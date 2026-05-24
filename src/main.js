@@ -19,6 +19,8 @@ import {
   UPGRADES,
   pickUpgradeChoices,
   categoryColor,
+  SKILL_TREE,
+  ownedSkills,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -50,6 +52,7 @@ import {
   setLuckyCharge,
   showChangelog,
   showUpgradePicker,
+  showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -128,15 +131,52 @@ function upgradeCount(id) {
   return state.runUpgrades.filter((u) => u === id).length;
 }
 
+function metaSkills() {
+  return ownedSkills(state.roguelike.skills || {});
+}
+function hasMeta(id) { return metaSkills().has(id); }
+
+function buyMetaSkill(id) {
+  const skill = SKILL_TREE.find((s) => s.id === id);
+  if (!skill) return false;
+  if (hasMeta(id)) return false;
+  if ((state.roguelike.gems || 0) < skill.cost) return false;
+  state.roguelike.gems -= skill.cost;
+  if (!state.roguelike.skills) state.roguelike.skills = {};
+  state.roguelike.skills[id] = true;
+  // Bigger Bank — bump POWERUP_CAP behaviour by widening when banking
+  // is computed; the cap effectively becomes 12.
+  persist();
+  flashMessage(`Unlocked: ${skill.name}`, 1500);
+  speech.speak(`Unlocked ${skill.name}`);
+  haptics.specialBirth();
+  refreshLevelUI();
+  return true;
+}
+
+function effectivePowerupCap() {
+  return hasMeta('bigger-bank') ? 12 : POWERUP_CAP;
+}
+
 function applyRunUpgradesOnSlotStart() {
   if (!state.inRoguelikeRun) return;
   state.movesRemaining += upgradeCount('moves+2') * 2;
+  const cap = effectivePowerupCap();
   const bank = powerupBank();
-  bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + upgradeCount('hammer+1'));
-  bank.colorBomb = Math.min(POWERUP_CAP, (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
-  bank.shuffle = Math.min(POWERUP_CAP, (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
-  bank.plusMoves = Math.min(POWERUP_CAP, (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
+  // Meta: Sweet Start — at slot 1 only
+  if (hasMeta('sweet-start') && state.roguelike.currentSlot === 1) {
+    bank.hammer = Math.min(cap, (bank.hammer || 0) + 1);
+  }
+  bank.hammer = Math.min(cap, (bank.hammer || 0) + upgradeCount('hammer+1'));
+  bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
+  bank.shuffle = Math.min(cap, (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
+  bank.plusMoves = Math.min(cap, (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
   setPowerupCounts(bank);
+  // Meta: Lucky Soul — Lucky starts at 25%
+  if (hasMeta('lucky-soul')) {
+    state.luckyCharge = Math.max(state.luckyCharge, 25);
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
 }
 
 function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
@@ -145,6 +185,7 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   m *= Math.pow(1.25, upgradeCount('score+25'));
   if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
   if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
+  if (hasMeta('score-sage')) m *= 1.1;
   return Math.round(amount * m);
 }
 
@@ -190,14 +231,14 @@ function spendPowerup(kind) {
 
 function earnPowerups(stars) {
   const bank = powerupBank();
-  // Always grant a hammer on any clear.
-  bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + 1);
+  const cap = effectivePowerupCap();
+  bank.hammer = Math.min(cap, (bank.hammer || 0) + 1);
   if (stars >= 2) {
-    bank.shuffle = Math.min(POWERUP_CAP, (bank.shuffle || 0) + 1);
+    bank.shuffle = Math.min(cap, (bank.shuffle || 0) + 1);
   }
   if (stars >= 3) {
-    bank.colorBomb = Math.min(POWERUP_CAP, (bank.colorBomb || 0) + 1);
-    bank.plusMoves = Math.min(POWERUP_CAP, (bank.plusMoves || 0) + 1);
+    bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + 1);
+    bank.plusMoves = Math.min(cap, (bank.plusMoves || 0) + 1);
   }
   setPowerupCounts(bank);
 }
@@ -372,7 +413,7 @@ function advanceRoguelikeAfterWin() {
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
   if (slot >= RUN_LENGTH) {
     // Full run cleared
-    const gems = gemsEarned(slot + 1, true);
+    const gems = gemsEarned(slot + 1, true, metaSkills());
     state.roguelike.gems = (state.roguelike.gems || 0) + gems;
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
     state.roguelike.currentSlot = 1;
@@ -398,7 +439,8 @@ function advanceRoguelikeAfterWin() {
     speech.speak('Boss defeated!');
     setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 1400);
   } else {
-    const choices = pickUpgradeChoices(state.runUpgrades);
+    const n = hasMeta('wider-choice') ? 4 : 3;
+    const choices = pickUpgradeChoices(state.runUpgrades, n);
     showUpgradePicker(choices, state.runUpgrades, (chosen) => {
       state.runUpgrades.push(chosen.id);
       flashMessage(`Picked: ${chosen.name}`, 1200);
@@ -410,7 +452,7 @@ function advanceRoguelikeAfterWin() {
 
 function endRoguelikeRun() {
   const reached = state.roguelike.currentSlot;
-  const gems = gemsEarned(reached, false);
+  const gems = gemsEarned(reached, false, metaSkills());
   state.roguelike.gems = (state.roguelike.gems || 0) + gems;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
   state.roguelike.currentSlot = 1;
@@ -1469,6 +1511,18 @@ const levelSelect = createLevelSelect({
 document.getElementById('level-chip').addEventListener('click', () => {
   if (state.settings.mode === 'levels') levelSelect.show();
 });
+
+const skillTreeBtn = document.getElementById('setting-skill-tree');
+if (skillTreeBtn) {
+  skillTreeBtn.addEventListener('click', () => {
+    showSkillTree({
+      skills: SKILL_TREE,
+      gems: () => state.roguelike.gems || 0,
+      owned: () => metaSkills(),
+      onBuy: (id) => buyMetaSkill(id),
+    });
+  });
+}
 
 document.getElementById('help-open').addEventListener('click', () => {
   sfx.unlockAudio();

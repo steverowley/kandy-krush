@@ -459,6 +459,57 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
+export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
+  const overlay = document.getElementById('skill-tree-overlay');
+  const panel = document.getElementById('skill-tree-panel');
+  const list = document.getElementById('skill-tree-list');
+  const gemsEl = document.getElementById('skill-tree-gems');
+  const closeBtn = document.getElementById('skill-tree-close');
+  if (!overlay || !panel || !list) return;
+
+  const render = () => {
+    gemsEl.textContent = `${gems()} 💎`;
+    list.innerHTML = '';
+    for (const skill of skills) {
+      const isOwned = owned().has(skill.id);
+      const canAfford = gems() >= skill.cost;
+      const row = document.createElement('div');
+      row.className = `flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${isOwned ? 'bg-green-100' : canAfford ? 'bg-white' : 'bg-gray-100 opacity-60'}`;
+      row.innerHTML = `
+        <div class="flex-1">
+          <div class="flex items-center gap-2 text-lg sm:text-xl font-bold">
+            ${skill.name}
+            ${isOwned ? '<span class="text-sm font-bold uppercase tracking-wider text-green-700">Owned</span>' : ''}
+          </div>
+          <div class="text-sm sm:text-base text-gray-700">${skill.desc}</div>
+        </div>
+        ${isOwned ? '' : `<button type="button" data-skill="${skill.id}" class="text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'}>${skill.cost} 💎</button>`}
+      `;
+      list.appendChild(row);
+    }
+    for (const btn of list.querySelectorAll('button[data-skill]')) {
+      btn.addEventListener('click', (e) => {
+        const id = btn.getAttribute('data-skill');
+        if (onBuy(id)) render();
+      });
+    }
+  };
+
+  const close = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    closeBtn.removeEventListener('click', close);
+    overlay.removeEventListener('click', close);
+    if (onClose) onClose();
+  };
+  closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', close);
+
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  render();
+}
+
 export function showUpgradePicker(choices, activeIds, onPick, categoryColor) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');

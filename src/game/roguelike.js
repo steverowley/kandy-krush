@@ -108,27 +108,41 @@ export function categoryColor(cat) { return CATEGORY_COLORS[cat] || '#FFD60A'; }
 // Pick 3 distinct upgrades from the pool. Bias slightly toward
 // categories the player has fewer of, so the choice menu doesn't
 // always show the same boring three.
-export function pickUpgradeChoices(picked = []) {
-  const taken = new Set(picked);
-  // Allow repeats — stacking is a feature.
+export function pickUpgradeChoices(picked = [], n = 3) {
+  // Allow repeats with previously-picked stack — stacking is a feature.
   const pool = UPGRADES.slice();
-  // Fisher-Yates shuffle then take first 3
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, 3);
+  return pool.slice(0, Math.min(n, pool.length));
+}
+
+// Meta skill tree — bought with gems, permanent across runs.
+export const SKILL_TREE = [
+  { id: 'sweet-start',  cost: 15, name: 'Sweet Start',  desc: 'Every run starts with +1 free hammer in your bank.' },
+  { id: 'lucky-soul',   cost: 20, name: 'Lucky Soul',   desc: 'Lucky bar starts at 25% on every slot.' },
+  { id: 'bigger-bank',  cost: 25, name: 'Bigger Bank',  desc: 'Power-up bank cap raised from 9 to 12.' },
+  { id: 'wider-choice', cost: 40, name: 'Wider Choice', desc: 'Upgrade picker shows 4 choices instead of 3.' },
+  { id: 'score-sage',   cost: 35, name: 'Score Sage',   desc: 'All scores in roguelike runs +10%.' },
+  { id: 'boss-bonus',   cost: 50, name: 'Boss Slayer',  desc: 'Each boss cleared grants +5 extra gems.' },
+];
+
+export function ownedSkills(skillMap) {
+  if (!skillMap || typeof skillMap !== 'object') return new Set();
+  return new Set(Object.keys(skillMap).filter((id) => skillMap[id]));
 }
 
 // Gems earned for finishing a run at a given level (whether by clearing
 // the final boss or running out of moves earlier). Roughly: 1 per
 // regular level cleared, +5 bonus per boss cleared, +20 grand bonus
 // if the whole run completes.
-export function gemsEarned(reachedLevel, runComplete) {
+export function gemsEarned(reachedLevel, runComplete, skillSet = null) {
   const cleared = Math.max(0, Math.min(RUN_LENGTH, reachedLevel - 1));
+  const bossBonus = (skillSet && skillSet.has && skillSet.has('boss-bonus')) ? 10 : 5;
   let gems = cleared;
   for (const boss of BOSS_SLOTS) {
-    if (cleared >= boss) gems += 5;
+    if (cleared >= boss) gems += bossBonus;
   }
   if (runComplete) gems += 20;
   return gems;
