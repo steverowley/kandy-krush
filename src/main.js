@@ -404,9 +404,10 @@ document.getElementById('pu-hammer').addEventListener('click', () => {
   armTool('hammer');
 });
 
-document.getElementById('pu-shuffle').addEventListener('click', () => {
+document.getElementById('pu-shuffle').addEventListener('click', (e) => {
   sfx.unlockAudio();
   useShuffle();
+  if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur();
 });
 
 document.getElementById('pu-colorbomb').addEventListener('click', () => {
@@ -414,9 +415,10 @@ document.getElementById('pu-colorbomb').addEventListener('click', () => {
   armTool('colorBomb');
 });
 
-document.getElementById('pu-plusmoves').addEventListener('click', () => {
+document.getElementById('pu-plusmoves').addEventListener('click', (e) => {
   sfx.unlockAudio();
   usePlusMoves();
+  if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur();
 });
 
 async function onTap(pos) {

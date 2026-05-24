@@ -331,6 +331,55 @@ body.theme-hc .tile.jelly-2 {
   box-shadow: inset 0 0 0 5px #fff, 0 3px 0 rgba(0,0,0,0.4);
 }
 
+/* Power-up tooltips — visible on hover, focus (tap), or armed state. */
+.powerup-btn { position: relative; }
+.pu-tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #111;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
+  z-index: 70;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  max-width: 80vw;
+}
+.pu-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #111;
+}
+.powerup-btn:hover .pu-tip,
+.powerup-btn:focus .pu-tip,
+.powerup-btn.armed .pu-tip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.powerup-btn:disabled .pu-tip {
+  display: none;
+}
+
+body.theme-hc .pu-tip {
+  background: #fff;
+  color: #000;
+  border: 2px solid #000;
+}
+body.theme-hc .pu-tip::after {
+  border-top-color: #fff;
+}
+
 /* Power-up buttons */
 .powerup-btn.armed {
   background: #FFD60A;
