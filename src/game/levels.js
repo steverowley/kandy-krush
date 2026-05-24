@@ -180,6 +180,68 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 17,
+    name: 'Quick spark',
+    moves: 18,
+    objective: { kind: 'score', target: 700 },
+    hint: 'Tight 18-move budget. Reach 700 points.',
+  },
+  {
+    id: 18,
+    name: 'Sunshine festival',
+    moves: 24,
+    objective: { kind: 'clearType', type: 0, target: 18 },
+    hint: 'Clear 18 yellow circles.',
+  },
+  {
+    id: 19,
+    name: 'Make magic',
+    moves: 24,
+    objective: { kind: 'specials', target: 2 },
+    hint: 'Make 2 special candies.',
+    tip: 'Match 4 in a row for a striped candy. 5 for a rainbow!',
+  },
+  {
+    id: 20,
+    name: 'Match marathon',
+    moves: 26,
+    objective: { kind: 'matches', target: 16 },
+    hint: 'Make 16 matches — every one counts.',
+  },
+  {
+    id: 21,
+    name: 'Pink unlock',
+    moves: 28,
+    objective: { kind: 'clearType', type: 2, target: 16 },
+    hint: 'Clear 16 pink triangles. Some are behind locks.',
+    obstacles: {
+      locks: [
+        [1, 2, 1], [4, 2, 1],
+        [1, 3, 1], [4, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 22,
+    name: 'Sweet symphony',
+    moves: 36,
+    objective: { kind: 'score', target: 3000 },
+    hint: 'The final piece: jelly, locks, and a steep climb to 3,000.',
+    tip: 'Take your time — there is no losing, only winning.',
+    obstacles: {
+      jelly: [
+        [0, 1, 2], [5, 1, 2],
+        [0, 4, 2], [5, 4, 2],
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+      locks: [
+        [1, 0, 1], [4, 0, 1],
+        [1, 5, 1], [4, 5, 1],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
