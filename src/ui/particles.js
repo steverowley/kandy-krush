@@ -137,7 +137,12 @@ export function spawnShockwave(c, r, opts = {}) {
   setTimeout(() => el.remove(), 720);
 }
 
+function motionReduced() {
+  return document.body && document.body.classList.contains('reduce-motion');
+}
+
 export function spawnScreenFlash(color = '#FFD60A') {
+  if (motionReduced()) return;
   const root = layer();
   if (!root) return;
   const el = document.createElement('div');
@@ -149,6 +154,7 @@ export function spawnScreenFlash(color = '#FFD60A') {
 
 let shakeTimer = null;
 export function screenShake(intensity = 6, durationMs = 360) {
+  if (motionReduced()) return;
   const body = document.body;
   if (!body) return;
   body.style.setProperty('--shake-amp', `${intensity}px`);

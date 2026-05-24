@@ -94,6 +94,40 @@ body.theme-hc .tile.adjacent {
   100% { transform: translateY(0) scale(1, 1); }
 }
 
+/* Reduce-motion overrides — driven by Settings toggle (body.reduce-motion)
+   or by the OS preference. Kills the continuous pulses and any motion that
+   amplifies vestibular discomfort. Match-essential animations (swap, pop,
+   fall) stay so the game remains readable. */
+body.reduce-motion .tile.special-line-h,
+body.reduce-motion .tile.special-line-v,
+body.reduce-motion .tile.special-rainbow,
+body.reduce-motion .tile.hint,
+body.reduce-motion #moves.moves-critical,
+body.reduce-motion #cascade-text.cascade-show,
+body.reduce-motion .powerup-btn.armed,
+body.reduce-motion #pu-hint {
+  animation: none !important;
+}
+body.reduce-motion .tap-ripple,
+body.reduce-motion .particle-screen-flash {
+  display: none !important;
+}
+body.reduce-motion.shake {
+  animation: none !important;
+  transform: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  body .tile.special-line-h,
+  body .tile.special-line-v,
+  body .tile.special-rainbow,
+  body .tile.hint,
+  body #moves.moves-critical {
+    animation: none !important;
+  }
+  body .tap-ripple, body .particle-screen-flash { display: none !important; }
+  body.shake { animation: none !important; transform: none !important; }
+}
+
 /* Special candy glow — pulsing aura that reinforces "this one's powerful" */
 .tile.special-line-h,
 .tile.special-line-v {
