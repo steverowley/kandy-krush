@@ -45,8 +45,13 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
     }
 
     if (modeBtn) {
+      const modeLabels = {
+        levels: 'Mode: Levels',
+        free: 'Mode: Free Play',
+        roguelike: 'Mode: Roguelike',
+      };
       modeBtn.setAttribute('aria-pressed', String(current.mode === 'levels'));
-      modeBtn.textContent = current.mode === 'levels' ? 'Mode: Levels' : 'Mode: Free Play';
+      modeBtn.textContent = modeLabels[current.mode] || modeLabels.levels;
     }
 
     for (const b of sizeButtons) {
@@ -96,8 +101,9 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
     );
   }
   if (modeBtn) {
+    const modeCycle = { levels: 'free', free: 'roguelike', roguelike: 'levels' };
     modeBtn.addEventListener('click', () =>
-      apply({ mode: current.mode === 'levels' ? 'free' : 'levels' })
+      apply({ mode: modeCycle[current.mode] || 'levels' })
     );
   }
   for (const b of sizeButtons) {

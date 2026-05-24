@@ -284,9 +284,18 @@ function projectedStarsForRemaining(level, movesRemaining) {
   return movesRemaining > 0 ? 1 : 0;
 }
 
-export function setLevelChip(level, mode, stars) {
+export function setLevelChip(level, mode, stars, opts = {}) {
   const chip = document.getElementById('level-chip');
   if (!chip) return;
+  if (mode === 'roguelike') {
+    chip.classList.remove('hidden');
+    const slot = opts.slot || 1;
+    const total = opts.total || 30;
+    const gems = opts.gems || 0;
+    const boss = opts.isBoss ? ' BOSS' : '';
+    chip.textContent = `Run Slot ${slot} / ${total}${boss} · ${gems}💎`;
+    return;
+  }
   if (mode !== 'levels' || !level) {
     chip.classList.add('hidden');
     return;
