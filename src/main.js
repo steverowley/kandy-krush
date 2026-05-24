@@ -72,6 +72,9 @@ import {
   spawnScreenFlash,
   screenShake,
   spawnStarRain,
+  spawnLightningRow,
+  spawnBlackHole,
+  spawnSnake,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -135,6 +138,142 @@ function upgradeCount(id) {
   return state.runUpgrades.filter((u) => u === id).length;
 }
 
+// Counters for upgrades that trigger on a schedule. Reset per slot.
+let lightningCounter = 0;
+function resetAbilityCounters() {
+  lightningCounter = 0;
+}
+
+async function fireLightning() {
+  if (!state.board) return;
+  const r = Math.floor(Math.random() * state.board.rows);
+  const positions = [];
+  for (let c = 0; c < state.board.cols; c++) {
+    if (state.board.isIngredient(c, r)) continue;
+    if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+    positions.push({ c, r });
+  }
+  if (positions.length === 0) return;
+  spawnLightningRow(r);
+  flashMessage('⚡ LIGHTNING STRIKE!', 1200);
+  speech.speak('Lightning strike');
+  sfx.playMatch(positions.length, 2);
+  haptics.epic();
+  screenShake(6, 320);
+  await delay(220);
+  spawnPopSpecks(positions);
+  await animatePop(positions);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  renderBoard(state.board, state);
+  await delay(140);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+  // Cascade any resulting matches
+  let result = findMatches(state.board);
+  let lvl = 1;
+  while (result.positions.length > 0) {
+    await processMatchRound(result, lvl, null);
+    result = findMatches(state.board);
+    lvl++;
+  }
+}
+
+function maybeTriggerLightning() {
+  const stacks = upgradeCount('lightning');
+  if (stacks <= 0) return;
+  lightningCounter++;
+  // Each stack reduces the threshold by 1, minimum every 2 matches.
+  const threshold = Math.max(2, 4 - (stacks - 1));
+  if (lightningCounter >= threshold) {
+    lightningCounter = 0;
+    fireLightning();
+  }
+}
+
+async function fireBlackHole() {
+  const stacks = upgradeCount('black-hole');
+  if (stacks <= 0) return;
+  const candidates = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      if (state.board.isIngredient(c, r)) continue;
+      if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+      candidates.push({ c, r });
+    }
+  }
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  const n = Math.min(5 * stacks, candidates.length);
+  const positions = candidates.slice(0, n);
+  spawnBlackHole(positions);
+  flashMessage('🌀 BLACK HOLE', 1600);
+  speech.speak('Black hole');
+  haptics.combo();
+  await delay(750);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  renderBoard(state.board, state);
+  await delay(160);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+}
+
+function maybeFireSnake() {
+  if (upgradeCount('hungry-snake') <= 0) return;
+  const path = [];
+  const visited = new Set();
+  let c = Math.floor(Math.random() * state.board.cols);
+  let r = Math.floor(Math.random() * state.board.rows);
+  const key0 = `${c},${r}`;
+  if (state.board.isIngredient(c, r) || state.lockMap.get(key0) > 0) {
+    // try again from a corner
+    c = 0; r = 0;
+  }
+  path.push({ c, r });
+  visited.add(`${c},${r}`);
+  const targetLen = 4 + upgradeCount('hungry-snake'); // grows with stacks
+  while (path.length < targetLen) {
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    for (let i = dirs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+    }
+    let moved = false;
+    for (const [dc, dr] of dirs) {
+      const nc = c + dc, nr = r + dr;
+      if (nc < 0 || nc >= state.board.cols || nr < 0 || nr >= state.board.rows) continue;
+      const k = `${nc},${nr}`;
+      if (visited.has(k)) continue;
+      if (state.board.isIngredient(nc, nr)) continue;
+      if ((state.lockMap.get(k) || 0) > 0) continue;
+      path.push({ c: nc, r: nr });
+      visited.add(k);
+      c = nc; r = nr;
+      moved = true;
+      break;
+    }
+    if (!moved) break;
+  }
+  if (path.length < 2) return;
+  spawnSnake(path);
+  flashMessage('🐍 SNAKE FEAST', 1500);
+  speech.speak('Snake');
+  sfx.playCascade();
+  haptics.combo();
+  setTimeout(() => {
+    state.board.clear(path);
+    decrementJellyAt(path);
+    renderBoard(state.board, state);
+    setTimeout(() => {
+      const fallen = gravityWithIngredients();
+      renderBoard(state.board, state, { fallen });
+    }, 180);
+  }, 900);
+}
+
 function metaSkills() {
   return ownedSkills(state.roguelike.skills || {});
 }
@@ -181,6 +320,13 @@ function applyRunUpgradesOnSlotStart() {
     state.luckyCharge = Math.max(state.luckyCharge, 25);
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // Reset ability counters at slot start
+  resetAbilityCounters();
+  // Trigger Black Hole on slot start, if owned (slight delay so the
+  // intro card has time to dismiss).
+  if (upgradeCount('black-hole') > 0) {
+    setTimeout(() => fireBlackHole(), 1200);
+  }
 }
 
 function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
@@ -204,6 +350,15 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2025-05-24-7m',
+    items: [
+      '⚡ NEW upgrade: Lightning Strike — every 4 matches a real lightning bolt zigzags across the screen and clears a whole row.',
+      '🌀 NEW upgrade: Black Hole — at the start of each slot, a vortex appears at the centre and SUCKS 5 random candies in spiraling.',
+      '🐍 NEW upgrade: Hungry Snake — make a special candy and a green snake slithers across the board eating 4 random tiles in its wake.',
+      'All three abilities stack — pick the same upgrade twice and it triggers more often / eats more / clears bigger.',
+    ],
+  },
   {
     id: '2025-05-24-7l',
     items: [
@@ -1494,6 +1649,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   state.progress.matches += 1;
   state.progress.specials += specialsCreated.length;
   flashObjectiveProgress(specialsCreated.length);
+  maybeTriggerLightning();
+  if (specialsCreated.length > 0) maybeFireSnake();
 
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });

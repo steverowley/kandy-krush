@@ -1275,6 +1275,84 @@ body.reduce-motion::after {
 body.theme-hc::before,
 body.theme-hc::after { display: none; }
 
+/* Lightning bolt — draws fast across the row, flashes, fades. */
+.lightning-bolt {
+  filter: drop-shadow(0 0 12px rgba(255, 214, 10, 0.95)) drop-shadow(0 0 30px rgba(255, 255, 255, 0.75));
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: lightning-strike 700ms cubic-bezier(.05,.8,.4,1) forwards;
+}
+.lightning-bolt.lightning-core {
+  animation-duration: 700ms;
+  filter: drop-shadow(0 0 6px #FFD60A);
+}
+@keyframes lightning-strike {
+  0%   { stroke-dashoffset: 2000; opacity: 0; }
+  10%  { stroke-dashoffset: 0;    opacity: 1; }
+  35%  { stroke-dashoffset: 0;    opacity: 1; }
+  60%  { stroke-dashoffset: 0;    opacity: 0.4; }
+  75%  { stroke-dashoffset: 0;    opacity: 1; }
+  100% { stroke-dashoffset: 0;    opacity: 0; }
+}
+
+/* Black hole — dark vortex at the centre, suck-in ghosts spiral toward it. */
+.black-hole {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0%, #1a0030 50%, transparent 100%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: black-hole-pulse 900ms cubic-bezier(.3,.6,.3,1) forwards;
+  box-shadow: 0 0 40px rgba(131, 56, 236, 0.8), 0 0 80px rgba(255, 0, 110, 0.4);
+}
+@keyframes black-hole-pulse {
+  0%   { width: 8px;  height: 8px;  opacity: 0; }
+  20%  { width: 80px; height: 80px; opacity: 1; }
+  70%  { width: 160px; height: 160px; opacity: 1; }
+  100% { width: 4px;  height: 4px;  opacity: 0; }
+}
+.black-hole-suck {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1) rotate(0);
+  animation: black-hole-suck 900ms cubic-bezier(.5,.0,.85,.5) forwards;
+}
+.black-hole-suck svg { width: 100%; height: 100%; }
+@keyframes black-hole-suck {
+  0%   { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.05) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Snake — draws along its body and head pulses */
+.snake-body {
+  stroke-dasharray: 1800;
+  stroke-dashoffset: 1800;
+  animation: snake-draw 1300ms cubic-bezier(.4,.0,.2,1) forwards;
+}
+.snake-outline { animation-delay: 0ms; }
+.snake-body:not(.snake-outline) { animation-delay: 0ms; }
+@keyframes snake-draw {
+  0%   { stroke-dashoffset: 1800; opacity: 0; }
+  10%  { opacity: 1; }
+  60%  { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+body.reduce-motion .lightning-bolt,
+body.reduce-motion .black-hole,
+body.reduce-motion .black-hole-suck,
+body.reduce-motion .snake-body {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
 .particle-starfall {
   color: #F59E0B;
   text-shadow: 0 0 8px rgba(255, 214, 10, 0.9), 0 0 16px rgba(255, 214, 10, 0.5);

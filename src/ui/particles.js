@@ -165,6 +165,149 @@ export function screenShake(intensity = 6, durationMs = 360) {
   shakeTimer = setTimeout(() => body.classList.remove('shake'), durationMs);
 }
 
+// Lightning bolt across a row. Just renders an SVG zigzag; the
+// caller is responsible for clearing the row's tiles.
+export function spawnLightningRow(rowIndex) {
+  const board = document.getElementById('board');
+  const root = layer();
+  if (!board || !root) return;
+  const boardRect = board.getBoundingClientRect();
+  // Find any tile in that row to read y.
+  const tile = document.querySelector(`#board .tile[data-r="${rowIndex}"]`);
+  if (!tile) return;
+  const tr = tile.getBoundingClientRect();
+  const y = tr.top + tr.height / 2;
+  const xLeft = boardRect.left - 40;
+  const xRight = boardRect.right + 40;
+  // Build a jagged polyline across the row.
+  const segments = 16;
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const x = xLeft + ((xRight - xLeft) * i) / segments;
+    const dy = (i === 0 || i === segments) ? 0 : (Math.random() - 0.5) * tr.height * 0.7;
+    pts.push(`${x.toFixed(1)},${(y + dy).toFixed(1)}`);
+  }
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'particle');
+  svg.style.position = 'fixed';
+  svg.style.left = '0';
+  svg.style.top = '0';
+  svg.setAttribute('width', String(window.innerWidth));
+  svg.setAttribute('height', String(window.innerHeight));
+  svg.style.pointerEvents = 'none';
+  svg.style.zIndex = '90';
+  const line = document.createElementNS(ns, 'polyline');
+  line.setAttribute('points', pts.join(' '));
+  line.setAttribute('fill', 'none');
+  line.setAttribute('stroke', '#fff8dc');
+  line.setAttribute('stroke-width', '8');
+  line.setAttribute('stroke-linecap', 'round');
+  line.setAttribute('stroke-linejoin', 'round');
+  line.setAttribute('class', 'lightning-bolt');
+  // Thinner inner glow for a hot core
+  const glow = document.createElementNS(ns, 'polyline');
+  glow.setAttribute('points', pts.join(' '));
+  glow.setAttribute('fill', 'none');
+  glow.setAttribute('stroke', '#FFD60A');
+  glow.setAttribute('stroke-width', '3');
+  glow.setAttribute('stroke-linecap', 'round');
+  glow.setAttribute('class', 'lightning-bolt lightning-core');
+  svg.appendChild(line);
+  svg.appendChild(glow);
+  root.appendChild(svg);
+  setTimeout(() => svg.remove(), 700);
+}
+
+// Black-hole vortex — pulses dark at the centre of the board and
+// spirals tile copies inward. The caller is responsible for actually
+// clearing the cells; this is the visual.
+export function spawnBlackHole(positions) {
+  const board = document.getElementById('board');
+  const root = layer();
+  if (!board || !root || positions.length === 0) return;
+  const boardRect = board.getBoundingClientRect();
+  const cx = boardRect.left + boardRect.width / 2;
+  const cy = boardRect.top + boardRect.height / 2;
+  // The void itself
+  const hole = document.createElement('div');
+  hole.className = 'particle black-hole';
+  hole.style.left = `${cx}px`;
+  hole.style.top = `${cy}px`;
+  root.appendChild(hole);
+  setTimeout(() => hole.remove(), 900);
+  // Per-cell suck animation
+  positions.forEach((p, i) => {
+    const tile = document.querySelector(`#board .tile[data-c="${p.c}"][data-r="${p.r}"]`);
+    if (!tile) return;
+    const tr = tile.getBoundingClientRect();
+    const tx = tr.left + tr.width / 2;
+    const ty = tr.top + tr.height / 2;
+    const ghost = document.createElement('div');
+    ghost.className = 'particle black-hole-suck';
+    ghost.style.left = `${tx}px`;
+    ghost.style.top = `${ty}px`;
+    ghost.style.setProperty('--dx', `${cx - tx}px`);
+    ghost.style.setProperty('--dy', `${cy - ty}px`);
+    ghost.style.animationDelay = `${i * 60}ms`;
+    const inner = tile.querySelector('svg');
+    if (inner) ghost.innerHTML = inner.outerHTML;
+    root.appendChild(ghost);
+    setTimeout(() => ghost.remove(), 1000 + i * 60);
+  });
+}
+
+// Hungry snake — animates a green snake SVG following the positions
+// path. Caller clears tiles after the snake passes them.
+export function spawnSnake(path) {
+  const root = layer();
+  if (!root || path.length < 2) return;
+  const points = path.map((p) => {
+    const tile = document.querySelector(`#board .tile[data-c="${p.c}"][data-r="${p.r}"]`);
+    if (!tile) return null;
+    const r = tile.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }).filter(Boolean);
+  if (points.length < 2) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.style.position = 'fixed';
+  svg.style.left = '0';
+  svg.style.top = '0';
+  svg.setAttribute('width', String(window.innerWidth));
+  svg.setAttribute('height', String(window.innerHeight));
+  svg.style.pointerEvents = 'none';
+  svg.style.zIndex = '88';
+  // Snake body as a thick polyline that's stroke-dasharray'd to "draw"
+  // along its length over time.
+  const line = document.createElementNS(ns, 'polyline');
+  const pts = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  line.setAttribute('points', pts);
+  line.setAttribute('fill', 'none');
+  line.setAttribute('stroke', '#16a34a');
+  line.setAttribute('stroke-width', '24');
+  line.setAttribute('stroke-linecap', 'round');
+  line.setAttribute('stroke-linejoin', 'round');
+  line.setAttribute('class', 'snake-body');
+  const outline = line.cloneNode();
+  outline.setAttribute('stroke', '#000');
+  outline.setAttribute('stroke-width', '30');
+  outline.setAttribute('class', 'snake-body snake-outline');
+  // Head
+  const head = document.createElementNS(ns, 'circle');
+  head.setAttribute('cx', String(points[0].x));
+  head.setAttribute('cy', String(points[0].y));
+  head.setAttribute('r', '14');
+  head.setAttribute('fill', '#16a34a');
+  head.setAttribute('stroke', '#000');
+  head.setAttribute('stroke-width', '3');
+  svg.appendChild(outline);
+  svg.appendChild(line);
+  svg.appendChild(head);
+  root.appendChild(svg);
+  setTimeout(() => svg.remove(), 1500);
+}
+
 export function spawnStarRain(count = 28) {
   const root = layer();
   if (!root) return;
