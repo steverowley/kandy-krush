@@ -293,7 +293,10 @@ export function setLevelChip(level, mode, stars, opts = {}) {
     const total = opts.total || 30;
     const gems = opts.gems || 0;
     const boss = opts.isBoss ? ' BOSS' : '';
-    chip.textContent = `Run Slot ${slot} / ${total}${boss} · ${gems}💎`;
+    const lives = Math.max(0, Math.min(9, opts.lives || 0));
+    const maxLives = Math.max(lives, Math.min(9, opts.maxLives || lives));
+    const hearts = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, maxLives - lives));
+    chip.textContent = `Slot ${slot}/${total}${boss} · ${hearts} · ${gems}💎`;
     return;
   }
   if (mode !== 'levels' || !level) {

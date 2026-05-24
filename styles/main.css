@@ -1045,118 +1045,183 @@ body.mode-roguelike:not(.theme-hc) #reset-cancel {
   border-color: #FF006E;
 }
 
-/* Roguelike mode — dark dungeon backdrop, neon-red accents.
-   Candies and the board itself stay readable; only the page
-   chrome shifts so it FEELS like a different mode. HC theme
-   wins if both are on (HC stays flat #111). */
+/* Roguelike mode — clean high-contrast dark. White text on solid
+   slate. Hot-pink + gold accents on borders + chips only. No
+   decorative orbs (they made too many things hard to read). */
 body.mode-roguelike:not(.theme-hc) {
   background:
-    radial-gradient(ellipse at top, rgba(255, 0, 110, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at bottom, rgba(131, 56, 236, 0.28) 0%, transparent 55%),
-    linear-gradient(180deg, #170917 0%, #1a0822 50%, #0d0414 100%);
-  color: #f3e8ff;
+    radial-gradient(ellipse at top, rgba(255, 0, 110, 0.10) 0%, transparent 70%),
+    #14101e !important;
+  color: #ffffff;
 }
-body.mode-roguelike:not(.theme-hc) h1,
+body.mode-roguelike:not(.theme-hc)::before,
+body.mode-roguelike:not(.theme-hc)::after {
+  display: none !important;
+}
+
+/* Force every Tailwind text-color utility to white (dark themes only). */
+body.mode-roguelike:not(.theme-hc) [class*="text-gray-"],
+body.mode-roguelike:not(.theme-hc) [class*="text-pink-7"],
+body.mode-roguelike:not(.theme-hc) [class*="text-pink-8"],
+body.mode-roguelike:not(.theme-hc) [class*="text-pink-9"],
+body.mode-roguelike:not(.theme-hc) [class*="text-yellow-7"],
+body.mode-roguelike:not(.theme-hc) [class*="text-yellow-8"],
+body.mode-roguelike:not(.theme-hc) [class*="text-yellow-9"],
+body.mode-roguelike:not(.theme-hc) [class*="text-red-7"],
+body.mode-roguelike:not(.theme-hc) [class*="text-red-8"],
+body.mode-roguelike:not(.theme-hc) [class*="text-red-9"],
+body.mode-roguelike:not(.theme-hc) [class*="text-green-7"],
+body.mode-roguelike:not(.theme-hc) [class*="text-green-8"],
+body.mode-roguelike:not(.theme-hc) [class*="text-green-9"],
+body.mode-roguelike:not(.theme-hc) [class*="text-black"],
+body.mode-roguelike:not(.theme-hc) footer {
+  color: #ffffff !important;
+}
+/* A few branded exceptions */
+body.mode-roguelike:not(.theme-hc) h1 {
+  color: #ffb6d9;
+  letter-spacing: 0.04em;
+}
 body.mode-roguelike:not(.theme-hc) #score,
-body.mode-roguelike:not(.theme-hc) #best,
+body.mode-roguelike:not(.theme-hc) #best {
+  color: #FFD60A !important;
+  text-shadow: 0 0 8px rgba(255, 214, 10, 0.5);
+}
 body.mode-roguelike:not(.theme-hc) #level-name,
 body.mode-roguelike:not(.theme-hc) #li-name {
-  color: #ffd1e8;
-  text-shadow: 0 0 14px rgba(255, 0, 110, 0.6);
+  color: #ffb6d9 !important;
 }
-body.mode-roguelike:not(.theme-hc) h1 { letter-spacing: 0.04em; }
 
-/* Top-of-stack chrome bars adopt the dark palette */
+/* Force every light surface dark so the white text sits cleanly. */
+body.mode-roguelike:not(.theme-hc) [class*="bg-white"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-gray-1"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-amber-5"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-pink-5"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-pink-1"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-red-1"],
+body.mode-roguelike:not(.theme-hc) [class*="bg-green-1"],
 body.mode-roguelike:not(.theme-hc) #level-info,
 body.mode-roguelike:not(.theme-hc) #powerups .powerup-btn,
 body.mode-roguelike:not(.theme-hc) #upgrade-panel,
 body.mode-roguelike:not(.theme-hc) #skill-tree-panel,
 body.mode-roguelike:not(.theme-hc) #level-intro-card,
+body.mode-roguelike:not(.theme-hc) #welcome-panel,
+body.mode-roguelike:not(.theme-hc) #reset-panel,
+body.mode-roguelike:not(.theme-hc) #level-select-panel,
 body.mode-roguelike:not(.theme-hc) #level-complete,
 body.mode-roguelike:not(.theme-hc) #level-fail,
-body.mode-roguelike:not(.theme-hc) footer {
-  background: #1d0a26;
-  color: #f3e8ff;
-  border-color: #FF006E;
-  box-shadow: 0 0 0 1px rgba(255, 0, 110, 0.35), 0 6px 24px rgba(255, 0, 110, 0.18);
-}
-body.mode-roguelike:not(.theme-hc) #moves-label,
-body.mode-roguelike:not(.theme-hc) #objective-text,
-body.mode-roguelike:not(.theme-hc) #objective-progress,
-body.mode-roguelike:not(.theme-hc) #lucky-label,
-body.mode-roguelike:not(.theme-hc) #lc-title,
-body.mode-roguelike:not(.theme-hc) #lc-score,
-body.mode-roguelike:not(.theme-hc) #lf-title,
-body.mode-roguelike:not(.theme-hc) #lf-score {
-  color: #f3e8ff;
-}
-body.mode-roguelike:not(.theme-hc) #lc-replay,
-body.mode-roguelike:not(.theme-hc) #lf-skip {
-  background: #2c0f3a;
-  color: #f3e8ff;
-  border-color: #FF006E;
-}
-body.mode-roguelike:not(.theme-hc) #lc-next,
-body.mode-roguelike:not(.theme-hc) #lf-replay {
-  background: #FF006E;
-  color: #fff;
-  border-color: #FFD60A;
-}
-body.mode-roguelike:not(.theme-hc) #level-chip {
-  background: #FF006E;
-  color: #fff;
-  border-color: #FFD60A;
-  box-shadow: 0 0 12px rgba(255, 0, 110, 0.6);
-}
+body.mode-roguelike:not(.theme-hc) #install-toast,
 body.mode-roguelike:not(.theme-hc) #help-open,
 body.mode-roguelike:not(.theme-hc) #settings-open,
-body.mode-roguelike:not(.theme-hc) #restart {
-  background: #2c0f3a;
-  color: #f3e8ff;
-  border-color: #FF006E;
+body.mode-roguelike:not(.theme-hc) footer {
+  background: #1f1a2e !important;
+  border-color: #FF006E !important;
 }
-body.mode-roguelike:not(.theme-hc) #board {
-  background: #0d0414;
-  border-color: #FF006E;
-  box-shadow:
-    0 0 0 1px rgba(255, 0, 110, 0.35),
-    0 0 32px rgba(255, 0, 110, 0.25),
-    inset 0 -3px 0 rgba(0, 0, 0, 0.4);
-}
-/* Recolor the drifting orbs to a sickly red + purple */
-body.mode-roguelike:not(.theme-hc)::before {
-  background: radial-gradient(circle, rgba(220, 38, 38, 0.55) 0%, transparent 70%);
-}
-body.mode-roguelike:not(.theme-hc)::after {
-  background: radial-gradient(circle, rgba(131, 56, 236, 0.55) 0%, transparent 70%);
-  filter: blur(50px);
+body.mode-roguelike:not(.theme-hc) [class*="border-black"] {
+  border-color: #FF006E !important;
 }
 
-/* Mode-transition overlay — wipes across the screen when switching modes.
-   Wicked version for roguelike (red glitch), gentle white wipe otherwise. */
+/* Accent buttons — primary action in hot-pink with gold rim */
+body.mode-roguelike:not(.theme-hc) #level-chip,
+body.mode-roguelike:not(.theme-hc) #lc-next,
+body.mode-roguelike:not(.theme-hc) #lf-replay,
+body.mode-roguelike:not(.theme-hc) #welcome-start,
+body.mode-roguelike:not(.theme-hc) #reset-confirm,
+body.mode-roguelike:not(.theme-hc) #install-cta {
+  background: #FF006E !important;
+  color: #ffffff !important;
+  border-color: #FFD60A !important;
+}
+/* Gold chips stay gold */
+body.mode-roguelike:not(.theme-hc) [class*="bg-yellow-3"],
+body.mode-roguelike:not(.theme-hc) #restart {
+  background: #FFD60A !important;
+  color: #000 !important;
+  border-color: #000 !important;
+}
+body.mode-roguelike:not(.theme-hc) #streak {
+  background: #FF006E !important;
+  color: #ffffff !important;
+  border-color: #FFD60A !important;
+}
+body.mode-roguelike:not(.theme-hc) #li-tip {
+  background: rgba(255, 0, 110, 0.20) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 214, 10, 0.65) !important;
+}
+body.mode-roguelike:not(.theme-hc) #board {
+  background: #14101e !important;
+  border-color: #FF006E !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 0, 110, 0.4),
+    0 0 28px rgba(255, 0, 110, 0.22),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.4);
+}
+body.mode-roguelike:not(.theme-hc) .upgrade-card,
+body.mode-roguelike:not(.theme-hc) .level-tile {
+  background: #2a2240 !important;
+  color: #ffffff !important;
+  border-color: #FF006E !important;
+}
+body.mode-roguelike:not(.theme-hc) #upgrade-panel [class*="text-xs"] {
+  color: #FFD60A !important;
+}
+
+/* --- Mode-transition overlay — drawn-out, mode-specific animations --- */
 #mode-transition {
   position: fixed; inset: 0; z-index: 95;
   pointer-events: none; opacity: 0;
 }
-#mode-transition.show {
-  animation: mode-wipe 900ms ease-in-out forwards;
+
+/* ROGUELIKE: 1.6s — black void zooms in from a slit, screen shake-shudder,
+   blood-red eye-blink iris that snaps open then closes. Wicked. */
+#mode-transition.wicked.show {
+  background: #0d0414;
+  animation: mode-roguelike-enter 1600ms cubic-bezier(.4, .0, .2, 1) forwards;
 }
-#mode-transition.wicked {
-  background:
-    radial-gradient(ellipse at center, rgba(255, 0, 110, 0.95) 0%, rgba(131, 56, 236, 0.85) 40%, rgba(13, 4, 20, 1) 100%);
+@keyframes mode-roguelike-enter {
+  0%   { opacity: 0; clip-path: ellipse(0% 1% at 50% 50%); }
+  18%  { opacity: 1; clip-path: ellipse(120% 3% at 50% 50%); }
+  35%  { opacity: 1; clip-path: ellipse(140% 140% at 50% 50%); background: #14101e; }
+  55%  { opacity: 1; clip-path: ellipse(140% 140% at 50% 50%); background:
+           radial-gradient(circle at center, #FF006E 0%, #8b0040 25%, #14101e 70%); }
+  78%  { opacity: 1; clip-path: ellipse(140% 140% at 50% 50%); background:
+           radial-gradient(circle at center, transparent 50%, #14101e 100%); }
+  100% { opacity: 0; clip-path: ellipse(140% 140% at 50% 50%); }
 }
-#mode-transition.bright {
-  background: linear-gradient(180deg, #fff8e7 0%, #ffe1f0 100%);
+
+/* LEVELS: 1.3s — sunshine burst. Gold radiates from centre, flares,
+   then fades through warm cream. Cheerful + welcoming. */
+#mode-transition.levels.show {
+  animation: mode-levels-enter 1300ms cubic-bezier(.2, .8, .3, 1) forwards;
 }
-@keyframes mode-wipe {
-  0%   { opacity: 0; transform: scale(0.3); border-radius: 100%; }
-  25%  { opacity: 1; transform: scale(2.2); border-radius: 0; }
-  60%  { opacity: 1; transform: scale(2.2); }
-  100% { opacity: 0; transform: scale(2.2); }
+@keyframes mode-levels-enter {
+  0%   { opacity: 0; background:
+           radial-gradient(circle at center, #FFD60A 0%, transparent 5%); }
+  20%  { opacity: 1; background:
+           radial-gradient(circle at center, #FFD60A 0%, #FFE85C 30%, transparent 75%); }
+  50%  { opacity: 1; background:
+           radial-gradient(circle at center, #FFF6CC 0%, #FFD7E2 50%, #fff8e7 100%); }
+  80%  { opacity: 0.8; background:
+           radial-gradient(circle at center, #fff8e7 0%, #ffe1f0 70%, transparent 100%); }
+  100% { opacity: 0; }
 }
+
+/* FREE PLAY: 1.1s — gentle horizontal pastel sweep. Calm + relaxed. */
+#mode-transition.bright.show {
+  animation: mode-free-enter 1100ms ease-in-out forwards;
+}
+@keyframes mode-free-enter {
+  0%   { opacity: 0; background: linear-gradient(120deg, #fff8e7 -10%, #ffe1f0 50%, transparent 100%);
+         transform: translateX(-100%); }
+  25%  { opacity: 1; transform: translateX(0); }
+  60%  { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+
 body.reduce-motion #mode-transition.show {
-  animation: none;
-  opacity: 0;
+  animation: none !important;
+  opacity: 0 !important;
 }
 
 #board {
