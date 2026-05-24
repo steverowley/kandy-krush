@@ -81,6 +81,7 @@ const state = {
   jellyMap: new Map(),
   lockMap: new Map(),
   resolved: false,
+  almostFired: false,
   seenWelcome: persisted.seenWelcome,
   powerups: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
   armedTool: null,
@@ -186,6 +187,14 @@ function checkLevelOutcome() {
   if (state.resolved) return;
   if (state.settings.mode !== 'levels' || !state.level) return;
   const p = progressTowardObjective(state.level, state.score, state.progress);
+  if (!p.done && p.target > 0 && !state.almostFired) {
+    const ratio = p.current / p.target;
+    if (ratio >= 0.8) {
+      state.almostFired = true;
+      flashMessage('Almost there!', 1200);
+      speech.speak('Almost there!');
+    }
+  }
   if (p.done) {
     state.resolved = true;
     const stars = starsForLevel(state.level, state.movesRemaining);
@@ -678,6 +687,7 @@ function resetBoard() {
   state.selected = null;
   state.busy = false;
   state.resolved = false;
+  state.almostFired = false;
   state.jellyMap = new Map();
   state.lockMap = new Map();
   state.progress = {
