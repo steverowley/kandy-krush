@@ -19,8 +19,9 @@
 </head>
 <body class="size-medium min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
   <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
       <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
+      <span id="level-chip" class="hidden text-base sm:text-lg font-bold bg-yellow-300 text-black border-[3px] border-black rounded-full px-3 py-1">Level 1 / 8</span>
       <span id="streak" class="hidden text-base sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-3 py-1">Day 1</span>
     </div>
     <div class="flex items-center gap-2 sm:gap-3">
@@ -40,17 +41,25 @@
     </div>
   </header>
 
-  <section id="level-info" class="hidden w-full max-w-3xl bg-white border-[3px] border-black rounded-2xl px-4 py-3 flex flex-col gap-1 shadow-md">
-    <div class="flex items-baseline justify-between gap-3">
+  <section id="level-info" class="hidden w-full max-w-3xl bg-white border-[3px] border-black rounded-2xl px-4 py-3 flex flex-col gap-2 shadow-md">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
       <div id="level-name" class="text-xl sm:text-2xl font-bold">Level 1</div>
-      <div class="flex items-baseline gap-2">
-        <span id="moves-label" class="text-base sm:text-lg font-bold uppercase tracking-wider text-gray-700">Moves</span>
-        <span id="moves" class="text-3xl sm:text-4xl font-bold tabular-nums leading-none">20</span>
+      <div class="flex items-center gap-3">
+        <div id="projected-stars" class="text-2xl sm:text-3xl text-yellow-500 leading-none tabular-nums" aria-label="0 of 3 stars projected">★★★</div>
+        <div class="flex items-baseline gap-2">
+          <span id="moves-label" class="text-base sm:text-lg font-bold uppercase tracking-wider text-gray-700">Moves</span>
+          <span id="moves" class="text-3xl sm:text-4xl font-bold tabular-nums leading-none">20</span>
+        </div>
       </div>
     </div>
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
+      <span id="objective-icon" class="hidden w-7 h-7 sm:w-8 sm:h-8 shrink-0" aria-hidden="true"></span>
       <div id="objective-text" class="text-lg sm:text-xl">Reach 400 points</div>
-      <div id="objective-progress" class="text-lg sm:text-xl font-bold tabular-nums">0 / 400</div>
+      <div id="objective-progress" class="text-lg sm:text-xl font-bold tabular-nums ml-auto">0 / 400</div>
+    </div>
+    <div class="relative h-3 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+      <div id="objective-fill" class="absolute inset-y-0 left-0 bg-yellow-400 transition-[width] duration-300 ease-out" style="width: 0%"></div>
+      <span id="objective-delta" class="hidden pointer-events-none absolute -top-7 right-2 text-lg font-bold text-pink-700"></span>
     </div>
   </section>
 
@@ -85,6 +94,17 @@
   </footer>
 
   <div id="particles" class="pointer-events-none fixed inset-0 z-30 overflow-hidden" aria-hidden="true"></div>
+
+  <div
+    id="level-intro"
+    class="hidden pointer-events-none fixed top-20 sm:top-28 left-1/2 -translate-x-1/2 z-40 bg-white border-[4px] border-black rounded-3xl shadow-2xl px-8 py-5 sm:py-6 max-w-[92vw] sm:w-[520px] text-center"
+    aria-live="polite"
+  >
+    <div id="li-tag" class="text-base sm:text-lg font-bold uppercase tracking-wider text-pink-700">Level 1 of 8</div>
+    <div id="li-name" class="text-3xl sm:text-4xl font-bold mt-1">First steps</div>
+    <div id="li-hint" class="text-xl sm:text-2xl mt-2">Reach 400 points</div>
+    <div id="li-moves" class="text-lg sm:text-xl mt-2 text-gray-700">20 moves</div>
+  </div>
 
   <div id="level-overlay" class="hidden fixed inset-0 bg-black/60 z-40" aria-hidden="true"></div>
   <div

@@ -24,9 +24,13 @@ import {
   clearHintGlow,
   showAchievement,
   setLevelUI,
+  setLevelChip,
   showLevelComplete,
   showLevelFail,
   hideLevelOverlay,
+  bumpMoveCounter,
+  flashObjectiveDelta,
+  showLevelIntro,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -123,12 +127,31 @@ function refreshLevelUI() {
     target: p.target,
     mode: state.settings.mode,
   });
+  setLevelChip(
+    state.level,
+    state.settings.mode,
+    state.level ? state.levelProgress.stars[state.level.id] || 0 : 0
+  );
 }
 
 function recordClearedTypes(toClearWithTypes) {
+  let objectiveDelta = 0;
+  const obj = state.level && state.level.objective;
+  const trackedType = obj && obj.kind === 'clearType' ? obj.type : null;
   for (const t of toClearWithTypes) {
     if (t == null) continue;
     state.progress.type[t] = (state.progress.type[t] || 0) + 1;
+    if (t === trackedType) objectiveDelta++;
+  }
+  if (objectiveDelta > 0) flashObjectiveDelta(`+${objectiveDelta}`);
+}
+
+function flashObjectiveProgress(specialsCreatedCount) {
+  const obj = state.level && state.level.objective;
+  if (!obj) return;
+  if (obj.kind === 'matches') flashObjectiveDelta('+1');
+  else if (obj.kind === 'specials' && specialsCreatedCount > 0) {
+    flashObjectiveDelta(`+${specialsCreatedCount}`);
   }
 }
 
@@ -137,6 +160,7 @@ function consumeMove() {
   if (state.movesRemaining > 0) {
     state.movesRemaining--;
     refreshLevelUI();
+    bumpMoveCounter();
   }
 }
 
@@ -272,6 +296,7 @@ async function runComboTurn(combo) {
   state.board.clear(cleared);
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
+  flashObjectiveProgress(0);
   const earned = calcScore(cleared, 2);
   state.score += earned;
   setScore(state.score, { animate: true });
@@ -380,6 +405,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   state.progress.specials += specialsCreated.length;
+  flashObjectiveProgress(specialsCreated.length);
 
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
@@ -436,6 +462,7 @@ function startLevel(levelId) {
   state.movesRemaining = state.level.moves;
   refreshLevelUI();
   renderBoard(state.board, state);
+  showLevelIntro(state.level, LEVELS.length);
   scheduleHint();
 }
 

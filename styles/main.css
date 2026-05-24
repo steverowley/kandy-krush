@@ -93,6 +93,65 @@ body.size-large  { --board-size: min(99vw, 900px); }
   background: #FFD60A;
 }
 
+/* Move counter urgency */
+#moves.moves-low {
+  color: #d97706;
+}
+#moves.moves-critical {
+  color: #b91c1c;
+  animation: moves-pulse 700ms ease-in-out infinite;
+}
+@keyframes moves-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+#moves.move-bump {
+  animation: move-bump 360ms ease-out;
+}
+@keyframes move-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* Objective progress delta */
+#objective-delta {
+  transition: transform 240ms ease-out, opacity 240ms ease-out;
+  transform: translateY(6px) scale(0.85);
+  opacity: 0;
+}
+#objective-delta.show {
+  transform: translateY(0) scale(1.15);
+  opacity: 1;
+}
+
+/* Level intro card */
+#level-intro {
+  transition: transform 280ms cubic-bezier(.2,.8,.3,1.05), opacity 280ms ease-out;
+  transform: translate(-50%, -16px) scale(0.92);
+  opacity: 0;
+}
+#level-intro.show {
+  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+}
+
+body.theme-hc #level-intro {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #level-intro #li-name { color: #fff; }
+body.theme-hc #level-intro #li-tag { color: #FFD60A; }
+body.theme-hc #level-intro #li-hint { color: #fff; }
+body.theme-hc #level-intro #li-moves { color: #d4d4d4; }
+
+body.theme-hc #level-chip {
+  background: #FFD60A;
+  color: #000;
+  border-color: #000;
+}
+
 /* Particle layer */
 #particles { contain: layout style; }
 .particle { position: absolute; pointer-events: none; will-change: transform, opacity; }
