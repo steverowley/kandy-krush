@@ -151,66 +151,99 @@ export function playLevelFail() {
   tone(294, 900, 'sine', 0.07, 240);
 }
 
-// --- Background music ---
-// A warm I-V-vi-IV progression in C major — the classic "happy" pop loop
-// — sitting in the upper-mid octave so it never feels droney. Each chord
-// crossfades into the next with a subtle bell on top for sparkle.
-// Capped at 4% gain so it sits comfortably under SFX.
+// --- Background music: lo-fi pad ---
+// Slow jazzy chord changes routed through a low-pass filter for that
+// muffled-vinyl warmth, plus a quiet white-noise crackle bed underneath.
+// Pure Web Audio, no samples. Capped at ~3.5% gain so it stays under SFX.
 const MUSIC_CHORDS = [
-  // C major   (I)   — C5, E5, G5
-  [523.25, 659.25, 783.99],
-  // G major   (V)   — G4, B4, D5
-  [392.00, 493.88, 587.33],
-  // A minor   (vi)  — A4, C5, E5
-  [440.00, 523.25, 659.25],
-  // F major   (IV)  — F4, A4, C5
-  [349.23, 440.00, 523.25],
-];
-const MUSIC_BELLS = [
-  // Top-octave sparkle that sits above each chord; just one note each.
-  1046.50, // C6
-  987.77,  // B5
-  1318.51, // E6
-  1046.50, // C6
+  // Fmaj7 — F4, A4, C5, E5
+  [349.23, 440.00, 523.25, 659.25],
+  // Em7  — E4, G4, B4, D5
+  [329.63, 392.00, 493.88, 587.33],
+  // Dm7  — D4, F4, A4, C5
+  [293.66, 349.23, 440.00, 523.25],
+  // Cmaj7 — C4, E4, G4, B4
+  [261.63, 329.63, 392.00, 493.88],
 ];
 let musicChordIndex = 0;
+let crackleTimer = null;
 
-function playChord(chord, bellFreq, startAt, holdMs, fadeMs) {
+function playLoFiChord(chord, startAt, holdMs, fadeMs) {
   if (muted || !ctx) return [];
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1100, startAt);
+  filter.Q.setValueAtTime(0.6, startAt);
+
   const masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(0, startAt);
-  masterGain.gain.linearRampToValueAtTime(0.04, startAt + fadeMs / 1000);
-  masterGain.gain.setValueAtTime(0.04, startAt + (holdMs - fadeMs) / 1000);
+  masterGain.gain.linearRampToValueAtTime(0.035, startAt + fadeMs / 1000);
+  masterGain.gain.setValueAtTime(0.035, startAt + (holdMs - fadeMs) / 1000);
   masterGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
-  masterGain.connect(ctx.destination);
+
+  filter.connect(masterGain).connect(ctx.destination);
 
   const oscs = [];
   for (const freq of chord) {
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, startAt);
-    // Tiny detune for warmth.
-    osc.detune.setValueAtTime((Math.random() - 0.5) * 6, startAt);
-    osc.connect(masterGain);
+    // Wider detune (±8 cents) for that hazy lo-fi chorus.
+    osc.detune.setValueAtTime((Math.random() - 0.5) * 16, startAt);
+    osc.connect(filter);
     osc.start(startAt);
     osc.stop(startAt + holdMs / 1000 + 0.1);
     oscs.push(osc);
   }
-  if (bellFreq) {
-    const bellGain = ctx.createGain();
-    bellGain.gain.setValueAtTime(0, startAt);
-    bellGain.gain.linearRampToValueAtTime(0.025, startAt + 0.6);
-    bellGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
-    bellGain.connect(ctx.destination);
-    const bell = ctx.createOscillator();
-    bell.type = 'sine';
-    bell.frequency.setValueAtTime(bellFreq, startAt);
-    bell.connect(bellGain);
-    bell.start(startAt);
-    bell.stop(startAt + holdMs / 1000 + 0.1);
-    oscs.push(bell);
-  }
+  // A second pad an octave down for body, very low volume.
+  const subGain = ctx.createGain();
+  subGain.gain.setValueAtTime(0, startAt);
+  subGain.gain.linearRampToValueAtTime(0.018, startAt + fadeMs / 1000);
+  subGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
+  subGain.connect(filter);
+  const sub = ctx.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(chord[0] / 2, startAt);
+  sub.connect(subGain);
+  sub.start(startAt);
+  sub.stop(startAt + holdMs / 1000 + 0.1);
+  oscs.push(sub);
+
   return oscs;
+}
+
+// Quiet white-noise burst — vinyl crackle. Scheduled at random intervals
+// (180-720ms apart) while music is enabled.
+function playCrackle() {
+  if (muted || !ctx || !musicNodes || musicNodes.stopped) return;
+  try {
+    const len = 0.04;
+    const sr = ctx.sampleRate;
+    const buf = ctx.createBuffer(1, Math.floor(len * sr), sr);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(2400, ctx.currentTime);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.008, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + len);
+    src.connect(filter).connect(g).connect(ctx.destination);
+    src.start(ctx.currentTime);
+    src.stop(ctx.currentTime + len + 0.02);
+  } catch {}
+}
+
+function scheduleNextCrackle() {
+  if (!musicNodes || musicNodes.stopped || muted) {
+    crackleTimer = null;
+    return;
+  }
+  playCrackle();
+  const next = 180 + Math.random() * 540;
+  crackleTimer = setTimeout(scheduleNextCrackle, next);
 }
 
 export function setMusicEnabled(on) {
@@ -225,18 +258,18 @@ function startMusic() {
   if (!c) return;
   musicNodes = { oscs: [], stopped: false };
   scheduleNextChord();
+  scheduleNextCrackle();
 }
 
 function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
   const c = ensureCtx();
   if (!c) return;
-  const holdMs = 6500;
-  const fadeMs = 1800;
+  const holdMs = 10000;
+  const fadeMs = 3600;
   const chord = MUSIC_CHORDS[musicChordIndex];
-  const bell = MUSIC_BELLS[musicChordIndex];
   musicChordIndex = (musicChordIndex + 1) % MUSIC_CHORDS.length;
-  const oscs = playChord(chord, bell, c.currentTime, holdMs, fadeMs);
+  const oscs = playLoFiChord(chord, c.currentTime, holdMs, fadeMs);
   musicNodes.oscs.push(...oscs);
   musicTimer = setTimeout(() => {
     musicNodes.oscs = musicNodes.oscs.filter((o) => {
@@ -251,6 +284,10 @@ function stopMusic() {
   if (musicTimer) {
     clearTimeout(musicTimer);
     musicTimer = null;
+  }
+  if (crackleTimer) {
+    clearTimeout(crackleTimer);
+    crackleTimer = null;
   }
   if (musicNodes) {
     musicNodes.stopped = true;
