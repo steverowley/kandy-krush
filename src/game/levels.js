@@ -309,6 +309,71 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 29,
+    name: 'Pumpkin spice',
+    moves: 24,
+    objective: { kind: 'clearType', type: 3, target: 15 },
+    hint: 'Clear 15 orange diamonds.',
+  },
+  {
+    id: 30,
+    name: 'Pop pop pop',
+    moves: 22,
+    objective: { kind: 'specials', target: 3 },
+    hint: 'Make 3 special candies in 22 moves.',
+  },
+  {
+    id: 31,
+    name: 'Meadow stars',
+    moves: 24,
+    objective: { kind: 'clearType', type: 4, target: 14 },
+    hint: 'Clear 14 green stars. Locks guard the corners.',
+    obstacles: {
+      locks: [
+        [0, 0, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 32,
+    name: 'Plum punch',
+    moves: 26,
+    objective: { kind: 'clearType', type: 5, target: 14 },
+    hint: 'Clear 14 purple hearts. Some sit on jelly.',
+    obstacles: {
+      jelly: [
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 33,
+    name: 'Match parade',
+    moves: 30,
+    objective: { kind: 'matches', target: 20 },
+    hint: 'Make 20 matches. Quick clears count, big ones count more.',
+  },
+  {
+    id: 34,
+    name: 'Sweetest dream',
+    moves: 38,
+    objective: { kind: 'score', target: 3500 },
+    hint: 'The sweetest of all: jelly, locks, and 3,500 to climb.',
+    tip: 'Hammer through locks. Bombs clear colors. Take your time.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [5, 0, 2],
+        [0, 5, 2], [5, 5, 2],
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+      locks: [
+        [1, 1, 1], [4, 1, 1],
+        [1, 4, 1], [4, 4, 1],
+        [0, 2, 1], [5, 2, 1],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
