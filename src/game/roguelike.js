@@ -126,7 +126,11 @@ export const SKILL_TREE = [
   { id: 'wider-choice', cost: 40, name: 'Wider Choice', desc: 'Upgrade picker shows 4 choices instead of 3.' },
   { id: 'score-sage',   cost: 35, name: 'Score Sage',   desc: 'All scores in roguelike runs +10%.' },
   { id: 'boss-bonus',   cost: 50, name: 'Boss Slayer',  desc: 'Each boss cleared grants +5 extra gems.' },
+  { id: 'extra-life-1', cost: 35, name: 'Extra Life',   desc: 'Start each run with one extra life (total 4).' },
+  { id: 'extra-life-2', cost: 70, name: 'Two Extra Lives', desc: 'Start each run with two extra lives (total 5).' },
 ];
+
+export const RUN_LIVES_BASE = 3;
 
 export function ownedSkills(skillMap) {
   if (!skillMap || typeof skillMap !== 'object') return new Set();

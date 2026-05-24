@@ -21,6 +21,7 @@ import {
   categoryColor,
   SKILL_TREE,
   ownedSkills,
+  RUN_LIVES_BASE,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -203,6 +204,15 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2025-05-24-7l',
+    items: [
+      'Roguelike theme rebuilt for readability — solid dark slate, pure white text, hot-pink + gold only on borders and chips. Every label, dialog, card and toast is now legible.',
+      'Lives system added — every run starts with 3 lives (♥♥♥ on the chip). Failing a slot costs one life. Out of lives = run over.',
+      'New meta skills in the Skill Tree: Extra Life (35 💎) and Two Extra Lives (70 💎) — bring more lives into every future run.',
+      'Mode-switch animations rebuilt — each mode has its own drawn-out animation: a 1.6s blood-red iris-blast into Roguelike, a 1.3s sunshine burst into Levels, a 1.1s pastel sweep into Free Play.',
+    ],
+  },
   {
     id: '2025-05-24-7k',
     items: [
@@ -387,15 +397,27 @@ function preservingReshuffle() {
 function playModeTransition(mode) {
   const el = document.getElementById('mode-transition');
   if (!el) return;
-  el.classList.remove('show', 'wicked', 'bright');
-  el.classList.add(mode === 'roguelike' ? 'wicked' : 'bright');
-  void el.offsetWidth;
-  el.classList.add('show');
+  el.classList.remove('show', 'wicked', 'bright', 'levels');
+  let cls = 'bright';
+  let duration = 1100;
   if (mode === 'roguelike') {
+    cls = 'wicked';
+    duration = 1600;
     haptics.epic();
     sfx.playObjectiveComplete('specials');
+    screenShake(8, 600);
+  } else if (mode === 'levels') {
+    cls = 'levels';
+    duration = 1300;
+    sfx.playRestart();
+    haptics.specialBirth();
+  } else {
+    sfx.playSwap();
   }
-  setTimeout(() => el.classList.remove('show'), 1000);
+  el.classList.add(cls);
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
 }
 
 function persist() {
@@ -497,16 +519,24 @@ if (isIOS() && shouldShowInstallPrompt()) {
   setTimeout(() => showInstallToast('ios'), 3000);
 }
 
+function maxLivesForRun() {
+  let lives = RUN_LIVES_BASE;
+  if (hasMeta('extra-life-1')) lives += 1;
+  if (hasMeta('extra-life-2')) lives += 1;
+  return lives;
+}
+
 function startRoguelikeRun() {
   state.inRoguelikeRun = true;
-  // If we're already partway through a run (came back to the app),
-  // keep going from that slot. Otherwise reset to slot 1.
   if (!state.roguelike.currentSlot || state.roguelike.currentSlot < 1) {
     state.roguelike.currentSlot = 1;
   }
+  // Refresh lives if this is a fresh start (slot 1 or zero lives).
+  if (state.roguelike.currentSlot === 1 || !state.roguelike.livesRemaining) {
+    state.roguelike.livesRemaining = maxLivesForRun();
+  }
   if (state.roguelike.currentSlot === 1) {
     state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
-    // Fresh run -> wipe in-run upgrades
     state.runUpgrades = [];
   }
   persist();
@@ -805,6 +835,8 @@ function refreshLevelUI() {
       total: RUN_LENGTH,
       gems: state.roguelike.gems,
       isBoss: !!(state.level && state.level.isBoss),
+      lives: state.roguelike.livesRemaining || 0,
+      maxLives: maxLivesForRun(),
     });
   } else {
     setLevelChip(
@@ -929,6 +961,35 @@ function checkLevelOutcome() {
     speech.speak('Try again');
     if (state.inRoguelikeRun) {
       const slotAtFail = state.roguelike.currentSlot;
+      // Decrement a life. If lives remain, offer a retry.
+      // If lives hit zero, the run is over.
+      state.roguelike.livesRemaining = Math.max(0, (state.roguelike.livesRemaining || 0) - 1);
+      persist();
+      refreshLevelUI();
+      if (state.roguelike.livesRemaining <= 0) {
+        // Out of lives — end run; show terminal fail dialog.
+        const reached = slotAtFail;
+        const gems = gemsEarned(reached, false, metaSkills());
+        state.roguelike.gems = (state.roguelike.gems || 0) + gems;
+        state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
+        state.roguelike.currentSlot = 1;
+        state.inRoguelikeRun = false;
+        state.runUpgrades = [];
+        persist();
+        flashMessage(`Run over — out of lives. +${gems} 💎`, 2400);
+        speech.speak(`Out of lives. Run over. You earned ${gems} gems.`);
+        showLevelFail({
+          level: { ...state.level, id: slotAtFail },
+          score: state.score,
+          canSkip: true, // we repurpose Skip as "Start new run"
+          onReplay: () => startRoguelikeRun(),
+          onSkip: () => startRoguelikeRun(),
+        });
+        return;
+      }
+      const livesLeft = state.roguelike.livesRemaining;
+      flashMessage(`Life lost — ${livesLeft} ${livesLeft === 1 ? 'life' : 'lives'} left`, 1800);
+      speech.speak(`Life lost. ${livesLeft} ${livesLeft === 1 ? 'life' : 'lives'} remaining.`);
       showLevelFail({
         level: { ...state.level, id: slotAtFail },
         score: state.score,
@@ -936,9 +997,6 @@ function checkLevelOutcome() {
         onReplay: () => playRoguelikeSlot(slotAtFail),
         onSkip: () => {},
       });
-      // The run is considered "over" if she taps something other than
-      // replay; for now treat replay as continuing the run. Walking away
-      // from the fail screen by toggling Mode does endRoguelikeRun().
       return;
     }
     const replayLevelId = state.level.id;

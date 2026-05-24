@@ -32,6 +32,7 @@ const defaults = () => ({
     runsCompleted: 0,
     runsStarted: 0,
     bestSlot: 0,
+    livesRemaining: 0,
     skills: {},             // permanent meta upgrades { id: true }
   },
 });
@@ -107,6 +108,7 @@ const ROGUELIKE_DEFAULTS = {
   runsCompleted: 0,
   runsStarted: 0,
   bestSlot: 0,
+  livesRemaining: 0, // refreshed by startRoguelikeRun
 };
 
 function sanitizeRoguelike(raw) {
