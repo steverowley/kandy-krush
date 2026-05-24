@@ -509,13 +509,30 @@ export function showLevelComplete({ level, stars, score, onNext, onReplay, isLas
   if (failPanel) failPanel.classList.add('hidden');
 
   title.textContent = isLast ? `${level.name} — All done!` : `Level ${level.id} complete!`;
-  starsEl.textContent = starString(stars);
-  starsEl.setAttribute('aria-label', `${stars} of 3 stars`);
   scoreEl.textContent = `Score: ${score.toLocaleString()}`;
   nextBtn.textContent = isLast ? 'Play again' : 'Next level';
 
+  // Build three star spans with stagger delays so earned stars
+  // animate in one by one ("Angry Birds" style).
+  starsEl.innerHTML = '';
+  starsEl.setAttribute('aria-label', `${stars} of 3 stars`);
+  for (let i = 1; i <= 3; i++) {
+    const s = document.createElement('span');
+    s.className = 'lc-star';
+    const isEarned = i <= stars;
+    s.textContent = isEarned ? '★' : '☆';
+    s.style.setProperty('--star-delay', `${(i - 1) * 320}ms`);
+    if (isEarned) s.classList.add('earned');
+    starsEl.appendChild(s);
+  }
+
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+
+  // Reveal animation re-trigger
+  starsEl.classList.remove('reveal');
+  void starsEl.offsetWidth;
+  starsEl.classList.add('reveal');
 
   nextBtn.onclick = () => {
     hideLevelOverlay();
