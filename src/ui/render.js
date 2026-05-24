@@ -186,6 +186,20 @@ export function applyTheme({ contrast, size }) {
   body.classList.add(`size-${size || 'medium'}`);
 }
 
+export function showHintGlow(a, b) {
+  clearHintGlow();
+  const tA = tileEl(a.c, a.r);
+  const tB = tileEl(b.c, b.r);
+  if (tA) tA.classList.add('hint');
+  if (tB) tB.classList.add('hint');
+}
+
+export function clearHintGlow() {
+  for (const t of document.querySelectorAll('#board .tile.hint')) {
+    t.classList.remove('hint');
+  }
+}
+
 let achTimer;
 export function showAchievement(text) {
   const el = document.getElementById('achievement');
