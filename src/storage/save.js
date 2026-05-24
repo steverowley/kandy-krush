@@ -20,6 +20,7 @@ const defaults = () => ({
   levelProgress: {
     currentLevel: 1,
     stars: {},
+    bestScores: {},
   },
 });
 
@@ -65,11 +66,22 @@ export function load() {
       levelProgress: {
         currentLevel: deriveCurrentLevel(lp.currentLevel, stars),
         stars,
+        bestScores: sanitizeBestScores(lp.bestScores),
       },
     };
   } catch {
     return defaults();
   }
+}
+
+function sanitizeBestScores(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) out[k] = Math.floor(n);
+  }
+  return out;
 }
 
 function deriveCurrentLevel(saved, stars) {
