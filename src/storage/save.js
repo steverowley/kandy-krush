@@ -22,6 +22,7 @@ const defaults = () => ({
     currentLevel: 1,
     stars: {},
     bestScores: {},
+    powerupBank: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
   },
 });
 
@@ -69,6 +70,7 @@ export function load() {
         currentLevel: deriveCurrentLevel(lp.currentLevel, stars),
         stars,
         bestScores: sanitizeBestScores(lp.bestScores),
+        powerupBank: sanitizePowerupBank(lp.powerupBank),
       },
     };
   } catch {
@@ -82,6 +84,18 @@ function sanitizeBestScores(raw) {
   for (const [k, v] of Object.entries(raw)) {
     const n = Number(v);
     if (Number.isFinite(n) && n > 0) out[k] = Math.floor(n);
+  }
+  return out;
+}
+
+const POWERUP_CAP = 9;
+const POWERUP_DEFAULT_BANK = { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 };
+function sanitizePowerupBank(raw) {
+  const out = { ...POWERUP_DEFAULT_BANK };
+  if (!raw || typeof raw !== 'object') return out;
+  for (const key of Object.keys(out)) {
+    const n = Number(raw[key]);
+    if (Number.isFinite(n) && n >= 0) out[key] = Math.min(POWERUP_CAP, Math.floor(n));
   }
   return out;
 }
