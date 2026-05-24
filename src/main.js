@@ -1,5 +1,5 @@
 import { Board } from './game/board.js';
-import { findMatches, deriveNewSpecials, activationClears } from './game/match.js';
+import { findMatches, deriveNewSpecials, activationClears, detectCombo, applyCombo } from './game/match.js';
 import { applyGravity } from './game/cascade.js';
 import { calcScore } from './game/score.js';
 import { findAnyValidSwap, hasAnyValidSwap, reshuffle } from './game/hint.js';
@@ -14,6 +14,7 @@ import {
   animatePop,
   showHintGlow,
   clearHintGlow,
+  showAchievement,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -143,12 +144,63 @@ async function onTap(pos) {
   await trySwap(a, b);
 }
 
+function comboFanfare(kind) {
+  switch (kind) {
+    case 'double-rainbow': return 'WHOA!';
+    case 'rainbow-stripes': return 'POW!';
+    case 'rainbow-type': return 'Wow!';
+    case 'stripes-pair': return 'BOOM!';
+  }
+  return 'Combo!';
+}
+
+async function runComboTurn(combo) {
+  const cleared = applyCombo(state.board, combo);
+  sfx.playCascade();
+  sfx.playMatch(cleared.length, 2);
+  await animatePop(cleared);
+  state.board.clear(cleared);
+  const earned = calcScore(cleared, 2);
+  state.score += earned;
+  setScore(state.score, { animate: true });
+  achievements.onScore(state.score);
+  const banner = comboFanfare(combo.kind);
+  flashMessage(banner);
+  speech.speak(banner);
+  showAchievement(banner);
+  renderBoard(state.board, state);
+  await delay(180);
+  const fallen = applyGravity(state.board, CANDY_TYPES);
+  renderBoard(state.board, state, { fallen });
+  await delay(260);
+}
+
 async function trySwap(a, b) {
   state.busy = true;
   sfx.playSwap();
   await animateSwap(a, b);
   state.board.swap(a, b);
   renderBoard(state.board, state);
+
+  const cellAtA = state.board.cell(a.c, a.r);
+  const cellAtB = state.board.cell(b.c, b.r);
+  const combo = detectCombo(cellAtA, cellAtB, a, b);
+
+  if (combo) {
+    await runComboTurn(combo);
+    let cascadeResult = findMatches(state.board);
+    let cascadeLevel = 2;
+    while (cascadeResult.positions.length > 0) {
+      await processMatchRound(cascadeResult, cascadeLevel, null);
+      cascadeResult = findMatches(state.board);
+      cascadeLevel++;
+    }
+    maybeUpdateBest();
+    await ensureMovesAvailable();
+    state.busy = false;
+    scheduleHint();
+    return;
+  }
 
   let result = findMatches(state.board);
   if (result.positions.length === 0) {
@@ -165,56 +217,7 @@ async function trySwap(a, b) {
   let cascadeLevel = 1;
   let swapTarget = b;
   while (result.positions.length > 0) {
-    const specialsCreated = deriveNewSpecials(result.groups, swapTarget);
-    const newSpecialKeys = new Set(specialsCreated.map((s) => `${s.c},${s.r}`));
-
-    const activated = activationClears(state.board, result.positions);
-    const specialsActivated = result.positions
-      .map((p) => state.board.specialAt(p.c, p.r))
-      .filter(Boolean);
-
-    const allCleared = new Set();
-    for (const p of result.positions) allCleared.add(`${p.c},${p.r}`);
-    for (const p of activated) allCleared.add(`${p.c},${p.r}`);
-
-    const toClear = [...allCleared]
-      .filter((k) => !newSpecialKeys.has(k))
-      .map((k) => {
-        const [c, r] = k.split(',').map(Number);
-        return { c, r };
-      });
-
-    sfx.playMatch(allCleared.size, cascadeLevel);
-    if (cascadeLevel >= 2) sfx.playCascade();
-
-    await animatePop(toClear);
-    state.board.clear(toClear);
-
-    for (const s of specialsCreated) {
-      state.board.set(s.c, s.r, { type: s.type, special: s.kind });
-    }
-
-    const earned = calcScore([...allCleared], cascadeLevel);
-    state.score += earned;
-    setScore(state.score, { animate: true });
-    achievements.onScore(state.score);
-
-    const ctx = {
-      matchCount: allCleared.size,
-      cascadeLevel,
-      specialsCreated,
-      specialsActivated,
-    };
-    const msg = messageFor(ctx);
-    flashMessage(msg);
-    speech.speak(msg);
-    achievements.onMatch(ctx);
-
-    renderBoard(state.board, state);
-    await delay(160);
-    const fallen = applyGravity(state.board, CANDY_TYPES);
-    renderBoard(state.board, state, { fallen });
-    await delay(260);
+    await processMatchRound(result, cascadeLevel, swapTarget);
     result = findMatches(state.board);
     cascadeLevel++;
     swapTarget = null;
@@ -224,6 +227,59 @@ async function trySwap(a, b) {
   await ensureMovesAvailable();
   state.busy = false;
   scheduleHint();
+}
+
+async function processMatchRound(result, cascadeLevel, swapTarget) {
+  const specialsCreated = deriveNewSpecials(result.groups, swapTarget);
+  const newSpecialKeys = new Set(specialsCreated.map((s) => `${s.c},${s.r}`));
+
+  const activated = activationClears(state.board, result.positions);
+  const specialsActivated = result.positions
+    .map((p) => state.board.specialAt(p.c, p.r))
+    .filter(Boolean);
+
+  const allCleared = new Set();
+  for (const p of result.positions) allCleared.add(`${p.c},${p.r}`);
+  for (const p of activated) allCleared.add(`${p.c},${p.r}`);
+
+  const toClear = [...allCleared]
+    .filter((k) => !newSpecialKeys.has(k))
+    .map((k) => {
+      const [c, r] = k.split(',').map(Number);
+      return { c, r };
+    });
+
+  sfx.playMatch(allCleared.size, cascadeLevel);
+  if (cascadeLevel >= 2) sfx.playCascade();
+
+  await animatePop(toClear);
+  state.board.clear(toClear);
+
+  for (const s of specialsCreated) {
+    state.board.set(s.c, s.r, { type: s.type, special: s.kind });
+  }
+
+  const earned = calcScore([...allCleared], cascadeLevel);
+  state.score += earned;
+  setScore(state.score, { animate: true });
+  achievements.onScore(state.score);
+
+  const ctx = {
+    matchCount: allCleared.size,
+    cascadeLevel,
+    specialsCreated,
+    specialsActivated,
+  };
+  const msg = messageFor(ctx);
+  flashMessage(msg);
+  speech.speak(msg);
+  achievements.onMatch(ctx);
+
+  renderBoard(state.board, state);
+  await delay(160);
+  const fallen = applyGravity(state.board, CANDY_TYPES);
+  renderBoard(state.board, state, { fallen });
+  await delay(260);
 }
 
 function init({ chime = false } = {}) {
