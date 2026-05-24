@@ -37,8 +37,11 @@ function svgFor(shape, color) {
   return open + inner + close;
 }
 
-export function renderBoard(board, state) {
+const cellKey = (c, r) => `${c},${r}`;
+
+export function renderBoard(board, state, opts = {}) {
   const root = document.getElementById('board');
+  const fallenSet = opts.fallen ? new Set(opts.fallen.map(p => cellKey(p.c, p.r))) : null;
   const frag = document.createDocumentFragment();
   for (let r = 0; r < board.rows; r++) {
     for (let c = 0; c < board.cols; c++) {
@@ -62,14 +65,56 @@ export function renderBoard(board, state) {
       if (state.selected && state.selected.c === c && state.selected.r === r) {
         tile.classList.add('selected');
       }
+      if (fallenSet && fallenSet.has(cellKey(c, r))) {
+        tile.classList.add('falling');
+      }
       frag.appendChild(tile);
     }
   }
   root.replaceChildren(frag);
 }
 
-export function setScore(n) {
-  document.getElementById('score').textContent = n.toLocaleString();
+export function tileEl(c, r) {
+  return document.querySelector(`#board .tile[data-c="${c}"][data-r="${r}"]`);
+}
+
+export async function animateSwap(a, b) {
+  const tA = tileEl(a.c, a.r);
+  const tB = tileEl(b.c, b.r);
+  if (!tA || !tB) return;
+  const ra = tA.getBoundingClientRect();
+  const rb = tB.getBoundingClientRect();
+  const dx = rb.left - ra.left;
+  const dy = rb.top - ra.top;
+  tA.style.transition = tB.style.transition = 'transform 220ms ease';
+  tA.style.zIndex = tB.style.zIndex = '4';
+  tA.style.transform = `translate(${dx}px, ${dy}px)`;
+  tB.style.transform = `translate(${-dx}px, ${-dy}px)`;
+  await new Promise((res) => setTimeout(res, 235));
+}
+
+export async function animatePop(positions) {
+  for (const p of positions) {
+    const t = tileEl(p.c, p.r);
+    if (t) t.classList.add('popping');
+  }
+  await new Promise((res) => setTimeout(res, 240));
+}
+
+export function setScore(n, { animate = false } = {}) {
+  const el = document.getElementById('score');
+  const old = Number(el.textContent.replace(/,/g, '')) || 0;
+  el.textContent = n.toLocaleString();
+  if (animate && n !== old) {
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+}
+
+export function setBest(n) {
+  const el = document.getElementById('best');
+  if (el) el.textContent = n.toLocaleString();
 }
 
 let msgTimer;
@@ -82,4 +127,11 @@ export function flashMessage(text, holdMs = 1200) {
       el.textContent = '';
     }, holdMs);
   }
+}
+
+export function applyTheme({ contrast, size }) {
+  const body = document.body;
+  body.classList.toggle('theme-hc', !!contrast);
+  body.classList.remove('size-small', 'size-medium', 'size-large');
+  body.classList.add(`size-${size || 'medium'}`);
 }

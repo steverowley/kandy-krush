@@ -11,23 +11,36 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
 </head>
-<body class="min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
-  <header class="w-full max-w-3xl flex items-center justify-between gap-4">
+<body class="size-medium min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
+  <header class="w-full max-w-3xl flex items-center justify-between gap-3">
     <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
-    <button
-      id="restart"
-      type="button"
-      class="text-xl sm:text-2xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-5 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
-      aria-label="Start over"
-    >Start Over</button>
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button
+        id="settings-open"
+        type="button"
+        class="text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
+        aria-label="Open settings"
+        aria-haspopup="dialog"
+      >Settings</button>
+      <button
+        id="restart"
+        type="button"
+        class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
+        aria-label="Start over"
+      >Start Over</button>
+    </div>
   </header>
 
   <section class="w-full max-w-3xl flex items-end justify-between gap-4" aria-live="polite">
     <div>
-      <div class="text-2xl sm:text-3xl font-bold">Score</div>
+      <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Score</div>
       <div id="score" class="text-5xl sm:text-7xl font-bold tabular-nums leading-none">0</div>
     </div>
-    <div id="message" class="text-2xl sm:text-4xl font-bold text-pink-700 min-h-[1.5em] text-right"></div>
+    <div>
+      <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Best</div>
+      <div id="best" class="text-3xl sm:text-5xl font-bold tabular-nums leading-none text-gray-700">0</div>
+    </div>
+    <div id="message" class="text-2xl sm:text-4xl font-bold text-pink-700 min-h-[1.5em] text-right flex-1"></div>
   </section>
 
   <main
@@ -40,6 +53,51 @@
   <footer class="text-base sm:text-lg text-gray-600 max-w-3xl text-center">
     Tap a candy, then tap one next to it to swap. Match three or more in a row.
   </footer>
+
+  <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
+  <div
+    id="settings-panel"
+    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col gap-5"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-title"
+    aria-hidden="true"
+  >
+    <div class="flex items-center justify-between gap-3">
+      <h2 id="settings-title" class="text-3xl font-bold">Settings</h2>
+      <button
+        id="settings-close"
+        type="button"
+        class="text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-2"
+        aria-label="Close settings"
+      >Done</button>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <button
+        id="setting-sound"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        aria-pressed="true"
+      >Sound: On</button>
+
+      <button
+        id="setting-contrast"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        aria-pressed="false"
+      >High Contrast: Off</button>
+
+      <div>
+        <div class="text-xl font-bold mb-2">Tile size</div>
+        <div class="grid grid-cols-3 gap-2">
+          <button data-size="small"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false">Cozy</button>
+          <button data-size="medium" type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="true">Big</button>
+          <button data-size="large"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false">Huge</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="src/main.js"></script>
 </body>
