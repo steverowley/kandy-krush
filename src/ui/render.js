@@ -420,7 +420,7 @@ export function showWelcome(onStart) {
 }
 
 let introTimer;
-export function showLevelIntro(level, totalLevels = 8) {
+export function showLevelIntro(level, totalLevels = 8, opts = {}) {
   const card = document.getElementById('level-intro');
   if (!card || !level) return;
   document.getElementById('li-tag').textContent = `Level ${level.id} of ${totalLevels}`;
@@ -428,6 +428,19 @@ export function showLevelIntro(level, totalLevels = 8) {
   document.getElementById('li-hint').textContent = level.hint;
   document.getElementById('li-moves').textContent =
     level.moves === 1 ? '1 move' : `${level.moves} moves`;
+  const bestEl = document.getElementById('li-best');
+  if (bestEl) {
+    const stars = opts.bestStars || 0;
+    const score = opts.bestScore || 0;
+    if (stars > 0 || score > 0) {
+      const starStr = stars > 0 ? '★'.repeat(stars) : '';
+      const scoreStr = score > 0 ? `${score.toLocaleString()} pts` : '';
+      bestEl.textContent = `Your best: ${starStr}${stars > 0 && score > 0 ? '  ' : ''}${scoreStr}`;
+      bestEl.classList.remove('hidden');
+    } else {
+      bestEl.classList.add('hidden');
+    }
+  }
   card.classList.remove('hidden');
   card.classList.remove('show');
   void card.offsetWidth;

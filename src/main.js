@@ -202,6 +202,11 @@ function checkLevelOutcome() {
     const improved = stars > prev;
     const firstClear = prev === 0;
     if (improved) state.levelProgress.stars[state.level.id] = stars;
+    if (!state.levelProgress.bestScores) state.levelProgress.bestScores = {};
+    const prevBest = state.levelProgress.bestScores[state.level.id] || 0;
+    if (state.score > prevBest) {
+      state.levelProgress.bestScores[state.level.id] = state.score;
+    }
     const next = nextLevelId(state.level.id);
     if (next && next > (state.levelProgress.currentLevel || 0)) {
       state.levelProgress.currentLevel = next;
@@ -798,9 +803,18 @@ function startLevel(levelId, { announce = true } = {}) {
   refreshLevelUI();
   renderBoard(state.board, state);
   if (announce) {
-    showLevelIntro(state.level, LEVELS.length);
+    const bestStars = state.levelProgress.stars[state.level.id] || 0;
+    const bestScore = (state.levelProgress.bestScores || {})[state.level.id] || 0;
+    showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
+    let bestPhrase = '';
+    if (bestStars > 0 || bestScore > 0) {
+      const parts = [];
+      if (bestStars > 0) parts.push(`${bestStars} ${bestStars === 1 ? 'star' : 'stars'}`);
+      if (bestScore > 0) parts.push(`${bestScore.toLocaleString()} points`);
+      bestPhrase = ` Your best: ${parts.join(', ')}.`;
+    }
     speech.speak(
-      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
+      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}`
     );
   }
   scheduleHint();
