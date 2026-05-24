@@ -1,3 +1,5 @@
+import { LEVELS } from '../game/levels.js';
+
 const KEY = 'sweet-match.v1';
 const SIZES = ['small', 'medium', 'large'];
 const MODES = ['levels', 'free'];
@@ -59,13 +61,23 @@ export function load() {
         mode: MODES.includes(s.mode) ? s.mode : 'levels',
       },
       levelProgress: {
-        currentLevel: Number(lp.currentLevel) || 1,
+        currentLevel: deriveCurrentLevel(lp.currentLevel, stars),
         stars,
       },
     };
   } catch {
     return defaults();
   }
+}
+
+function deriveCurrentLevel(saved, stars) {
+  const savedNum = Number(saved) || 1;
+  const starredIds = Object.keys(stars)
+    .map(Number)
+    .filter((n) => Number.isFinite(n) && n >= 1);
+  const maxStarred = starredIds.length ? Math.max(...starredIds) : 0;
+  const earned = Math.max(savedNum, maxStarred + 1, 1);
+  return Math.min(LEVELS.length, earned);
 }
 
 export function save(state) {
