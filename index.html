@@ -105,8 +105,10 @@
     <button
       id="pu-hammer"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Hammer power-up: smash one candy"
+      title="Smash one candy"
+      data-tip="Smash any one candy"
     >
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M14 4l6 6-4 4-6-6z"/>
@@ -114,12 +116,15 @@
       </svg>
       <span>Hammer</span>
       <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">3</span>
+      <span class="pu-tip" aria-hidden="true">Smash any one candy</span>
     </button>
     <button
       id="pu-shuffle"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Shuffle power-up: rearrange the board"
+      title="Mix up the board"
+      data-tip="Mix up the board"
     >
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M16 3h5v5"/>
@@ -130,12 +135,15 @@
       </svg>
       <span>Shuffle</span>
       <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">2</span>
+      <span class="pu-tip" aria-hidden="true">Mix up the board</span>
     </button>
     <button
       id="pu-colorbomb"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Color bomb power-up: clear every candy of one color"
+      title="Clear every candy of one color"
+      data-tip="Clear every candy of one color"
     >
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
         <defs>
@@ -151,12 +159,15 @@
       </svg>
       <span>Bomb</span>
       <span id="pu-colorbomb-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+      <span class="pu-tip" aria-hidden="true">Clear every candy of one color</span>
     </button>
     <button
       id="pu-plusmoves"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Plus three moves power-up: add three moves"
+      title="Add 3 moves to your budget"
+      data-tip="Add 3 moves to your budget"
     >
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9"/>
@@ -165,6 +176,7 @@
       </svg>
       <span>+3 Moves</span>
       <span id="pu-plusmoves-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+      <span class="pu-tip" aria-hidden="true">Add 3 moves to your budget</span>
     </button>
     <div id="pu-hint" class="hidden w-full text-center text-base sm:text-lg text-pink-700 font-bold">Tap a candy to smash</div>
   </section>
