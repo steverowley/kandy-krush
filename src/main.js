@@ -4,6 +4,14 @@ import { applyGravity } from './game/cascade.js';
 import { calcScore } from './game/score.js';
 import { findAnyValidSwap, hasAnyValidSwap, reshuffle } from './game/hint.js';
 import {
+  LEVELS,
+  getLevel,
+  nextLevelId,
+  isLastLevel,
+  progressTowardObjective,
+  starsForLevel,
+} from './game/levels.js';
+import {
   renderBoard,
   setScore,
   setBest,
@@ -15,6 +23,10 @@ import {
   showHintGlow,
   clearHintGlow,
   showAchievement,
+  setLevelUI,
+  showLevelComplete,
+  showLevelFail,
+  hideLevelOverlay,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -49,6 +61,11 @@ const state = {
   busy: false,
   selected: null,
   settings: { ...persisted.settings },
+  levelProgress: { ...persisted.levelProgress },
+  level: null,
+  movesRemaining: 0,
+  progress: { type: {}, matches: 0, specials: 0 },
+  resolved: false,
 };
 
 sfx.setMuted(!state.settings.sound);
@@ -93,7 +110,91 @@ function persist() {
     streak: state.streak,
     lastPlayedDate: state.lastPlayedDate,
     settings: state.settings,
+    levelProgress: state.levelProgress,
   });
+}
+
+function refreshLevelUI() {
+  const p = progressTowardObjective(state.level, state.score, state.progress);
+  setLevelUI({
+    level: state.level,
+    movesRemaining: state.movesRemaining,
+    current: p.current,
+    target: p.target,
+    mode: state.settings.mode,
+  });
+}
+
+function recordClearedTypes(toClearWithTypes) {
+  for (const t of toClearWithTypes) {
+    if (t == null) continue;
+    state.progress.type[t] = (state.progress.type[t] || 0) + 1;
+  }
+}
+
+function consumeMove() {
+  if (state.settings.mode !== 'levels' || !state.level) return;
+  if (state.movesRemaining > 0) {
+    state.movesRemaining--;
+    refreshLevelUI();
+  }
+}
+
+function checkLevelOutcome() {
+  if (state.resolved) return;
+  if (state.settings.mode !== 'levels' || !state.level) return;
+  const p = progressTowardObjective(state.level, state.score, state.progress);
+  if (p.done) {
+    state.resolved = true;
+    const stars = starsForLevel(state.level, state.movesRemaining);
+    const prev = state.levelProgress.stars[state.level.id] || 0;
+    if (stars > prev) state.levelProgress.stars[state.level.id] = stars;
+    const next = nextLevelId(state.level.id);
+    if (next && next > (state.levelProgress.currentLevel || 0)) {
+      state.levelProgress.currentLevel = next;
+    }
+    persist();
+    spawnConfetti(48);
+    sfx.playRestart();
+    speech.speak('Level complete!');
+    showLevelComplete({
+      level: state.level,
+      stars,
+      score: state.score,
+      isLast: isLastLevel(state.level.id),
+      onNext: () => {
+        if (isLastLevel(state.level.id)) {
+          startLevel(state.levelProgress.currentLevel);
+        } else {
+          startLevel(state.levelProgress.currentLevel);
+        }
+      },
+      onReplay: () => startLevel(state.level.id),
+    });
+    return;
+  }
+  if (state.movesRemaining <= 0) {
+    state.resolved = true;
+    sfx.playInvalid();
+    speech.speak('Try again');
+    const replayLevelId = state.level.id;
+    showLevelFail({
+      level: state.level,
+      score: state.score,
+      canSkip: !isLastLevel(state.level.id),
+      onReplay: () => startLevel(replayLevelId),
+      onSkip: () => {
+        const next = nextLevelId(replayLevelId);
+        if (next) {
+          state.levelProgress.currentLevel = next;
+          persist();
+          startLevel(next);
+        } else {
+          startLevel(replayLevelId);
+        }
+      },
+    });
+  }
 }
 
 function messageFor({ matchCount, cascadeLevel, specialsCreated, specialsActivated }) {
@@ -162,12 +263,15 @@ function comboFanfare(kind) {
 
 async function runComboTurn(combo) {
   const cleared = applyCombo(state.board, combo);
+  const clearedTypes = cleared.map((p) => state.board.typeAt(p.c, p.r));
   sfx.playCascade();
   sfx.playMatch(cleared.length, 2);
   spawnPopSpecks(cleared);
   spawnConfetti(combo.kind === 'double-rainbow' ? 40 : 22);
   await animatePop(cleared);
   state.board.clear(cleared);
+  recordClearedTypes(clearedTypes);
+  state.progress.matches += 1;
   const earned = calcScore(cleared, 2);
   state.score += earned;
   setScore(state.score, { animate: true });
@@ -196,6 +300,7 @@ async function trySwap(a, b) {
   const combo = detectCombo(cellAtA, cellAtB, a, b);
 
   if (combo) {
+    consumeMove();
     await runComboTurn(combo);
     let cascadeResult = findMatches(state.board);
     let cascadeLevel = 2;
@@ -205,9 +310,11 @@ async function trySwap(a, b) {
       cascadeLevel++;
     }
     maybeUpdateBest();
+    refreshLevelUI();
     await ensureMovesAvailable();
+    checkLevelOutcome();
     state.busy = false;
-    scheduleHint();
+    if (!state.resolved) scheduleHint();
     return;
   }
 
@@ -223,6 +330,7 @@ async function trySwap(a, b) {
     return;
   }
 
+  consumeMove();
   let cascadeLevel = 1;
   let swapTarget = b;
   while (result.positions.length > 0) {
@@ -233,9 +341,11 @@ async function trySwap(a, b) {
   }
 
   maybeUpdateBest();
+  refreshLevelUI();
   await ensureMovesAvailable();
+  checkLevelOutcome();
   state.busy = false;
-  scheduleHint();
+  if (!state.resolved) scheduleHint();
 }
 
 async function processMatchRound(result, cascadeLevel, swapTarget) {
@@ -258,6 +368,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       return { c, r };
     });
 
+  const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
+
   sfx.playMatch(allCleared.size, cascadeLevel);
   if (cascadeLevel >= 2) sfx.playCascade();
   if (cascadeLevel >= 3) spawnConfetti(20);
@@ -265,6 +377,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   spawnPopSpecks(toClear);
   await animatePop(toClear);
   state.board.clear(toClear);
+  recordClearedTypes(clearedTypes);
+  state.progress.matches += 1;
+  state.progress.specials += specialsCreated.length;
 
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
@@ -295,8 +410,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   await delay(260);
 }
 
-function init({ chime = false } = {}) {
-  cancelHint();
+function resetBoard() {
   state.board = new Board(COLS, ROWS, CANDY_TYPES);
   state.board.fillNoMatches();
   if (!hasAnyValidSwap(state.board)) {
@@ -305,14 +419,44 @@ function init({ chime = false } = {}) {
   state.score = 0;
   state.selected = null;
   state.busy = false;
+  state.resolved = false;
+  state.progress = { type: {}, matches: 0, specials: 0 };
   setScore(0);
   setBest(state.highScore);
   setStreak(state.streak);
   flashMessage('');
   achievements.onNewGame();
+}
+
+function startLevel(levelId) {
+  cancelHint();
+  hideLevelOverlay();
+  state.level = getLevel(levelId);
+  resetBoard();
+  state.movesRemaining = state.level.moves;
+  refreshLevelUI();
   renderBoard(state.board, state);
-  if (chime) sfx.playRestart();
   scheduleHint();
+}
+
+function startFreePlay() {
+  cancelHint();
+  hideLevelOverlay();
+  state.level = null;
+  resetBoard();
+  state.movesRemaining = 0;
+  refreshLevelUI();
+  renderBoard(state.board, state);
+  scheduleHint();
+}
+
+function init({ chime = false } = {}) {
+  if (state.settings.mode === 'levels') {
+    startLevel(state.levelProgress.currentLevel || 1);
+  } else {
+    startFreePlay();
+  }
+  if (chime) sfx.playRestart();
 }
 
 applyTheme(state.settings);
@@ -320,17 +464,30 @@ applyTheme(state.settings);
 createSettingsUI({
   initial: state.settings,
   onChange: (next) => {
+    const modeChanged = next.mode !== state.settings.mode;
     state.settings = { ...state.settings, ...next };
     sfx.setMuted(!state.settings.sound);
     speech.setSpeechEnabled(state.settings.speech);
     applyTheme(state.settings);
     persist();
+    if (modeChanged) {
+      if (state.settings.mode === 'levels') {
+        startLevel(state.levelProgress.currentLevel || 1);
+      } else {
+        startFreePlay();
+      }
+    }
   },
 });
 
 document.getElementById('restart').addEventListener('click', () => {
   sfx.unlockAudio();
-  init({ chime: true });
+  if (state.settings.mode === 'levels') {
+    startLevel(state.level ? state.level.id : state.levelProgress.currentLevel || 1);
+  } else {
+    startFreePlay();
+  }
+  sfx.playRestart();
 });
 attachInput(onTap);
 init({ chime: false });

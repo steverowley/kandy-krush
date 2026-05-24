@@ -6,6 +6,7 @@ export function createSettingsUI({ initial, onChange }) {
   const soundBtn = document.getElementById('setting-sound');
   const speechBtn = document.getElementById('setting-speech');
   const contrastBtn = document.getElementById('setting-contrast');
+  const modeBtn = document.getElementById('setting-mode');
   const sizeButtons = Array.from(document.querySelectorAll('[data-size]'));
 
   let current = { ...initial };
@@ -23,6 +24,11 @@ export function createSettingsUI({ initial, onChange }) {
     contrastBtn.textContent = current.contrast
       ? 'High Contrast: On'
       : 'High Contrast: Off';
+
+    if (modeBtn) {
+      modeBtn.setAttribute('aria-pressed', String(current.mode === 'levels'));
+      modeBtn.textContent = current.mode === 'levels' ? 'Mode: Levels' : 'Mode: Free Play';
+    }
 
     for (const b of sizeButtons) {
       const active = b.dataset.size === current.size;
@@ -62,6 +68,11 @@ export function createSettingsUI({ initial, onChange }) {
   contrastBtn.addEventListener('click', () =>
     apply({ contrast: !current.contrast })
   );
+  if (modeBtn) {
+    modeBtn.addEventListener('click', () =>
+      apply({ mode: current.mode === 'levels' ? 'free' : 'levels' })
+    );
+  }
   for (const b of sizeButtons) {
     b.addEventListener('click', () => apply({ size: b.dataset.size }));
   }
