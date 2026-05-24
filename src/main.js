@@ -1075,7 +1075,20 @@ document.getElementById('restart').addEventListener('click', () => {
   }
   sfx.playRestart();
 });
-attachInput(onTap);
+async function onSwipe(origin, target) {
+  if (state.busy) return;
+  cancelHint();
+  sfx.unlockAudio();
+  // Treat the swipe as: select origin, then commit to target.
+  // If origin or target is a tool-armed flow, fall back to taps.
+  if (state.armedTool === 'hammer' || state.armedTool === 'colorBomb') {
+    return onTap(origin);
+  }
+  state.selected = null;
+  await trySwap(origin, target);
+}
+
+attachInput({ onTap, onSwap: onSwipe });
 
 document.addEventListener(
   'pointerdown',
