@@ -167,12 +167,60 @@ export function setStreak(days) {
   el.textContent = days === 1 ? 'Day 1' : `Day ${days} streak`;
 }
 
+function objectiveIconSvg(level) {
+  if (!level) return '';
+  const o = level.objective;
+  if (o.kind === 'clearType') {
+    const def = CANDY_DEFS[o.type];
+    return svgForCell({ type: o.type, special: null });
+  }
+  if (o.kind === 'matches') {
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><circle cx="22" cy="50" r="14" fill="#FFD60A" stroke="#000" stroke-width="6"/><circle cx="50" cy="50" r="14" fill="#FFD60A" stroke="#000" stroke-width="6"/><circle cx="78" cy="50" r="14" fill="#FFD60A" stroke="#000" stroke-width="6"/></svg>`;
+  }
+  if (o.kind === 'specials') {
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><circle cx="50" cy="50" r="36" fill="#FF006E" stroke="#000" stroke-width="6"/><rect x="2" y="44" width="96" height="6" fill="#fff" stroke="#000" stroke-width="2"/></svg>`;
+  }
+  return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><polygon points="50,10 61,38 92,40 67,58 76,88 50,71 24,88 33,58 8,40 39,38" fill="#FFD60A" stroke="#000" stroke-width="6" stroke-linejoin="round"/></svg>`;
+}
+
+function objectiveFillColor(level) {
+  if (!level) return '#FFD60A';
+  const o = level.objective;
+  if (o.kind === 'clearType') return CANDY_DEFS[o.type].color;
+  if (o.kind === 'specials') return '#FF006E';
+  if (o.kind === 'matches') return '#06A77D';
+  return '#FFD60A';
+}
+
+function projectedStarsForRemaining(level, movesRemaining) {
+  if (!level) return 0;
+  const ratio = movesRemaining / level.moves;
+  if (ratio >= 0.5) return 3;
+  if (ratio >= 0.25) return 2;
+  return movesRemaining > 0 ? 1 : 0;
+}
+
+export function setLevelChip(level, mode, stars) {
+  const chip = document.getElementById('level-chip');
+  if (!chip) return;
+  if (mode !== 'levels' || !level) {
+    chip.classList.add('hidden');
+    return;
+  }
+  chip.classList.remove('hidden');
+  const earned = stars && stars > 0 ? ' ' + '★'.repeat(stars) : '';
+  chip.textContent = `Level ${level.id} / 8${earned}`;
+}
+
 export function setLevelUI({ level, movesRemaining, current, target, mode }) {
   const wrap = document.getElementById('level-info');
   const movesEl = document.getElementById('moves');
   const movesLabel = document.getElementById('moves-label');
   const objEl = document.getElementById('objective-text');
   const objProgEl = document.getElementById('objective-progress');
+  const objIconEl = document.getElementById('objective-icon');
+  const fillEl = document.getElementById('objective-fill');
+  const starsEl = document.getElementById('projected-stars');
   const nameEl = document.getElementById('level-name');
   if (!wrap) return;
 
@@ -186,8 +234,76 @@ export function setLevelUI({ level, movesRemaining, current, target, mode }) {
   if (movesLabel) movesLabel.classList.remove('hidden');
   if (nameEl) nameEl.textContent = `Level ${level.id} — ${level.name}`;
   if (objEl) objEl.textContent = level.hint;
-  if (objProgEl) objProgEl.textContent = `${Math.min(current, target).toLocaleString()} / ${target.toLocaleString()}`;
-  if (movesEl) movesEl.textContent = String(movesRemaining);
+  if (objProgEl) {
+    objProgEl.textContent = `${Math.min(current, target).toLocaleString()} / ${target.toLocaleString()}`;
+  }
+  if (movesEl) {
+    movesEl.textContent = String(movesRemaining);
+    movesEl.classList.remove('moves-low', 'moves-critical');
+    if (movesRemaining <= 2) movesEl.classList.add('moves-critical');
+    else if (movesRemaining <= 5) movesEl.classList.add('moves-low');
+  }
+  if (objIconEl) {
+    objIconEl.innerHTML = objectiveIconSvg(level);
+    objIconEl.classList.remove('hidden');
+  }
+  if (fillEl) {
+    const ratio = target > 0 ? Math.min(1, current / target) : 0;
+    fillEl.style.width = `${ratio * 100}%`;
+    fillEl.style.background = objectiveFillColor(level);
+  }
+  if (starsEl) {
+    const proj = projectedStarsForRemaining(level, movesRemaining);
+    starsEl.textContent = '★'.repeat(proj) + '☆'.repeat(3 - proj);
+    starsEl.setAttribute('aria-label', `${proj} of 3 stars projected`);
+  }
+}
+
+let moveBumpTimer;
+export function bumpMoveCounter() {
+  const el = document.getElementById('moves');
+  if (!el) return;
+  el.classList.remove('move-bump');
+  void el.offsetWidth;
+  el.classList.add('move-bump');
+  clearTimeout(moveBumpTimer);
+  moveBumpTimer = setTimeout(() => el.classList.remove('move-bump'), 360);
+}
+
+let deltaTimer;
+export function flashObjectiveDelta(text) {
+  const el = document.getElementById('objective-delta');
+  if (!el || !text) return;
+  el.textContent = text;
+  el.classList.remove('hidden');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(deltaTimer);
+  deltaTimer = setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.classList.add('hidden'), 240);
+  }, 900);
+}
+
+let introTimer;
+export function showLevelIntro(level, totalLevels = 8) {
+  const card = document.getElementById('level-intro');
+  if (!card || !level) return;
+  document.getElementById('li-tag').textContent = `Level ${level.id} of ${totalLevels}`;
+  document.getElementById('li-name').textContent = level.name;
+  document.getElementById('li-hint').textContent = level.hint;
+  document.getElementById('li-moves').textContent =
+    level.moves === 1 ? '1 move' : `${level.moves} moves`;
+  card.classList.remove('hidden');
+  card.classList.remove('show');
+  void card.offsetWidth;
+  card.classList.add('show');
+  clearTimeout(introTimer);
+  introTimer = setTimeout(() => {
+    card.classList.remove('show');
+    setTimeout(() => card.classList.add('hidden'), 320);
+  }, 2400);
 }
 
 function starString(stars) {
