@@ -87,6 +87,71 @@ export function deriveNewSpecials(groups, swapTarget) {
   return newSpecials;
 }
 
+const STRIPES = new Set(['line-h', 'line-v']);
+
+export function detectCombo(cellA, cellB, posA, posB) {
+  if (!cellA || !cellB) return null;
+  const sA = cellA.special;
+  const sB = cellB.special;
+  if (sA === 'rainbow' && sB === 'rainbow') {
+    return { kind: 'double-rainbow', a: posA, b: posB };
+  }
+  if (sA === 'rainbow' && STRIPES.has(sB)) {
+    return { kind: 'rainbow-stripes', type: cellB.type, a: posA, b: posB };
+  }
+  if (sB === 'rainbow' && STRIPES.has(sA)) {
+    return { kind: 'rainbow-stripes', type: cellA.type, a: posA, b: posB };
+  }
+  if (sA === 'rainbow') {
+    return { kind: 'rainbow-type', type: cellB.type, a: posA, b: posB };
+  }
+  if (sB === 'rainbow') {
+    return { kind: 'rainbow-type', type: cellA.type, a: posA, b: posB };
+  }
+  if (STRIPES.has(sA) && STRIPES.has(sB)) {
+    return { kind: 'stripes-pair', a: posA, b: posB };
+  }
+  return null;
+}
+
+export function applyCombo(board, combo) {
+  const positions = new Set();
+  const k = (c, r) => `${c},${r}`;
+  positions.add(k(combo.a.c, combo.a.r));
+  positions.add(k(combo.b.c, combo.b.r));
+
+  if (combo.kind === 'double-rainbow') {
+    for (let r = 0; r < board.rows; r++) {
+      for (let c = 0; c < board.cols; c++) positions.add(k(c, r));
+    }
+  } else if (combo.kind === 'rainbow-stripes') {
+    for (let r = 0; r < board.rows; r++) {
+      for (let c = 0; c < board.cols; c++) {
+        if (board.typeAt(c, r) === combo.type) {
+          for (let cc = 0; cc < board.cols; cc++) positions.add(k(cc, r));
+          for (let rr = 0; rr < board.rows; rr++) positions.add(k(c, rr));
+        }
+      }
+    }
+  } else if (combo.kind === 'rainbow-type') {
+    for (let r = 0; r < board.rows; r++) {
+      for (let c = 0; c < board.cols; c++) {
+        if (board.typeAt(c, r) === combo.type) positions.add(k(c, r));
+      }
+    }
+  } else if (combo.kind === 'stripes-pair') {
+    for (let c = 0; c < board.cols; c++) positions.add(k(c, combo.b.r));
+    for (let r = 0; r < board.rows; r++) positions.add(k(combo.b.c, r));
+    for (let c = 0; c < board.cols; c++) positions.add(k(c, combo.a.r));
+    for (let r = 0; r < board.rows; r++) positions.add(k(combo.a.c, r));
+  }
+
+  return [...positions].map((s) => {
+    const [c, r] = s.split(',').map(Number);
+    return { c, r };
+  });
+}
+
 export function activationClears(board, matchedPositions) {
   const extra = new Set();
   const k = (c, r) => `${c},${r}`;
