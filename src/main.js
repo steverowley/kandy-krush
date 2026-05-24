@@ -34,6 +34,7 @@ import {
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
+import { createLevelSelect } from './ui/levelSelect.js';
 import { createAchievements } from './ui/achievements.js';
 import * as sfx from './audio/sfx.js';
 import * as speech from './audio/speech.js';
@@ -505,6 +506,14 @@ createSettingsUI({
       }
     }
   },
+});
+
+const levelSelect = createLevelSelect({
+  getProgress: () => state.levelProgress,
+  onChoose: (id) => startLevel(id),
+});
+document.getElementById('level-chip').addEventListener('click', () => {
+  if (state.settings.mode === 'levels') levelSelect.show();
 });
 
 document.getElementById('restart').addEventListener('click', () => {

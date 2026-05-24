@@ -21,7 +21,7 @@
   <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
     <div class="flex items-center gap-3 flex-wrap">
       <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
-      <span id="level-chip" class="hidden text-base sm:text-lg font-bold bg-yellow-300 text-black border-[3px] border-black rounded-full px-3 py-1">Level 1 / 8</span>
+      <button id="level-chip" type="button" class="hidden text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 text-black border-[3px] border-black rounded-full px-3 py-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Open level select" aria-haspopup="dialog">Level 1 / 8</button>
       <span id="streak" class="hidden text-base sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-3 py-1">Day 1</span>
     </div>
     <div class="flex items-center gap-2 sm:gap-3">
@@ -104,6 +104,27 @@
     <div id="li-name" class="text-3xl sm:text-4xl font-bold mt-1">First steps</div>
     <div id="li-hint" class="text-xl sm:text-2xl mt-2">Reach 400 points</div>
     <div id="li-moves" class="text-lg sm:text-xl mt-2 text-gray-700">20 moves</div>
+  </div>
+
+  <div id="level-select-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
+  <div
+    id="level-select-panel"
+    class="hidden fixed inset-x-3 top-16 sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[640px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[88vh] overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ls-title"
+    aria-hidden="true"
+  >
+    <div class="flex items-center justify-between gap-3">
+      <h2 id="ls-title" class="text-2xl sm:text-3xl font-bold">Choose a level</h2>
+      <button
+        id="level-select-close"
+        type="button"
+        class="text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-2"
+        aria-label="Close level select"
+      >Done</button>
+    </div>
+    <div id="level-select-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
   </div>
 
   <div id="level-overlay" class="hidden fixed inset-0 bg-black/60 z-40" aria-hidden="true"></div>
