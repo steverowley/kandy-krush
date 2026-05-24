@@ -26,11 +26,12 @@ const defaults = () => ({
     powerupBank: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
   },
   roguelike: {
-    currentSlot: 1,        // 1..30 within the active run
-    gems: 0,                // persistent currency for the future skill tree
-    runsCompleted: 0,       // total runs that cleared slot 30
-    runsStarted: 0,         // total runs begun
-    bestSlot: 0,            // furthest slot ever reached
+    currentSlot: 1,
+    gems: 0,
+    runsCompleted: 0,
+    runsStarted: 0,
+    bestSlot: 0,
+    skills: {},             // permanent meta upgrades { id: true }
   },
 });
 
@@ -107,14 +108,20 @@ const ROGUELIKE_DEFAULTS = {
 };
 
 function sanitizeRoguelike(raw) {
-  const out = { ...ROGUELIKE_DEFAULTS };
+  const out = { ...ROGUELIKE_DEFAULTS, skills: {} };
   if (!raw || typeof raw !== 'object') return out;
-  for (const key of Object.keys(out)) {
+  for (const key of Object.keys(ROGUELIKE_DEFAULTS)) {
     const n = Number(raw[key]);
     if (Number.isFinite(n) && n >= 0) out[key] = Math.floor(n);
   }
   if (out.currentSlot < 1) out.currentSlot = 1;
   if (out.currentSlot > 30) out.currentSlot = 30;
+  if (raw.skills && typeof raw.skills === 'object') {
+    out.skills = {};
+    for (const [k, v] of Object.entries(raw.skills)) {
+      if (v) out.skills[k] = true;
+    }
+  }
   return out;
 }
 
