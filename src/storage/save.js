@@ -10,6 +10,7 @@ const defaults = () => ({
   lastPlayedDate: null,
   seenWelcome: false,
   seenVersion: null,
+  installPromptDismissedAt: 0,
   settings: {
     sound: true,
     speech: false,
@@ -67,6 +68,7 @@ export function load() {
       lastPlayedDate: parsed.lastPlayedDate || null,
       seenWelcome: !!parsed.seenWelcome,
       seenVersion: typeof parsed.seenVersion === 'string' ? parsed.seenVersion : null,
+      installPromptDismissedAt: Number(parsed.installPromptDismissedAt) || 0,
       settings: {
         sound: s.sound !== false,
         speech: !!s.speech,
