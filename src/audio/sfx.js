@@ -151,22 +151,31 @@ export function playLevelFail() {
   tone(294, 900, 'sine', 0.07, 240);
 }
 
-// --- Background music: lo-fi pad ---
-// Slow jazzy chord changes routed through a low-pass filter for that
-// muffled-vinyl warmth, plus a quiet white-noise crackle bed underneath.
-// Pure Web Audio, no samples. Capped at ~3.5% gain so it stays under SFX.
+// --- Background music: lo-fi pad + half-time beat + sub bass ---
+// Slow jazzy chord changes through a low-pass filter, white-noise crackle
+// underneath, plus a 75 BPM kick/snare/hat pattern and a triangle-wave
+// sub bass that walks the chord roots. Pure Web Audio, no samples.
 const MUSIC_CHORDS = [
-  // Fmaj7 — F4, A4, C5, E5
-  [349.23, 440.00, 523.25, 659.25],
-  // Em7  — E4, G4, B4, D5
-  [329.63, 392.00, 493.88, 587.33],
-  // Dm7  — D4, F4, A4, C5
-  [293.66, 349.23, 440.00, 523.25],
-  // Cmaj7 — C4, E4, G4, B4
-  [261.63, 329.63, 392.00, 493.88],
+  // Fmaj7 — F4, A4, C5, E5      bassRoot=F2
+  { notes: [349.23, 440.00, 523.25, 659.25], bass: 87.31 },
+  // Em7  — E4, G4, B4, D5       bassRoot=E2
+  { notes: [329.63, 392.00, 493.88, 587.33], bass: 82.41 },
+  // Dm7  — D4, F4, A4, C5       bassRoot=D2
+  { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },
+  // Cmaj7 — C4, E4, G4, B4      bassRoot=C2
+  { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },
 ];
+const BPM = 75;
+const BEAT_S = 60 / BPM;           // 0.8s per quarter
+const BAR_S = BEAT_S * 4;          // 3.2s per 4/4 bar
+const BARS_PER_CHORD = 4;          // each chord holds for 4 bars = 12.8s
+const CHORD_HOLD_MS = BAR_S * BARS_PER_CHORD * 1000;
+const CHORD_FADE_MS = BAR_S * 1000;
+
 let musicChordIndex = 0;
 let crackleTimer = null;
+let beatTimer = null;
+let beatBarCount = 0;
 
 function playLoFiChord(chord, startAt, holdMs, fadeMs) {
   if (muted || !ctx) return [];
@@ -177,43 +186,122 @@ function playLoFiChord(chord, startAt, holdMs, fadeMs) {
 
   const masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(0, startAt);
-  masterGain.gain.linearRampToValueAtTime(0.035, startAt + fadeMs / 1000);
-  masterGain.gain.setValueAtTime(0.035, startAt + (holdMs - fadeMs) / 1000);
+  masterGain.gain.linearRampToValueAtTime(0.032, startAt + fadeMs / 1000);
+  masterGain.gain.setValueAtTime(0.032, startAt + (holdMs - fadeMs) / 1000);
   masterGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
 
   filter.connect(masterGain).connect(ctx.destination);
 
   const oscs = [];
-  for (const freq of chord) {
+  for (const freq of chord.notes) {
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, startAt);
-    // Wider detune (±8 cents) for that hazy lo-fi chorus.
     osc.detune.setValueAtTime((Math.random() - 0.5) * 16, startAt);
     osc.connect(filter);
     osc.start(startAt);
     osc.stop(startAt + holdMs / 1000 + 0.1);
     oscs.push(osc);
   }
-  // A second pad an octave down for body, very low volume.
-  const subGain = ctx.createGain();
-  subGain.gain.setValueAtTime(0, startAt);
-  subGain.gain.linearRampToValueAtTime(0.018, startAt + fadeMs / 1000);
-  subGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
-  subGain.connect(filter);
-  const sub = ctx.createOscillator();
-  sub.type = 'sine';
-  sub.frequency.setValueAtTime(chord[0] / 2, startAt);
-  sub.connect(subGain);
-  sub.start(startAt);
-  sub.stop(startAt + holdMs / 1000 + 0.1);
-  oscs.push(sub);
-
   return oscs;
 }
 
-// Quiet white-noise burst — vinyl crackle. Scheduled at random intervals
-// (180-720ms apart) while music is enabled.
+// ---------- drum hits ----------
+function hitKick(at) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(140, at);
+  osc.frequency.exponentialRampToValueAtTime(42, at + 0.13);
+  g.gain.setValueAtTime(0.001, at);
+  g.gain.exponentialRampToValueAtTime(0.07, at + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + 0.25);
+}
+
+function hitSnare(at) {
+  if (muted || !ctx) return;
+  const len = 0.13;
+  const sr = ctx.sampleRate;
+  const buf = ctx.createBuffer(1, Math.floor(len * sr), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1700, at);
+  filter.Q.setValueAtTime(0.7, at);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.028, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  src.connect(filter).connect(g).connect(ctx.destination);
+  src.start(at);
+  src.stop(at + len + 0.02);
+}
+
+function hitHat(at, accent = false) {
+  if (muted || !ctx) return;
+  const len = accent ? 0.05 : 0.035;
+  const sr = ctx.sampleRate;
+  const buf = ctx.createBuffer(1, Math.floor(len * sr), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.setValueAtTime(6500, at);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(accent ? 0.013 : 0.009, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  src.connect(filter).connect(g).connect(ctx.destination);
+  src.start(at);
+  src.stop(at + len + 0.02);
+}
+
+function hitBass(at, freq) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(420, at);
+  filter.Q.setValueAtTime(0.5, at);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(0.045, at + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 1.4);
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, at);
+  osc.detune.setValueAtTime(-4, at);
+  osc.connect(filter).connect(g).connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + 1.5);
+}
+
+// Schedule one bar's worth of beat events starting at audio time `startAt`.
+function scheduleBar(startAt, chord) {
+  // Hat: 8 hits (eighth notes), accent on downbeats.
+  for (let i = 0; i < 8; i++) {
+    hitHat(startAt + (i * BEAT_S) / 2, i % 2 === 0);
+  }
+  // Kick on beat 1.
+  hitKick(startAt);
+  // Snare on beat 3.
+  hitSnare(startAt + BEAT_S * 2);
+  // Bass: root on beat 1, fifth on beat 3 — gives motion.
+  hitBass(startAt, chord.bass);
+  hitBass(startAt + BEAT_S * 2, chord.bass * 1.5);
+}
+
+// Quiet white-noise burst — vinyl crackle.
 function playCrackle() {
   if (muted || !ctx || !musicNodes || musicNodes.stopped) return;
   try {
@@ -242,8 +330,21 @@ function scheduleNextCrackle() {
     return;
   }
   playCrackle();
-  const next = 180 + Math.random() * 540;
+  const next = 220 + Math.random() * 580;
   crackleTimer = setTimeout(scheduleNextCrackle, next);
+}
+
+function scheduleNextBeatBar() {
+  if (!musicNodes || musicNodes.stopped || muted) {
+    beatTimer = null;
+    return;
+  }
+  const c = ensureCtx();
+  if (!c) return;
+  const chord = MUSIC_CHORDS[Math.floor(beatBarCount / BARS_PER_CHORD) % MUSIC_CHORDS.length];
+  scheduleBar(c.currentTime + 0.04, chord);
+  beatBarCount++;
+  beatTimer = setTimeout(scheduleNextBeatBar, BAR_S * 1000);
 }
 
 export function setMusicEnabled(on) {
@@ -257,19 +358,23 @@ function startMusic() {
   const c = ensureCtx();
   if (!c) return;
   musicNodes = { oscs: [], stopped: false };
+  musicChordIndex = 0;
+  beatBarCount = 0;
   scheduleNextChord();
   scheduleNextCrackle();
+  // Small delay so the first chord has begun fading in before the beat starts.
+  setTimeout(() => {
+    if (musicNodes && !musicNodes.stopped) scheduleNextBeatBar();
+  }, 400);
 }
 
 function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
   const c = ensureCtx();
   if (!c) return;
-  const holdMs = 10000;
-  const fadeMs = 3600;
   const chord = MUSIC_CHORDS[musicChordIndex];
   musicChordIndex = (musicChordIndex + 1) % MUSIC_CHORDS.length;
-  const oscs = playLoFiChord(chord, c.currentTime, holdMs, fadeMs);
+  const oscs = playLoFiChord(chord, c.currentTime, CHORD_HOLD_MS, CHORD_FADE_MS);
   musicNodes.oscs.push(...oscs);
   musicTimer = setTimeout(() => {
     musicNodes.oscs = musicNodes.oscs.filter((o) => {
@@ -277,7 +382,7 @@ function scheduleNextChord() {
       return false;
     });
     scheduleNextChord();
-  }, holdMs - fadeMs);
+  }, CHORD_HOLD_MS - CHORD_FADE_MS);
 }
 
 function stopMusic() {
@@ -288,6 +393,10 @@ function stopMusic() {
   if (crackleTimer) {
     clearTimeout(crackleTimer);
     crackleTimer = null;
+  }
+  if (beatTimer) {
+    clearTimeout(beatTimer);
+    beatTimer = null;
   }
   if (musicNodes) {
     musicNodes.stopped = true;
