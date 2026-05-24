@@ -155,16 +155,46 @@ export function playLevelFail() {
 // Slow jazzy chord changes through a low-pass filter, white-noise crackle
 // underneath, plus a 75 BPM kick/snare/hat pattern and a triangle-wave
 // sub bass that walks the chord roots. Pure Web Audio, no samples.
-const MUSIC_CHORDS = [
-  // Fmaj7 — F4, A4, C5, E5      bassRoot=F2
-  { notes: [349.23, 440.00, 523.25, 659.25], bass: 87.31 },
-  // Em7  — E4, G4, B4, D5       bassRoot=E2
-  { notes: [329.63, 392.00, 493.88, 587.33], bass: 82.41 },
-  // Dm7  — D4, F4, A4, C5       bassRoot=D2
-  { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },
-  // Cmaj7 — C4, E4, G4, B4      bassRoot=C2
-  { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },
+//
+// A small library of songs cycles automatically — same lo-fi vibe but
+// different chord motion so the loop doesn't get monotonous. Each song
+// plays one full cycle (4 chords × 4 bars each ≈ 51s) before
+// crossfading into the next via the existing chord-crossfade.
+const SONGS = [
+  // Song A: descending mellow (the original).
+  // Fmaj7 -> Em7 -> Dm7 -> Cmaj7
+  [
+    { notes: [349.23, 440.00, 523.25, 659.25], bass: 87.31 },
+    { notes: [329.63, 392.00, 493.88, 587.33], bass: 82.41 },
+    { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },
+    { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },
+  ],
+  // Song B: minor ii-V-I-vi turnaround.
+  // Am9 -> Dm9 -> G7 -> Cmaj7
+  [
+    { notes: [440.00, 523.25, 659.25, 783.99], bass: 55.00 },  // A m9
+    { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },  // Dm9 (uses Dm7 voicing for warmth)
+    { notes: [392.00, 493.88, 587.33, 698.46], bass: 98.00 },  // G7
+    { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },  // Cmaj7
+  ],
+  // Song C: ascending arc — opens up after the descents above.
+  // Cmaj7 -> Em7 -> Fmaj7 -> Gmaj7
+  [
+    { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },
+    { notes: [329.63, 392.00, 493.88, 587.33], bass: 82.41 },
+    { notes: [349.23, 440.00, 523.25, 659.25], bass: 87.31 },
+    { notes: [392.00, 493.88, 587.33, 698.46], bass: 98.00 },
+  ],
+  // Song D: classic ii-V-I-vi pop turnaround at lo-fi tempo.
+  // Dm7 -> G7 -> Cmaj7 -> Am7
+  [
+    { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },
+    { notes: [392.00, 493.88, 587.33, 698.46], bass: 98.00 },
+    { notes: [261.63, 329.63, 392.00, 493.88], bass: 65.41 },
+    { notes: [440.00, 523.25, 659.25, 783.99], bass: 55.00 },
+  ],
 ];
+let songIndex = 0;
 const BPM = 75;
 const BEAT_S = 60 / BPM;           // 0.8s per quarter
 const BAR_S = BEAT_S * 4;          // 3.2s per 4/4 bar
@@ -336,6 +366,10 @@ function scheduleNextCrackle() {
   crackleTimer = setTimeout(scheduleNextCrackle, next);
 }
 
+function currentSong() {
+  return SONGS[songIndex % SONGS.length];
+}
+
 function scheduleNextBeatBar() {
   if (!musicNodes || musicNodes.stopped || muted) {
     beatTimer = null;
@@ -343,7 +377,8 @@ function scheduleNextBeatBar() {
   }
   const c = ensureCtx();
   if (!c) return;
-  const chord = MUSIC_CHORDS[Math.floor(beatBarCount / BARS_PER_CHORD) % MUSIC_CHORDS.length];
+  const song = currentSong();
+  const chord = song[Math.floor(beatBarCount / BARS_PER_CHORD) % song.length];
   scheduleBar(c.currentTime + 0.04, chord);
   beatBarCount++;
   beatTimer = setTimeout(scheduleNextBeatBar, BAR_S * 1000);
@@ -362,6 +397,9 @@ function startMusic() {
   musicNodes = { oscs: [], stopped: false };
   musicChordIndex = 0;
   beatBarCount = 0;
+  // Randomly pick a starting song so two sessions in a row don't
+  // always open with the same chord progression.
+  songIndex = Math.floor(Math.random() * SONGS.length);
   scheduleNextChord();
   scheduleNextCrackle();
   // Small delay so the first chord has begun fading in before the beat starts.
@@ -374,8 +412,15 @@ function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
   const c = ensureCtx();
   if (!c) return;
-  const chord = MUSIC_CHORDS[musicChordIndex];
-  musicChordIndex = (musicChordIndex + 1) % MUSIC_CHORDS.length;
+  const song = currentSong();
+  const chord = song[musicChordIndex];
+  musicChordIndex = (musicChordIndex + 1) % song.length;
+  // After completing one full pass through the current song's chords,
+  // advance to the next song. The chord crossfade naturally bridges
+  // the gap — no special transition needed.
+  if (musicChordIndex === 0) {
+    songIndex = (songIndex + 1) % SONGS.length;
+  }
   const oscs = playLoFiChord(chord, c.currentTime, CHORD_HOLD_MS, CHORD_FADE_MS);
   musicNodes.oscs.push(...oscs);
   musicTimer = setTimeout(() => {
