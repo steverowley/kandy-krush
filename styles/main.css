@@ -674,6 +674,20 @@ body.reduce-motion .tile.shuffling {
   100% { opacity: 0; }
 }
 
+/* Roguelike upgrade picker cards */
+.upgrade-card { transition: transform 120ms ease, box-shadow 120ms ease; }
+.upgrade-card:hover { transform: translateY(-2px); box-shadow: 0 4px 0 rgba(0,0,0,.2); }
+body.theme-hc #upgrade-panel {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc .upgrade-card {
+  background: #1f2937;
+  color: #fff;
+  border-color: #fff;
+}
+
 /* Combo meter — sits over the score, pops on each chain step */
 #combo-meter {
   text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;

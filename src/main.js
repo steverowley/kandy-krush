@@ -16,6 +16,9 @@ import {
   BOSS_SLOTS,
   getRoguelikeLevel,
   gemsEarned,
+  UPGRADES,
+  pickUpgradeChoices,
+  categoryColor,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -46,6 +49,7 @@ import {
   setComboMeter,
   setLuckyCharge,
   showChangelog,
+  showUpgradePicker,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -116,7 +120,39 @@ const state = {
     currentSlot: 1, gems: 0, runsCompleted: 0, runsStarted: 0, bestSlot: 0,
   },
   inRoguelikeRun: false,
+  // Upgrades collected during the current run. Reset when a run begins.
+  runUpgrades: [],
 };
+
+function upgradeCount(id) {
+  return state.runUpgrades.filter((u) => u === id).length;
+}
+
+function applyRunUpgradesOnSlotStart() {
+  if (!state.inRoguelikeRun) return;
+  state.movesRemaining += upgradeCount('moves+2') * 2;
+  const bank = powerupBank();
+  bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + upgradeCount('hammer+1'));
+  bank.colorBomb = Math.min(POWERUP_CAP, (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
+  bank.shuffle = Math.min(POWERUP_CAP, (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
+  bank.plusMoves = Math.min(POWERUP_CAP, (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
+  setPowerupCounts(bank);
+}
+
+function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
+  if (!state.inRoguelikeRun) return amount;
+  let m = 1;
+  m *= Math.pow(1.25, upgradeCount('score+25'));
+  if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
+  if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
+  return Math.round(amount * m);
+}
+
+function runLuckyRate() {
+  let m = 1;
+  for (let i = 0; i < upgradeCount('lucky-fast'); i++) m *= 1.5;
+  return LUCKY_PER_MOVE * m;
+}
 
 const APP_VERSION = '2025-05-24-6n';
 const CHANGELOG = [
@@ -291,6 +327,8 @@ function startRoguelikeRun() {
   }
   if (state.roguelike.currentSlot === 1) {
     state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
+    // Fresh run -> wipe in-run upgrades
+    state.runUpgrades = [];
   }
   persist();
   playRoguelikeSlot(state.roguelike.currentSlot, { announce: true });
@@ -304,6 +342,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
   resetBoard();
   applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
+  applyRunUpgradesOnSlotStart();
   refreshLevelUI();
   renderBoard(state.board, state, { intro: true });
   if (announce) {
@@ -330,6 +369,7 @@ function advanceRoguelikeAfterWin() {
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
     state.roguelike.currentSlot = 1;
     state.inRoguelikeRun = false;
+    state.runUpgrades = [];
     persist();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
     speech.speak(`Run complete. You earned ${gems} gems.`);
@@ -337,7 +377,21 @@ function advanceRoguelikeAfterWin() {
   }
   state.roguelike.currentSlot = slot + 1;
   persist();
-  setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 600);
+  // Boss slots and the final slot skip the upgrade picker; other slots
+  // offer 3 choices before the next slot starts.
+  const justFinished = slot;
+  const isBossWin = BOSS_SLOTS.has(justFinished);
+  if (isBossWin) {
+    setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 600);
+  } else {
+    const choices = pickUpgradeChoices(state.runUpgrades);
+    showUpgradePicker(choices, state.runUpgrades, (chosen) => {
+      state.runUpgrades.push(chosen.id);
+      flashMessage(`Picked: ${chosen.name}`, 1200);
+      speech.speak(`Picked ${chosen.name}`);
+      setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
+    }, categoryColor);
+  }
 }
 
 function endRoguelikeRun() {
@@ -347,6 +401,7 @@ function endRoguelikeRun() {
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
   state.roguelike.currentSlot = 1;
   state.inRoguelikeRun = false;
+  state.runUpgrades = [];
   persist();
   flashMessage(`Run over. +${gems} 💎`, 2200);
   speech.speak(`Run over. You reached slot ${reached}. You earned ${gems} gems.`);
@@ -362,7 +417,7 @@ function updateComboMeter(level) {
 // the next successful match round when full.
 function bumpLuckyCharge() {
   if (state.luckyReady) return;
-  state.luckyCharge = Math.min(100, state.luckyCharge + LUCKY_PER_MOVE);
+  state.luckyCharge = Math.min(100, state.luckyCharge + runLuckyRate());
   if (state.luckyCharge >= 100) {
     state.luckyReady = true;
     state.luckyCharge = 100;
@@ -382,6 +437,12 @@ function consumeLuckyIfReady(baseScore) {
   speech.speak('Lucky two times');
   spawnConfetti(28);
   haptics.epic();
+  // Lucky Strike synergy upgrade — also tops up a hammer
+  if (state.inRoguelikeRun && upgradeCount('lucky-strike') > 0) {
+    const bank = powerupBank();
+    bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + upgradeCount('lucky-strike'));
+    setPowerupCounts(bank);
+  }
   return baseScore * LUCKY_MULTIPLIER;
 }
 
@@ -740,7 +801,9 @@ async function useColorBomb(pos) {
   recordClearedTypes(clearedTypeList);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
-  const earned = consumeLuckyIfReady(calcScore(positions, 2));
+  const earned = consumeLuckyIfReady(
+    applyRunScoreMultiplier(calcScore(positions, 2), 2, positions.length)
+  );
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
@@ -918,7 +981,9 @@ async function runComboTurn(combo) {
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
-  const earned = consumeLuckyIfReady(calcScore(cleared, 2));
+  const earned = consumeLuckyIfReady(
+    applyRunScoreMultiplier(calcScore(cleared, 2), 2, cleared.length)
+  );
   state.score += earned;
   maybeDropSurprise(cleared, 2);
   setScore(state.score, { animate: true });
@@ -1106,7 +1171,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);
   if (specialsCreated.length > 0) haptics.specialBirth();
 
-  const earned = consumeLuckyIfReady(calcScore([...allCleared], cascadeLevel));
+  const earned = consumeLuckyIfReady(
+    applyRunScoreMultiplier(
+      calcScore([...allCleared], cascadeLevel),
+      cascadeLevel,
+      allCleared.size
+    )
+  );
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, toClear);
