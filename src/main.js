@@ -32,6 +32,8 @@ import {
   flashObjectiveDelta,
   showLevelIntro,
   showWelcome,
+  showCascadeBanner,
+  popNewSpecial,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -44,6 +46,7 @@ import {
   spawnTileSparkles,
   spawnPopSpecks,
   spawnConfetti,
+  drawMatchTrails,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -400,9 +403,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
 
   sfx.playMatch(allCleared.size, cascadeLevel);
-  if (cascadeLevel >= 2) sfx.playCascade();
+  if (cascadeLevel >= 2) {
+    sfx.playCascade();
+    showCascadeBanner(cascadeLevel);
+  }
   if (cascadeLevel >= 3) spawnConfetti(20);
 
+  drawMatchTrails(result.groups);
   spawnPopSpecks(toClear);
   await animatePop(toClear);
   state.board.clear(toClear);
@@ -415,6 +422,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
     spawnTileSparkles(s.c, s.r, s.kind === 'rainbow' ? 14 : 10);
   }
+  renderBoard(state.board, state);
+  for (const s of specialsCreated) popNewSpecial(s.c, s.r);
 
   const earned = calcScore([...allCleared], cascadeLevel);
   state.score += earned;
@@ -433,7 +442,6 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   speech.speak(msg);
   achievements.onMatch(ctx);
 
-  renderBoard(state.board, state);
   await delay(160);
   const fallen = applyGravity(state.board, CANDY_TYPES);
   renderBoard(state.board, state, { fallen });

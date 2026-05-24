@@ -292,6 +292,40 @@ export function flashObjectiveDelta(text) {
   }, 900);
 }
 
+const CASCADE_LABELS = {
+  2: 'CASCADE!',
+  3: 'TRIPLE!',
+  4: 'QUADRUPLE!',
+  5: 'INCREDIBLE!',
+};
+
+let cascadeTimer;
+export function showCascadeBanner(level) {
+  const wrap = document.getElementById('cascade-banner');
+  const text = document.getElementById('cascade-text');
+  if (!wrap || !text) return;
+  text.textContent = CASCADE_LABELS[level] || `${level}x WOW!`;
+  wrap.classList.remove('hidden');
+  text.classList.remove('cascade-show');
+  void text.offsetWidth;
+  text.classList.add('cascade-show');
+  clearTimeout(cascadeTimer);
+  cascadeTimer = setTimeout(() => {
+    wrap.classList.add('hidden');
+  }, 1000);
+}
+
+export function popNewSpecial(c, r) {
+  const tile = document.querySelector(
+    `#board .tile[data-c="${c}"][data-r="${r}"]`
+  );
+  if (!tile) return;
+  tile.classList.remove('spawn-special');
+  void tile.offsetWidth;
+  tile.classList.add('spawn-special');
+  setTimeout(() => tile.classList.remove('spawn-special'), 720);
+}
+
 export function showWelcome(onStart) {
   const overlay = document.getElementById('welcome-overlay');
   const panel = document.getElementById('welcome-panel');
