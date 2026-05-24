@@ -653,6 +653,27 @@ body.theme-hc #pu-shuffle-count {
   color: #000;
 }
 
+/* Auto-shuffle spin-out — applied to every tile when the board has no
+   legal moves and reshuffles. Tiles spin, shrink, and fade together
+   so the player sees that something deliberate is happening, not a
+   random snap. */
+.tile.shuffling {
+  animation: tile-shuffle 480ms cubic-bezier(.4, 0, .2, 1) both;
+  z-index: 3;
+}
+@keyframes tile-shuffle {
+  0%   { transform: scale(1) rotate(0deg);   opacity: 1; }
+  60%  { transform: scale(0.55) rotate(220deg); opacity: 0.5; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+body.reduce-motion .tile.shuffling {
+  animation: tile-shuffle-soft 280ms ease-out both;
+}
+@keyframes tile-shuffle-soft {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* Match-line trail (svg polyline drawn under the popping tiles) */
 .match-trail {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));
