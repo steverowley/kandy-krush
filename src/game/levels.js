@@ -55,6 +55,35 @@ export const LEVELS = [
     objective: { kind: 'score', target: 3000 },
     hint: 'Reach 3,000 points',
   },
+  {
+    id: 9,
+    name: 'Sweet jelly',
+    moves: 22,
+    objective: { kind: 'clearJelly' },
+    hint: 'Clear all the jelly',
+    obstacles: {
+      jelly: [
+        [1, 1, 1], [4, 1, 1],
+        [2, 3, 1], [3, 3, 1],
+        [1, 5, 1], [4, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 10,
+    name: 'Big jelly',
+    moves: 30,
+    objective: { kind: 'clearJelly' },
+    hint: 'Clear all the jelly (some takes two hits!)',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [5, 0, 2],
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+        [0, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
@@ -93,6 +122,15 @@ export function progressTowardObjective(level, score, progress) {
         target: o.target,
         done: progress.specials >= o.target,
       };
+    case 'clearJelly': {
+      const total = progress.jellyTotal || 0;
+      const remaining = progress.jellyRemaining || 0;
+      return {
+        current: Math.max(0, total - remaining),
+        target: total,
+        done: total > 0 && remaining === 0,
+      };
+    }
   }
   return { current: 0, target: 0, done: false };
 }

@@ -1,3 +1,5 @@
+import { LEVELS as ALL_LEVELS } from '../game/levels.js';
+
 export const CANDY_DEFS = [
   { name: 'sunshine', color: '#FFD60A', shape: 'circle' },
   { name: 'ocean',    color: '#0353A4', shape: 'square' },
@@ -113,6 +115,11 @@ export function renderBoard(board, state, opts = {}) {
       if (fallenSet && fallenSet.has(cellKey(c, r))) {
         tile.classList.add('falling');
       }
+      if (state.jellyMap) {
+        const j = state.jellyMap.get(cellKey(c, r));
+        if (j === 2) tile.classList.add('jelly', 'jelly-2');
+        else if (j === 1) tile.classList.add('jelly', 'jelly-1');
+      }
       frag.appendChild(tile);
     }
   }
@@ -186,6 +193,9 @@ function objectiveIconSvg(level) {
   if (o.kind === 'specials') {
     return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><circle cx="50" cy="50" r="36" fill="#FF006E" stroke="#000" stroke-width="6"/><rect x="2" y="44" width="96" height="6" fill="#fff" stroke="#000" stroke-width="2"/></svg>`;
   }
+  if (o.kind === 'clearJelly') {
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><rect x="10" y="10" width="80" height="80" rx="14" fill="#C4B5FD" stroke="#000" stroke-width="6"/><path d="M22 70 Q30 56 38 70 T54 70 T70 70" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.7"/></svg>`;
+  }
   return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><polygon points="50,10 61,38 92,40 67,58 76,88 50,71 24,88 33,58 8,40 39,38" fill="#FFD60A" stroke="#000" stroke-width="6" stroke-linejoin="round"/></svg>`;
 }
 
@@ -195,6 +205,7 @@ function objectiveFillColor(level) {
   if (o.kind === 'clearType') return CANDY_DEFS[o.type].color;
   if (o.kind === 'specials') return '#FF006E';
   if (o.kind === 'matches') return '#06A77D';
+  if (o.kind === 'clearJelly') return '#8B5CF6';
   return '#FFD60A';
 }
 
@@ -215,7 +226,7 @@ export function setLevelChip(level, mode, stars) {
   }
   chip.classList.remove('hidden');
   const earned = stars && stars > 0 ? ' ' + '★'.repeat(stars) : '';
-  chip.textContent = `Level ${level.id} / 8${earned}`;
+  chip.textContent = `Level ${level.id} / ${ALL_LEVELS.length}${earned}`;
 }
 
 export function setLevelUI({ level, movesRemaining, current, target, mode }) {
