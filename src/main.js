@@ -1072,7 +1072,7 @@ function usePlusMoves() {
   hideLevelOverlay();
 }
 
-function useShuffle() {
+async function useShuffle() {
   if (state.busy) return;
   const bank = powerupBank();
   if ((bank.shuffle || 0) <= 0) return;
@@ -1081,10 +1081,22 @@ function useShuffle() {
   setArmedTool(null);
   cancelHint();
   sfx.unlockAudio();
-  reshuffle(state.board, CANDY_TYPES);
-  flashMessage('Shuffled!', 1000);
+  state.busy = true;
+  flashMessage('Shuffled!', 1100);
   speech.speak('Shuffled!');
-  renderBoard(state.board, state);
+  // Same spin-out animation as the auto-shuffle so the manual action
+  // also reads as "the board is being rearranged" rather than a snap.
+  const tiles = document.querySelectorAll('#board .tile');
+  tiles.forEach((t, i) => {
+    t.style.animationDelay = `${i * 6}ms`;
+    t.classList.add('shuffling');
+  });
+  await delay(440);
+  // Preserves specials AND ingredients (cherries). The old destructive
+  // reshuffle was wiping cherries on cherry-objective levels.
+  preservingReshuffle();
+  renderBoard(state.board, state, { intro: true });
+  state.busy = false;
   scheduleHint();
 }
 
