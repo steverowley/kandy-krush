@@ -94,6 +94,24 @@ body.theme-hc .tile.adjacent {
   100% { transform: translateY(0) scale(1, 1); }
 }
 
+/* Special candy glow — pulsing aura that reinforces "this one's powerful" */
+.tile.special-line-h,
+.tile.special-line-v {
+  animation: special-glow 2s ease-in-out infinite;
+}
+@keyframes special-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 214, 10, 0.4)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(255, 214, 10, 0.9)); }
+}
+.tile.special-rainbow {
+  animation: rainbow-glow 1.7s ease-in-out infinite;
+}
+@keyframes rainbow-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 0, 110, 0.4)); }
+  35%      { filter: drop-shadow(0 0 14px rgba(131, 56, 236, 0.8)); }
+  70%      { filter: drop-shadow(0 0 14px rgba(6, 167, 125, 0.7)); }
+}
+
 /* Level-complete stars — earned ones animate in one by one. */
 #lc-stars { display: inline-flex; gap: 10px; align-items: center; }
 .lc-star {
