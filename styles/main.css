@@ -885,19 +885,76 @@ body.theme-hc::after { display: none; }
 .tile {
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18);
 }
-.tile.selected,
-.tile.hint {
+.tile.selected {
   box-shadow: 0 0 0 5px #FFD60A, 0 0 0 8px #000, 0 4px 0 rgba(0,0,0,0.2);
 }
 
-/* Hint pulse for idle-detected swap */
+/* Hint = idle-detected swap suggestion. Visually distinct from
+   selected: hot-pink ring (vs yellow), bouncing in place (vs static),
+   plus a floating "tap here" dot above the tile. */
 .tile.hint {
-  animation: hint-pulse 1.2s ease-in-out infinite;
-  z-index: 3;
+  z-index: 4;
+  position: relative;
+  animation: hint-bounce 1100ms cubic-bezier(.4, 0, .2, 1) infinite;
 }
-@keyframes hint-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px #FFD60A, 0 0 0 7px #000; }
-  50%      { box-shadow: 0 0 0 8px #FFD60A, 0 0 0 11px #000; }
+@keyframes hint-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 4px #FF006E, 0 0 0 7px #000, 0 4px 0 rgba(0,0,0,0.2);
+  }
+  35% {
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: 0 0 0 8px #FF006E, 0 0 0 11px #000, 0 12px 18px rgba(255, 0, 110, 0.4);
+  }
+  55% {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 0 6px #FF006E, 0 0 0 9px #000, 0 8px 14px rgba(255, 0, 110, 0.3);
+  }
+}
+.tile.hint::after {
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #FF006E;
+  border: 2px solid #000;
+  transform: translateX(-50%);
+  animation: hint-dot 1100ms ease-in-out infinite;
+  pointer-events: none;
+  z-index: 5;
+}
+@keyframes hint-dot {
+  0%, 100% { opacity: 0.4; transform: translate(-50%, 0) scale(0.7); }
+  50%      { opacity: 1;   transform: translate(-50%, -6px) scale(1.2); }
+}
+
+body.reduce-motion .tile.hint {
+  /* Replace the bounce with a flat hot-pink ring so the suggestion
+     is still obvious without any motion. */
+  box-shadow: 0 0 0 5px #FF006E, 0 0 0 8px #000, 0 4px 0 rgba(0,0,0,0.2);
+  transform: none;
+}
+body.reduce-motion .tile.hint::after { display: none; }
+
+body.theme-hc .tile.hint {
+  animation-name: hint-bounce-hc;
+}
+@keyframes hint-bounce-hc {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 4px #FFD60A, 0 0 0 7px #fff, 0 4px 0 rgba(0,0,0,0.4);
+  }
+  35% {
+    transform: translateY(-6px) scale(1.04);
+    box-shadow: 0 0 0 8px #FFD60A, 0 0 0 11px #fff;
+  }
+}
+body.theme-hc .tile.hint::after {
+  background: #FFD60A;
+  border-color: #fff;
 }
 
 /* Special candies */
