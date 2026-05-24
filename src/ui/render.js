@@ -450,9 +450,12 @@ export function showWelcome(onStart) {
 }
 
 let introTimer;
+let introResolve = null;
+let introOverlayListener = null;
 export function showLevelIntro(level, totalLevels = 8, opts = {}) {
-  const card = document.getElementById('level-intro');
-  if (!card || !level) return;
+  const overlay = document.getElementById('level-intro');
+  const card = document.getElementById('level-intro-card');
+  if (!overlay || !card || !level) return Promise.resolve();
   document.getElementById('li-tag').textContent = `Level ${level.id} of ${totalLevels}`;
   document.getElementById('li-name').textContent = level.name;
   document.getElementById('li-hint').textContent = level.hint;
@@ -480,16 +483,44 @@ export function showLevelIntro(level, totalLevels = 8, opts = {}) {
       tipEl.classList.add('hidden');
     }
   }
-  card.classList.remove('hidden');
-  card.classList.remove('show');
-  void card.offsetWidth;
-  card.classList.add('show');
-  clearTimeout(introTimer);
-  const dismissAfter = level.tip ? 4400 : 2400;
-  introTimer = setTimeout(() => {
-    card.classList.remove('show');
-    setTimeout(() => card.classList.add('hidden'), 320);
-  }, dismissAfter);
+  // Reveal + animate in
+  overlay.classList.remove('hidden');
+  overlay.classList.remove('show');
+  void overlay.offsetWidth;
+  overlay.classList.add('show');
+
+  // Resolve any pending promise so callers don't leak.
+  if (introResolve) { try { introResolve(); } catch {} introResolve = null; }
+  if (introOverlayListener) {
+    overlay.removeEventListener('click', introOverlayListener);
+    introOverlayListener = null;
+  }
+
+  return new Promise((resolve) => {
+    introResolve = resolve;
+    const dismiss = () => {
+      if (!introResolve) return;
+      clearTimeout(introTimer);
+      overlay.classList.remove('show');
+      overlay.classList.add('closing');
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('closing');
+      }, 280);
+      if (introOverlayListener) {
+        overlay.removeEventListener('click', introOverlayListener);
+        introOverlayListener = null;
+      }
+      const r = introResolve;
+      introResolve = null;
+      r();
+    };
+    introOverlayListener = dismiss;
+    overlay.addEventListener('click', dismiss);
+    const dismissAfter = level.tip ? 4400 : 2800;
+    clearTimeout(introTimer);
+    introTimer = setTimeout(dismiss, dismissAfter);
+  });
 }
 
 function starString(stars) {
@@ -508,7 +539,9 @@ export function showLevelComplete({ level, stars, score, onNext, onReplay, isLas
   if (!overlay || !panel) return;
   if (failPanel) failPanel.classList.add('hidden');
 
-  title.textContent = isLast ? `${level.name} — All done!` : `Level ${level.id} complete!`;
+  title.textContent = isLast
+    ? `Level ${level.id} complete — you've cleared every level so far!`
+    : `Level ${level.id} complete!`;
   scoreEl.textContent = `Score: ${score.toLocaleString()}`;
   nextBtn.textContent = isLast ? 'Play again' : 'Next level';
 

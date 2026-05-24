@@ -871,7 +871,6 @@ function startLevel(levelId, { announce = true } = {}) {
   if (announce) {
     const bestStars = state.levelProgress.stars[state.level.id] || 0;
     const bestScore = (state.levelProgress.bestScores || {})[state.level.id] || 0;
-    showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
     let bestPhrase = '';
     if (bestStars > 0 || bestScore > 0) {
       const parts = [];
@@ -883,8 +882,18 @@ function startLevel(levelId, { announce = true } = {}) {
     speech.speak(
       `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}${tipPhrase}`
     );
+    // Block input while intro is up; the intro resolves on tap or timeout.
+    state.busy = true;
+    const done = () => {
+      state.busy = false;
+      scheduleHint();
+    };
+    const p = showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
+    if (p && typeof p.then === 'function') p.then(done);
+    else done();
+  } else {
+    scheduleHint();
   }
-  scheduleHint();
 }
 
 function startFreePlay() {

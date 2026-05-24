@@ -341,26 +341,44 @@ body.theme-hc .level-tile.current {
   opacity: 1;
 }
 
-/* Level intro card */
+/* Level intro card — full-screen modal, scale + fade in/out */
 #level-intro {
-  transition: transform 280ms cubic-bezier(.2,.8,.3,1.05), opacity 280ms ease-out;
-  transform: translate(-50%, -16px) scale(0.92);
+  transition: opacity 320ms ease-out;
   opacity: 0;
+  pointer-events: none;
 }
 #level-intro.show {
-  transform: translate(-50%, 0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+#level-intro #level-intro-card {
+  transform: scale(0.85) translateY(20px);
+  opacity: 0;
+  transition: transform 360ms cubic-bezier(.2,.85,.3,1.1), opacity 320ms ease-out;
+}
+#level-intro.show #level-intro-card {
+  transform: scale(1) translateY(0);
   opacity: 1;
 }
+#level-intro.closing {
+  opacity: 0;
+  transition: opacity 240ms ease-in;
+}
+#level-intro.closing #level-intro-card {
+  transform: scale(0.92) translateY(-12px);
+  opacity: 0;
+  transition: transform 240ms ease-in, opacity 220ms ease-in;
+}
 
-body.theme-hc #level-intro {
+body.theme-hc #level-intro-card {
   background: #111;
   color: #fff;
   border-color: #fff;
 }
-body.theme-hc #level-intro #li-name { color: #fff; }
-body.theme-hc #level-intro #li-tag { color: #FFD60A; }
-body.theme-hc #level-intro #li-hint { color: #fff; }
-body.theme-hc #level-intro #li-moves { color: #d4d4d4; }
+body.theme-hc #level-intro-card #li-name { color: #fff; }
+body.theme-hc #level-intro-card #li-tag { color: #FFD60A; }
+body.theme-hc #level-intro-card #li-hint { color: #fff; }
+body.theme-hc #level-intro-card #li-moves { color: #d4d4d4; }
 
 body.theme-hc #level-chip {
   background: #FFD60A;

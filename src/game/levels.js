@@ -50,7 +50,7 @@ export const LEVELS = [
   },
   {
     id: 8,
-    name: 'Grand finale',
+    name: 'Sky climb',
     moves: 30,
     objective: { kind: 'score', target: 3000 },
     hint: 'Reach 3,000 points',
@@ -163,10 +163,10 @@ export const LEVELS = [
   },
   {
     id: 16,
-    name: 'Grand puzzle',
+    name: 'Twin towers',
     moves: 34,
     objective: { kind: 'score', target: 2800 },
-    hint: 'The final challenge: jelly, locks, and a steep target.',
+    hint: 'Jelly and locks crowd the board. Reach 2,800.',
     obstacles: {
       jelly: [
         [1, 0, 2], [4, 0, 2],
@@ -227,7 +227,7 @@ export const LEVELS = [
     name: 'Sweet symphony',
     moves: 36,
     objective: { kind: 'score', target: 3000 },
-    hint: 'The final piece: jelly, locks, and a steep climb to 3,000.',
+    hint: 'Jelly, locks, and a steep climb to 3,000.',
     tip: 'Take your time — there is no losing, only winning.',
     obstacles: {
       jelly: [
@@ -356,10 +356,10 @@ export const LEVELS = [
   },
   {
     id: 34,
-    name: 'Sweetest dream',
+    name: 'Lantern light',
     moves: 38,
     objective: { kind: 'score', target: 3500 },
-    hint: 'The sweetest of all: jelly, locks, and 3,500 to climb.',
+    hint: 'Jelly and locks woven across the board. Reach 3,500.',
     tip: 'Hammer through locks. Bombs clear colors. Take your time.',
     obstacles: {
       jelly: [
