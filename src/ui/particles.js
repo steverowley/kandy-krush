@@ -159,6 +159,26 @@ export function screenShake(intensity = 6, durationMs = 360) {
   shakeTimer = setTimeout(() => body.classList.remove('shake'), durationMs);
 }
 
+export function spawnStarRain(count = 28) {
+  const root = layer();
+  if (!root) return;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'particle particle-starfall';
+    el.textContent = '★';
+    const startX = Math.random() * window.innerWidth;
+    el.style.left = `${startX}px`;
+    el.style.top = '-40px';
+    el.style.setProperty('--drift', `${(Math.random() - 0.5) * 140}px`);
+    el.style.setProperty('--rot', `${(Math.random() - 0.5) * 540}deg`);
+    el.style.fontSize = `${20 + Math.random() * 26}px`;
+    el.style.animationDelay = `${Math.random() * 400}ms`;
+    el.style.animationDuration = `${1600 + Math.random() * 700}ms`;
+    root.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+  }
+}
+
 const CONFETTI_COLORS = [
   '#FFD60A', '#0353A4', '#FF006E', '#FB5607', '#06A77D', '#8338EC',
 ];

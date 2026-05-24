@@ -53,6 +53,7 @@ import {
   spawnShockwave,
   spawnScreenFlash,
   screenShake,
+  spawnStarRain,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -216,6 +217,7 @@ function checkLevelOutcome() {
     }
     persist();
     spawnConfetti(improved && !firstClear ? 72 : 48);
+    if (stars === 3) spawnStarRain(36);
     sfx.playObjectiveComplete(state.level.objective.kind);
     if (improved && !firstClear) {
       flashMessage(`New best! ${stars} ${stars === 1 ? 'star' : 'stars'}`, 1600);
