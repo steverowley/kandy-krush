@@ -813,8 +813,9 @@ function startLevel(levelId, { announce = true } = {}) {
       if (bestScore > 0) parts.push(`${bestScore.toLocaleString()} points`);
       bestPhrase = ` Your best: ${parts.join(', ')}.`;
     }
+    const tipPhrase = state.level.tip ? ` Tip: ${state.level.tip}` : '';
     speech.speak(
-      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}`
+      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}${tipPhrase}`
     );
   }
   scheduleHint();
