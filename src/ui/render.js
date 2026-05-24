@@ -103,6 +103,12 @@ export function renderBoard(board, state, opts = {}) {
       if (cell && cell.special) tile.classList.add('special', `special-${cell.special}`);
       if (state.selected && state.selected.c === c && state.selected.r === r) {
         tile.classList.add('selected');
+      } else if (state.selected) {
+        const dc = Math.abs(state.selected.c - c);
+        const dr = Math.abs(state.selected.r - r);
+        if ((dc === 1 && dr === 0) || (dc === 0 && dr === 1)) {
+          tile.classList.add('adjacent');
+        }
       }
       if (fallenSet && fallenSet.has(cellKey(c, r))) {
         tile.classList.add('falling');

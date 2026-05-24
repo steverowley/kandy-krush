@@ -181,7 +181,7 @@ function checkLevelOutcome() {
     persist();
     spawnConfetti(48);
     sfx.playRestart();
-    speech.speak('Level complete!');
+    speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
     showLevelComplete({
       level: state.level,
       stars,
@@ -464,6 +464,9 @@ function startLevel(levelId) {
   refreshLevelUI();
   renderBoard(state.board, state);
   showLevelIntro(state.level, LEVELS.length);
+  speech.speak(
+    `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
+  );
   scheduleHint();
 }
 

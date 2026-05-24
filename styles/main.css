@@ -47,6 +47,16 @@ body.size-large  { --board-size: min(99vw, 900px); }
   z-index: 2;
 }
 
+.tile.adjacent {
+  background: #FFFCE5;
+  box-shadow: 0 0 0 3px #FFD60A, 0 3px 0 rgba(0, 0, 0, 0.18);
+}
+
+body.theme-hc .tile.adjacent {
+  background: #FFF1A8;
+  box-shadow: 0 0 0 3px #FFD60A, 0 3px 0 rgba(0,0,0,0.2);
+}
+
 .tile svg {
   width: 100%;
   height: 100%;
