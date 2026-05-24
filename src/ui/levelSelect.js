@@ -24,8 +24,18 @@ export function createLevelSelect({ getProgress, onChoose }) {
     return { show: () => {}, hide: () => {} };
   }
 
+  const titleEl = document.getElementById('ls-title');
+
   function populate() {
     const { currentLevel, stars } = getProgress();
+    const totalEarned = LEVELS.reduce(
+      (sum, l) => sum + (stars[l.id] || 0),
+      0
+    );
+    const totalPossible = LEVELS.length * 3;
+    if (titleEl) {
+      titleEl.innerHTML = `Choose a level <span class="text-yellow-500 font-bold whitespace-nowrap">${'★'.repeat(Math.min(3, totalEarned))}</span> <span class="text-base font-bold text-gray-700 align-middle">${totalEarned} / ${totalPossible}</span>`;
+    }
     grid.innerHTML = '';
     for (const lv of LEVELS) {
       const earned = stars[lv.id] || 0;

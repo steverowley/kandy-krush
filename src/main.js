@@ -31,6 +31,7 @@ import {
   bumpMoveCounter,
   flashObjectiveDelta,
   showLevelIntro,
+  showWelcome,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -71,6 +72,7 @@ const state = {
   movesRemaining: 0,
   progress: { type: {}, matches: 0, specials: 0 },
   resolved: false,
+  seenWelcome: persisted.seenWelcome,
 };
 
 sfx.setMuted(!state.settings.sound);
@@ -114,6 +116,7 @@ function persist() {
     highScore: state.highScore,
     streak: state.streak,
     lastPlayedDate: state.lastPlayedDate,
+    seenWelcome: state.seenWelcome,
     settings: state.settings,
     levelProgress: state.levelProgress,
   });
@@ -455,7 +458,7 @@ function resetBoard() {
   achievements.onNewGame();
 }
 
-function startLevel(levelId) {
+function startLevel(levelId, { announce = true } = {}) {
   cancelHint();
   hideLevelOverlay();
   state.level = getLevel(levelId);
@@ -463,10 +466,12 @@ function startLevel(levelId) {
   state.movesRemaining = state.level.moves;
   refreshLevelUI();
   renderBoard(state.board, state);
-  showLevelIntro(state.level, LEVELS.length);
-  speech.speak(
-    `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
-  );
+  if (announce) {
+    showLevelIntro(state.level, LEVELS.length);
+    speech.speak(
+      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
+    );
+  }
   scheduleHint();
 }
 
@@ -481,9 +486,9 @@ function startFreePlay() {
   scheduleHint();
 }
 
-function init({ chime = false } = {}) {
+function init({ chime = false, announceLevel = true } = {}) {
   if (state.settings.mode === 'levels') {
-    startLevel(state.levelProgress.currentLevel || 1);
+    startLevel(state.levelProgress.currentLevel || 1, { announce: announceLevel });
   } else {
     startFreePlay();
   }
@@ -529,7 +534,23 @@ document.getElementById('restart').addEventListener('click', () => {
   sfx.playRestart();
 });
 attachInput(onTap);
-init({ chime: false });
+
+if (state.seenWelcome) {
+  init({ chime: false });
+} else {
+  init({ chime: false, announceLevel: false });
+  showWelcome(() => {
+    state.seenWelcome = true;
+    persist();
+    sfx.unlockAudio();
+    if (state.settings.mode === 'levels' && state.level) {
+      showLevelIntro(state.level, LEVELS.length);
+      speech.speak(
+        `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
+      );
+    }
+  });
+}
 persist();
 
 if ('serviceWorker' in navigator) {
