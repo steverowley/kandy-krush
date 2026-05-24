@@ -50,6 +50,9 @@ import {
   spawnPopSpecks,
   spawnConfetti,
   drawMatchTrails,
+  spawnShockwave,
+  spawnScreenFlash,
+  screenShake,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -644,6 +647,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     showCascadeBanner(cascadeLevel);
   }
   if (cascadeLevel >= 3) spawnConfetti(20);
+  if (cascadeLevel >= 4) {
+    screenShake(7, 380);
+    spawnConfetti(36);
+  }
+  if (allCleared.size >= 6) {
+    flashMessage('HUGE MATCH!', 1200);
+    screenShake(5, 300);
+  }
 
   drawMatchTrails(result.groups);
   spawnPopSpecks(toClear);
@@ -662,6 +673,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
     spawnTileSparkles(s.c, s.r, s.kind === 'rainbow' ? 14 : 10);
+    if (s.kind === 'rainbow') {
+      spawnShockwave(s.c, s.r, { color: '#FF006E', size: 240 });
+      spawnScreenFlash('rgba(255, 214, 10, 0.35)');
+      flashMessage('RAINBOW!', 1200);
+      screenShake(4, 280);
+    } else {
+      spawnShockwave(s.c, s.r, { color: '#FFD60A', size: 160 });
+    }
   }
   renderBoard(state.board, state);
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);

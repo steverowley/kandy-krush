@@ -691,6 +691,48 @@ body.theme-hc #cascade-text {
   100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3); opacity: 0; }
 }
 
+.particle-shockwave {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 4px solid var(--ring-color, #FFD60A);
+  background: transparent;
+  box-shadow: 0 0 14px var(--ring-color, #FFD60A);
+  transform: translate(-50%, -50%);
+  animation: particle-shockwave 700ms cubic-bezier(.15,.7,.4,1) forwards;
+}
+@keyframes particle-shockwave {
+  0%   { width: 12px; height: 12px; opacity: 0.95; border-width: 4px; }
+  100% { width: var(--ring-size); height: var(--ring-size); opacity: 0; border-width: 1px; }
+}
+
+.particle-screen-flash {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  transform: none;
+  opacity: 0;
+  animation: particle-screen-flash 480ms ease-out forwards;
+  z-index: 35;
+  mix-blend-mode: screen;
+}
+@keyframes particle-screen-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+body.shake {
+  animation: body-shake 360ms cubic-bezier(.36,.07,.19,.97);
+}
+@keyframes body-shake {
+  10%, 90% { transform: translate(calc(var(--shake-amp, 6px) * -0.3), 0); }
+  20%, 80% { transform: translate(calc(var(--shake-amp, 6px) * 0.5), 0); }
+  30%, 50%, 70% { transform: translate(calc(var(--shake-amp, 6px) * -1), 0); }
+  40%, 60% { transform: translate(var(--shake-amp, 6px), 0); }
+}
+
 .particle-confetti {
   width: 10px;
   height: 14px;

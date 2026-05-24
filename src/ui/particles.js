@@ -121,6 +121,44 @@ export function drawMatchTrails(groups) {
   }, 700);
 }
 
+export function spawnShockwave(c, r, opts = {}) {
+  const root = layer();
+  if (!root) return;
+  const pt = tileCenter(c, r);
+  if (!pt) return;
+  const color = opts.color || '#FFD60A';
+  const el = document.createElement('div');
+  el.className = 'particle particle-shockwave';
+  el.style.left = `${pt.x}px`;
+  el.style.top = `${pt.y}px`;
+  el.style.setProperty('--ring-color', color);
+  el.style.setProperty('--ring-size', `${(opts.size || pt.w * 0.7)}px`);
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 720);
+}
+
+export function spawnScreenFlash(color = '#FFD60A') {
+  const root = layer();
+  if (!root) return;
+  const el = document.createElement('div');
+  el.className = 'particle particle-screen-flash';
+  el.style.background = color;
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 500);
+}
+
+let shakeTimer = null;
+export function screenShake(intensity = 6, durationMs = 360) {
+  const body = document.body;
+  if (!body) return;
+  body.style.setProperty('--shake-amp', `${intensity}px`);
+  body.classList.remove('shake');
+  void body.offsetWidth;
+  body.classList.add('shake');
+  clearTimeout(shakeTimer);
+  shakeTimer = setTimeout(() => body.classList.remove('shake'), durationMs);
+}
+
 const CONFETTI_COLORS = [
   '#FFD60A', '#0353A4', '#FF006E', '#FB5607', '#06A77D', '#8338EC',
 ];
