@@ -459,6 +459,44 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
+export function showUpgradePicker(choices, activeIds, onPick, categoryColor) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const active = document.getElementById('upgrade-active-list');
+  if (!overlay || !panel || !list) return;
+  list.innerHTML = '';
+  for (const u of choices) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'upgrade-card flex flex-col gap-1 p-4 text-left border-[3px] border-black rounded-2xl bg-white hover:bg-amber-50 active:bg-amber-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 shadow-md';
+    btn.innerHTML = `
+      <span class="text-xs font-bold uppercase tracking-wider" style="color:${categoryColor(u.category)}">${u.category}</span>
+      <span class="text-lg sm:text-xl font-bold">${u.name}</span>
+      <span class="text-sm sm:text-base text-gray-700">${u.desc}</span>
+    `;
+    btn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      panel.classList.add('hidden');
+      onPick(u);
+    });
+    list.appendChild(btn);
+  }
+  if (active && activeIds && activeIds.length > 0) {
+    const counts = new Map();
+    for (const id of activeIds) counts.set(id, (counts.get(id) || 0) + 1);
+    const parts = [];
+    for (const [id, n] of counts) parts.push(n > 1 ? `${id} ×${n}` : id);
+    active.textContent = `Active: ${parts.join(' · ')}`;
+  } else if (active) {
+    active.textContent = 'No upgrades yet — this is your first pick.';
+  }
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  const firstBtn = list.querySelector('button');
+  if (firstBtn) firstBtn.focus();
+}
+
 let comboHideTimer = null;
 export function setComboMeter(level) {
   const el = document.getElementById('combo-meter');
