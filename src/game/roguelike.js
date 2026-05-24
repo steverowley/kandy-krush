@@ -6,26 +6,80 @@ import { LEVELS, getLevel } from './levels.js';
 export const RUN_LENGTH = 30;
 export const BOSS_SLOTS = new Set([10, 20, 30]);
 
+// Dedicated boss layouts. Each is a fully-formed level config with its
+// own name, hint, objective, moves, obstacles, and tip. Slot 30 is the
+// final boss — everything thrown in at once.
+const BOSS_LEVELS = {
+  10: {
+    id: 'boss-1',
+    name: 'Jelly Guardian',
+    moves: 28,
+    objective: { kind: 'clearJelly' },
+    hint: 'BOSS 1 — clear every jelly tile to defeat the Guardian.',
+    tip: 'The Guardian protects 16 hits of jelly. Stack matches over the centre to break through.',
+    obstacles: {
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [0, 2, 1], [2, 2, 1], [3, 2, 1], [5, 2, 1],
+        [0, 3, 1], [2, 3, 1], [3, 3, 1], [5, 3, 1],
+        [1, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  20: {
+    id: 'boss-2',
+    name: 'Lock Tyrant',
+    moves: 32,
+    objective: { kind: 'score', target: 3000 },
+    hint: 'BOSS 2 — reach 3,000 points through the Tyrant’s locks.',
+    tip: 'Locks block swaps. Free them with adjacent matches, then push for the score.',
+    obstacles: {
+      locks: [
+        [0, 1, 2], [5, 1, 2],
+        [0, 4, 2], [5, 4, 2],
+        [2, 0, 1], [3, 0, 1],
+        [2, 5, 1], [3, 5, 1],
+      ],
+      jelly: [
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  30: {
+    id: 'boss-3',
+    name: 'Sweet King',
+    moves: 40,
+    objective: { kind: 'score', target: 5000 },
+    hint: 'FINAL BOSS — reach 5,000 to crown the Sweet King.',
+    tip: 'Jelly, locks, and cherries all at once. Use everything in your bank — this is the last slot.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [5, 0, 2],
+        [0, 5, 2], [5, 5, 2],
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+      locks: [
+        [1, 1, 1], [4, 1, 1],
+        [1, 4, 1], [4, 4, 1],
+      ],
+      ingredients: [[2, 0], [3, 0]],
+    },
+  },
+};
+
 // Map a roguelike slot (1..30) to a base level config. For now this
 // just walks the first 30 hand-tuned levels; later we'll tag boss
 // slots and tune difficulty per slot.
 export function getRoguelikeLevel(slot) {
   const idx = Math.max(1, Math.min(RUN_LENGTH, slot));
+  if (BOSS_LEVELS[idx]) {
+    return { ...BOSS_LEVELS[idx], runSlot: idx, isBoss: true };
+  }
   const base = LEVELS[(idx - 1) % LEVELS.length] || getLevel(1);
-  const isBoss = BOSS_SLOTS.has(idx);
-  // Construct a slot-specific level wrapper so the visible name and
-  // hint reflect "Slot N of 30" rather than the underlying level's
-  // own title. We keep all of base's mechanics + obstacles.
   return {
     ...base,
     runSlot: idx,
-    isBoss,
-    name: isBoss
-      ? `Boss ${BOSS_SLOTS.size > 0 ? Math.ceil(idx / 10) : 1} — ${base.name}`
-      : base.name,
-    hint: isBoss
-      ? `BOSS · ${base.hint}`
-      : base.hint,
+    isBoss: false,
   };
 }
 

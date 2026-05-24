@@ -351,8 +351,16 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     const p = showLevelIntro(state.level, RUN_LENGTH);
     if (p && typeof p.then === 'function') p.then(done);
     else done();
+    if (lvl.isBoss) {
+      // Boss fanfare on top of the intro card
+      flashMessage(slot === 30 ? 'FINAL BOSS!' : 'BOSS BATTLE!', 1600);
+      spawnScreenFlash('rgba(255, 0, 110, 0.45)');
+      screenShake(8, 420);
+      sfx.playObjectiveComplete('specials'); // sparkly chord
+      haptics.epic();
+    }
     speech.speak(
-      `Slot ${slot} of ${RUN_LENGTH}.${state.level.isBoss ? ' Boss level.' : ''} ${state.level.hint}.`
+      `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
     );
   } else {
     scheduleHint();
@@ -382,7 +390,13 @@ function advanceRoguelikeAfterWin() {
   const justFinished = slot;
   const isBossWin = BOSS_SLOTS.has(justFinished);
   if (isBossWin) {
-    setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 600);
+    flashMessage('BOSS DEFEATED!', 2000);
+    spawnConfetti(80);
+    spawnStarRain(40);
+    screenShake(7, 400);
+    haptics.levelComplete();
+    speech.speak('Boss defeated!');
+    setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 1400);
   } else {
     const choices = pickUpgradeChoices(state.runUpgrades);
     showUpgradePicker(choices, state.runUpgrades, (chosen) => {
