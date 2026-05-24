@@ -34,6 +34,8 @@ import {
   showWelcome,
   showCascadeBanner,
   popNewSpecial,
+  setPowerupCounts,
+  setHammerArmed,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -76,7 +78,11 @@ const state = {
   progress: { type: {}, matches: 0, specials: 0 },
   resolved: false,
   seenWelcome: persisted.seenWelcome,
+  powerups: { hammer: 3, shuffle: 2 },
+  armedTool: null,
 };
+
+const POWERUP_DEFAULTS = { hammer: 3, shuffle: 2 };
 
 sfx.setMuted(!state.settings.sound);
 speech.setSpeechEnabled(state.settings.speech);
@@ -248,8 +254,83 @@ function maybeUpdateBest() {
   }
 }
 
+async function useHammer(pos) {
+  if (state.busy || state.powerups.hammer <= 0) return;
+  if (!state.board.cell(pos.c, pos.r)) return;
+  state.busy = true;
+  state.powerups.hammer--;
+  setPowerupCounts(state.powerups);
+  cancelHint();
+  sfx.unlockAudio();
+  sfx.playMatch(1, 1);
+  speech.speak('Smash!');
+  spawnPopSpecks([pos]);
+  await animatePop([pos]);
+  state.board.clear([pos]);
+  renderBoard(state.board, state);
+  await delay(120);
+  const fallen = applyGravity(state.board, CANDY_TYPES);
+  renderBoard(state.board, state, { fallen });
+  await delay(220);
+
+  let cascadeResult = findMatches(state.board);
+  let cascadeLevel = 1;
+  while (cascadeResult.positions.length > 0) {
+    await processMatchRound(cascadeResult, cascadeLevel, null);
+    cascadeResult = findMatches(state.board);
+    cascadeLevel++;
+  }
+
+  maybeUpdateBest();
+  refreshLevelUI();
+  await ensureMovesAvailable();
+  checkLevelOutcome();
+  state.busy = false;
+  if (!state.resolved) scheduleHint();
+}
+
+function useShuffle() {
+  if (state.busy || state.powerups.shuffle <= 0) return;
+  state.powerups.shuffle--;
+  setPowerupCounts(state.powerups);
+  state.armedTool = null;
+  setHammerArmed(false);
+  cancelHint();
+  sfx.unlockAudio();
+  reshuffle(state.board, CANDY_TYPES);
+  flashMessage('Shuffled!', 1000);
+  speech.speak('Shuffled!');
+  renderBoard(state.board, state);
+  scheduleHint();
+}
+
+document.getElementById('pu-hammer').addEventListener('click', () => {
+  sfx.unlockAudio();
+  if (state.busy || state.powerups.hammer <= 0) return;
+  if (state.armedTool === 'hammer') {
+    state.armedTool = null;
+    setHammerArmed(false);
+    return;
+  }
+  state.selected = null;
+  renderBoard(state.board, state);
+  state.armedTool = 'hammer';
+  setHammerArmed(true);
+  speech.speak('Tap a candy to smash');
+});
+
+document.getElementById('pu-shuffle').addEventListener('click', () => {
+  useShuffle();
+});
+
 async function onTap(pos) {
   if (state.busy) return;
+  if (state.armedTool === 'hammer') {
+    state.armedTool = null;
+    setHammerArmed(false);
+    await useHammer(pos);
+    return;
+  }
   cancelHint();
   sfx.unlockAudio();
 
@@ -459,6 +540,10 @@ function resetBoard() {
   state.busy = false;
   state.resolved = false;
   state.progress = { type: {}, matches: 0, specials: 0 };
+  state.powerups = { ...POWERUP_DEFAULTS };
+  state.armedTool = null;
+  setHammerArmed(false);
+  setPowerupCounts(state.powerups);
   setScore(0);
   setBest(state.highScore);
   setStreak(state.streak);
