@@ -37,6 +37,9 @@ import {
   setPowerupCounts,
   setHammerArmed,
   setArmedTool,
+  setComboMeter,
+  setLuckyCharge,
+  showChangelog,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -96,8 +99,27 @@ const state = {
   resolved: false,
   almostFired: false,
   seenWelcome: persisted.seenWelcome,
+  seenVersion: persisted.seenVersion,
   armedTool: null,
+  luckyCharge: 0,
+  luckyReady: false,
+  comboLevel: 0,
 };
+
+const APP_VERSION = '2025-05-24-6n';
+const CHANGELOG = [
+  'Lucky charge bar — fills as you play, your next match earns 2× points',
+  'Combo meter — see your chain depth grow during cascades',
+  'Surprise drops — big matches sometimes drop a free power-up into your bank',
+  'Swipe candies on mobile to swap (taps still work)',
+  '"No moves" shuffles now animate and preserve your powered-up sweets',
+  'Four lo-fi songs that rotate, quieter vinyl crackle, haptic feedback',
+  'Hint glow is now hot-pink and bouncing so it stands out from selection',
+];
+const LUCKY_PER_MOVE = 12;        // % per successful swap
+const LUCKY_MULTIPLIER = 2;
+const SURPRISE_DROP_MIN_TILES = 6; // Match must clear this many tiles to roll
+const SURPRISE_DROP_CHANCE = 0.28; // 28% on a 6+ match
 
 const POWERUP_CAP = 9;
 const PLUS_MOVES_BONUS = 3;
@@ -241,9 +263,119 @@ function persist() {
     streak: state.streak,
     lastPlayedDate: state.lastPlayedDate,
     seenWelcome: state.seenWelcome,
+    seenVersion: state.seenVersion,
     settings: state.settings,
     levelProgress: state.levelProgress,
   });
+}
+
+// Combo meter — visible chain depth during cascades
+function updateComboMeter(level) {
+  state.comboLevel = level;
+  setComboMeter(level);
+}
+
+// Lucky charge — fills as you successfully play, gives a 2x score on
+// the next successful match round when full.
+function bumpLuckyCharge() {
+  if (state.luckyReady) return;
+  state.luckyCharge = Math.min(100, state.luckyCharge + LUCKY_PER_MOVE);
+  if (state.luckyCharge >= 100) {
+    state.luckyReady = true;
+    state.luckyCharge = 100;
+    flashMessage('LUCKY READY!', 1200);
+    speech.speak('Lucky ready');
+    haptics.specialBirth();
+  }
+  setLuckyCharge(state.luckyCharge, state.luckyReady);
+}
+
+function consumeLuckyIfReady(baseScore) {
+  if (!state.luckyReady) return baseScore;
+  state.luckyReady = false;
+  state.luckyCharge = 0;
+  setLuckyCharge(0, false);
+  flashMessage(`LUCKY × ${LUCKY_MULTIPLIER}!`, 1400);
+  speech.speak('Lucky two times');
+  spawnConfetti(28);
+  haptics.epic();
+  return baseScore * LUCKY_MULTIPLIER;
+}
+
+const SURPRISE_KINDS = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+const SURPRISE_LABELS = {
+  hammer: 'Hammer',
+  shuffle: 'Shuffle',
+  colorBomb: 'Color Bomb',
+  plusMoves: '+3 Moves',
+};
+const SURPRISE_BUTTON_IDS = {
+  hammer: 'pu-hammer',
+  shuffle: 'pu-shuffle',
+  colorBomb: 'pu-colorbomb',
+  plusMoves: 'pu-plusmoves',
+};
+
+// Big matches occasionally drop a free power-up — flying icon animates
+// from the cleared tiles toward the matching power-up button, then the
+// bank ticks up.
+function maybeDropSurprise(positions, cascadeLevel) {
+  if (!positions || positions.length < SURPRISE_DROP_MIN_TILES) return;
+  // Chance scales slightly with cascade depth — deeper chains feel more
+  // like Vampire Survivors / Survivor.io: rewards stacking on rewards.
+  const chance = SURPRISE_DROP_CHANCE + Math.max(0, cascadeLevel - 1) * 0.04;
+  if (Math.random() > chance) return;
+  const kind = SURPRISE_KINDS[Math.floor(Math.random() * SURPRISE_KINDS.length)];
+  // Centroid of the cleared tiles
+  let sx = 0, sy = 0, n = 0;
+  for (const p of positions) {
+    const tile = document.querySelector(`#board .tile[data-c="${p.c}"][data-r="${p.r}"]`);
+    if (!tile) continue;
+    const rect = tile.getBoundingClientRect();
+    sx += rect.left + rect.width / 2;
+    sy += rect.top + rect.height / 2;
+    n++;
+  }
+  if (n === 0) return;
+  const fromX = sx / n;
+  const fromY = sy / n;
+  const targetBtn = document.getElementById(SURPRISE_BUTTON_IDS[kind]);
+  if (!targetBtn) return;
+  const tRect = targetBtn.getBoundingClientRect();
+  const toX = tRect.left + tRect.width / 2;
+  const toY = tRect.top + tRect.height / 2;
+  flashMessage(`Free ${SURPRISE_LABELS[kind]}!`, 1300);
+  speech.speak(`Free ${SURPRISE_LABELS[kind]}`);
+  haptics.specialBirth();
+  animateSurpriseIcon(kind, fromX, fromY, toX, toY, () => {
+    const bank = powerupBank();
+    bank[kind] = Math.min(POWERUP_CAP, (bank[kind] || 0) + 1);
+    setPowerupCounts(bank);
+    persist();
+    targetBtn.classList.remove('surprise-land');
+    void targetBtn.offsetWidth;
+    targetBtn.classList.add('surprise-land');
+    setTimeout(() => targetBtn.classList.remove('surprise-land'), 600);
+  });
+}
+
+function animateSurpriseIcon(kind, fromX, fromY, toX, toY, onArrive) {
+  const layer = document.getElementById('particles');
+  if (!layer) { if (onArrive) onArrive(); return; }
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const el = document.createElement('div');
+  el.className = 'particle surprise-icon';
+  el.style.left = `${fromX}px`;
+  el.style.top = `${fromY}px`;
+  el.style.setProperty('--fly-dx', `${dx}px`);
+  el.style.setProperty('--fly-dy', `${dy}px`);
+  el.textContent = SURPRISE_LABELS[kind];
+  layer.appendChild(el);
+  setTimeout(() => {
+    el.remove();
+    if (onArrive) onArrive();
+  }, 820);
 }
 
 function refreshLevelUI() {
@@ -284,6 +416,7 @@ function flashObjectiveProgress(specialsCreatedCount) {
 }
 
 function consumeMove() {
+  bumpLuckyCharge();
   if (state.settings.mode !== 'levels' || !state.level) return;
   if (state.movesRemaining > 0) {
     state.movesRemaining--;
@@ -483,10 +616,11 @@ async function useColorBomb(pos) {
   recordClearedTypes(clearedTypeList);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
-  const earned = calcScore(positions, 2);
+  const earned = consumeLuckyIfReady(calcScore(positions, 2));
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
+  maybeDropSurprise(positions, 2);
   achievements.onScore(state.score);
   await delay(180);
   const fallen = gravityWithIngredients();
@@ -660,8 +794,9 @@ async function runComboTurn(combo) {
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
-  const earned = calcScore(cleared, 2);
+  const earned = consumeLuckyIfReady(calcScore(cleared, 2));
   state.score += earned;
+  maybeDropSurprise(cleared, 2);
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, cleared, { color: '#FF006E' });
   achievements.onScore(state.score);
@@ -847,10 +982,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);
   if (specialsCreated.length > 0) haptics.specialBirth();
 
-  const earned = calcScore([...allCleared], cascadeLevel);
+  const earned = consumeLuckyIfReady(calcScore([...allCleared], cascadeLevel));
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, toClear);
+  maybeDropSurprise(toClear, cascadeLevel);
+  updateComboMeter(cascadeLevel);
   achievements.onScore(state.score);
 
   const ctx = {
@@ -1170,12 +1307,31 @@ document.addEventListener(
   { passive: true }
 );
 
+// Initialize lucky bar display
+setLuckyCharge(0, false);
+
+// Show changelog for returning players who haven't seen this version,
+// only after the welcome flow (or instead of it, for returning players).
+function maybeShowChangelog(after) {
+  if (state.seenVersion === APP_VERSION || !state.seenWelcome) {
+    if (after) after();
+    return;
+  }
+  showChangelog(CHANGELOG, () => {
+    state.seenVersion = APP_VERSION;
+    persist();
+    if (after) after();
+  });
+}
+
 if (state.seenWelcome) {
   init({ chime: false });
+  maybeShowChangelog();
 } else {
   init({ chime: false, announceLevel: false });
   showWelcome(() => {
     state.seenWelcome = true;
+    state.seenVersion = APP_VERSION; // first-time players have effectively "seen" it
     persist();
     sfx.unlockAudio();
     if (state.settings.mode === 'levels' && state.level) {

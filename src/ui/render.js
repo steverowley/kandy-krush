@@ -450,6 +450,67 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
+let comboHideTimer = null;
+export function setComboMeter(level) {
+  const el = document.getElementById('combo-meter');
+  if (!el) return;
+  if (!level || level < 2) {
+    el.classList.add('hidden');
+    return;
+  }
+  el.textContent = `CHAIN ×${level}`;
+  el.classList.remove('hidden');
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+  clearTimeout(comboHideTimer);
+  comboHideTimer = setTimeout(() => el.classList.add('hidden'), 1800);
+}
+
+export function setLuckyCharge(pct, ready = false) {
+  const fill = document.getElementById('lucky-fill');
+  const label = document.getElementById('lucky-label');
+  const bar = document.getElementById('lucky-bar');
+  if (!fill || !label || !bar) return;
+  fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  if (ready) {
+    label.textContent = 'READY!';
+    bar.classList.add('lucky-ready');
+  } else {
+    label.textContent = `${Math.round(pct)}%`;
+    bar.classList.remove('lucky-ready');
+  }
+}
+
+export function showChangelog(items, onDismiss) {
+  const overlay = document.getElementById('changelog-overlay');
+  const panel = document.getElementById('changelog-panel');
+  const list = document.getElementById('changelog-list');
+  const btn = document.getElementById('changelog-dismiss');
+  if (!overlay || !panel || !list || !btn) {
+    if (onDismiss) onDismiss();
+    return;
+  }
+  list.innerHTML = '';
+  for (const text of items) {
+    const li = document.createElement('li');
+    li.textContent = text;
+    list.appendChild(li);
+  }
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  btn.focus();
+  const dismiss = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    btn.removeEventListener('click', dismiss);
+    overlay.removeEventListener('click', dismiss);
+    if (onDismiss) onDismiss();
+  };
+  btn.addEventListener('click', dismiss);
+  overlay.addEventListener('click', dismiss);
+}
+
 export function showWelcome(onStart) {
   const overlay = document.getElementById('welcome-overlay');
   const panel = document.getElementById('welcome-panel');
