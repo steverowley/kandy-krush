@@ -40,6 +40,20 @@
     </div>
   </header>
 
+  <section id="level-info" class="hidden w-full max-w-3xl bg-white border-[3px] border-black rounded-2xl px-4 py-3 flex flex-col gap-1 shadow-md">
+    <div class="flex items-baseline justify-between gap-3">
+      <div id="level-name" class="text-xl sm:text-2xl font-bold">Level 1</div>
+      <div class="flex items-baseline gap-2">
+        <span id="moves-label" class="text-base sm:text-lg font-bold uppercase tracking-wider text-gray-700">Moves</span>
+        <span id="moves" class="text-3xl sm:text-4xl font-bold tabular-nums leading-none">20</span>
+      </div>
+    </div>
+    <div class="flex items-center justify-between gap-3">
+      <div id="objective-text" class="text-lg sm:text-xl">Reach 400 points</div>
+      <div id="objective-progress" class="text-lg sm:text-xl font-bold tabular-nums">0 / 400</div>
+    </div>
+  </section>
+
   <section class="w-full max-w-3xl flex items-end justify-between gap-4" aria-live="polite">
     <div>
       <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Score</div>
@@ -71,6 +85,37 @@
   </footer>
 
   <div id="particles" class="pointer-events-none fixed inset-0 z-30 overflow-hidden" aria-hidden="true"></div>
+
+  <div id="level-overlay" class="hidden fixed inset-0 bg-black/60 z-40" aria-hidden="true"></div>
+  <div
+    id="level-complete"
+    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-4 text-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lc-title"
+  >
+    <h2 id="lc-title" class="text-3xl sm:text-4xl font-bold">Level complete!</h2>
+    <div id="lc-stars" class="text-6xl sm:text-7xl text-yellow-500 leading-none" aria-label="0 of 3 stars">☆☆☆</div>
+    <div id="lc-score" class="text-2xl font-bold text-gray-800">Score: 0</div>
+    <div class="flex flex-col sm:flex-row gap-3 w-full">
+      <button id="lc-replay" type="button" class="flex-1 text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-3">Replay</button>
+      <button id="lc-next" type="button" class="flex-1 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 border-[3px] border-black rounded-2xl px-4 py-3">Next level</button>
+    </div>
+  </div>
+  <div
+    id="level-fail"
+    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-4 text-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="lf-title"
+  >
+    <h2 id="lf-title" class="text-3xl sm:text-4xl font-bold">So close!</h2>
+    <div id="lf-score" class="text-xl sm:text-2xl text-gray-800">You scored 0 — try again?</div>
+    <div class="flex flex-col sm:flex-row gap-3 w-full">
+      <button id="lf-skip" type="button" class="hidden flex-1 text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-3">Skip this level</button>
+      <button id="lf-replay" type="button" class="flex-1 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 border-[3px] border-black rounded-2xl px-4 py-3">Try again</button>
+    </div>
+  </div>
   <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
   <div
     id="settings-panel"
@@ -111,6 +156,13 @@
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="false"
       >High Contrast: Off</button>
+
+      <button
+        id="setting-mode"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        aria-pressed="true"
+      >Mode: Levels</button>
 
       <div>
         <div class="text-xl font-bold mb-2">Tile size</div>

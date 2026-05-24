@@ -167,6 +167,107 @@ export function setStreak(days) {
   el.textContent = days === 1 ? 'Day 1' : `Day ${days} streak`;
 }
 
+export function setLevelUI({ level, movesRemaining, current, target, mode }) {
+  const wrap = document.getElementById('level-info');
+  const movesEl = document.getElementById('moves');
+  const movesLabel = document.getElementById('moves-label');
+  const objEl = document.getElementById('objective-text');
+  const objProgEl = document.getElementById('objective-progress');
+  const nameEl = document.getElementById('level-name');
+  if (!wrap) return;
+
+  if (mode !== 'levels' || !level) {
+    wrap.classList.add('hidden');
+    if (movesLabel) movesLabel.classList.add('hidden');
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  if (movesLabel) movesLabel.classList.remove('hidden');
+  if (nameEl) nameEl.textContent = `Level ${level.id} — ${level.name}`;
+  if (objEl) objEl.textContent = level.hint;
+  if (objProgEl) objProgEl.textContent = `${Math.min(current, target).toLocaleString()} / ${target.toLocaleString()}`;
+  if (movesEl) movesEl.textContent = String(movesRemaining);
+}
+
+function starString(stars) {
+  return '★'.repeat(stars) + '☆'.repeat(3 - stars);
+}
+
+export function showLevelComplete({ level, stars, score, onNext, onReplay, isLast }) {
+  const overlay = document.getElementById('level-overlay');
+  const panel = document.getElementById('level-complete');
+  const failPanel = document.getElementById('level-fail');
+  const title = document.getElementById('lc-title');
+  const starsEl = document.getElementById('lc-stars');
+  const scoreEl = document.getElementById('lc-score');
+  const nextBtn = document.getElementById('lc-next');
+  const replayBtn = document.getElementById('lc-replay');
+  if (!overlay || !panel) return;
+  if (failPanel) failPanel.classList.add('hidden');
+
+  title.textContent = isLast ? `${level.name} — All done!` : `Level ${level.id} complete!`;
+  starsEl.textContent = starString(stars);
+  starsEl.setAttribute('aria-label', `${stars} of 3 stars`);
+  scoreEl.textContent = `Score: ${score.toLocaleString()}`;
+  nextBtn.textContent = isLast ? 'Play again' : 'Next level';
+
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+
+  nextBtn.onclick = () => {
+    hideLevelOverlay();
+    onNext();
+  };
+  replayBtn.onclick = () => {
+    hideLevelOverlay();
+    onReplay();
+  };
+  nextBtn.focus();
+}
+
+export function showLevelFail({ level, score, onReplay, onSkip, canSkip }) {
+  const overlay = document.getElementById('level-overlay');
+  const panel = document.getElementById('level-fail');
+  const completePanel = document.getElementById('level-complete');
+  const title = document.getElementById('lf-title');
+  const scoreEl = document.getElementById('lf-score');
+  const replayBtn = document.getElementById('lf-replay');
+  const skipBtn = document.getElementById('lf-skip');
+  if (!overlay || !panel) return;
+  if (completePanel) completePanel.classList.add('hidden');
+
+  title.textContent = 'So close!';
+  scoreEl.textContent = `You scored ${score.toLocaleString()} — try again?`;
+
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+
+  replayBtn.onclick = () => {
+    hideLevelOverlay();
+    onReplay();
+  };
+  if (canSkip) {
+    skipBtn.classList.remove('hidden');
+    skipBtn.onclick = () => {
+      hideLevelOverlay();
+      onSkip();
+    };
+  } else {
+    skipBtn.classList.add('hidden');
+  }
+  replayBtn.focus();
+}
+
+export function hideLevelOverlay() {
+  const overlay = document.getElementById('level-overlay');
+  const complete = document.getElementById('level-complete');
+  const fail = document.getElementById('level-fail');
+  if (overlay) overlay.classList.add('hidden');
+  if (complete) complete.classList.add('hidden');
+  if (fail) fail.classList.add('hidden');
+}
+
 let msgTimer;
 export function flashMessage(text, holdMs = 1200) {
   const el = document.getElementById('message');

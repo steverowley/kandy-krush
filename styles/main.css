@@ -242,3 +242,31 @@ body.theme-hc #achievement {
   color: #000;
   border-color: #000;
 }
+body.theme-hc #level-info {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #level-info #moves-label,
+body.theme-hc #level-info #objective-text,
+body.theme-hc #level-info #objective-progress,
+body.theme-hc #level-info #level-name { color: #fff; }
+body.theme-hc #level-complete,
+body.theme-hc #level-fail {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #level-complete h2,
+body.theme-hc #level-fail h2,
+body.theme-hc #lc-score,
+body.theme-hc #lf-score { color: #fff; }
+body.theme-hc #level-complete button,
+body.theme-hc #level-fail button {
+  background: #fff;
+  color: #000;
+}
+body.theme-hc #lc-next,
+body.theme-hc #lf-replay {
+  background: #FFD60A;
+}

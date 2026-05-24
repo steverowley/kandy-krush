@@ -1,5 +1,6 @@
 const KEY = 'sweet-match.v1';
 const SIZES = ['small', 'medium', 'large'];
+const MODES = ['levels', 'free'];
 
 const defaults = () => ({
   highScore: 0,
@@ -10,6 +11,11 @@ const defaults = () => ({
     speech: false,
     contrast: false,
     size: 'medium',
+    mode: 'levels',
+  },
+  levelProgress: {
+    currentLevel: 1,
+    stars: {},
   },
 });
 
@@ -32,6 +38,13 @@ export function load() {
     if (!raw) return defaults();
     const parsed = JSON.parse(raw);
     const s = parsed.settings || {};
+    const lp = parsed.levelProgress || {};
+    const starsRaw = lp.stars && typeof lp.stars === 'object' ? lp.stars : {};
+    const stars = {};
+    for (const [k, v] of Object.entries(starsRaw)) {
+      const n = Number(v);
+      if (Number.isFinite(n) && n >= 1 && n <= 3) stars[k] = Math.floor(n);
+    }
     return {
       highScore: Number(parsed.highScore) || 0,
       streak: Number(parsed.streak) || 0,
@@ -41,6 +54,11 @@ export function load() {
         speech: !!s.speech,
         contrast: !!s.contrast,
         size: SIZES.includes(s.size) ? s.size : 'medium',
+        mode: MODES.includes(s.mode) ? s.mode : 'levels',
+      },
+      levelProgress: {
+        currentLevel: Number(lp.currentLevel) || 1,
+        stars,
       },
     };
   } catch {
