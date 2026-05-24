@@ -198,15 +198,35 @@ function runLuckyRate() {
   return LUCKY_PER_MOVE * m;
 }
 
-const APP_VERSION = '2025-05-24-7f';
-const CHANGELOG = [
-  'NEW: Roguelike mode! 30 slots with bosses at 10, 20, 30. Settings → Mode → Roguelike.',
-  'Pick an upgrade between slots — buffs, consumables, or synergies. They stack within the run.',
-  'Earn gems from runs and spend them in the Skill Tree (Settings → Skill Tree) for permanent boosts.',
-  'Dedicated boss battles: Jelly Guardian (slot 10), Lock Tyrant (20), Sweet King (30).',
-  'Lucky bar reworked: it now drains when idle. Bursts to ×3 then sustains ×1.5 for 4 more matches.',
-  'Install Sweet Match to your home screen — a one-tap prompt now appears on supported browsers.',
+// Changelog — newest entry first. APP_VERSION auto-derives from the
+// top entry's id so adding a new entry here is enough to make the
+// "What's new" modal re-appear on every player's next visit. No
+// manual version bump needed for future releases.
+const CHANGELOG_ENTRIES = [
+  {
+    id: '2025-05-24-7j',
+    items: [
+      'Roguelike mode now SHOWS its goals mid-run — slot number, objective, move counter and progress bar all visible.',
+      'Mode-switch animation — a wicked red-purple wipe blasts across the screen when entering Roguelike, a soft wipe for Levels/Free Play.',
+      'Roguelike music switches to a darker dungeon progression (minor 7ths, lower bass).',
+      'Manual Shuffle no longer wipes cherries on cherry levels.',
+      '"What\'s new" notifications now appear on every update automatically.',
+    ],
+  },
+  {
+    id: '2025-05-24-7f',
+    items: [
+      'NEW: Roguelike mode — 30 slots with bosses at 10, 20, 30. Settings → Mode → Roguelike.',
+      'Pick an upgrade between slots — buffs, consumables, or synergies. They stack within the run.',
+      'Earn gems from runs and spend them in the Skill Tree (Settings → Skill Tree) for permanent boosts.',
+      'Dedicated boss battles: Jelly Guardian (10), Lock Tyrant (20), Sweet King (30).',
+      'Lucky bar reworked: drains when idle, bursts to ×3, sustains ×1.5 for 4 more matches.',
+      'Install Sweet Match to your home screen — one-tap prompt on supported browsers.',
+    ],
+  },
 ];
+const APP_VERSION = CHANGELOG_ENTRIES[0].id;
+const CHANGELOG = CHANGELOG_ENTRIES[0].items;
 const LUCKY_PER_MOVE = 12;            // % per successful swap
 const LUCKY_INSTANT_MULTIPLIER = 3;   // burst on first match after fill
 const LUCKY_MODE_MATCHES = 4;         // additional matches at lower mult
@@ -351,6 +371,22 @@ function preservingReshuffle() {
   // Last resort: fresh fill (loses specials), but keep ingredients.
   board.fillNoMatches();
   for (const p of ingredientCells) board.set(p.c, p.r, p.cell);
+}
+
+// Animated mode-switch wipe. Wicked red-purple for Roguelike, soft
+// cream-pink for Levels/Free Play. Respects reduce-motion.
+function playModeTransition(mode) {
+  const el = document.getElementById('mode-transition');
+  if (!el) return;
+  el.classList.remove('show', 'wicked', 'bright');
+  el.classList.add(mode === 'roguelike' ? 'wicked' : 'bright');
+  void el.offsetWidth;
+  el.classList.add('show');
+  if (mode === 'roguelike') {
+    haptics.epic();
+    sfx.playObjectiveComplete('specials');
+  }
+  setTimeout(() => el.classList.remove('show'), 1000);
 }
 
 function persist() {
@@ -1657,6 +1693,7 @@ createSettingsUI({
     state.settings = { ...state.settings, ...next };
     sfx.setMuted(!state.settings.sound);
     sfx.setMusicEnabled(state.settings.music);
+    sfx.setMusicMode(state.settings.mode);
     speech.setSpeechEnabled(state.settings.speech);
     applyTheme(state.settings);
     persist();
@@ -1665,6 +1702,7 @@ createSettingsUI({
       if (state.inRoguelikeRun && state.settings.mode !== 'roguelike') {
         endRoguelikeRun();
       }
+      playModeTransition(state.settings.mode);
       if (state.settings.mode === 'roguelike') {
         startRoguelikeRun();
       } else if (state.settings.mode === 'levels') {
@@ -1682,6 +1720,7 @@ createSettingsUI({
 });
 
 sfx.setMusicEnabled(state.settings.music);
+sfx.setMusicMode(state.settings.mode);
 
 const levelSelect = createLevelSelect({
   getProgress: () => state.levelProgress,
