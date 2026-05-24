@@ -54,6 +54,7 @@ import {
   load as loadSave,
   save as saveSave,
   bumpStreakForToday,
+  resetProgress as resetProgressSave,
 } from './storage/save.js';
 
 const COLS = 6;
@@ -651,6 +652,11 @@ createSettingsUI({
         startFreePlay();
       }
     }
+  },
+  onResetProgress: () => {
+    resetProgressSave({ settings: state.settings });
+    speech.speak('Progress reset. Starting over.');
+    location.reload();
   },
 });
 
