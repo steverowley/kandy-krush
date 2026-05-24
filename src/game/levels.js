@@ -242,6 +242,73 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 23,
+    name: 'Tight squeeze',
+    moves: 16,
+    objective: { kind: 'score', target: 800 },
+    hint: 'Only 16 moves. Make them count.',
+  },
+  {
+    id: 24,
+    name: 'Yellow vault',
+    moves: 26,
+    objective: { kind: 'clearType', type: 0, target: 14 },
+    hint: 'Clear 14 yellow circles — but locks guard the corners.',
+    obstacles: {
+      locks: [
+        [0, 0, 1], [5, 0, 1],
+        [0, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 25,
+    name: 'Ocean swim',
+    moves: 26,
+    objective: { kind: 'clearType', type: 1, target: 18 },
+    hint: 'Clear 18 blue squares — no obstacles, just patience.',
+  },
+  {
+    id: 26,
+    name: 'Specials galore',
+    moves: 28,
+    objective: { kind: 'specials', target: 3 },
+    hint: 'Make 3 special candies. Plan those 4-in-a-rows!',
+  },
+  {
+    id: 27,
+    name: 'Jelly maze',
+    moves: 30,
+    objective: { kind: 'clearJelly' },
+    hint: 'Ten jelly tiles in a snaking pattern — clear them all.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [5, 0, 1],
+        [2, 1, 2], [3, 1, 2],
+        [1, 3, 1], [4, 3, 1],
+        [2, 4, 2], [3, 4, 2],
+        [0, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 28,
+    name: 'Combo master',
+    moves: 32,
+    objective: { kind: 'score', target: 2500 },
+    hint: 'Reach 2,500 with jelly AND locks. Use those power-ups!',
+    obstacles: {
+      jelly: [
+        [1, 1, 1], [4, 1, 1],
+        [1, 4, 1], [4, 4, 1],
+      ],
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [2, 5, 1], [3, 5, 1],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
