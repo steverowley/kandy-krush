@@ -75,7 +75,8 @@ const state = {
   levelProgress: { ...persisted.levelProgress },
   level: null,
   movesRemaining: 0,
-  progress: { type: {}, matches: 0, specials: 0 },
+  progress: { type: {}, matches: 0, specials: 0, jellyRemaining: 0, jellyTotal: 0 },
+  jellyMap: new Map(),
   resolved: false,
   seenWelcome: persisted.seenWelcome,
   powerups: { hammer: 3, shuffle: 2 },
@@ -267,6 +268,7 @@ async function useHammer(pos) {
   spawnPopSpecks([pos]);
   await animatePop([pos]);
   state.board.clear([pos]);
+  decrementJellyAt([pos]);
   renderBoard(state.board, state);
   await delay(120);
   const fallen = applyGravity(state.board, CANDY_TYPES);
@@ -382,6 +384,7 @@ async function runComboTurn(combo) {
   spawnConfetti(combo.kind === 'double-rainbow' ? 40 : 22);
   await animatePop(cleared);
   state.board.clear(cleared);
+  decrementJellyAt(cleared);
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
@@ -494,6 +497,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   spawnPopSpecks(toClear);
   await animatePop(toClear);
   state.board.clear(toClear);
+  decrementJellyAt(toClear);
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   state.progress.specials += specialsCreated.length;
@@ -539,7 +543,14 @@ function resetBoard() {
   state.selected = null;
   state.busy = false;
   state.resolved = false;
-  state.progress = { type: {}, matches: 0, specials: 0 };
+  state.jellyMap = new Map();
+  state.progress = {
+    type: {},
+    matches: 0,
+    specials: 0,
+    jellyRemaining: 0,
+    jellyTotal: 0,
+  };
   state.powerups = { ...POWERUP_DEFAULTS };
   state.armedTool = null;
   setHammerArmed(false);
@@ -551,11 +562,45 @@ function resetBoard() {
   achievements.onNewGame();
 }
 
+function applyLevelObstacles(level) {
+  state.jellyMap = new Map();
+  let total = 0;
+  if (level && level.obstacles && Array.isArray(level.obstacles.jelly)) {
+    for (const spec of level.obstacles.jelly) {
+      const [c, r, hits = 1] = spec;
+      state.jellyMap.set(`${c},${r}`, hits);
+      total += hits;
+    }
+  }
+  state.progress.jellyTotal = total;
+  state.progress.jellyRemaining = total;
+}
+
+function decrementJellyAt(positions) {
+  if (state.jellyMap.size === 0) return 0;
+  let dec = 0;
+  for (const p of positions) {
+    const k = `${p.c},${p.r}`;
+    const n = state.jellyMap.get(k);
+    if (n && n > 0) {
+      state.jellyMap.set(k, n - 1);
+      dec++;
+    }
+  }
+  if (dec > 0) {
+    state.progress.jellyRemaining = Math.max(0, state.progress.jellyRemaining - dec);
+    const obj = state.level && state.level.objective;
+    if (obj && obj.kind === 'clearJelly') flashObjectiveDelta(`+${dec}`);
+  }
+  return dec;
+}
+
 function startLevel(levelId, { announce = true } = {}) {
   cancelHint();
   hideLevelOverlay();
   state.level = getLevel(levelId);
   resetBoard();
+  applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
   refreshLevelUI();
   renderBoard(state.board, state);
