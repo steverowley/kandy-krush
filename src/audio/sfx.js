@@ -301,11 +301,11 @@ function scheduleBar(startAt, chord) {
   hitBass(startAt + BEAT_S * 2, chord.bass * 1.5);
 }
 
-// Quiet white-noise burst — vinyl crackle.
+// Very quiet white-noise burst — barely-there vinyl crackle.
 function playCrackle() {
   if (muted || !ctx || !musicNodes || musicNodes.stopped) return;
   try {
-    const len = 0.04;
+    const len = 0.03;
     const sr = ctx.sampleRate;
     const buf = ctx.createBuffer(1, Math.floor(len * sr), sr);
     const data = buf.getChannelData(0);
@@ -314,9 +314,9 @@ function playCrackle() {
     src.buffer = buf;
     const filter = ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(2400, ctx.currentTime);
+    filter.frequency.setValueAtTime(3200, ctx.currentTime);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.008, ctx.currentTime);
+    g.gain.setValueAtTime(0.0022, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + len);
     src.connect(filter).connect(g).connect(ctx.destination);
     src.start(ctx.currentTime);
@@ -330,7 +330,9 @@ function scheduleNextCrackle() {
     return;
   }
   playCrackle();
-  const next = 220 + Math.random() * 580;
+  // Sparse: 0.9-2.6s between pops, so the texture sits in the
+  // background instead of clattering on top of the chord.
+  const next = 900 + Math.random() * 1700;
   crackleTimer = setTimeout(scheduleNextCrackle, next);
 }
 
