@@ -93,6 +93,16 @@ body.size-large  { --board-size: min(99vw, 900px); }
   background: #FFD60A;
 }
 
+/* Hint pulse for idle-detected swap */
+.tile.hint {
+  animation: hint-pulse 1.2s ease-in-out infinite;
+  z-index: 3;
+}
+@keyframes hint-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px #FFD60A, 0 0 0 7px #000; }
+  50%      { box-shadow: 0 0 0 8px #FFD60A, 0 0 0 11px #000; }
+}
+
 /* Special candies */
 .tile.special {
   box-shadow: 0 0 0 2px #FFD60A inset;

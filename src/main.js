@@ -2,6 +2,7 @@ import { Board } from './game/board.js';
 import { findMatches, deriveNewSpecials, activationClears } from './game/match.js';
 import { applyGravity } from './game/cascade.js';
 import { calcScore } from './game/score.js';
+import { findAnyValidSwap, hasAnyValidSwap, reshuffle } from './game/hint.js';
 import {
   renderBoard,
   setScore,
@@ -11,6 +12,8 @@ import {
   applyTheme,
   animateSwap,
   animatePop,
+  showHintGlow,
+  clearHintGlow,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -49,6 +52,33 @@ const achievements = createAchievements({
 });
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const HINT_IDLE_MS = 7000;
+let hintTimer = null;
+
+function cancelHint() {
+  clearTimeout(hintTimer);
+  clearHintGlow();
+}
+
+function scheduleHint() {
+  cancelHint();
+  hintTimer = setTimeout(() => {
+    if (state.busy) {
+      scheduleHint();
+      return;
+    }
+    const swap = findAnyValidSwap(state.board);
+    if (swap) showHintGlow(swap.a, swap.b);
+  }, HINT_IDLE_MS);
+}
+
+async function ensureMovesAvailable() {
+  if (hasAnyValidSwap(state.board)) return;
+  flashMessage('Shuffle!', 1100);
+  await delay(120);
+  reshuffle(state.board, CANDY_TYPES);
+  renderBoard(state.board, state);
+}
 
 function persist() {
   saveSave({
@@ -81,18 +111,21 @@ function maybeUpdateBest() {
 
 async function onTap(pos) {
   if (state.busy) return;
+  cancelHint();
   sfx.unlockAudio();
 
   if (!state.selected) {
     state.selected = pos;
     renderBoard(state.board, state);
     sfx.playSelect();
+    scheduleHint();
     return;
   }
 
   if (state.selected.c === pos.c && state.selected.r === pos.r) {
     state.selected = null;
     renderBoard(state.board, state);
+    scheduleHint();
     return;
   }
 
@@ -100,6 +133,7 @@ async function onTap(pos) {
     state.selected = pos;
     renderBoard(state.board, state);
     sfx.playSelect();
+    scheduleHint();
     return;
   }
 
@@ -124,6 +158,7 @@ async function trySwap(a, b) {
     renderBoard(state.board, state);
     flashMessage('Try another', 900);
     state.busy = false;
+    scheduleHint();
     return;
   }
 
@@ -186,12 +221,18 @@ async function trySwap(a, b) {
   }
 
   maybeUpdateBest();
+  await ensureMovesAvailable();
   state.busy = false;
+  scheduleHint();
 }
 
 function init({ chime = false } = {}) {
+  cancelHint();
   state.board = new Board(COLS, ROWS, CANDY_TYPES);
   state.board.fillNoMatches();
+  if (!hasAnyValidSwap(state.board)) {
+    reshuffle(state.board, CANDY_TYPES);
+  }
   state.score = 0;
   state.selected = null;
   state.busy = false;
@@ -202,6 +243,7 @@ function init({ chime = false } = {}) {
   achievements.onNewGame();
   renderBoard(state.board, state);
   if (chime) sfx.playRestart();
+  scheduleHint();
 }
 
 applyTheme(state.settings);
