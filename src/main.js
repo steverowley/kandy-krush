@@ -87,12 +87,41 @@ const state = {
   resolved: false,
   almostFired: false,
   seenWelcome: persisted.seenWelcome,
-  powerups: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
   armedTool: null,
 };
 
-const POWERUP_DEFAULTS = { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 };
+const POWERUP_CAP = 9;
 const PLUS_MOVES_BONUS = 3;
+
+function powerupBank() {
+  if (!state.levelProgress.powerupBank) {
+    state.levelProgress.powerupBank = { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 };
+  }
+  return state.levelProgress.powerupBank;
+}
+
+function spendPowerup(kind) {
+  const bank = powerupBank();
+  if ((bank[kind] || 0) <= 0) return false;
+  bank[kind]--;
+  setPowerupCounts(bank);
+  persist();
+  return true;
+}
+
+function earnPowerups(stars) {
+  const bank = powerupBank();
+  // Always grant a hammer on any clear.
+  bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + 1);
+  if (stars >= 2) {
+    bank.shuffle = Math.min(POWERUP_CAP, (bank.shuffle || 0) + 1);
+  }
+  if (stars >= 3) {
+    bank.colorBomb = Math.min(POWERUP_CAP, (bank.colorBomb || 0) + 1);
+    bank.plusMoves = Math.min(POWERUP_CAP, (bank.plusMoves || 0) + 1);
+  }
+  setPowerupCounts(bank);
+}
 
 sfx.setMuted(!state.settings.sound);
 speech.setSpeechEnabled(state.settings.speech);
@@ -211,6 +240,7 @@ function checkLevelOutcome() {
     if (state.score > prevBest) {
       state.levelProgress.bestScores[state.level.id] = state.score;
     }
+    earnPowerups(stars);
     const next = nextLevelId(state.level.id);
     if (next && next > (state.levelProgress.currentLevel || 0)) {
       state.levelProgress.currentLevel = next;
@@ -286,11 +316,18 @@ function maybeUpdateBest() {
 }
 
 async function useHammer(pos) {
-  if (state.busy || state.powerups.hammer <= 0) return;
+  if (state.busy) return;
+  const bank = powerupBank();
+  if ((bank.hammer || 0) <= 0) return;
   if (!state.board.cell(pos.c, pos.r)) return;
+  const key = `${pos.c},${pos.r}`;
+  if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0) {
+    flashMessage('Hammer cannot break special blocks', 1200);
+    sfx.playInvalid();
+    return;
+  }
+  if (!spendPowerup('hammer')) return;
   state.busy = true;
-  state.powerups.hammer--;
-  setPowerupCounts(state.powerups);
   cancelHint();
   sfx.unlockAudio();
   sfx.playMatch(1, 1);
@@ -298,8 +335,6 @@ async function useHammer(pos) {
   spawnPopSpecks([pos]);
   await animatePop([pos]);
   state.board.clear([pos]);
-  decrementJellyAt([pos]);
-  state.lockMap.delete(`${pos.c},${pos.r}`);
   renderBoard(state.board, state);
   await delay(120);
   const fallen = applyGravity(state.board, CANDY_TYPES);
@@ -323,23 +358,35 @@ async function useHammer(pos) {
 }
 
 async function useColorBomb(pos) {
-  if (state.busy || state.powerups.colorBomb <= 0) return;
+  if (state.busy) return;
+  const bank = powerupBank();
+  if ((bank.colorBomb || 0) <= 0) return;
   const targetCell = state.board.cell(pos.c, pos.r);
   if (!targetCell || targetCell.type == null) return;
+  const key = `${pos.c},${pos.r}`;
+  if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0) {
+    flashMessage('Bomb cannot target special blocks', 1200);
+    sfx.playInvalid();
+    return;
+  }
   const targetType = targetCell.type;
+  if (!spendPowerup('colorBomb')) return;
   state.busy = true;
-  state.powerups.colorBomb--;
-  setPowerupCounts(state.powerups);
   cancelHint();
   sfx.unlockAudio();
 
-  const candidate = [];
+  // Bomb skips any tile that has jelly OR a lock — power-ups don't
+  // affect special blocks per the design rule.
+  const positions = [];
   for (let r = 0; r < state.board.rows; r++) {
     for (let c = 0; c < state.board.cols; c++) {
-      if (state.board.typeAt(c, r) === targetType) candidate.push({ c, r });
+      if (state.board.typeAt(c, r) !== targetType) continue;
+      const k = `${c},${r}`;
+      if (state.lockMap.get(k) > 0) continue;
+      if (state.jellyMap.get(k) > 0) continue;
+      positions.push({ c, r });
     }
   }
-  const { clearable: positions, blocked: lockedBlocked } = splitByLock(candidate);
   flashMessage('Color bomb!', 1100);
   speech.speak('Color bomb!');
   spawnConfetti(28);
@@ -348,11 +395,7 @@ async function useColorBomb(pos) {
   spawnPopSpecks(positions);
   await animatePop(positions);
   state.board.clear(positions);
-  decrementJellyAt(positions);
-  if (lockedBlocked.length > 0) {
-    decrementLockAt(lockedBlocked);
-    for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
-  }
+  // Intentionally NOT decrementing jelly or locks — bombs skip those.
   const clearedTypeList = positions.map(() => targetType);
   recordClearedTypes(clearedTypeList);
   state.progress.matches += 1;
@@ -384,14 +427,15 @@ async function useColorBomb(pos) {
 }
 
 function usePlusMoves() {
-  if (state.busy || state.powerups.plusMoves <= 0) return;
+  if (state.busy) return;
+  const bank = powerupBank();
+  if ((bank.plusMoves || 0) <= 0) return;
   if (state.settings.mode !== 'levels' || !state.level) {
     speech.speak('Plus moves only works in Levels');
     flashMessage('Levels mode only', 1100);
     return;
   }
-  state.powerups.plusMoves--;
-  setPowerupCounts(state.powerups);
+  if (!spendPowerup('plusMoves')) return;
   state.movesRemaining += PLUS_MOVES_BONUS;
   state.resolved = false;
   refreshLevelUI();
@@ -402,9 +446,10 @@ function usePlusMoves() {
 }
 
 function useShuffle() {
-  if (state.busy || state.powerups.shuffle <= 0) return;
-  state.powerups.shuffle--;
-  setPowerupCounts(state.powerups);
+  if (state.busy) return;
+  const bank = powerupBank();
+  if ((bank.shuffle || 0) <= 0) return;
+  if (!spendPowerup('shuffle')) return;
   state.armedTool = null;
   setArmedTool(null);
   cancelHint();
@@ -418,7 +463,8 @@ function useShuffle() {
 
 function armTool(tool) {
   if (state.busy) return;
-  if (state.powerups[tool] <= 0) return;
+  const bank = powerupBank();
+  if ((bank[tool] || 0) <= 0) return;
   if (state.armedTool === tool) {
     state.armedTool = null;
     setArmedTool(null);
@@ -730,10 +776,9 @@ function resetBoard() {
     jellyRemaining: 0,
     jellyTotal: 0,
   };
-  state.powerups = { ...POWERUP_DEFAULTS };
   state.armedTool = null;
   setArmedTool(null);
-  setPowerupCounts(state.powerups);
+  setPowerupCounts(powerupBank());
   setScore(0);
   setBest(state.highScore);
   setStreak(state.streak);
