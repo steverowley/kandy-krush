@@ -303,31 +303,50 @@ export function flashObjectiveDelta(text) {
   }, 900);
 }
 
-export function setPowerupCounts({ hammer, shuffle }) {
-  const hCount = document.getElementById('pu-hammer-count');
-  const sCount = document.getElementById('pu-shuffle-count');
-  const hBtn = document.getElementById('pu-hammer');
-  const sBtn = document.getElementById('pu-shuffle');
-  if (hCount) hCount.textContent = String(hammer);
-  if (sCount) sCount.textContent = String(shuffle);
-  if (hBtn) hBtn.disabled = hammer <= 0;
-  if (sBtn) sBtn.disabled = shuffle <= 0;
+export function setPowerupCounts({ hammer, shuffle, colorBomb, plusMoves }) {
+  const map = {
+    hammer: { count: hammer, btn: 'pu-hammer', countEl: 'pu-hammer-count' },
+    shuffle: { count: shuffle, btn: 'pu-shuffle', countEl: 'pu-shuffle-count' },
+    colorBomb: { count: colorBomb, btn: 'pu-colorbomb', countEl: 'pu-colorbomb-count' },
+    plusMoves: { count: plusMoves, btn: 'pu-plusmoves', countEl: 'pu-plusmoves-count' },
+  };
+  for (const cfg of Object.values(map)) {
+    const c = document.getElementById(cfg.countEl);
+    const b = document.getElementById(cfg.btn);
+    if (c && cfg.count != null) c.textContent = String(cfg.count);
+    if (b && cfg.count != null) b.disabled = cfg.count <= 0;
+  }
+}
+
+const ARM_CONFIG = {
+  hammer:    { btn: 'pu-hammer',    hint: 'Tap a candy to smash',           boardClass: 'hammer-armed' },
+  colorBomb: { btn: 'pu-colorbomb', hint: 'Tap a candy to clear its color', boardClass: 'colorbomb-armed' },
+};
+
+export function setArmedTool(tool) {
+  const hint = document.getElementById('pu-hint');
+  const board = document.getElementById('board');
+  for (const cfg of Object.values(ARM_CONFIG)) {
+    const b = document.getElementById(cfg.btn);
+    if (b) b.classList.remove('armed');
+    if (board) board.classList.remove(cfg.boardClass);
+  }
+  if (!tool || !ARM_CONFIG[tool]) {
+    if (hint) hint.classList.add('hidden');
+    return;
+  }
+  const cfg = ARM_CONFIG[tool];
+  const b = document.getElementById(cfg.btn);
+  if (b) b.classList.add('armed');
+  if (board) board.classList.add(cfg.boardClass);
+  if (hint) {
+    hint.textContent = cfg.hint;
+    hint.classList.remove('hidden');
+  }
 }
 
 export function setHammerArmed(armed) {
-  const hBtn = document.getElementById('pu-hammer');
-  const hint = document.getElementById('pu-hint');
-  const board = document.getElementById('board');
-  if (!hBtn || !hint || !board) return;
-  if (armed) {
-    hBtn.classList.add('armed');
-    hint.classList.remove('hidden');
-    board.classList.add('hammer-armed');
-  } else {
-    hBtn.classList.remove('armed');
-    hint.classList.add('hidden');
-    board.classList.remove('hammer-armed');
-  }
+  setArmedTool(armed ? 'hammer' : null);
 }
 
 const CASCADE_LABELS = {

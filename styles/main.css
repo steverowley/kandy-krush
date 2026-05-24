@@ -348,12 +348,19 @@ body.theme-hc .tile.jelly-2 {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-3px); }
 }
-#board.hammer-armed .tile {
+#board.hammer-armed .tile,
+#board.colorbomb-armed .tile {
   cursor: crosshair;
 }
 #board.hammer-armed .tile:hover {
   background: #FFE08A;
   box-shadow: 0 0 0 4px #FF006E;
+  transform: scale(1.06);
+  z-index: 3;
+}
+#board.colorbomb-armed .tile:hover {
+  background: #FFE0F0;
+  box-shadow: 0 0 0 4px #FF006E, 0 0 16px rgba(255, 0, 110, 0.6);
   transform: scale(1.06);
   z-index: 3;
 }
