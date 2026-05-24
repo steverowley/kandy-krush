@@ -106,7 +106,20 @@ export function renderBoard(board, state, opts = {}) {
       tile.type = 'button';
       tile.setAttribute('role', 'gridcell');
       tile.setAttribute('aria-label', ariaForCell(cell, c, r));
-      if (cell) tile.innerHTML = svgForCell(cell);
+      if (cell) {
+        if (cell.ingredient) {
+          tile.classList.add('ingredient');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <path d="M40 38 Q55 16 76 22" fill="none" stroke="#15803D" stroke-width="6" stroke-linecap="round"/>
+            <path d="M44 38 Q62 12 78 20" fill="none" stroke="#16A34A" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="35" cy="68" r="22" fill="#DC2626" stroke="#000" stroke-width="5"/>
+            <circle cx="68" cy="65" r="20" fill="#B91C1C" stroke="#000" stroke-width="5"/>
+            <ellipse cx="28" cy="60" rx="6" ry="4" fill="#fff" opacity="0.5"/>
+          </svg>`;
+        } else {
+          tile.innerHTML = svgForCell(cell);
+        }
+      }
       if (cell && cell.special) tile.classList.add('special', `special-${cell.special}`);
       if (state.selected && state.selected.c === c && state.selected.r === r) {
         tile.classList.add('selected');
@@ -242,6 +255,13 @@ function objectiveIconSvg(level) {
   if (o.kind === 'clearJelly') {
     return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><rect x="10" y="10" width="80" height="80" rx="14" fill="#C4B5FD" stroke="#000" stroke-width="6"/><path d="M22 70 Q30 56 38 70 T54 70 T70 70" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.7"/></svg>`;
   }
+  if (o.kind === 'dropIngredients') {
+    return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%">
+      <path d="M42 38 Q56 18 78 22" fill="none" stroke="#15803D" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="36" cy="68" r="22" fill="#DC2626" stroke="#000" stroke-width="5"/>
+      <circle cx="68" cy="66" r="20" fill="#B91C1C" stroke="#000" stroke-width="5"/>
+    </svg>`;
+  }
   return `<svg viewBox="0 0 100 100" aria-hidden="true" width="100%" height="100%"><polygon points="50,10 61,38 92,40 67,58 76,88 50,71 24,88 33,58 8,40 39,38" fill="#FFD60A" stroke="#000" stroke-width="6" stroke-linejoin="round"/></svg>`;
 }
 
@@ -252,6 +272,7 @@ function objectiveFillColor(level) {
   if (o.kind === 'specials') return '#FF006E';
   if (o.kind === 'matches') return '#06A77D';
   if (o.kind === 'clearJelly') return '#8B5CF6';
+  if (o.kind === 'dropIngredients') return '#DC2626';
   return '#FFD60A';
 }
 

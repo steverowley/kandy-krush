@@ -28,7 +28,16 @@ export class Board {
 
   typeAt(c, r) {
     const v = this.cell(c, r);
-    return v ? v.type : null;
+    // Ingredient cells exist but cannot match. Treat them as empty for
+    // match-find purposes; they still occupy the cell against gravity.
+    if (!v) return null;
+    if (v.ingredient) return null;
+    return v.type;
+  }
+
+  isIngredient(c, r) {
+    const v = this.cell(c, r);
+    return !!(v && v.ingredient);
   }
 
   specialAt(c, r) {

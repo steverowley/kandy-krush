@@ -81,7 +81,15 @@ const state = {
   levelProgress: { ...persisted.levelProgress },
   level: null,
   movesRemaining: 0,
-  progress: { type: {}, matches: 0, specials: 0, jellyRemaining: 0, jellyTotal: 0 },
+  progress: {
+    type: {},
+    matches: 0,
+    specials: 0,
+    jellyRemaining: 0,
+    jellyTotal: 0,
+    ingredientsTotal: 0,
+    ingredientsDropped: 0,
+  },
   jellyMap: new Map(),
   lockMap: new Map(),
   resolved: false,
@@ -321,7 +329,7 @@ async function useHammer(pos) {
   if ((bank.hammer || 0) <= 0) return;
   if (!state.board.cell(pos.c, pos.r)) return;
   const key = `${pos.c},${pos.r}`;
-  if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0) {
+  if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0 || state.board.isIngredient(pos.c, pos.r)) {
     flashMessage('Hammer cannot break special blocks', 1200);
     sfx.playInvalid();
     return;
@@ -337,7 +345,7 @@ async function useHammer(pos) {
   state.board.clear([pos]);
   renderBoard(state.board, state);
   await delay(120);
-  const fallen = applyGravity(state.board, CANDY_TYPES);
+  const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
   await delay(220);
 
@@ -406,7 +414,7 @@ async function useColorBomb(pos) {
   spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
   achievements.onScore(state.score);
   await delay(180);
-  const fallen = applyGravity(state.board, CANDY_TYPES);
+  const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
   await delay(260);
 
@@ -585,13 +593,20 @@ async function runComboTurn(combo) {
   showAchievement(banner);
   renderBoard(state.board, state);
   await delay(180);
-  const fallen = applyGravity(state.board, CANDY_TYPES);
+  const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
   await delay(260);
 }
 
 async function trySwap(a, b) {
   state.busy = true;
+  if (state.board.isIngredient(a.c, a.r) || state.board.isIngredient(b.c, b.r)) {
+    sfx.playInvalid();
+    flashMessage('Cherries cannot be swapped', 1000);
+    state.busy = false;
+    scheduleHint();
+    return;
+  }
   if (isLocked(a.c, a.r) || isLocked(b.c, b.r)) {
     sfx.playInvalid();
     flashMessage('Locked!', 900);
@@ -684,7 +699,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     .map((k) => {
       const [c, r] = k.split(',').map(Number);
       return { c, r };
-    });
+    })
+    .filter((p) => !state.board.isIngredient(p.c, p.r));
 
   const { clearable: toClear, blocked: lockedBlocked } = splitByLock(candidate);
   const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
@@ -751,7 +767,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   achievements.onMatch(ctx);
 
   await delay(160);
-  const fallen = applyGravity(state.board, CANDY_TYPES);
+  const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
   await delay(260);
 }
@@ -775,6 +791,8 @@ function resetBoard() {
     specials: 0,
     jellyRemaining: 0,
     jellyTotal: 0,
+    ingredientsTotal: 0,
+    ingredientsDropped: 0,
   };
   state.armedTool = null;
   setArmedTool(null);
@@ -790,6 +808,7 @@ function applyLevelObstacles(level) {
   state.jellyMap = new Map();
   state.lockMap = new Map();
   let total = 0;
+  let ingredientCount = 0;
   if (level && level.obstacles) {
     if (Array.isArray(level.obstacles.jelly)) {
       for (const spec of level.obstacles.jelly) {
@@ -804,9 +823,54 @@ function applyLevelObstacles(level) {
         state.lockMap.set(`${c},${r}`, hits);
       }
     }
+    if (Array.isArray(level.obstacles.ingredients)) {
+      for (const spec of level.obstacles.ingredients) {
+        const [c, r] = spec;
+        const cell = state.board.cell(c, r);
+        if (cell) cell.ingredient = true;
+        ingredientCount++;
+      }
+    }
   }
   state.progress.jellyTotal = total;
   state.progress.jellyRemaining = total;
+  state.progress.ingredientsTotal = ingredientCount;
+  state.progress.ingredientsDropped = 0;
+}
+
+// After every gravity settle, check the bottom row for ingredients
+// that have arrived. Remove them, bump the counter, and (optionally)
+// run another gravity pass to fill the freed cells.
+function exitIngredients() {
+  const bottom = state.board.rows - 1;
+  const exited = [];
+  for (let c = 0; c < state.board.cols; c++) {
+    const cell = state.board.cell(c, bottom);
+    if (cell && cell.ingredient) {
+      exited.push({ c, r: bottom });
+      state.board.set(c, bottom, null);
+    }
+  }
+  if (exited.length === 0) return [];
+  state.progress.ingredientsDropped += exited.length;
+  spawnConfetti(20);
+  for (const p of exited) spawnTileSparkles(p.c, p.r, 12, { color: '#FF006E' });
+  const obj = state.level && state.level.objective;
+  if (obj && obj.kind === 'dropIngredients') {
+    flashObjectiveDelta(`+${exited.length}`);
+  }
+  speech.speak(exited.length === 1 ? 'Dropped!' : `Dropped ${exited.length}!`);
+  return exited;
+}
+
+function gravityWithIngredients() {
+  const fallen = applyGravity(state.board, CANDY_TYPES);
+  const exited = exitIngredients();
+  if (exited.length > 0) {
+    const more = applyGravity(state.board, CANDY_TYPES);
+    for (const p of more) fallen.push(p);
+  }
+  return fallen;
 }
 
 function isLocked(c, r) {
