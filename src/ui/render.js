@@ -90,12 +90,17 @@ export function renderBoard(board, state, opts = {}) {
   const fallenSet = opts.fallen
     ? new Set(opts.fallen.map((p) => cellKey(p.c, p.r)))
     : null;
+  const introDrop = !!opts.intro;
   const frag = document.createDocumentFragment();
   for (let r = 0; r < board.rows; r++) {
     for (let c = 0; c < board.cols; c++) {
       const cell = board.cell(c, r);
       const tile = document.createElement('button');
       tile.className = 'tile';
+      if (introDrop) {
+        tile.classList.add('intro-drop');
+        tile.style.setProperty('--intro-delay', `${c * 40 + r * 20}ms`);
+      }
       tile.dataset.c = String(c);
       tile.dataset.r = String(r);
       tile.type = 'button';
@@ -169,14 +174,39 @@ export async function animatePop(positions) {
   await new Promise((res) => setTimeout(res, 240));
 }
 
+let scoreRollFrame = null;
 export function setScore(n, { animate = false } = {}) {
   const el = document.getElementById('score');
+  if (!el) return;
   const old = Number(el.textContent.replace(/,/g, '')) || 0;
-  el.textContent = n.toLocaleString();
-  if (animate && n !== old) {
+  if (animate && n > old) {
+    if (scoreRollFrame) cancelAnimationFrame(scoreRollFrame);
+    const start = old;
+    const end = n;
+    const t0 = performance.now();
+    const duration = Math.min(700, 220 + (end - start) * 1.2);
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const display = Math.floor(start + (end - start) * eased);
+      el.textContent = display.toLocaleString();
+      if (p < 1) scoreRollFrame = requestAnimationFrame(step);
+      else {
+        el.textContent = end.toLocaleString();
+        scoreRollFrame = null;
+      }
+    };
+    scoreRollFrame = requestAnimationFrame(step);
     el.classList.remove('bump');
     void el.offsetWidth;
     el.classList.add('bump');
+  } else {
+    el.textContent = n.toLocaleString();
+    if (animate && n !== old) {
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+    }
   }
 }
 

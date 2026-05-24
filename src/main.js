@@ -801,7 +801,7 @@ function startLevel(levelId, { announce = true } = {}) {
   applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
   refreshLevelUI();
-  renderBoard(state.board, state);
+  renderBoard(state.board, state, { intro: true });
   if (announce) {
     const bestStars = state.levelProgress.stars[state.level.id] || 0;
     const bestScore = (state.levelProgress.bestScores || {})[state.level.id] || 0;
@@ -828,7 +828,7 @@ function startFreePlay() {
   resetBoard();
   state.movesRemaining = 0;
   refreshLevelUI();
-  renderBoard(state.board, state);
+  renderBoard(state.board, state, { intro: true });
   scheduleHint();
 }
 
@@ -899,6 +899,25 @@ document.getElementById('restart').addEventListener('click', () => {
   sfx.playRestart();
 });
 attachInput(onTap);
+
+document.addEventListener(
+  'pointerdown',
+  (e) => {
+    const target = e.target instanceof Element ? e.target.closest('button, .tile') : null;
+    if (!target) return;
+    if (target.disabled) return;
+    const rect = target.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'tap-ripple';
+    ripple.style.left = `${e.clientX - rect.left}px`;
+    ripple.style.top = `${e.clientY - rect.top}px`;
+    const cs = getComputedStyle(target);
+    if (cs.position === 'static') target.style.position = 'relative';
+    target.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 520);
+  },
+  { passive: true }
+);
 
 if (state.seenWelcome) {
   init({ chime: false });
