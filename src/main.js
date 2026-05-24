@@ -147,6 +147,12 @@ function cancelHint() {
   clearHintGlow();
 }
 
+function isSwappable(c, r) {
+  if (state.board.isIngredient(c, r)) return false;
+  if ((state.lockMap.get(`${c},${r}`) || 0) > 0) return false;
+  return true;
+}
+
 function scheduleHint() {
   cancelHint();
   hintTimer = setTimeout(() => {
@@ -154,13 +160,13 @@ function scheduleHint() {
       scheduleHint();
       return;
     }
-    const swap = findAnyValidSwap(state.board);
+    const swap = findAnyValidSwap(state.board, isSwappable);
     if (swap) showHintGlow(swap.a, swap.b);
   }, HINT_IDLE_MS);
 }
 
 async function ensureMovesAvailable() {
-  if (hasAnyValidSwap(state.board)) return;
+  if (hasAnyValidSwap(state.board, isSwappable)) return;
   flashMessage('Shuffle!', 1100);
   await delay(120);
   reshuffle(state.board, CANDY_TYPES);

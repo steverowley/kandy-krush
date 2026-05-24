@@ -1,10 +1,12 @@
 import { findMatches } from './match.js';
 import { makeCell } from './board.js';
 
-export function findAnyValidSwap(board) {
+export function findAnyValidSwap(board, isSwappable) {
+  const ok = (c, r) => !isSwappable || isSwappable(c, r);
   for (let r = 0; r < board.rows; r++) {
     for (let c = 0; c < board.cols; c++) {
-      if (c + 1 < board.cols) {
+      if (!ok(c, r)) continue;
+      if (c + 1 < board.cols && ok(c + 1, r)) {
         board.swap({ c, r }, { c: c + 1, r });
         const m = findMatches(board);
         board.swap({ c, r }, { c: c + 1, r });
@@ -12,7 +14,7 @@ export function findAnyValidSwap(board) {
           return { a: { c, r }, b: { c: c + 1, r } };
         }
       }
-      if (r + 1 < board.rows) {
+      if (r + 1 < board.rows && ok(c, r + 1)) {
         board.swap({ c, r }, { c, r: r + 1 });
         const m = findMatches(board);
         board.swap({ c, r }, { c, r: r + 1 });
@@ -25,8 +27,8 @@ export function findAnyValidSwap(board) {
   return null;
 }
 
-export function hasAnyValidSwap(board) {
-  return findAnyValidSwap(board) !== null;
+export function hasAnyValidSwap(board, isSwappable) {
+  return findAnyValidSwap(board, isSwappable) !== null;
 }
 
 export function reshuffle(board, candyTypes) {
