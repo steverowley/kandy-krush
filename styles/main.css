@@ -254,6 +254,24 @@ body.theme-hc #level-chip {
   border-color: #000;
 }
 
+body.theme-hc #welcome-panel {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #welcome-panel h2,
+body.theme-hc #welcome-panel p { color: #fff; }
+body.theme-hc #welcome-panel #welcome-start {
+  background: #FFD60A;
+  color: #000;
+  border-color: #000;
+}
+body.theme-hc #help-open {
+  background: #fff;
+  color: #000;
+  border-color: #000;
+}
+
 /* Particle layer */
 #particles { contain: layout style; }
 .particle { position: absolute; pointer-events: none; will-change: transform, opacity; }
