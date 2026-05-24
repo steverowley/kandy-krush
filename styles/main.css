@@ -3,8 +3,16 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
+body {
+  --board-size: min(96vw, 720px);
+}
+
+body.size-small  { --board-size: min(88vw, 560px); }
+body.size-medium { --board-size: min(96vw, 720px); }
+body.size-large  { --board-size: min(99vw, 900px); }
+
 #board {
-  width: min(96vw, 720px);
+  width: var(--board-size);
   aspect-ratio: 1 / 1;
 }
 
@@ -57,10 +65,70 @@ html, body {
 }
 
 .tile.falling svg {
-  animation: fall 260ms ease-out;
+  animation: fall 280ms ease-out;
 }
 
 @keyframes fall {
-  0%   { transform: translateY(-40%); }
-  100% { transform: translateY(0); }
+  0%   { transform: translateY(-48%); opacity: 0.4; }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+#score.bump {
+  animation: scoreBump 360ms ease-out;
+}
+
+@keyframes scoreBump {
+  0%   { transform: scale(1);    color: inherit; }
+  40%  { transform: scale(1.18); color: #FF006E; }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+/* Settings panel */
+.setting-toggle[aria-pressed="true"] {
+  background: #FFD60A;
+}
+.setting-size[aria-pressed="true"],
+.setting-size.active {
+  background: #FFD60A;
+}
+
+/* High-contrast theme: stark dark canvas, brighter tiles */
+body.theme-hc {
+  background: #000 !important;
+  color: #fff;
+}
+body.theme-hc h1,
+body.theme-hc #score,
+body.theme-hc .uppercase { color: #fff; }
+body.theme-hc #best { color: #ffd60a; }
+body.theme-hc #message { color: #FFD60A; }
+body.theme-hc footer { color: #d4d4d4; }
+body.theme-hc #board {
+  background: #fff;
+  border-color: #fff;
+}
+body.theme-hc .tile {
+  background: #fff;
+  border-color: #000;
+  border-width: 4px;
+}
+body.theme-hc .tile.selected {
+  background: #FFF1A8;
+  box-shadow: 0 0 0 6px #FFD60A, 0 0 0 10px #000;
+}
+body.theme-hc #settings-panel {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #settings-panel .setting-toggle,
+body.theme-hc #settings-panel .setting-size,
+body.theme-hc #settings-panel button {
+  background: #fff;
+  color: #000;
+}
+body.theme-hc #settings-panel .setting-toggle[aria-pressed="true"],
+body.theme-hc #settings-panel .setting-size[aria-pressed="true"] {
+  background: #FFD60A;
 }
