@@ -94,6 +94,31 @@ body.theme-hc .tile.adjacent {
   100% { transform: translateY(0) scale(1, 1); }
 }
 
+/* Level-complete stars — earned ones animate in one by one. */
+#lc-stars { display: inline-flex; gap: 10px; align-items: center; }
+.lc-star {
+  display: inline-block;
+  color: #d4d4d4;
+  font-size: inherit;
+  line-height: 1;
+  opacity: 0.55;
+}
+.lc-star.earned {
+  color: #F59E0B;
+  opacity: 0;
+  transform: scale(0.6);
+}
+#lc-stars.reveal .lc-star.earned {
+  animation: lc-star-pop 700ms cubic-bezier(.2,.85,.3,1.2) both;
+  animation-delay: var(--star-delay, 0ms);
+}
+@keyframes lc-star-pop {
+  0%   { transform: scale(0.6) rotate(-12deg); opacity: 0; filter: brightness(2); }
+  40%  { transform: scale(1.55) rotate(8deg);  opacity: 1; filter: brightness(1.5) drop-shadow(0 0 18px #FFD60A); }
+  70%  { transform: scale(0.95) rotate(-2deg);             filter: brightness(1.1) drop-shadow(0 0 6px #FFD60A); }
+  100% { transform: scale(1) rotate(0deg);    opacity: 1; filter: none; }
+}
+
 /* Tap ripple — spawned by main.js pointerdown handler */
 .tap-ripple {
   position: absolute;
