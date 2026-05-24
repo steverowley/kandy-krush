@@ -204,6 +204,15 @@ function runLuckyRate() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2025-05-24-7k',
+    items: [
+      'Roguelike progression FIXED — hitting the score target on a slot now actually shows the level-complete dialog. The win-check used to early-return for any mode that wasn\'t Levels.',
+      'Move counter now ticks down in Roguelike mode too (same fix).',
+      'High Contrast and Roguelike themes are now fully accessible — every label, hint, footer, dialog, card and toast has readable text on the dark background.',
+      'Streak chip + install toast + cards all get proper dark-mode variants.',
+    ],
+  },
+  {
     id: '2025-05-24-7j',
     items: [
       'Roguelike mode now SHOWS its goals mid-run — slot number, objective, move counter and progress bar all visible.',
@@ -829,7 +838,8 @@ function flashObjectiveProgress(specialsCreatedCount) {
 
 function consumeMove() {
   bumpLuckyCharge();
-  if (state.settings.mode !== 'levels' || !state.level) return;
+  // Free Play has unlimited moves. Levels and Roguelike both count down.
+  if (state.settings.mode === 'free' || !state.level) return;
   if (state.movesRemaining > 0) {
     state.movesRemaining--;
     refreshLevelUI();
@@ -839,7 +849,8 @@ function consumeMove() {
 
 function checkLevelOutcome() {
   if (state.resolved) return;
-  if (state.settings.mode !== 'levels' || !state.level) return;
+  // Free Play has no level objective. Levels and Roguelike both do.
+  if (state.settings.mode === 'free' || !state.level) return;
   const p = progressTowardObjective(state.level, state.score, state.progress);
   if (!p.done && p.target > 0 && !state.almostFired) {
     const ratio = p.current / p.target;
@@ -1093,9 +1104,9 @@ function usePlusMoves() {
   if (state.busy) return;
   const bank = powerupBank();
   if ((bank.plusMoves || 0) <= 0) return;
-  if (state.settings.mode !== 'levels' || !state.level) {
-    speech.speak('Plus moves only works in Levels');
-    flashMessage('Levels mode only', 1100);
+  if (state.settings.mode === 'free' || !state.level) {
+    speech.speak('Plus moves only works when there are moves to count');
+    flashMessage('Not in Free Play', 1100);
     return;
   }
   if (!spendPowerup('plusMoves')) return;
