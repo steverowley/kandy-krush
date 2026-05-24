@@ -61,6 +61,7 @@ export const LEVELS = [
     moves: 22,
     objective: { kind: 'clearJelly' },
     hint: 'Clear all the jelly',
+    tip: 'Match candies on the purple jelly to clear one layer.',
     obstacles: {
       jelly: [
         [1, 1, 1], [4, 1, 1],
@@ -75,6 +76,7 @@ export const LEVELS = [
     moves: 30,
     objective: { kind: 'clearJelly' },
     hint: 'Clear all the jelly (some takes two hits!)',
+    tip: 'Darker jelly needs two hits to clear.',
     obstacles: {
       jelly: [
         [0, 0, 2], [5, 0, 2],
@@ -90,6 +92,7 @@ export const LEVELS = [
     moves: 24,
     objective: { kind: 'score', target: 900 },
     hint: 'Locked tiles need a match to break free. Reach 900 points.',
+    tip: 'Locked tiles can’t be swapped. Match next to them to break the chain.',
     obstacles: {
       locks: [
         [2, 1, 1], [3, 1, 1],
@@ -103,6 +106,7 @@ export const LEVELS = [
     moves: 30,
     objective: { kind: 'score', target: 1800 },
     hint: 'Some locks take two hits to break! Reach 1,800 points.',
+    tip: 'A "2" on a lock badge means it takes two hits to break.',
     obstacles: {
       locks: [
         [0, 2, 2], [5, 2, 2],
@@ -145,6 +149,7 @@ export const LEVELS = [
     moves: 28,
     objective: { kind: 'score', target: 1600 },
     hint: 'Reach 1,600 with jelly AND locks on the board.',
+    tip: 'Jelly AND locks together. Free up the locks first to score faster.',
     obstacles: {
       jelly: [
         [0, 0, 1], [5, 0, 1],

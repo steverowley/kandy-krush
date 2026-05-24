@@ -441,15 +441,25 @@ export function showLevelIntro(level, totalLevels = 8, opts = {}) {
       bestEl.classList.add('hidden');
     }
   }
+  const tipEl = document.getElementById('li-tip');
+  if (tipEl) {
+    if (level.tip) {
+      tipEl.textContent = `Tip: ${level.tip}`;
+      tipEl.classList.remove('hidden');
+    } else {
+      tipEl.classList.add('hidden');
+    }
+  }
   card.classList.remove('hidden');
   card.classList.remove('show');
   void card.offsetWidth;
   card.classList.add('show');
   clearTimeout(introTimer);
+  const dismissAfter = level.tip ? 4400 : 2400;
   introTimer = setTimeout(() => {
     card.classList.remove('show');
     setTimeout(() => card.classList.add('hidden'), 320);
-  }, 2400);
+  }, dismissAfter);
 }
 
 function starString(stars) {
