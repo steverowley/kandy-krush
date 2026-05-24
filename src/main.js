@@ -198,15 +198,14 @@ function runLuckyRate() {
   return LUCKY_PER_MOVE * m;
 }
 
-const APP_VERSION = '2025-05-24-6n';
+const APP_VERSION = '2025-05-24-7f';
 const CHANGELOG = [
-  'Lucky charge bar — fills as you play, your next match earns 2× points',
-  'Combo meter — see your chain depth grow during cascades',
-  'Surprise drops — big matches sometimes drop a free power-up into your bank',
-  'Swipe candies on mobile to swap (taps still work)',
-  '"No moves" shuffles now animate and preserve your powered-up sweets',
-  'Four lo-fi songs that rotate, quieter vinyl crackle, haptic feedback',
-  'Hint glow is now hot-pink and bouncing so it stands out from selection',
+  'NEW: Roguelike mode! 30 slots with bosses at 10, 20, 30. Settings → Mode → Roguelike.',
+  'Pick an upgrade between slots — buffs, consumables, or synergies. They stack within the run.',
+  'Earn gems from runs and spend them in the Skill Tree (Settings → Skill Tree) for permanent boosts.',
+  'Dedicated boss battles: Jelly Guardian (slot 10), Lock Tyrant (20), Sweet King (30).',
+  'Lucky bar reworked: it now drains when idle. Bursts to ×3 then sustains ×1.5 for 4 more matches.',
+  'Install Sweet Match to your home screen — a one-tap prompt now appears on supported browsers.',
 ];
 const LUCKY_PER_MOVE = 12;            // % per successful swap
 const LUCKY_INSTANT_MULTIPLIER = 3;   // burst on first match after fill
