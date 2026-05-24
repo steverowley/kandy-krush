@@ -409,6 +409,59 @@ body.theme-hc [data-tip][data-tip-pos="below"]::after {
   border-bottom-color: #fff;
 }
 
+/* Locked tile overlay */
+.tile.locked {
+  position: relative;
+  box-shadow: inset 0 0 0 4px #4B5563, 0 3px 0 rgba(0, 0, 0, 0.18);
+}
+.tile.locked-2 {
+  box-shadow: inset 0 0 0 5px #1F2937, 0 3px 0 rgba(0, 0, 0, 0.2);
+}
+.lock-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 32%;
+  height: 32%;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+  z-index: 3;
+}
+.lock-badge svg { width: 100%; height: 100%; }
+.lock-hits {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #000;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0 5px;
+  border: 2px solid #fff;
+  line-height: 1.2;
+}
+.tile.lock-shake {
+  animation: lock-shake 420ms ease-in-out;
+  z-index: 5;
+}
+@keyframes lock-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px) rotate(-2deg); }
+  30% { transform: translateX(6px) rotate(2deg); }
+  45% { transform: translateX(-5px) rotate(-1deg); }
+  60% { transform: translateX(5px) rotate(1deg); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+}
+
+body.theme-hc .tile.locked {
+  box-shadow: inset 0 0 0 4px #fff, 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+body.theme-hc .tile.locked-2 {
+  box-shadow: inset 0 0 0 5px #fff, 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
 /* Power-up buttons */
 .powerup-btn.armed {
   background: #FFD60A;
