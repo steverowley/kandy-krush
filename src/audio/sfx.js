@@ -152,35 +152,63 @@ export function playLevelFail() {
 }
 
 // --- Background music ---
-// A slowly evolving 4-chord pad loop. Web-Audio synthesized, no files.
-// Each chord plays for 8s with 3s crossfade, then advances to the next.
-// Volume capped at ~6% so it never overpowers SFX.
+// A warm I-V-vi-IV progression in C major — the classic "happy" pop loop
+// — sitting in the upper-mid octave so it never feels droney. Each chord
+// crossfades into the next with a subtle bell on top for sparkle.
+// Capped at 4% gain so it sits comfortably under SFX.
 const MUSIC_CHORDS = [
-  [261.63, 329.63, 392.00, 493.88], // Cmaj7
-  [220.00, 277.18, 329.63, 415.30], // A m7
-  [349.23, 440.00, 523.25, 659.26], // F maj7
-  [392.00, 493.88, 587.33, 698.46], // G maj
+  // C major   (I)   — C5, E5, G5
+  [523.25, 659.25, 783.99],
+  // G major   (V)   — G4, B4, D5
+  [392.00, 493.88, 587.33],
+  // A minor   (vi)  — A4, C5, E5
+  [440.00, 523.25, 659.25],
+  // F major   (IV)  — F4, A4, C5
+  [349.23, 440.00, 523.25],
+];
+const MUSIC_BELLS = [
+  // Top-octave sparkle that sits above each chord; just one note each.
+  1046.50, // C6
+  987.77,  // B5
+  1318.51, // E6
+  1046.50, // C6
 ];
 let musicChordIndex = 0;
 
-function playChord(chord, startAt, holdMs, fadeMs) {
+function playChord(chord, bellFreq, startAt, holdMs, fadeMs) {
   if (muted || !ctx) return [];
   const masterGain = ctx.createGain();
   masterGain.gain.setValueAtTime(0, startAt);
-  masterGain.gain.linearRampToValueAtTime(0.06, startAt + fadeMs / 1000);
-  masterGain.gain.setValueAtTime(0.06, startAt + (holdMs - fadeMs) / 1000);
+  masterGain.gain.linearRampToValueAtTime(0.04, startAt + fadeMs / 1000);
+  masterGain.gain.setValueAtTime(0.04, startAt + (holdMs - fadeMs) / 1000);
   masterGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
   masterGain.connect(ctx.destination);
 
   const oscs = [];
   for (const freq of chord) {
     const osc = ctx.createOscillator();
-    osc.type = 'sine';
+    osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, startAt);
+    // Tiny detune for warmth.
+    osc.detune.setValueAtTime((Math.random() - 0.5) * 6, startAt);
     osc.connect(masterGain);
     osc.start(startAt);
     osc.stop(startAt + holdMs / 1000 + 0.1);
     oscs.push(osc);
+  }
+  if (bellFreq) {
+    const bellGain = ctx.createGain();
+    bellGain.gain.setValueAtTime(0, startAt);
+    bellGain.gain.linearRampToValueAtTime(0.025, startAt + 0.6);
+    bellGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
+    bellGain.connect(ctx.destination);
+    const bell = ctx.createOscillator();
+    bell.type = 'sine';
+    bell.frequency.setValueAtTime(bellFreq, startAt);
+    bell.connect(bellGain);
+    bell.start(startAt);
+    bell.stop(startAt + holdMs / 1000 + 0.1);
+    oscs.push(bell);
   }
   return oscs;
 }
@@ -203,11 +231,12 @@ function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
   const c = ensureCtx();
   if (!c) return;
-  const holdMs = 8000;
-  const fadeMs = 2400;
+  const holdMs = 6500;
+  const fadeMs = 1800;
   const chord = MUSIC_CHORDS[musicChordIndex];
+  const bell = MUSIC_BELLS[musicChordIndex];
   musicChordIndex = (musicChordIndex + 1) % MUSIC_CHORDS.length;
-  const oscs = playChord(chord, c.currentTime, holdMs, fadeMs);
+  const oscs = playChord(chord, bell, c.currentTime, holdMs, fadeMs);
   musicNodes.oscs.push(...oscs);
   musicTimer = setTimeout(() => {
     musicNodes.oscs = musicNodes.oscs.filter((o) => {

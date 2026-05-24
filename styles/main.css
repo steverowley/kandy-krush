@@ -767,6 +767,66 @@ body.shake {
   40%, 60% { transform: translate(var(--shake-amp, 6px), 0); }
 }
 
+body {
+  background:
+    radial-gradient(ellipse at top, #fff6dc 0%, transparent 60%),
+    radial-gradient(ellipse at bottom right, #ffe1f0 0%, transparent 55%),
+    #fff8e7;
+  background-attachment: fixed;
+}
+body.theme-hc { background: #111 !important; }
+
+#board {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 12px 28px -8px rgba(0, 0, 0, 0.18),
+    0 4px 10px rgba(0, 0, 0, 0.08),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Ambient floating sparkles in the background — slow, gentle, never
+   interactive. Pure CSS pseudo-elements on body::before/::after for
+   2 fixed orbs that drift; smaller floating dots spawned by JS. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.4;
+}
+body::before {
+  background: radial-gradient(circle, rgba(255, 214, 10, 0.55) 0%, transparent 70%);
+  top: -80px;
+  left: -60px;
+  animation: orb-drift-a 24s ease-in-out infinite alternate;
+}
+body::after {
+  background: radial-gradient(circle, rgba(255, 0, 110, 0.45) 0%, transparent 70%);
+  bottom: -90px;
+  right: -70px;
+  animation: orb-drift-b 30s ease-in-out infinite alternate;
+}
+@keyframes orb-drift-a {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(60px, 80px) scale(1.15); }
+}
+@keyframes orb-drift-b {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-70px, -60px) scale(1.1); }
+}
+
+body.reduce-motion::before,
+body.reduce-motion::after {
+  animation: none !important;
+}
+body.theme-hc::before,
+body.theme-hc::after { display: none; }
+
 .particle-starfall {
   color: #F59E0B;
   text-shadow: 0 0 8px rgba(255, 214, 10, 0.9), 0 0 16px rgba(255, 214, 10, 0.5);
