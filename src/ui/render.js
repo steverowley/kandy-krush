@@ -565,14 +565,30 @@ export function setComboMeter(level) {
   comboHideTimer = setTimeout(() => el.classList.add('hidden'), 1800);
 }
 
-export function setLuckyCharge(pct, ready = false) {
+export function setLuckyCharge(pct, opts = false) {
+  // Back-compat: setLuckyCharge(pct, true) -> { ready: true }
+  let ready = false, mode = false, remaining = 0, total = 0;
+  if (typeof opts === 'boolean') {
+    ready = opts;
+  } else if (opts && typeof opts === 'object') {
+    ready = !!opts.ready; mode = !!opts.mode;
+    remaining = opts.remaining || 0; total = opts.total || 0;
+  }
   const fill = document.getElementById('lucky-fill');
   const label = document.getElementById('lucky-label');
   const bar = document.getElementById('lucky-bar');
   if (!fill || !label || !bar) return;
+  if (mode) {
+    fill.style.width = '100%';
+    label.textContent = `LUCKY ×1.5 · ${remaining}/${total}`;
+    bar.classList.remove('lucky-ready');
+    bar.classList.add('lucky-mode');
+    return;
+  }
+  bar.classList.remove('lucky-mode');
   fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
   if (ready) {
-    label.textContent = 'READY!';
+    label.textContent = 'READY · TRIPLE!';
     bar.classList.add('lucky-ready');
   } else {
     label.textContent = `${Math.round(pct)}%`;

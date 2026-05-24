@@ -113,9 +113,12 @@ const state = {
   almostFired: false,
   seenWelcome: persisted.seenWelcome,
   seenVersion: persisted.seenVersion,
+  installPromptDismissedAt: persisted.installPromptDismissedAt || 0,
   armedTool: null,
   luckyCharge: 0,
   luckyReady: false,
+  luckyMode: false,
+  luckyModeRemaining: 0,
   comboLevel: 0,
   // Roguelike run state — currentSlot mirrors levelProgress.roguelike but
   // we also track whether the level we're playing is part of an active run.
@@ -205,8 +208,13 @@ const CHANGELOG = [
   'Four lo-fi songs that rotate, quieter vinyl crackle, haptic feedback',
   'Hint glow is now hot-pink and bouncing so it stands out from selection',
 ];
-const LUCKY_PER_MOVE = 12;        // % per successful swap
-const LUCKY_MULTIPLIER = 2;
+const LUCKY_PER_MOVE = 12;            // % per successful swap
+const LUCKY_INSTANT_MULTIPLIER = 3;   // burst on first match after fill
+const LUCKY_MODE_MATCHES = 4;         // additional matches at lower mult
+const LUCKY_MODE_MULTIPLIER = 1.5;
+const LUCKY_DRAIN_AFTER_MS = 7000;    // idle before drain starts
+const LUCKY_DRAIN_INTERVAL_MS = 250;
+const LUCKY_DRAIN_PER_SEC = 6;        // % per second once draining
 const SURPRISE_DROP_MIN_TILES = 6; // Match must clear this many tiles to roll
 const SURPRISE_DROP_CHANCE = 0.28; // 28% on a 6+ match
 
@@ -353,10 +361,96 @@ function persist() {
     lastPlayedDate: state.lastPlayedDate,
     seenWelcome: state.seenWelcome,
     seenVersion: state.seenVersion,
+    installPromptDismissedAt: state.installPromptDismissedAt || 0,
     settings: state.settings,
     levelProgress: state.levelProgress,
     roguelike: state.roguelike,
   });
+}
+
+// --- Install / Add to Home Screen prompt ---
+// On Android (and other PWA-capable browsers) the browser fires
+// `beforeinstallprompt`; we capture it and offer a custom Install
+// button. On iOS Safari there's no programmatic prompt — we show
+// "Tap Share → Add to Home Screen" instead. Dismissed prompts are
+// remembered for ~7 days so we don't nag.
+let deferredInstallPrompt = null;
+const INSTALL_REMINDER_DAYS = 7;
+
+function isStandalone() {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true
+  );
+}
+
+function isIOS() {
+  return /iPhone|iPad|iPod/i.test(window.navigator.userAgent) && !window.MSStream;
+}
+
+function shouldShowInstallPrompt() {
+  if (isStandalone()) return false;
+  const dismissedAt = state.installPromptDismissedAt || 0;
+  const days = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+  return days >= INSTALL_REMINDER_DAYS;
+}
+
+function showInstallToast(kind) {
+  const toast = document.getElementById('install-toast');
+  const title = document.getElementById('install-title');
+  const body = document.getElementById('install-body');
+  const cta = document.getElementById('install-cta');
+  if (!toast || !title || !body || !cta) return;
+  if (kind === 'ios') {
+    title.textContent = 'Add Sweet Match to your home screen';
+    body.textContent = "Tap the Share icon, then 'Add to Home Screen'.";
+    cta.style.display = 'none';
+  } else {
+    title.textContent = 'Install Sweet Match';
+    body.textContent = 'Get the game on your home screen for one-tap play.';
+    cta.style.display = '';
+  }
+  toast.classList.remove('hidden');
+}
+
+function hideInstallToast() {
+  const toast = document.getElementById('install-toast');
+  if (toast) toast.classList.add('hidden');
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (shouldShowInstallPrompt()) showInstallToast('default');
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  hideInstallToast();
+});
+
+document.getElementById('install-cta').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  hideInstallToast();
+  try {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+  } catch {}
+  deferredInstallPrompt = null;
+  state.installPromptDismissedAt = Date.now();
+  persist();
+});
+
+document.getElementById('install-dismiss').addEventListener('click', () => {
+  hideInstallToast();
+  state.installPromptDismissedAt = Date.now();
+  persist();
+});
+
+// iOS doesn't fire beforeinstallprompt; show the manual instructions
+// once on first load if we haven't installed yet.
+if (isIOS() && shouldShowInstallPrompt()) {
+  setTimeout(() => showInstallToast('ios'), 3000);
 }
 
 function startRoguelikeRun() {
@@ -471,35 +565,109 @@ function updateComboMeter(level) {
 
 // Lucky charge — fills as you successfully play, gives a 2x score on
 // the next successful match round when full.
+let luckyDrainTimer = null;
+let luckyLastBumpAt = 0;
+
 function bumpLuckyCharge() {
-  if (state.luckyReady) return;
+  // Don't fill while ready (waiting to fire) or while in mode (would be lost).
+  luckyLastBumpAt = Date.now();
+  if (luckyDrainTimer) { clearTimeout(luckyDrainTimer); luckyDrainTimer = null; }
+  if (state.luckyMode) {
+    refreshLucky();
+    return;
+  }
+  if (state.luckyReady) {
+    refreshLucky();
+    scheduleLuckyDrainCheck();
+    return;
+  }
   state.luckyCharge = Math.min(100, state.luckyCharge + runLuckyRate());
   if (state.luckyCharge >= 100) {
     state.luckyReady = true;
     state.luckyCharge = 100;
-    flashMessage('LUCKY READY!', 1200);
-    speech.speak('Lucky ready');
+    flashMessage('LUCKY READY! Next match triples your score', 1800);
+    speech.speak('Lucky ready. Your next match scores triple.');
     haptics.specialBirth();
+    spawnConfetti(18);
   }
-  setLuckyCharge(state.luckyCharge, state.luckyReady);
+  refreshLucky();
+  scheduleLuckyDrainCheck();
+}
+
+function scheduleLuckyDrainCheck() {
+  if (luckyDrainTimer) clearTimeout(luckyDrainTimer);
+  // Don't drain when ready, in mode, or already empty.
+  if (state.luckyMode || state.luckyReady || state.luckyCharge <= 0) return;
+  luckyDrainTimer = setTimeout(drainLuckyTick, LUCKY_DRAIN_AFTER_MS);
+}
+
+function drainLuckyTick() {
+  if (state.luckyMode || state.luckyReady || state.luckyCharge <= 0) {
+    luckyDrainTimer = null;
+    return;
+  }
+  const idle = Date.now() - luckyLastBumpAt;
+  if (idle < LUCKY_DRAIN_AFTER_MS) {
+    luckyDrainTimer = setTimeout(drainLuckyTick, LUCKY_DRAIN_AFTER_MS - idle);
+    return;
+  }
+  const drain = LUCKY_DRAIN_PER_SEC * (LUCKY_DRAIN_INTERVAL_MS / 1000);
+  state.luckyCharge = Math.max(0, state.luckyCharge - drain);
+  refreshLucky();
+  if (state.luckyCharge > 0) {
+    luckyDrainTimer = setTimeout(drainLuckyTick, LUCKY_DRAIN_INTERVAL_MS);
+  } else {
+    luckyDrainTimer = null;
+  }
+}
+
+function refreshLucky() {
+  setLuckyCharge(state.luckyCharge, {
+    ready: state.luckyReady,
+    mode: state.luckyMode,
+    remaining: state.luckyModeRemaining,
+    total: LUCKY_MODE_MATCHES,
+  });
 }
 
 function consumeLuckyIfReady(baseScore) {
+  // Mid-mode: every match within the window gets the ongoing multiplier,
+  // counts toward the remaining tally, and ends mode when depleted.
+  if (state.luckyMode) {
+    state.luckyModeRemaining = Math.max(0, state.luckyModeRemaining - 1);
+    if (state.luckyModeRemaining <= 0) {
+      state.luckyMode = false;
+      flashMessage('Lucky window over', 1200);
+      speech.speak('Lucky window over');
+    }
+    refreshLucky();
+    return Math.round(baseScore * LUCKY_MODE_MULTIPLIER);
+  }
   if (!state.luckyReady) return baseScore;
+  // Activation moment — burst + start mode
   state.luckyReady = false;
   state.luckyCharge = 0;
-  setLuckyCharge(0, false);
-  flashMessage(`LUCKY × ${LUCKY_MULTIPLIER}!`, 1400);
-  speech.speak('Lucky two times');
-  spawnConfetti(28);
+  state.luckyMode = true;
+  state.luckyModeRemaining = LUCKY_MODE_MATCHES;
+  refreshLucky();
+  flashMessage(
+    `LUCKY! ×${LUCKY_INSTANT_MULTIPLIER} now, then ×${LUCKY_MODE_MULTIPLIER} for ${LUCKY_MODE_MATCHES} matches`,
+    2200
+  );
+  speech.speak(
+    `Lucky! Triple score now, plus one and a half for the next ${LUCKY_MODE_MATCHES} matches.`
+  );
+  spawnConfetti(56);
+  spawnScreenFlash('rgba(255, 214, 10, 0.45)');
+  screenShake(6, 360);
   haptics.epic();
   // Lucky Strike synergy upgrade — also tops up a hammer
   if (state.inRoguelikeRun && upgradeCount('lucky-strike') > 0) {
     const bank = powerupBank();
-    bank.hammer = Math.min(POWERUP_CAP, (bank.hammer || 0) + upgradeCount('lucky-strike'));
+    bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike'));
     setPowerupCounts(bank);
   }
-  return baseScore * LUCKY_MULTIPLIER;
+  return Math.round(baseScore * LUCKY_INSTANT_MULTIPLIER);
 }
 
 const SURPRISE_KINDS = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];

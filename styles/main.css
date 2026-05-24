@@ -702,16 +702,40 @@ body.theme-hc .upgrade-card {
   100% { transform: scale(1) rotate(0deg);    opacity: 1; }
 }
 
-/* Lucky bar — gold/pink gradient that pulses when ready */
+/* Lucky bar — gold/pink gradient that pulses when ready, glows during mode */
 #lucky-bar.lucky-ready {
-  animation: lucky-ready-pulse 800ms ease-in-out infinite;
-  box-shadow: 0 0 0 2px #FFD60A, 0 0 12px rgba(255, 0, 110, 0.6);
+  animation: lucky-ready-pulse 700ms ease-in-out infinite;
+  box-shadow: 0 0 0 2px #FFD60A, 0 0 14px rgba(255, 0, 110, 0.7);
+}
+#lucky-bar.lucky-mode {
+  animation: lucky-mode-glow 1100ms ease-in-out infinite;
+  box-shadow: 0 0 0 3px #FFD60A, 0 0 20px rgba(255, 214, 10, 0.9);
+}
+#lucky-bar.lucky-mode #lucky-fill {
+  background: linear-gradient(90deg, #FFD60A, #FB5607, #FFD60A);
+  background-size: 200% 100%;
+  animation: lucky-mode-shimmer 1400ms linear infinite;
 }
 @keyframes lucky-ready-pulse {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.03); }
 }
+@keyframes lucky-mode-glow {
+  0%, 100% { box-shadow: 0 0 0 3px #FFD60A, 0 0 12px rgba(255, 214, 10, 0.7); }
+  50%      { box-shadow: 0 0 0 5px #FFD60A, 0 0 24px rgba(255, 214, 10, 1); }
+}
+@keyframes lucky-mode-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+#lucky-bar.lucky-mode + #lucky-label,
+#lucky-bar.lucky-ready + #lucky-label {
+  color: #B91C1C;
+  font-weight: 900;
+}
 body.reduce-motion #lucky-bar.lucky-ready,
+body.reduce-motion #lucky-bar.lucky-mode,
+body.reduce-motion #lucky-bar.lucky-mode #lucky-fill,
 body.reduce-motion #combo-meter.bump {
   animation: none !important;
   transform: none !important;
