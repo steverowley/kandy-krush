@@ -21,7 +21,7 @@
   <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
     <div class="flex items-center gap-3 flex-wrap">
       <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
-      <button id="level-chip" type="button" class="hidden text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 text-black border-[3px] border-black rounded-full px-3 py-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Open level select" aria-haspopup="dialog">Level 1 / 8</button>
+      <button id="level-chip" type="button" class="hidden text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 text-black border-[3px] border-black rounded-full px-3 py-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Open level select" aria-haspopup="dialog" data-tip="Tap to choose a level" data-tip-pos="below">Level 1 / 8</button>
       <span id="streak" class="hidden text-base sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-3 py-1">Day 1</span>
     </div>
     <div class="flex items-center gap-2 sm:gap-3">
@@ -32,6 +32,8 @@
         aria-label="How to play"
         aria-haspopup="dialog"
         title="How to play"
+        data-tip="How to play"
+        data-tip-pos="below"
       >?</button>
       <button
         id="settings-open"
@@ -39,12 +41,18 @@
         class="text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
         aria-label="Open settings"
         aria-haspopup="dialog"
+        title="Game settings"
+        data-tip="Sound, contrast, size, mode"
+        data-tip-pos="below"
       >Settings</button>
       <button
         id="restart"
         type="button"
         class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
         aria-label="Start over"
+        title="Restart this level"
+        data-tip="Restart this level"
+        data-tip-pos="below"
       >Start Over</button>
     </div>
   </header>
@@ -116,7 +124,6 @@
       </svg>
       <span>Hammer</span>
       <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">3</span>
-      <span class="pu-tip" aria-hidden="true">Smash any one candy</span>
     </button>
     <button
       id="pu-shuffle"
@@ -135,7 +142,6 @@
       </svg>
       <span>Shuffle</span>
       <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">2</span>
-      <span class="pu-tip" aria-hidden="true">Mix up the board</span>
     </button>
     <button
       id="pu-colorbomb"
@@ -159,7 +165,6 @@
       </svg>
       <span>Bomb</span>
       <span id="pu-colorbomb-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
-      <span class="pu-tip" aria-hidden="true">Clear every candy of one color</span>
     </button>
     <button
       id="pu-plusmoves"
@@ -176,7 +181,6 @@
       </svg>
       <span>+3 Moves</span>
       <span id="pu-plusmoves-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
-      <span class="pu-tip" aria-hidden="true">Add 3 moves to your budget</span>
     </button>
     <div id="pu-hint" class="hidden w-full text-center text-base sm:text-lg text-pink-700 font-bold">Tap a candy to smash</div>
   </section>
@@ -293,6 +297,7 @@
         type="button"
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="true"
+        data-tip="Pops, swaps, cascades, and chimes"
       >Sound: On</button>
 
       <button
@@ -300,6 +305,7 @@
         type="button"
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="false"
+        data-tip="Speaks 'Wow!', 'Combo!', level intros, etc."
       >Spoken cheers: Off</button>
 
       <button
@@ -307,6 +313,7 @@
         type="button"
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="false"
+        data-tip="Darker theme with bolder borders"
       >High Contrast: Off</button>
 
       <button
@@ -314,14 +321,15 @@
         type="button"
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="true"
+        data-tip="Levels: structured goals. Free Play: endless"
       >Mode: Levels</button>
 
       <div>
         <div class="text-xl font-bold mb-2">Tile size</div>
         <div class="grid grid-cols-3 gap-2">
-          <button data-size="small"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false">Cozy</button>
-          <button data-size="medium" type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="true">Big</button>
-          <button data-size="large"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false">Huge</button>
+          <button data-size="small"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false" data-tip="Smaller tiles, more breathing room">Cozy</button>
+          <button data-size="medium" type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="true" data-tip="Default tile size">Big</button>
+          <button data-size="large"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false" data-tip="Largest tiles, easiest to tap">Huge</button>
         </div>
       </div>
 
@@ -331,6 +339,7 @@
         id="setting-reset"
         type="button"
         class="setting-danger text-xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-900 text-left shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
+        data-tip="Erases stars, level progress, and high score"
       >Reset progress&hellip;</button>
     </div>
   </div>
