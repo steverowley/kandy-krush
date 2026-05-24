@@ -146,11 +146,13 @@ Her feedback becomes the next prompt. That loop is the whole game.
 
 ## Deployment
 
-Once Phase 2 is solid:
-1. Push to GitHub.
-2. [Netlify](https://app.netlify.com) → "Add new site" → "Import from GitHub" → pick this repo.
-3. Netlify hands back a URL.
-4. On Grandma's tablet, open the URL → browser menu → "Add to Home Screen". Done.
+Hosted on **GitHub Pages**, built from GitHub Actions. Every push to `main` runs `.github/workflows/deploy.yml`, which stages the site (`index.html`, `manifest.json`, `service-worker.js`, `src/`, `styles/`, `assets/`) into a `_site/` artifact and publishes it via `actions/deploy-pages`.
+
+The live URL appears in the **Pages** tab of the repo and on the latest workflow run.
+
+On Grandma's tablet:
+1. Open the Pages URL in her browser.
+2. Use the browser menu → "Add to Home Screen" (Android Chrome offers "Install app"). The manifest + service worker mean it then launches like a real app and works offline.
 
 ## Commit conventions
 
@@ -167,4 +169,10 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/en
 
 ## Status
 
-Phase 0 — planning. No game code yet. Phase 1 next.
+Phases 1–3 are shipped and live on GitHub Pages:
+
+- **Phase 1 — Playable MVP**: 6x6 board, six shape+color candies, tap-to-swap, match detection, gravity cascade, scoring, Start Over.
+- **Phase 2 — Polish**: Web Audio sound effects, FLIP swap motion + pop/fall animations, score bump, Settings panel (Sound / High Contrast / Tile size), Best score persisted in `localStorage`.
+- **Phase 3 — Delight**: striped candies (4-match) and rainbow candies (5-match) with activation effects, achievement pop-ups, optional spoken cheers, PWA install (manifest + service worker + icons), daily streak counter.
+
+Next: playtest with Grandma and feed her reactions back as the next prompt — that loop is the whole game.
