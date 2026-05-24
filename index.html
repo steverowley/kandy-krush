@@ -77,12 +77,20 @@
       <div id="objective-fill" class="absolute inset-y-0 left-0 bg-yellow-400 transition-[width] duration-300 ease-out" style="width: 0%"></div>
       <span id="objective-delta" class="hidden pointer-events-none absolute -top-7 right-2 text-lg font-bold text-pink-700"></span>
     </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm sm:text-base font-bold uppercase tracking-wider text-gray-700">Lucky</span>
+      <div id="lucky-bar" class="relative flex-1 h-3 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+        <div id="lucky-fill" class="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out" style="width: 0%; background: linear-gradient(90deg, #FFD60A, #FF006E);"></div>
+      </div>
+      <span id="lucky-label" class="text-sm sm:text-base font-bold text-gray-700 tabular-nums">0%</span>
+    </div>
   </section>
 
   <section class="w-full max-w-3xl flex items-end justify-between gap-4" aria-live="polite">
-    <div>
+    <div class="relative">
       <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Score</div>
       <div id="score" class="text-5xl sm:text-7xl font-bold tabular-nums leading-none">0</div>
+      <div id="combo-meter" class="hidden absolute -top-6 left-0 sm:-top-7 px-3 py-1 rounded-full bg-pink-600 text-white text-base sm:text-xl font-extrabold border-[3px] border-black shadow-lg pointer-events-none">CHAIN ×2</div>
     </div>
     <div>
       <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Best</div>
@@ -208,6 +216,24 @@
       <div id="li-tip" class="hidden text-base sm:text-lg mt-5 bg-pink-50 text-pink-900 border-2 border-pink-200 rounded-xl px-4 py-3 leading-snug"></div>
       <div class="text-xs sm:text-sm text-gray-500 mt-6 uppercase tracking-wider">Tap anywhere to start</div>
     </div>
+  </div>
+
+  <div id="changelog-overlay" class="hidden fixed inset-0 bg-black/55 z-[60]" aria-hidden="true"></div>
+  <div
+    id="changelog-panel"
+    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[70] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-3 max-h-[88vh] overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="changelog-title"
+  >
+    <div class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700">What's new</div>
+    <h2 id="changelog-title" class="text-2xl sm:text-3xl font-bold">Sweet Match update</h2>
+    <ul id="changelog-list" class="text-lg sm:text-xl list-disc pl-6 flex flex-col gap-1.5"></ul>
+    <button
+      id="changelog-dismiss"
+      type="button"
+      class="mt-2 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 self-center"
+    >Got it!</button>
   </div>
 
   <div id="welcome-overlay" class="hidden fixed inset-0 bg-black/60 z-[60]" aria-hidden="true"></div>

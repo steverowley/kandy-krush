@@ -9,6 +9,7 @@ const defaults = () => ({
   streak: 0,
   lastPlayedDate: null,
   seenWelcome: false,
+  seenVersion: null,
   settings: {
     sound: true,
     speech: false,
@@ -57,6 +58,7 @@ export function load() {
       streak: Number(parsed.streak) || 0,
       lastPlayedDate: parsed.lastPlayedDate || null,
       seenWelcome: !!parsed.seenWelcome,
+      seenVersion: typeof parsed.seenVersion === 'string' ? parsed.seenVersion : null,
       settings: {
         sound: s.sound !== false,
         speech: !!s.speech,
