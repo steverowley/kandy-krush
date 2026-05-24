@@ -928,7 +928,122 @@ body {
     #fff8e7;
   background-attachment: fixed;
 }
-body.theme-hc { background: #111 !important; }
+body.theme-hc {
+  background: #111 !important;
+  color: #f5f5f5;
+}
+
+/* Accessibility: when the page is in either dark mode (High Contrast or
+   Roguelike), default Tailwind text-gray-*/* /-pink-700 colours go
+   invisible against the dark background. These overrides make every
+   labelled text node readable. Specificity stays low so per-element
+   colours (e.g. hot-pink banner text) still win where intended. */
+body.theme-hc .text-gray-500,
+body.theme-hc .text-gray-600,
+body.theme-hc .text-gray-700,
+body.theme-hc .text-gray-800,
+body.theme-hc .text-gray-900,
+body.mode-roguelike:not(.theme-hc) .text-gray-500,
+body.mode-roguelike:not(.theme-hc) .text-gray-600,
+body.mode-roguelike:not(.theme-hc) .text-gray-700,
+body.mode-roguelike:not(.theme-hc) .text-gray-800,
+body.mode-roguelike:not(.theme-hc) .text-gray-900 {
+  color: #e5e7eb;
+}
+body.theme-hc .text-pink-700,
+body.theme-hc .text-pink-800,
+body.theme-hc .text-pink-900,
+body.mode-roguelike:not(.theme-hc) .text-pink-700,
+body.mode-roguelike:not(.theme-hc) .text-pink-800,
+body.mode-roguelike:not(.theme-hc) .text-pink-900 {
+  color: #ffb6d9;
+}
+body.theme-hc .text-yellow-700,
+body.mode-roguelike:not(.theme-hc) .text-yellow-700 {
+  color: #fde047;
+}
+body.theme-hc .text-red-900,
+body.mode-roguelike:not(.theme-hc) .text-red-900 {
+  color: #fecaca;
+}
+body.theme-hc footer,
+body.mode-roguelike:not(.theme-hc) footer {
+  color: #e5e7eb;
+}
+/* #best uses inline text-gray-700; same #message uses text-pink-700.
+   Bump them to a stronger contrast in both dark modes. */
+body.theme-hc #best,
+body.mode-roguelike:not(.theme-hc) #best { color: #fde047; }
+body.theme-hc #message,
+body.mode-roguelike:not(.theme-hc) #message { color: #fbcfe8; }
+/* Tip pill in the intro card — pink-50 bg on pink-900 text won't
+   read on the dark surface. Flip to a translucent dark tint. */
+body.theme-hc #li-tip,
+body.mode-roguelike:not(.theme-hc) #li-tip {
+  background: rgba(255, 0, 110, 0.18);
+  color: #ffe4f1;
+  border-color: rgba(255, 0, 110, 0.55);
+}
+body.theme-hc #lc-replay,
+body.theme-hc #lf-skip {
+  background: #1f2937;
+  color: #f5f5f5;
+}
+body.theme-hc #lc-stars,
+body.mode-roguelike:not(.theme-hc) #lc-stars { color: #FFD60A; }
+/* Streak chip — light pink bg + pink-800 text becomes hard to scan */
+body.theme-hc #streak,
+body.mode-roguelike:not(.theme-hc) #streak {
+  background: rgba(255, 0, 110, 0.25);
+  color: #ffe4f1;
+  border-color: #FF006E;
+}
+/* Install toast — defaults bright; rim it for dark modes */
+body.theme-hc #install-toast,
+body.mode-roguelike:not(.theme-hc) #install-toast {
+  background: #1f1024;
+  color: #f5f5f5;
+  border-color: #FF006E;
+}
+body.theme-hc #install-dismiss,
+body.mode-roguelike:not(.theme-hc) #install-dismiss {
+  color: #f3e8ff;
+}
+/* Cards inside dark panels — keep them dark so the light text reads */
+body.mode-roguelike:not(.theme-hc) .upgrade-card,
+body.mode-roguelike:not(.theme-hc) .level-tile,
+body.mode-roguelike:not(.theme-hc) #skill-tree-panel > div[class*="bg-green-100"],
+body.mode-roguelike:not(.theme-hc) #skill-tree-panel > div[class*="bg-white"],
+body.mode-roguelike:not(.theme-hc) #skill-tree-panel > div[class*="bg-gray-100"] {
+  background: #1f1024 !important;
+  color: #f5f5f5 !important;
+  border-color: #FF006E !important;
+}
+/* Welcome panel + reset confirm panel — apply dark surface for both */
+body.mode-roguelike:not(.theme-hc) #welcome-panel,
+body.mode-roguelike:not(.theme-hc) #reset-panel,
+body.mode-roguelike:not(.theme-hc) #level-select-panel {
+  background: #1f1024;
+  color: #f5f5f5;
+  border-color: #FF006E;
+}
+body.mode-roguelike:not(.theme-hc) #welcome-panel h2,
+body.mode-roguelike:not(.theme-hc) #welcome-panel p,
+body.mode-roguelike:not(.theme-hc) #reset-panel h2,
+body.mode-roguelike:not(.theme-hc) #reset-panel p,
+body.mode-roguelike:not(.theme-hc) #ls-title { color: #f5f5f5; }
+body.mode-roguelike:not(.theme-hc) #welcome-start,
+body.mode-roguelike:not(.theme-hc) #reset-confirm,
+body.mode-roguelike:not(.theme-hc) #level-select-close {
+  background: #FF006E;
+  color: #fff;
+  border-color: #FFD60A;
+}
+body.mode-roguelike:not(.theme-hc) #reset-cancel {
+  background: #2c0f3a;
+  color: #f5f5f5;
+  border-color: #FF006E;
+}
 
 /* Roguelike mode — dark dungeon backdrop, neon-red accents.
    Candies and the board itself stay readable; only the page
