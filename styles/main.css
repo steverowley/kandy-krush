@@ -733,6 +733,21 @@ body.shake {
   40%, 60% { transform: translate(var(--shake-amp, 6px), 0); }
 }
 
+.particle-starfall {
+  color: #F59E0B;
+  text-shadow: 0 0 8px rgba(255, 214, 10, 0.9), 0 0 16px rgba(255, 214, 10, 0.5);
+  font-weight: 700;
+  pointer-events: none;
+  line-height: 1;
+  animation: particle-starfall 2000ms cubic-bezier(.25,.7,.5,1) forwards;
+}
+@keyframes particle-starfall {
+  0%   { transform: translate(0, -20px) rotate(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.95; }
+  100% { transform: translate(var(--drift), 90vh) rotate(var(--rot)); opacity: 0; }
+}
+
 .particle-confetti {
   width: 10px;
   height: 14px;
