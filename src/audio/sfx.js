@@ -366,8 +366,38 @@ function scheduleNextCrackle() {
   crackleTimer = setTimeout(scheduleNextCrackle, next);
 }
 
+// Dungeon set — darker minor 7th chords, lower octaves. Used when
+// the active mode is 'roguelike'.
+const DUNGEON_SONGS = [
+  // Am7 -> Dm7 -> Bbmaj7 -> Em7 — modal jazz-noir feel
+  [
+    { notes: [220.00, 261.63, 329.63, 392.00], bass: 55.00 },   // A m7  (A3/C4/E4/G4, bass A1)
+    { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },   // D m7
+    { notes: [233.08, 293.66, 349.23, 440.00], bass: 58.27 },   // Bb maj7
+    { notes: [246.94, 293.66, 369.99, 440.00], bass: 61.74 },   // B dim-ish
+  ],
+  // Em7 -> Cmaj7 -> G m7 -> D 7 — slow descending dread
+  [
+    { notes: [164.81, 196.00, 246.94, 293.66], bass: 41.20 },   // E m7
+    { notes: [196.00, 246.94, 293.66, 369.99], bass: 49.00 },   // G m7
+    { notes: [146.83, 174.61, 220.00, 261.63], bass: 36.71 },   // D m7
+    { notes: [130.81, 164.81, 196.00, 246.94], bass: 32.70 },   // C m7
+  ],
+];
+
+let musicMode = 'normal'; // 'normal' | 'dungeon'
+export function setMusicMode(mode) {
+  const next = mode === 'roguelike' ? 'dungeon' : 'normal';
+  if (next === musicMode) return;
+  musicMode = next;
+  songIndex = 0;
+  // If music's playing, fade old out by clearing the queue — the next
+  // scheduled chord will pick up from the new song bank.
+}
+
 function currentSong() {
-  return SONGS[songIndex % SONGS.length];
+  const bank = musicMode === 'dungeon' ? DUNGEON_SONGS : SONGS;
+  return bank[songIndex % bank.length];
 }
 
 function scheduleNextBeatBar() {
@@ -416,10 +446,10 @@ function scheduleNextChord() {
   const chord = song[musicChordIndex];
   musicChordIndex = (musicChordIndex + 1) % song.length;
   // After completing one full pass through the current song's chords,
-  // advance to the next song. The chord crossfade naturally bridges
-  // the gap — no special transition needed.
+  // advance to the next song in the active bank.
   if (musicChordIndex === 0) {
-    songIndex = (songIndex + 1) % SONGS.length;
+    const bank = musicMode === 'dungeon' ? DUNGEON_SONGS : SONGS;
+    songIndex = (songIndex + 1) % bank.length;
   }
   const oscs = playLoFiChord(chord, c.currentTime, CHORD_HOLD_MS, CHORD_FADE_MS);
   musicNodes.oscs.push(...oscs);

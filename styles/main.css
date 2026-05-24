@@ -957,6 +957,8 @@ body.mode-roguelike:not(.theme-hc) #powerups .powerup-btn,
 body.mode-roguelike:not(.theme-hc) #upgrade-panel,
 body.mode-roguelike:not(.theme-hc) #skill-tree-panel,
 body.mode-roguelike:not(.theme-hc) #level-intro-card,
+body.mode-roguelike:not(.theme-hc) #level-complete,
+body.mode-roguelike:not(.theme-hc) #level-fail,
 body.mode-roguelike:not(.theme-hc) footer {
   background: #1d0a26;
   color: #f3e8ff;
@@ -966,8 +968,24 @@ body.mode-roguelike:not(.theme-hc) footer {
 body.mode-roguelike:not(.theme-hc) #moves-label,
 body.mode-roguelike:not(.theme-hc) #objective-text,
 body.mode-roguelike:not(.theme-hc) #objective-progress,
-body.mode-roguelike:not(.theme-hc) #lucky-label {
+body.mode-roguelike:not(.theme-hc) #lucky-label,
+body.mode-roguelike:not(.theme-hc) #lc-title,
+body.mode-roguelike:not(.theme-hc) #lc-score,
+body.mode-roguelike:not(.theme-hc) #lf-title,
+body.mode-roguelike:not(.theme-hc) #lf-score {
   color: #f3e8ff;
+}
+body.mode-roguelike:not(.theme-hc) #lc-replay,
+body.mode-roguelike:not(.theme-hc) #lf-skip {
+  background: #2c0f3a;
+  color: #f3e8ff;
+  border-color: #FF006E;
+}
+body.mode-roguelike:not(.theme-hc) #lc-next,
+body.mode-roguelike:not(.theme-hc) #lf-replay {
+  background: #FF006E;
+  color: #fff;
+  border-color: #FFD60A;
 }
 body.mode-roguelike:not(.theme-hc) #level-chip {
   background: #FF006E;
@@ -996,15 +1014,34 @@ body.mode-roguelike:not(.theme-hc)::before {
 }
 body.mode-roguelike:not(.theme-hc)::after {
   background: radial-gradient(circle, rgba(131, 56, 236, 0.55) 0%, transparent 70%);
-}
-/* Add a vignette so the edges feel oppressive */
-body.mode-roguelike:not(.theme-hc)::after {
-  /* extra shadow layer on top of the existing orb */
   filter: blur(50px);
 }
-body.mode-roguelike:not(.theme-hc) > * {
-  position: relative;
-  z-index: 0;
+
+/* Mode-transition overlay — wipes across the screen when switching modes.
+   Wicked version for roguelike (red glitch), gentle white wipe otherwise. */
+#mode-transition {
+  position: fixed; inset: 0; z-index: 95;
+  pointer-events: none; opacity: 0;
+}
+#mode-transition.show {
+  animation: mode-wipe 900ms ease-in-out forwards;
+}
+#mode-transition.wicked {
+  background:
+    radial-gradient(ellipse at center, rgba(255, 0, 110, 0.95) 0%, rgba(131, 56, 236, 0.85) 40%, rgba(13, 4, 20, 1) 100%);
+}
+#mode-transition.bright {
+  background: linear-gradient(180deg, #fff8e7 0%, #ffe1f0 100%);
+}
+@keyframes mode-wipe {
+  0%   { opacity: 0; transform: scale(0.3); border-radius: 100%; }
+  25%  { opacity: 1; transform: scale(2.2); border-radius: 0; }
+  60%  { opacity: 1; transform: scale(2.2); }
+  100% { opacity: 0; transform: scale(2.2); }
+}
+body.reduce-motion #mode-transition.show {
+  animation: none;
+  opacity: 0;
 }
 
 #board {
