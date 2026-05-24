@@ -4,6 +4,7 @@ export function createSettingsUI({ initial, onChange }) {
   const closeBtn = document.getElementById('settings-close');
   const openBtn = document.getElementById('settings-open');
   const soundBtn = document.getElementById('setting-sound');
+  const speechBtn = document.getElementById('setting-speech');
   const contrastBtn = document.getElementById('setting-contrast');
   const sizeButtons = Array.from(document.querySelectorAll('[data-size]'));
 
@@ -12,6 +13,11 @@ export function createSettingsUI({ initial, onChange }) {
   function refresh() {
     soundBtn.setAttribute('aria-pressed', String(current.sound));
     soundBtn.textContent = current.sound ? 'Sound: On' : 'Sound: Off';
+
+    if (speechBtn) {
+      speechBtn.setAttribute('aria-pressed', String(current.speech));
+      speechBtn.textContent = current.speech ? 'Spoken cheers: On' : 'Spoken cheers: Off';
+    }
 
     contrastBtn.setAttribute('aria-pressed', String(current.contrast));
     contrastBtn.textContent = current.contrast
@@ -50,6 +56,9 @@ export function createSettingsUI({ initial, onChange }) {
   overlay.addEventListener('click', hide);
 
   soundBtn.addEventListener('click', () => apply({ sound: !current.sound }));
+  if (speechBtn) {
+    speechBtn.addEventListener('click', () => apply({ speech: !current.speech }));
+  }
   contrastBtn.addEventListener('click', () =>
     apply({ contrast: !current.contrast })
   );

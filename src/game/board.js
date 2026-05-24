@@ -1,3 +1,7 @@
+export function makeCell(type, special = null) {
+  return { type, special };
+}
+
 export class Board {
   constructor(cols, rows, candyTypes) {
     this.cols = cols;
@@ -14,29 +18,47 @@ export class Board {
     return c >= 0 && c < this.cols && r >= 0 && r < this.rows;
   }
 
-  at(c, r) {
+  cell(c, r) {
     return this.inBounds(c, r) ? this.grid[this.idx(c, r)] : null;
   }
 
-  set(c, r, v) {
-    this.grid[this.idx(c, r)] = v;
+  at(c, r) {
+    return this.cell(c, r);
+  }
+
+  typeAt(c, r) {
+    const v = this.cell(c, r);
+    return v ? v.type : null;
+  }
+
+  specialAt(c, r) {
+    const v = this.cell(c, r);
+    return v ? v.special : null;
+  }
+
+  set(c, r, cell) {
+    this.grid[this.idx(c, r)] = cell;
+  }
+
+  setType(c, r, type) {
+    this.grid[this.idx(c, r)] = makeCell(type, null);
   }
 
   fillNoMatches() {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const forbidden = new Set();
-        if (c >= 2 && this.at(c - 1, r) === this.at(c - 2, r)) {
-          forbidden.add(this.at(c - 1, r));
+        if (c >= 2 && this.typeAt(c - 1, r) === this.typeAt(c - 2, r)) {
+          forbidden.add(this.typeAt(c - 1, r));
         }
-        if (r >= 2 && this.at(c, r - 1) === this.at(c, r - 2)) {
-          forbidden.add(this.at(c, r - 1));
+        if (r >= 2 && this.typeAt(c, r - 1) === this.typeAt(c, r - 2)) {
+          forbidden.add(this.typeAt(c, r - 1));
         }
         let choice;
         do {
           choice = Math.floor(Math.random() * this.candyTypes);
         } while (forbidden.has(choice));
-        this.set(c, r, choice);
+        this.setType(c, r, choice);
       }
     }
   }

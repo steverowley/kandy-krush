@@ -93,6 +93,25 @@ body.size-large  { --board-size: min(99vw, 900px); }
   background: #FFD60A;
 }
 
+/* Special candies */
+.tile.special {
+  box-shadow: 0 0 0 2px #FFD60A inset;
+}
+.tile.special-rainbow {
+  box-shadow: 0 0 0 3px #fff inset, 0 0 0 6px #000 inset;
+}
+
+/* Achievement toast */
+#achievement {
+  transition: transform 240ms ease-out, opacity 240ms ease-out;
+  transform: translateY(-12px) scale(0.9);
+  opacity: 0;
+}
+#achievement.show {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
 /* High-contrast theme: stark dark canvas, brighter tiles */
 body.theme-hc {
   background: #000 !important;
@@ -131,4 +150,14 @@ body.theme-hc #settings-panel button {
 body.theme-hc #settings-panel .setting-toggle[aria-pressed="true"],
 body.theme-hc #settings-panel .setting-size[aria-pressed="true"] {
   background: #FFD60A;
+}
+body.theme-hc #streak {
+  background: #FFD60A;
+  color: #000;
+  border-color: #000;
+}
+body.theme-hc #achievement {
+  background: #FFD60A;
+  color: #000;
+  border-color: #000;
 }

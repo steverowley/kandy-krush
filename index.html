@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#fffbeb" />
   <title>Sweet Match</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Sweet Match" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
@@ -12,8 +18,11 @@
   <link rel="stylesheet" href="styles/main.css" />
 </head>
 <body class="size-medium min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
-  <header class="w-full max-w-3xl flex items-center justify-between gap-3">
-    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
+  <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
+      <span id="streak" class="hidden text-base sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-3 py-1">Day 1</span>
+    </div>
     <div class="flex items-center gap-2 sm:gap-3">
       <button
         id="settings-open"
@@ -43,12 +52,19 @@
     <div id="message" class="text-2xl sm:text-4xl font-bold text-pink-700 min-h-[1.5em] text-right flex-1"></div>
   </section>
 
-  <main
-    id="board"
-    class="grid grid-cols-6 gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-3xl border-[3px] border-black shadow-xl select-none touch-manipulation"
-    role="grid"
-    aria-label="Sweet Match board"
-  ></main>
+  <div class="relative">
+    <main
+      id="board"
+      class="grid grid-cols-6 gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-3xl border-[3px] border-black shadow-xl select-none touch-manipulation"
+      role="grid"
+      aria-label="Sweet Match board"
+    ></main>
+    <div
+      id="achievement"
+      class="hidden pointer-events-none absolute inset-x-2 top-2 mx-auto w-max max-w-[90%] px-5 py-3 rounded-2xl bg-pink-600 text-white text-2xl sm:text-3xl font-bold border-[3px] border-black shadow-lg"
+      aria-live="polite"
+    ></div>
+  </div>
 
   <footer class="text-base sm:text-lg text-gray-600 max-w-3xl text-center">
     Tap a candy, then tap one next to it to swap. Match three or more in a row.
@@ -80,6 +96,13 @@
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         aria-pressed="true"
       >Sound: On</button>
+
+      <button
+        id="setting-speech"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        aria-pressed="false"
+      >Spoken cheers: Off</button>
 
       <button
         id="setting-contrast"
