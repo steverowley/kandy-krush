@@ -44,6 +44,7 @@ import { createLevelSelect } from './ui/levelSelect.js';
 import { createAchievements } from './ui/achievements.js';
 import * as sfx from './audio/sfx.js';
 import * as speech from './audio/speech.js';
+import * as haptics from './audio/haptics.js';
 import {
   spawnFloatingNumber,
   spawnTileSparkles,
@@ -263,6 +264,7 @@ function checkLevelOutcome() {
     spawnConfetti(improved && !firstClear ? 72 : 48);
     if (stars === 3) spawnStarRain(36);
     sfx.playObjectiveComplete(state.level.objective.kind);
+    haptics.levelComplete();
     if (improved && !firstClear) {
       flashMessage(`New best! ${stars} ${stars === 1 ? 'star' : 'stars'}`, 1600);
       speech.speak(`New best! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
@@ -288,6 +290,7 @@ function checkLevelOutcome() {
   if (state.movesRemaining <= 0) {
     state.resolved = true;
     sfx.playLevelFail();
+    haptics.invalid();
     speech.speak('Try again');
     const replayLevelId = state.level.id;
     showLevelFail({
@@ -338,6 +341,7 @@ async function useHammer(pos) {
   if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0 || state.board.isIngredient(pos.c, pos.r)) {
     flashMessage('Hammer cannot break special blocks', 1200);
     sfx.playInvalid();
+    haptics.invalid();
     return;
   }
   if (!spendPowerup('hammer')) return;
@@ -345,6 +349,7 @@ async function useHammer(pos) {
   cancelHint();
   sfx.unlockAudio();
   sfx.playMatch(1, 1);
+  haptics.powerup();
   speech.speak('Smash!');
   spawnPopSpecks([pos]);
   await animatePop([pos]);
@@ -381,6 +386,7 @@ async function useColorBomb(pos) {
   if (state.lockMap.get(key) > 0 || state.jellyMap.get(key) > 0) {
     flashMessage('Bomb cannot target special blocks', 1200);
     sfx.playInvalid();
+    haptics.invalid();
     return;
   }
   const targetType = targetCell.type;
@@ -406,6 +412,8 @@ async function useColorBomb(pos) {
   spawnConfetti(28);
   sfx.playCascade();
   sfx.playMatch(positions.length, 2);
+  haptics.powerup();
+  haptics.epic();
   spawnPopSpecks(positions);
   await animatePop(positions);
   state.board.clear(positions);
@@ -535,6 +543,7 @@ async function onTap(pos) {
     state.selected = pos;
     renderBoard(state.board, state);
     sfx.playSelect();
+    haptics.tap();
     scheduleHint();
     return;
   }
@@ -550,6 +559,7 @@ async function onTap(pos) {
     state.selected = pos;
     renderBoard(state.board, state);
     sfx.playSelect();
+    haptics.tap();
     scheduleHint();
     return;
   }
@@ -576,6 +586,7 @@ async function runComboTurn(combo) {
   const clearedTypes = cleared.map((p) => state.board.typeAt(p.c, p.r));
   sfx.playCascade();
   sfx.playMatch(cleared.length, 2);
+  haptics.combo();
   spawnPopSpecks(cleared);
   spawnConfetti(combo.kind === 'double-rainbow' ? 40 : 22);
   await animatePop(cleared);
@@ -608,6 +619,7 @@ async function trySwap(a, b) {
   state.busy = true;
   if (state.board.isIngredient(a.c, a.r) || state.board.isIngredient(b.c, b.r)) {
     sfx.playInvalid();
+    haptics.invalid();
     flashMessage('Cherries cannot be swapped', 1000);
     state.busy = false;
     scheduleHint();
@@ -615,6 +627,7 @@ async function trySwap(a, b) {
   }
   if (isLocked(a.c, a.r) || isLocked(b.c, b.r)) {
     sfx.playInvalid();
+    haptics.invalid();
     flashMessage('Locked!', 900);
     speech.speak('Locked');
     const lockedPos = isLocked(a.c, a.r) ? a : b;
@@ -630,6 +643,7 @@ async function trySwap(a, b) {
     return;
   }
   sfx.playSwap();
+  haptics.swap();
   await animateSwap(a, b);
   state.board.swap(a, b);
   renderBoard(state.board, state);
@@ -660,6 +674,7 @@ async function trySwap(a, b) {
   let result = findMatches(state.board);
   if (result.positions.length === 0) {
     sfx.playInvalid();
+    haptics.invalid();
     await animateSwap(a, b);
     state.board.swap(a, b);
     renderBoard(state.board, state);
@@ -712,18 +727,33 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
 
   sfx.playMatch(allCleared.size, cascadeLevel);
+  const matchIntensity = allCleared.size >= 5 ? 3 : allCleared.size >= 4 ? 2 : 1;
+  haptics.match(matchIntensity);
   if (cascadeLevel >= 2) {
     sfx.playCascade();
     showCascadeBanner(cascadeLevel);
+    haptics.cascade(cascadeLevel);
   }
   if (cascadeLevel >= 3) spawnConfetti(20);
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
     spawnConfetti(36);
   }
-  if (allCleared.size >= 6) {
+  if (cascadeLevel >= 5) {
+    spawnScreenFlash('rgba(255, 0, 110, 0.35)');
+    spawnConfetti(48);
+  }
+  if (allCleared.size >= 6 && allCleared.size < 8) {
     flashMessage('HUGE MATCH!', 1200);
     screenShake(5, 300);
+    haptics.epic();
+  }
+  if (allCleared.size >= 8) {
+    flashMessage('EPIC MATCH!', 1400);
+    screenShake(9, 460);
+    spawnScreenFlash('rgba(255, 214, 10, 0.45)');
+    spawnConfetti(60);
+    haptics.epic();
   }
 
   drawMatchTrails(result.groups);
@@ -754,6 +784,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   }
   renderBoard(state.board, state);
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);
+  if (specialsCreated.length > 0) haptics.specialBirth();
 
   const earned = calcScore([...allCleared], cascadeLevel);
   state.score += earned;
@@ -866,6 +897,7 @@ function exitIngredients() {
     flashObjectiveDelta(`+${exited.length}`);
   }
   speech.speak(exited.length === 1 ? 'Dropped!' : `Dropped ${exited.length}!`);
+  haptics.drop();
   return exited;
 }
 
