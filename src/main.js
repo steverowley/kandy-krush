@@ -199,15 +199,22 @@ function checkLevelOutcome() {
     state.resolved = true;
     const stars = starsForLevel(state.level, state.movesRemaining);
     const prev = state.levelProgress.stars[state.level.id] || 0;
-    if (stars > prev) state.levelProgress.stars[state.level.id] = stars;
+    const improved = stars > prev;
+    const firstClear = prev === 0;
+    if (improved) state.levelProgress.stars[state.level.id] = stars;
     const next = nextLevelId(state.level.id);
     if (next && next > (state.levelProgress.currentLevel || 0)) {
       state.levelProgress.currentLevel = next;
     }
     persist();
-    spawnConfetti(48);
+    spawnConfetti(improved && !firstClear ? 72 : 48);
     sfx.playObjectiveComplete(state.level.objective.kind);
-    speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
+    if (improved && !firstClear) {
+      flashMessage(`New best! ${stars} ${stars === 1 ? 'star' : 'stars'}`, 1600);
+      speech.speak(`New best! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
+    } else {
+      speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
+    }
     showLevelComplete({
       level: state.level,
       stars,
