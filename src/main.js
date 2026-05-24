@@ -524,6 +524,17 @@ document.getElementById('level-chip').addEventListener('click', () => {
   if (state.settings.mode === 'levels') levelSelect.show();
 });
 
+document.getElementById('help-open').addEventListener('click', () => {
+  sfx.unlockAudio();
+  showWelcome(() => {
+    if (state.settings.mode === 'levels' && state.level) {
+      speech.speak(
+        `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.movesRemaining} moves left.`
+      );
+    }
+  });
+});
+
 document.getElementById('restart').addEventListener('click', () => {
   sfx.unlockAudio();
   if (state.settings.mode === 'levels') {
