@@ -2,7 +2,7 @@ import { LEVELS } from '../game/levels.js';
 
 const KEY = 'sweet-match.v1';
 const SIZES = ['small', 'medium', 'large'];
-const MODES = ['levels', 'free'];
+const MODES = ['levels', 'free', 'roguelike'];
 
 const defaults = () => ({
   highScore: 0,
@@ -24,6 +24,13 @@ const defaults = () => ({
     stars: {},
     bestScores: {},
     powerupBank: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
+  },
+  roguelike: {
+    currentSlot: 1,        // 1..30 within the active run
+    gems: 0,                // persistent currency for the future skill tree
+    runsCompleted: 0,       // total runs that cleared slot 30
+    runsStarted: 0,         // total runs begun
+    bestSlot: 0,            // furthest slot ever reached
   },
 });
 
@@ -74,6 +81,7 @@ export function load() {
         bestScores: sanitizeBestScores(lp.bestScores),
         powerupBank: sanitizePowerupBank(lp.powerupBank),
       },
+      roguelike: sanitizeRoguelike(parsed.roguelike),
     };
   } catch {
     return defaults();
@@ -87,6 +95,26 @@ function sanitizeBestScores(raw) {
     const n = Number(v);
     if (Number.isFinite(n) && n > 0) out[k] = Math.floor(n);
   }
+  return out;
+}
+
+const ROGUELIKE_DEFAULTS = {
+  currentSlot: 1,
+  gems: 0,
+  runsCompleted: 0,
+  runsStarted: 0,
+  bestSlot: 0,
+};
+
+function sanitizeRoguelike(raw) {
+  const out = { ...ROGUELIKE_DEFAULTS };
+  if (!raw || typeof raw !== 'object') return out;
+  for (const key of Object.keys(out)) {
+    const n = Number(raw[key]);
+    if (Number.isFinite(n) && n >= 0) out[key] = Math.floor(n);
+  }
+  if (out.currentSlot < 1) out.currentSlot = 1;
+  if (out.currentSlot > 30) out.currentSlot = 30;
   return out;
 }
 

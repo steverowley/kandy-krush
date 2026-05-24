@@ -12,6 +12,12 @@ import {
   starsForLevel,
 } from './game/levels.js';
 import {
+  RUN_LENGTH,
+  BOSS_SLOTS,
+  getRoguelikeLevel,
+  gemsEarned,
+} from './game/roguelike.js';
+import {
   renderBoard,
   setScore,
   setBest,
@@ -104,6 +110,12 @@ const state = {
   luckyCharge: 0,
   luckyReady: false,
   comboLevel: 0,
+  // Roguelike run state — currentSlot mirrors levelProgress.roguelike but
+  // we also track whether the level we're playing is part of an active run.
+  roguelike: persisted.roguelike || {
+    currentSlot: 1, gems: 0, runsCompleted: 0, runsStarted: 0, bestSlot: 0,
+  },
+  inRoguelikeRun: false,
 };
 
 const APP_VERSION = '2025-05-24-6n';
@@ -266,7 +278,78 @@ function persist() {
     seenVersion: state.seenVersion,
     settings: state.settings,
     levelProgress: state.levelProgress,
+    roguelike: state.roguelike,
   });
+}
+
+function startRoguelikeRun() {
+  state.inRoguelikeRun = true;
+  // If we're already partway through a run (came back to the app),
+  // keep going from that slot. Otherwise reset to slot 1.
+  if (!state.roguelike.currentSlot || state.roguelike.currentSlot < 1) {
+    state.roguelike.currentSlot = 1;
+  }
+  if (state.roguelike.currentSlot === 1) {
+    state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
+  }
+  persist();
+  playRoguelikeSlot(state.roguelike.currentSlot, { announce: true });
+}
+
+function playRoguelikeSlot(slot, { announce = true } = {}) {
+  const lvl = getRoguelikeLevel(slot);
+  cancelHint();
+  hideLevelOverlay();
+  state.level = lvl;
+  resetBoard();
+  applyLevelObstacles(state.level);
+  state.movesRemaining = state.level.moves;
+  refreshLevelUI();
+  renderBoard(state.board, state, { intro: true });
+  if (announce) {
+    state.busy = true;
+    const done = () => { state.busy = false; scheduleHint(); };
+    const p = showLevelIntro(state.level, RUN_LENGTH);
+    if (p && typeof p.then === 'function') p.then(done);
+    else done();
+    speech.speak(
+      `Slot ${slot} of ${RUN_LENGTH}.${state.level.isBoss ? ' Boss level.' : ''} ${state.level.hint}.`
+    );
+  } else {
+    scheduleHint();
+  }
+}
+
+function advanceRoguelikeAfterWin() {
+  const slot = state.roguelike.currentSlot;
+  state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  if (slot >= RUN_LENGTH) {
+    // Full run cleared
+    const gems = gemsEarned(slot + 1, true);
+    state.roguelike.gems = (state.roguelike.gems || 0) + gems;
+    state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
+    state.roguelike.currentSlot = 1;
+    state.inRoguelikeRun = false;
+    persist();
+    flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
+    speech.speak(`Run complete. You earned ${gems} gems.`);
+    return;
+  }
+  state.roguelike.currentSlot = slot + 1;
+  persist();
+  setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 600);
+}
+
+function endRoguelikeRun() {
+  const reached = state.roguelike.currentSlot;
+  const gems = gemsEarned(reached, false);
+  state.roguelike.gems = (state.roguelike.gems || 0) + gems;
+  state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
+  state.roguelike.currentSlot = 1;
+  state.inRoguelikeRun = false;
+  persist();
+  flashMessage(`Run over. +${gems} 💎`, 2200);
+  speech.speak(`Run over. You reached slot ${reached}. You earned ${gems} gems.`);
 }
 
 // Combo meter — visible chain depth during cascades
@@ -387,11 +470,20 @@ function refreshLevelUI() {
     target: p.target,
     mode: state.settings.mode,
   });
-  setLevelChip(
-    state.level,
-    state.settings.mode,
-    state.level ? state.levelProgress.stars[state.level.id] || 0 : 0
-  );
+  if (state.settings.mode === 'roguelike') {
+    setLevelChip(state.level, 'roguelike', 0, {
+      slot: state.roguelike.currentSlot,
+      total: RUN_LENGTH,
+      gems: state.roguelike.gems,
+      isBoss: !!(state.level && state.level.isBoss),
+    });
+  } else {
+    setLevelChip(
+      state.level,
+      state.settings.mode,
+      state.level ? state.levelProgress.stars[state.level.id] || 0 : 0
+    );
+  }
 }
 
 function recordClearedTypes(toClearWithTypes) {
@@ -465,6 +557,24 @@ function checkLevelOutcome() {
     } else {
       speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
     }
+    if (state.inRoguelikeRun) {
+      const isLastSlot = state.roguelike.currentSlot >= RUN_LENGTH;
+      showLevelComplete({
+        level: { ...state.level, id: state.roguelike.currentSlot, name: state.level.name },
+        stars,
+        score: state.score,
+        isLast: isLastSlot,
+        onNext: () => {
+          if (isLastSlot) {
+            advanceRoguelikeAfterWin(); // shows banner, ends run
+          } else {
+            advanceRoguelikeAfterWin();
+          }
+        },
+        onReplay: () => playRoguelikeSlot(state.roguelike.currentSlot),
+      });
+      return;
+    }
     showLevelComplete({
       level: state.level,
       stars,
@@ -486,6 +596,20 @@ function checkLevelOutcome() {
     sfx.playLevelFail();
     haptics.invalid();
     speech.speak('Try again');
+    if (state.inRoguelikeRun) {
+      const slotAtFail = state.roguelike.currentSlot;
+      showLevelFail({
+        level: { ...state.level, id: slotAtFail },
+        score: state.score,
+        canSkip: false,
+        onReplay: () => playRoguelikeSlot(slotAtFail),
+        onSkip: () => {},
+      });
+      // The run is considered "over" if she taps something other than
+      // replay; for now treat replay as continuing the run. Walking away
+      // from the fail screen by toggling Mode does endRoguelikeRun().
+      return;
+    }
     const replayLevelId = state.level.id;
     showLevelFail({
       level: state.level,
@@ -1208,7 +1332,9 @@ function startFreePlay() {
 }
 
 function init({ chime = false, announceLevel = true } = {}) {
-  if (state.settings.mode === 'levels') {
+  if (state.settings.mode === 'roguelike') {
+    startRoguelikeRun();
+  } else if (state.settings.mode === 'levels') {
     startLevel(state.levelProgress.currentLevel || 1, { announce: announceLevel });
   } else {
     startFreePlay();
@@ -1229,7 +1355,13 @@ createSettingsUI({
     applyTheme(state.settings);
     persist();
     if (modeChanged) {
-      if (state.settings.mode === 'levels') {
+      // Stepping out of an active run mid-game ends it and tallies gems.
+      if (state.inRoguelikeRun && state.settings.mode !== 'roguelike') {
+        endRoguelikeRun();
+      }
+      if (state.settings.mode === 'roguelike') {
+        startRoguelikeRun();
+      } else if (state.settings.mode === 'levels') {
         startLevel(state.levelProgress.currentLevel || 1);
       } else {
         startFreePlay();
@@ -1266,7 +1398,11 @@ document.getElementById('help-open').addEventListener('click', () => {
 
 document.getElementById('restart').addEventListener('click', () => {
   sfx.unlockAudio();
-  if (state.settings.mode === 'levels') {
+  if (state.settings.mode === 'roguelike') {
+    // Mid-run restart = forfeit the run from current slot
+    if (state.inRoguelikeRun) endRoguelikeRun();
+    startRoguelikeRun();
+  } else if (state.settings.mode === 'levels') {
     startLevel(state.level ? state.level.id : state.levelProgress.currentLevel || 1);
   } else {
     startFreePlay();
