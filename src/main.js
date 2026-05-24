@@ -79,6 +79,7 @@ const state = {
   movesRemaining: 0,
   progress: { type: {}, matches: 0, specials: 0, jellyRemaining: 0, jellyTotal: 0 },
   jellyMap: new Map(),
+  lockMap: new Map(),
   resolved: false,
   seenWelcome: persisted.seenWelcome,
   powerups: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
@@ -272,6 +273,7 @@ async function useHammer(pos) {
   await animatePop([pos]);
   state.board.clear([pos]);
   decrementJellyAt([pos]);
+  state.lockMap.delete(`${pos.c},${pos.r}`);
   renderBoard(state.board, state);
   await delay(120);
   const fallen = applyGravity(state.board, CANDY_TYPES);
@@ -305,12 +307,13 @@ async function useColorBomb(pos) {
   cancelHint();
   sfx.unlockAudio();
 
-  const positions = [];
+  const candidate = [];
   for (let r = 0; r < state.board.rows; r++) {
     for (let c = 0; c < state.board.cols; c++) {
-      if (state.board.typeAt(c, r) === targetType) positions.push({ c, r });
+      if (state.board.typeAt(c, r) === targetType) candidate.push({ c, r });
     }
   }
+  const { clearable: positions, blocked: lockedBlocked } = splitByLock(candidate);
   flashMessage('Color bomb!', 1100);
   speech.speak('Color bomb!');
   spawnConfetti(28);
@@ -320,6 +323,10 @@ async function useColorBomb(pos) {
   await animatePop(positions);
   state.board.clear(positions);
   decrementJellyAt(positions);
+  if (lockedBlocked.length > 0) {
+    decrementLockAt(lockedBlocked);
+    for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
+  }
   const clearedTypeList = positions.map(() => targetType);
   recordClearedTypes(clearedTypeList);
   state.progress.matches += 1;
@@ -478,7 +485,8 @@ function comboFanfare(kind) {
 }
 
 async function runComboTurn(combo) {
-  const cleared = applyCombo(state.board, combo);
+  const candidate = applyCombo(state.board, combo);
+  const { clearable: cleared, blocked: lockedBlocked } = splitByLock(candidate);
   const clearedTypes = cleared.map((p) => state.board.typeAt(p.c, p.r));
   sfx.playCascade();
   sfx.playMatch(cleared.length, 2);
@@ -487,6 +495,10 @@ async function runComboTurn(combo) {
   await animatePop(cleared);
   state.board.clear(cleared);
   decrementJellyAt(cleared);
+  if (lockedBlocked.length > 0) {
+    decrementLockAt(lockedBlocked);
+    for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
+  }
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   flashObjectiveProgress(0);
@@ -508,6 +520,22 @@ async function runComboTurn(combo) {
 
 async function trySwap(a, b) {
   state.busy = true;
+  if (isLocked(a.c, a.r) || isLocked(b.c, b.r)) {
+    sfx.playInvalid();
+    flashMessage('Locked!', 900);
+    speech.speak('Locked');
+    const lockedPos = isLocked(a.c, a.r) ? a : b;
+    const tile = document.querySelector(
+      `#board .tile[data-c="${lockedPos.c}"][data-r="${lockedPos.r}"]`
+    );
+    if (tile) {
+      tile.classList.add('lock-shake');
+      setTimeout(() => tile.classList.remove('lock-shake'), 420);
+    }
+    state.busy = false;
+    scheduleHint();
+    return;
+  }
   sfx.playSwap();
   await animateSwap(a, b);
   state.board.swap(a, b);
@@ -579,13 +607,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const p of result.positions) allCleared.add(`${p.c},${p.r}`);
   for (const p of activated) allCleared.add(`${p.c},${p.r}`);
 
-  const toClear = [...allCleared]
+  const candidate = [...allCleared]
     .filter((k) => !newSpecialKeys.has(k))
     .map((k) => {
       const [c, r] = k.split(',').map(Number);
       return { c, r };
     });
 
+  const { clearable: toClear, blocked: lockedBlocked } = splitByLock(candidate);
   const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
 
   sfx.playMatch(allCleared.size, cascadeLevel);
@@ -600,6 +629,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   await animatePop(toClear);
   state.board.clear(toClear);
   decrementJellyAt(toClear);
+  if (lockedBlocked.length > 0) {
+    decrementLockAt(lockedBlocked);
+    for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
+  }
   recordClearedTypes(clearedTypes);
   state.progress.matches += 1;
   state.progress.specials += specialsCreated.length;
@@ -646,6 +679,7 @@ function resetBoard() {
   state.busy = false;
   state.resolved = false;
   state.jellyMap = new Map();
+  state.lockMap = new Map();
   state.progress = {
     type: {},
     matches: 0,
@@ -666,16 +700,56 @@ function resetBoard() {
 
 function applyLevelObstacles(level) {
   state.jellyMap = new Map();
+  state.lockMap = new Map();
   let total = 0;
-  if (level && level.obstacles && Array.isArray(level.obstacles.jelly)) {
-    for (const spec of level.obstacles.jelly) {
-      const [c, r, hits = 1] = spec;
-      state.jellyMap.set(`${c},${r}`, hits);
-      total += hits;
+  if (level && level.obstacles) {
+    if (Array.isArray(level.obstacles.jelly)) {
+      for (const spec of level.obstacles.jelly) {
+        const [c, r, hits = 1] = spec;
+        state.jellyMap.set(`${c},${r}`, hits);
+        total += hits;
+      }
+    }
+    if (Array.isArray(level.obstacles.locks)) {
+      for (const spec of level.obstacles.locks) {
+        const [c, r, hits = 1] = spec;
+        state.lockMap.set(`${c},${r}`, hits);
+      }
     }
   }
   state.progress.jellyTotal = total;
   state.progress.jellyRemaining = total;
+}
+
+function isLocked(c, r) {
+  const n = state.lockMap.get(`${c},${r}`);
+  return n != null && n > 0;
+}
+
+function splitByLock(positions) {
+  const clearable = [];
+  const blocked = [];
+  for (const p of positions) {
+    if (isLocked(p.c, p.r)) blocked.push(p);
+    else clearable.push(p);
+  }
+  return { clearable, blocked };
+}
+
+function decrementLockAt(positions) {
+  if (state.lockMap.size === 0) return 0;
+  let dec = 0;
+  for (const p of positions) {
+    const k = `${p.c},${p.r}`;
+    const n = state.lockMap.get(k);
+    if (n && n > 0) {
+      const next = n - 1;
+      if (next === 0) state.lockMap.delete(k);
+      else state.lockMap.set(k, next);
+      dec++;
+    }
+  }
+  return dec;
 }
 
 function decrementJellyAt(positions) {

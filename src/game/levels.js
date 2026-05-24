@@ -84,6 +84,34 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 11,
+    name: 'Set them free',
+    moves: 24,
+    objective: { kind: 'score', target: 900 },
+    hint: 'Locked tiles need a match to break free. Reach 900 points.',
+    obstacles: {
+      locks: [
+        [2, 1, 1], [3, 1, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 12,
+    name: 'Locked vault',
+    moves: 30,
+    objective: { kind: 'score', target: 1800 },
+    hint: 'Some locks take two hits to break! Reach 1,800 points.',
+    obstacles: {
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [2, 0, 1], [3, 0, 1],
+        [2, 5, 1], [3, 5, 1],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {

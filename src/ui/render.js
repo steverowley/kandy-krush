@@ -120,6 +120,22 @@ export function renderBoard(board, state, opts = {}) {
         if (j === 2) tile.classList.add('jelly', 'jelly-2');
         else if (j === 1) tile.classList.add('jelly', 'jelly-1');
       }
+      if (state.lockMap) {
+        const lk = state.lockMap.get(cellKey(c, r));
+        if (lk && lk > 0) {
+          tile.classList.add('locked');
+          if (lk === 2) tile.classList.add('locked-2');
+          const badge = document.createElement('span');
+          badge.className = 'lock-badge';
+          badge.setAttribute('aria-hidden', 'true');
+          badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="10" rx="2" fill="#FFD60A" stroke="#000" stroke-width="2"/>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="15" r="1.5" fill="#000"/>
+          </svg>${lk === 2 ? '<span class="lock-hits">2</span>' : ''}`;
+          tile.appendChild(badge);
+        }
+      }
       frag.appendChild(tile);
     }
   }
