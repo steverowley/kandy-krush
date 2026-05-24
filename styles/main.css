@@ -930,6 +930,83 @@ body {
 }
 body.theme-hc { background: #111 !important; }
 
+/* Roguelike mode — dark dungeon backdrop, neon-red accents.
+   Candies and the board itself stay readable; only the page
+   chrome shifts so it FEELS like a different mode. HC theme
+   wins if both are on (HC stays flat #111). */
+body.mode-roguelike:not(.theme-hc) {
+  background:
+    radial-gradient(ellipse at top, rgba(255, 0, 110, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(131, 56, 236, 0.28) 0%, transparent 55%),
+    linear-gradient(180deg, #170917 0%, #1a0822 50%, #0d0414 100%);
+  color: #f3e8ff;
+}
+body.mode-roguelike:not(.theme-hc) h1,
+body.mode-roguelike:not(.theme-hc) #score,
+body.mode-roguelike:not(.theme-hc) #best,
+body.mode-roguelike:not(.theme-hc) #level-name,
+body.mode-roguelike:not(.theme-hc) #li-name {
+  color: #ffd1e8;
+  text-shadow: 0 0 14px rgba(255, 0, 110, 0.6);
+}
+body.mode-roguelike:not(.theme-hc) h1 { letter-spacing: 0.04em; }
+
+/* Top-of-stack chrome bars adopt the dark palette */
+body.mode-roguelike:not(.theme-hc) #level-info,
+body.mode-roguelike:not(.theme-hc) #powerups .powerup-btn,
+body.mode-roguelike:not(.theme-hc) #upgrade-panel,
+body.mode-roguelike:not(.theme-hc) #skill-tree-panel,
+body.mode-roguelike:not(.theme-hc) #level-intro-card,
+body.mode-roguelike:not(.theme-hc) footer {
+  background: #1d0a26;
+  color: #f3e8ff;
+  border-color: #FF006E;
+  box-shadow: 0 0 0 1px rgba(255, 0, 110, 0.35), 0 6px 24px rgba(255, 0, 110, 0.18);
+}
+body.mode-roguelike:not(.theme-hc) #moves-label,
+body.mode-roguelike:not(.theme-hc) #objective-text,
+body.mode-roguelike:not(.theme-hc) #objective-progress,
+body.mode-roguelike:not(.theme-hc) #lucky-label {
+  color: #f3e8ff;
+}
+body.mode-roguelike:not(.theme-hc) #level-chip {
+  background: #FF006E;
+  color: #fff;
+  border-color: #FFD60A;
+  box-shadow: 0 0 12px rgba(255, 0, 110, 0.6);
+}
+body.mode-roguelike:not(.theme-hc) #help-open,
+body.mode-roguelike:not(.theme-hc) #settings-open,
+body.mode-roguelike:not(.theme-hc) #restart {
+  background: #2c0f3a;
+  color: #f3e8ff;
+  border-color: #FF006E;
+}
+body.mode-roguelike:not(.theme-hc) #board {
+  background: #0d0414;
+  border-color: #FF006E;
+  box-shadow:
+    0 0 0 1px rgba(255, 0, 110, 0.35),
+    0 0 32px rgba(255, 0, 110, 0.25),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.4);
+}
+/* Recolor the drifting orbs to a sickly red + purple */
+body.mode-roguelike:not(.theme-hc)::before {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.55) 0%, transparent 70%);
+}
+body.mode-roguelike:not(.theme-hc)::after {
+  background: radial-gradient(circle, rgba(131, 56, 236, 0.55) 0%, transparent 70%);
+}
+/* Add a vignette so the edges feel oppressive */
+body.mode-roguelike:not(.theme-hc)::after {
+  /* extra shadow layer on top of the existing orb */
+  filter: blur(50px);
+}
+body.mode-roguelike:not(.theme-hc) > * {
+  position: relative;
+  z-index: 0;
+}
+
 #board {
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.04),
