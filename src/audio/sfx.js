@@ -1,5 +1,8 @@
 let ctx = null;
 let muted = false;
+let musicEnabled = false;
+let musicNodes = null;
+let musicTimer = null;
 
 function ensureCtx() {
   if (!ctx) {
@@ -15,6 +18,8 @@ function ensureCtx() {
 
 export function setMuted(v) {
   muted = !!v;
+  if (muted) stopMusic();
+  else if (musicEnabled) startMusic();
 }
 
 export function isMuted() {
@@ -23,6 +28,7 @@ export function isMuted() {
 
 export function unlockAudio() {
   ensureCtx();
+  if (musicEnabled && !muted && !musicNodes) startMusic();
 }
 
 function tone(freq, durationMs, type = 'sine', peakGain = 0.16, delayMs = 0) {
@@ -51,11 +57,28 @@ export function playSwap() {
   tone(720, 110, 'sine', 0.08, 70);
 }
 
-export function playMatch(tileCount, cascadeLevel) {
-  const base = 440 + cascadeLevel * 50;
-  const notes = Math.min(tileCount, 6);
-  for (let i = 0; i < notes; i++) {
-    tone(base * Math.pow(1.122, i), 150, 'triangle', 0.14, i * 55);
+// Match sounds now vary by chain length:
+//   3-match  -> simple ascending triad
+//   4-match  -> brighter triangle arpeggio (striped-candy worthy)
+//   5+ match -> full chord burst (rainbow-candy worthy)
+export function playMatch(tileCount, cascadeLevel = 1) {
+  const base = 440 + cascadeLevel * 40;
+  if (tileCount >= 5) {
+    // Big chord: maj7 stacked with sparkle on top
+    const chord = [1, 1.25, 1.5, 1.875, 2.5];
+    chord.forEach((mult, i) => tone(base * mult, 320, 'triangle', 0.12, i * 35));
+    tone(base * 3, 240, 'sine', 0.08, 200);
+  } else if (tileCount === 4) {
+    // Striped arpeggio: octave run with bright triangle
+    const arp = [1, 1.122, 1.26, 1.5];
+    arp.forEach((mult, i) => tone(base * mult, 200, 'triangle', 0.13, i * 45));
+    tone(base * 2, 260, 'sine', 0.07, 160);
+  } else {
+    // Simple 3-match
+    const notes = Math.min(tileCount, 3);
+    for (let i = 0; i < notes; i++) {
+      tone(base * Math.pow(1.122, i), 150, 'triangle', 0.14, i * 55);
+    }
   }
 }
 
@@ -72,4 +95,139 @@ export function playInvalid() {
 export function playRestart() {
   const notes = [523, 659, 784, 1047];
   notes.forEach((f, i) => tone(f, 200, 'sine', 0.11, i * 70));
+}
+
+// Per-objective completion jingles. Different shape per objective kind
+// so she can tell at a distance which kind of win it was.
+export function playObjectiveComplete(kind) {
+  switch (kind) {
+    case 'score': {
+      // Triumphant ascending major chord
+      const notes = [523, 659, 784, 1047, 1319];
+      notes.forEach((f, i) => tone(f, 360, 'triangle', 0.13, i * 80));
+      tone(1568, 500, 'sine', 0.08, 380);
+      break;
+    }
+    case 'clearType': {
+      // Warm 4-note maj7
+      [659, 784, 988, 1175].forEach((f, i) => tone(f, 420, 'sine', 0.12, i * 60));
+      break;
+    }
+    case 'clearJelly': {
+      // Bubbly water-drop sequence (descending sines with quick decay)
+      [1568, 1175, 988, 784, 1175, 1568].forEach((f, i) =>
+        tone(f, 140, 'sine', 0.11, i * 75)
+      );
+      tone(2349, 320, 'sine', 0.07, 450);
+      break;
+    }
+    case 'matches': {
+      // Light triadic flourish
+      [659, 784, 988, 784, 1175].forEach((f, i) =>
+        tone(f, 200, 'triangle', 0.12, i * 70)
+      );
+      break;
+    }
+    case 'specials': {
+      // Sparkly high-octave chord
+      [1047, 1319, 1568, 2093].forEach((f, i) => tone(f, 380, 'triangle', 0.11, i * 50));
+      tone(2637, 500, 'sine', 0.07, 220);
+      break;
+    }
+    default:
+      playRestart();
+  }
+}
+
+// Warm, gentle "try again" cue — no buzz, no fail vibe.
+// Two-note descending soft pad, with a slight chord tail so it
+// reads as "ok, let's go again" rather than "you lost".
+export function playLevelFail() {
+  if (muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  tone(440, 600, 'sine', 0.09, 0);
+  tone(370, 700, 'sine', 0.08, 120);
+  tone(294, 900, 'sine', 0.07, 240);
+}
+
+// --- Background music ---
+// A slowly evolving 4-chord pad loop. Web-Audio synthesized, no files.
+// Each chord plays for 8s with 3s crossfade, then advances to the next.
+// Volume capped at ~6% so it never overpowers SFX.
+const MUSIC_CHORDS = [
+  [261.63, 329.63, 392.00, 493.88], // Cmaj7
+  [220.00, 277.18, 329.63, 415.30], // A m7
+  [349.23, 440.00, 523.25, 659.26], // F maj7
+  [392.00, 493.88, 587.33, 698.46], // G maj
+];
+let musicChordIndex = 0;
+
+function playChord(chord, startAt, holdMs, fadeMs) {
+  if (muted || !ctx) return [];
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0, startAt);
+  masterGain.gain.linearRampToValueAtTime(0.06, startAt + fadeMs / 1000);
+  masterGain.gain.setValueAtTime(0.06, startAt + (holdMs - fadeMs) / 1000);
+  masterGain.gain.linearRampToValueAtTime(0, startAt + holdMs / 1000);
+  masterGain.connect(ctx.destination);
+
+  const oscs = [];
+  for (const freq of chord) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, startAt);
+    osc.connect(masterGain);
+    osc.start(startAt);
+    osc.stop(startAt + holdMs / 1000 + 0.1);
+    oscs.push(osc);
+  }
+  return oscs;
+}
+
+export function setMusicEnabled(on) {
+  musicEnabled = !!on;
+  if (!musicEnabled) stopMusic();
+  else if (!muted) startMusic();
+}
+
+function startMusic() {
+  if (musicNodes || muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  musicNodes = { oscs: [], stopped: false };
+  scheduleNextChord();
+}
+
+function scheduleNextChord() {
+  if (!musicNodes || musicNodes.stopped || muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  const holdMs = 8000;
+  const fadeMs = 2400;
+  const chord = MUSIC_CHORDS[musicChordIndex];
+  musicChordIndex = (musicChordIndex + 1) % MUSIC_CHORDS.length;
+  const oscs = playChord(chord, c.currentTime, holdMs, fadeMs);
+  musicNodes.oscs.push(...oscs);
+  musicTimer = setTimeout(() => {
+    musicNodes.oscs = musicNodes.oscs.filter((o) => {
+      try { o.stop(); } catch {}
+      return false;
+    });
+    scheduleNextChord();
+  }, holdMs - fadeMs);
+}
+
+function stopMusic() {
+  if (musicTimer) {
+    clearTimeout(musicTimer);
+    musicTimer = null;
+  }
+  if (musicNodes) {
+    musicNodes.stopped = true;
+    for (const o of musicNodes.oscs) {
+      try { o.stop(); } catch {}
+    }
+    musicNodes = null;
+  }
 }

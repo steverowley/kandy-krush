@@ -5,6 +5,7 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   const openBtn = document.getElementById('settings-open');
   const soundBtn = document.getElementById('setting-sound');
   const speechBtn = document.getElementById('setting-speech');
+  const musicBtn = document.getElementById('setting-music');
   const contrastBtn = document.getElementById('setting-contrast');
   const modeBtn = document.getElementById('setting-mode');
   const resetBtn = document.getElementById('setting-reset');
@@ -23,6 +24,11 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
     if (speechBtn) {
       speechBtn.setAttribute('aria-pressed', String(current.speech));
       speechBtn.textContent = current.speech ? 'Spoken cheers: On' : 'Spoken cheers: Off';
+    }
+
+    if (musicBtn) {
+      musicBtn.setAttribute('aria-pressed', String(current.music));
+      musicBtn.textContent = current.music ? 'Background music: On' : 'Background music: Off';
     }
 
     contrastBtn.setAttribute('aria-pressed', String(current.contrast));
@@ -69,6 +75,9 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   soundBtn.addEventListener('click', () => apply({ sound: !current.sound }));
   if (speechBtn) {
     speechBtn.addEventListener('click', () => apply({ speech: !current.speech }));
+  }
+  if (musicBtn) {
+    musicBtn.addEventListener('click', () => apply({ music: !current.music }));
   }
   contrastBtn.addEventListener('click', () =>
     apply({ contrast: !current.contrast })

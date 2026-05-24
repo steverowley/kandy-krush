@@ -197,7 +197,7 @@ function checkLevelOutcome() {
     }
     persist();
     spawnConfetti(48);
-    sfx.playRestart();
+    sfx.playObjectiveComplete(state.level.objective.kind);
     speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
     showLevelComplete({
       level: state.level,
@@ -217,7 +217,7 @@ function checkLevelOutcome() {
   }
   if (state.movesRemaining <= 0) {
     state.resolved = true;
-    sfx.playInvalid();
+    sfx.playLevelFail();
     speech.speak('Try again');
     const replayLevelId = state.level.id;
     showLevelFail({
@@ -817,6 +817,7 @@ createSettingsUI({
     const modeChanged = next.mode !== state.settings.mode;
     state.settings = { ...state.settings, ...next };
     sfx.setMuted(!state.settings.sound);
+    sfx.setMusicEnabled(state.settings.music);
     speech.setSpeechEnabled(state.settings.speech);
     applyTheme(state.settings);
     persist();
@@ -834,6 +835,8 @@ createSettingsUI({
     location.reload();
   },
 });
+
+sfx.setMusicEnabled(state.settings.music);
 
 const levelSelect = createLevelSelect({
   getProgress: () => state.levelProgress,
