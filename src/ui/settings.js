@@ -7,6 +7,7 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   const speechBtn = document.getElementById('setting-speech');
   const musicBtn = document.getElementById('setting-music');
   const contrastBtn = document.getElementById('setting-contrast');
+  const motionBtn = document.getElementById('setting-reduce-motion');
   const modeBtn = document.getElementById('setting-mode');
   const resetBtn = document.getElementById('setting-reset');
   const resetOverlay = document.getElementById('reset-overlay');
@@ -35,6 +36,13 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
     contrastBtn.textContent = current.contrast
       ? 'High Contrast: On'
       : 'High Contrast: Off';
+
+    if (motionBtn) {
+      motionBtn.setAttribute('aria-pressed', String(current.reduceMotion));
+      motionBtn.textContent = current.reduceMotion
+        ? 'Reduce motion: On'
+        : 'Reduce motion: Off';
+    }
 
     if (modeBtn) {
       modeBtn.setAttribute('aria-pressed', String(current.mode === 'levels'));
@@ -82,6 +90,11 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   contrastBtn.addEventListener('click', () =>
     apply({ contrast: !current.contrast })
   );
+  if (motionBtn) {
+    motionBtn.addEventListener('click', () =>
+      apply({ reduceMotion: !current.reduceMotion })
+    );
+  }
   if (modeBtn) {
     modeBtn.addEventListener('click', () =>
       apply({ mode: current.mode === 'levels' ? 'free' : 'levels' })

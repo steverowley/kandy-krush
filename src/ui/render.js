@@ -599,9 +599,10 @@ export function flashMessage(text, holdMs = 1200) {
   }
 }
 
-export function applyTheme({ contrast, size }) {
+export function applyTheme({ contrast, size, reduceMotion }) {
   const body = document.body;
   body.classList.toggle('theme-hc', !!contrast);
+  body.classList.toggle('reduce-motion', !!reduceMotion);
   body.classList.remove('size-small', 'size-medium', 'size-large');
   body.classList.add(`size-${size || 'medium'}`);
 }

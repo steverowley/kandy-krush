@@ -16,6 +16,7 @@ const defaults = () => ({
     size: 'medium',
     mode: 'levels',
     music: false,
+    reduceMotion: false,
   },
   levelProgress: {
     currentLevel: 1,
@@ -62,6 +63,7 @@ export function load() {
         size: SIZES.includes(s.size) ? s.size : 'medium',
         mode: MODES.includes(s.mode) ? s.mode : 'levels',
         music: !!s.music,
+        reduceMotion: !!s.reduceMotion,
       },
       levelProgress: {
         currentLevel: deriveCurrentLevel(lp.currentLevel, stars),
