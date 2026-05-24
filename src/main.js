@@ -22,6 +22,12 @@ import { createAchievements } from './ui/achievements.js';
 import * as sfx from './audio/sfx.js';
 import * as speech from './audio/speech.js';
 import {
+  spawnFloatingNumber,
+  spawnTileSparkles,
+  spawnPopSpecks,
+  spawnConfetti,
+} from './ui/particles.js';
+import {
   load as loadSave,
   save as saveSave,
   bumpStreakForToday,
@@ -158,11 +164,14 @@ async function runComboTurn(combo) {
   const cleared = applyCombo(state.board, combo);
   sfx.playCascade();
   sfx.playMatch(cleared.length, 2);
+  spawnPopSpecks(cleared);
+  spawnConfetti(combo.kind === 'double-rainbow' ? 40 : 22);
   await animatePop(cleared);
   state.board.clear(cleared);
   const earned = calcScore(cleared, 2);
   state.score += earned;
   setScore(state.score, { animate: true });
+  spawnFloatingNumber(`+${earned.toLocaleString()}`, cleared, { color: '#FF006E' });
   achievements.onScore(state.score);
   const banner = comboFanfare(combo.kind);
   flashMessage(banner);
@@ -251,17 +260,21 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
 
   sfx.playMatch(allCleared.size, cascadeLevel);
   if (cascadeLevel >= 2) sfx.playCascade();
+  if (cascadeLevel >= 3) spawnConfetti(20);
 
+  spawnPopSpecks(toClear);
   await animatePop(toClear);
   state.board.clear(toClear);
 
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
+    spawnTileSparkles(s.c, s.r, s.kind === 'rainbow' ? 14 : 10);
   }
 
   const earned = calcScore([...allCleared], cascadeLevel);
   state.score += earned;
   setScore(state.score, { animate: true });
+  spawnFloatingNumber(`+${earned.toLocaleString()}`, toClear);
   achievements.onScore(state.score);
 
   const ctx = {
