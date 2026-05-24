@@ -1,4 +1,4 @@
-const VERSION = 'sweet-match-v3';
+const VERSION = 'sweet-match-v4';
 const SHELL = [
   './',
   './index.html',
@@ -9,10 +9,14 @@ const SHELL = [
   './src/game/cascade.js',
   './src/game/match.js',
   './src/game/score.js',
+  './src/game/hint.js',
+  './src/game/levels.js',
   './src/ui/render.js',
   './src/ui/input.js',
   './src/ui/settings.js',
   './src/ui/achievements.js',
+  './src/ui/particles.js',
+  './src/ui/levelSelect.js',
   './src/audio/sfx.js',
   './src/audio/speech.js',
   './src/storage/save.js',
@@ -47,17 +51,14 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
-        .then((res) => {
-          if (res && res.ok) {
-            const clone = res.clone();
-            caches.open(VERSION).then((cache) => cache.put(req, clone));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.ok) {
+          const clone = res.clone();
+          caches.open(VERSION).then((cache) => cache.put(req, clone)).catch(() => {});
+        }
+        return res;
+      })
+      .catch(() => caches.match(req))
   );
 });
