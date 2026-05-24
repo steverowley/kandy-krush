@@ -36,6 +36,7 @@ import {
   popNewSpecial,
   setPowerupCounts,
   setHammerArmed,
+  setArmedTool,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -80,11 +81,12 @@ const state = {
   jellyMap: new Map(),
   resolved: false,
   seenWelcome: persisted.seenWelcome,
-  powerups: { hammer: 3, shuffle: 2 },
+  powerups: { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 },
   armedTool: null,
 };
 
-const POWERUP_DEFAULTS = { hammer: 3, shuffle: 2 };
+const POWERUP_DEFAULTS = { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 };
+const PLUS_MOVES_BONUS = 3;
 
 sfx.setMuted(!state.settings.sound);
 speech.setSpeechEnabled(state.settings.speech);
@@ -292,12 +294,86 @@ async function useHammer(pos) {
   if (!state.resolved) scheduleHint();
 }
 
+async function useColorBomb(pos) {
+  if (state.busy || state.powerups.colorBomb <= 0) return;
+  const targetCell = state.board.cell(pos.c, pos.r);
+  if (!targetCell || targetCell.type == null) return;
+  const targetType = targetCell.type;
+  state.busy = true;
+  state.powerups.colorBomb--;
+  setPowerupCounts(state.powerups);
+  cancelHint();
+  sfx.unlockAudio();
+
+  const positions = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      if (state.board.typeAt(c, r) === targetType) positions.push({ c, r });
+    }
+  }
+  flashMessage('Color bomb!', 1100);
+  speech.speak('Color bomb!');
+  spawnConfetti(28);
+  sfx.playCascade();
+  sfx.playMatch(positions.length, 2);
+  spawnPopSpecks(positions);
+  await animatePop(positions);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  const clearedTypeList = positions.map(() => targetType);
+  recordClearedTypes(clearedTypeList);
+  state.progress.matches += 1;
+  flashObjectiveProgress(0);
+  const earned = calcScore(positions, 2);
+  state.score += earned;
+  setScore(state.score, { animate: true });
+  spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
+  achievements.onScore(state.score);
+  await delay(180);
+  const fallen = applyGravity(state.board, CANDY_TYPES);
+  renderBoard(state.board, state, { fallen });
+  await delay(260);
+
+  let cascadeResult = findMatches(state.board);
+  let cascadeLevel = 2;
+  while (cascadeResult.positions.length > 0) {
+    await processMatchRound(cascadeResult, cascadeLevel, null);
+    cascadeResult = findMatches(state.board);
+    cascadeLevel++;
+  }
+
+  maybeUpdateBest();
+  refreshLevelUI();
+  await ensureMovesAvailable();
+  checkLevelOutcome();
+  state.busy = false;
+  if (!state.resolved) scheduleHint();
+}
+
+function usePlusMoves() {
+  if (state.busy || state.powerups.plusMoves <= 0) return;
+  if (state.settings.mode !== 'levels' || !state.level) {
+    speech.speak('Plus moves only works in Levels');
+    flashMessage('Levels mode only', 1100);
+    return;
+  }
+  state.powerups.plusMoves--;
+  setPowerupCounts(state.powerups);
+  state.movesRemaining += PLUS_MOVES_BONUS;
+  state.resolved = false;
+  refreshLevelUI();
+  bumpMoveCounter();
+  flashMessage(`+${PLUS_MOVES_BONUS} moves!`, 1100);
+  speech.speak(`Plus ${PLUS_MOVES_BONUS} moves`);
+  hideLevelOverlay();
+}
+
 function useShuffle() {
   if (state.busy || state.powerups.shuffle <= 0) return;
   state.powerups.shuffle--;
   setPowerupCounts(state.powerups);
   state.armedTool = null;
-  setHammerArmed(false);
+  setArmedTool(null);
   cancelHint();
   sfx.unlockAudio();
   reshuffle(state.board, CANDY_TYPES);
@@ -307,31 +383,54 @@ function useShuffle() {
   scheduleHint();
 }
 
-document.getElementById('pu-hammer').addEventListener('click', () => {
-  sfx.unlockAudio();
-  if (state.busy || state.powerups.hammer <= 0) return;
-  if (state.armedTool === 'hammer') {
+function armTool(tool) {
+  if (state.busy) return;
+  if (state.powerups[tool] <= 0) return;
+  if (state.armedTool === tool) {
     state.armedTool = null;
-    setHammerArmed(false);
+    setArmedTool(null);
     return;
   }
   state.selected = null;
   renderBoard(state.board, state);
-  state.armedTool = 'hammer';
-  setHammerArmed(true);
-  speech.speak('Tap a candy to smash');
+  state.armedTool = tool;
+  setArmedTool(tool);
+  if (tool === 'hammer') speech.speak('Tap a candy to smash');
+  else if (tool === 'colorBomb') speech.speak('Tap a candy to clear its color');
+}
+
+document.getElementById('pu-hammer').addEventListener('click', () => {
+  sfx.unlockAudio();
+  armTool('hammer');
 });
 
 document.getElementById('pu-shuffle').addEventListener('click', () => {
+  sfx.unlockAudio();
   useShuffle();
+});
+
+document.getElementById('pu-colorbomb').addEventListener('click', () => {
+  sfx.unlockAudio();
+  armTool('colorBomb');
+});
+
+document.getElementById('pu-plusmoves').addEventListener('click', () => {
+  sfx.unlockAudio();
+  usePlusMoves();
 });
 
 async function onTap(pos) {
   if (state.busy) return;
   if (state.armedTool === 'hammer') {
     state.armedTool = null;
-    setHammerArmed(false);
+    setArmedTool(null);
     await useHammer(pos);
+    return;
+  }
+  if (state.armedTool === 'colorBomb') {
+    state.armedTool = null;
+    setArmedTool(null);
+    await useColorBomb(pos);
     return;
   }
   cancelHint();
@@ -554,7 +653,7 @@ function resetBoard() {
   };
   state.powerups = { ...POWERUP_DEFAULTS };
   state.armedTool = null;
-  setHammerArmed(false);
+  setArmedTool(null);
   setPowerupCounts(state.powerups);
   setScore(0);
   setBest(state.highScore);

@@ -101,27 +101,27 @@
     ></div>
   </div>
 
-  <section id="powerups" class="w-full max-w-3xl flex items-center justify-center gap-3 sm:gap-4">
+  <section id="powerups" class="w-full max-w-3xl flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
     <button
       id="pu-hammer"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Hammer power-up: smash one candy"
     >
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M14 4l6 6-4 4-6-6z"/>
         <path d="M4 20l9-9"/>
       </svg>
       <span>Hammer</span>
-      <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-base">3</span>
+      <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">3</span>
     </button>
     <button
       id="pu-shuffle"
       type="button"
-      class="powerup-btn flex items-center gap-2 text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-4 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Shuffle power-up: rearrange the board"
     >
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M16 3h5v5"/>
         <path d="M4 20L21 3"/>
         <path d="M21 16v5h-5"/>
@@ -129,9 +129,44 @@
         <path d="M4 4l5 5"/>
       </svg>
       <span>Shuffle</span>
-      <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-base">2</span>
+      <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">2</span>
     </button>
-    <div id="pu-hint" class="hidden text-base sm:text-lg text-pink-700 font-bold">Tap a candy to smash</div>
+    <button
+      id="pu-colorbomb"
+      type="button"
+      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      aria-label="Color bomb power-up: clear every candy of one color"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+        <defs>
+          <linearGradient id="cbgrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FF006E"/>
+            <stop offset="33%" stop-color="#FFD60A"/>
+            <stop offset="66%" stop-color="#06A77D"/>
+            <stop offset="100%" stop-color="#0353A4"/>
+          </linearGradient>
+        </defs>
+        <circle cx="12" cy="12" r="9" fill="url(#cbgrad)" stroke="currentColor" stroke-width="2.5"/>
+        <circle cx="12" cy="12" r="2.5" fill="#fff" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <span>Bomb</span>
+      <span id="pu-colorbomb-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+    </button>
+    <button
+      id="pu-plusmoves"
+      type="button"
+      class="powerup-btn flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      aria-label="Plus three moves power-up: add three moves"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v10"/>
+        <path d="M7 12h10"/>
+      </svg>
+      <span>+3 Moves</span>
+      <span id="pu-plusmoves-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+    </button>
+    <div id="pu-hint" class="hidden w-full text-center text-base sm:text-lg text-pink-700 font-bold">Tap a candy to smash</div>
   </section>
 
   <footer class="text-base sm:text-lg text-gray-600 max-w-3xl text-center">
