@@ -168,10 +168,71 @@ function scheduleHint() {
 
 async function ensureMovesAvailable() {
   if (hasAnyValidSwap(state.board, isSwappable)) return;
-  flashMessage('Shuffle!', 1100);
-  await delay(120);
-  reshuffle(state.board, CANDY_TYPES);
-  renderBoard(state.board, state);
+  // Loud explanation so the player understands WHY the board is changing
+  flashMessage('No moves — shuffling!', 1500);
+  speech.speak('No moves. Shuffling.');
+  haptics.invalid();
+  await delay(280);
+  // Spin-out animation across the whole board
+  const tiles = document.querySelectorAll('#board .tile');
+  tiles.forEach((t, i) => {
+    t.style.animationDelay = `${i * 8}ms`;
+    t.classList.add('shuffling');
+  });
+  await delay(520);
+  preservingReshuffle();
+  // Render with the intro-drop animation so new tiles cascade back in
+  renderBoard(state.board, state, { intro: true });
+  await delay(80);
+}
+
+// Shuffle the candies in place while keeping powered-up sweets,
+// cherries (ingredients), jelly, and locks where they were. Tries
+// a few arrangements until one has no initial matches AND a legal swap;
+// falls back to a fresh fill if it can't find one.
+function preservingReshuffle() {
+  const board = state.board;
+  const movable = [];
+  const ingredientCells = [];
+  const ingredientKeys = new Set();
+  for (let r = 0; r < board.rows; r++) {
+    for (let c = 0; c < board.cols; c++) {
+      const cell = board.cell(c, r);
+      if (!cell) continue;
+      if (cell.ingredient) {
+        ingredientCells.push({ c, r, cell });
+        ingredientKeys.add(`${c},${r}`);
+      } else {
+        movable.push(cell);
+      }
+    }
+  }
+  const slots = [];
+  for (let r = 0; r < board.rows; r++) {
+    for (let c = 0; c < board.cols; c++) {
+      if (!ingredientKeys.has(`${c},${r}`)) slots.push({ c, r });
+    }
+  }
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const arr = movable.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    for (let i = 0; i < slots.length; i++) {
+      board.set(slots[i].c, slots[i].r, arr[i]);
+    }
+    for (const p of ingredientCells) board.set(p.c, p.r, p.cell);
+    if (
+      findMatches(board).positions.length === 0 &&
+      hasAnyValidSwap(board, isSwappable)
+    ) {
+      return;
+    }
+  }
+  // Last resort: fresh fill (loses specials), but keep ingredients.
+  board.fillNoMatches();
+  for (const p of ingredientCells) board.set(p.c, p.r, p.cell);
 }
 
 function persist() {
