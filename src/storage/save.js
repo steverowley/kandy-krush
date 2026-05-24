@@ -88,6 +88,18 @@ export function save(state) {
   }
 }
 
+export function resetProgress(currentState) {
+  const fresh = defaults();
+  const kept = currentState && currentState.settings ? currentState.settings : fresh.settings;
+  const merged = { ...fresh, settings: { ...fresh.settings, ...kept } };
+  try {
+    localStorage.setItem(KEY, JSON.stringify(merged));
+  } catch {
+    // ignore
+  }
+  return merged;
+}
+
 export function bumpStreakForToday(persisted) {
   const today = todayStamp();
   if (persisted.lastPlayedDate === today) return persisted;

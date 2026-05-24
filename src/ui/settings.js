@@ -1,4 +1,4 @@
-export function createSettingsUI({ initial, onChange }) {
+export function createSettingsUI({ initial, onChange, onResetProgress }) {
   const overlay = document.getElementById('settings-overlay');
   const panel = document.getElementById('settings-panel');
   const closeBtn = document.getElementById('settings-close');
@@ -7,6 +7,11 @@ export function createSettingsUI({ initial, onChange }) {
   const speechBtn = document.getElementById('setting-speech');
   const contrastBtn = document.getElementById('setting-contrast');
   const modeBtn = document.getElementById('setting-mode');
+  const resetBtn = document.getElementById('setting-reset');
+  const resetOverlay = document.getElementById('reset-overlay');
+  const resetPanel = document.getElementById('reset-panel');
+  const resetCancel = document.getElementById('reset-cancel');
+  const resetConfirm = document.getElementById('reset-confirm');
   const sizeButtons = Array.from(document.querySelectorAll('[data-size]'));
 
   let current = { ...initial };
@@ -77,8 +82,44 @@ export function createSettingsUI({ initial, onChange }) {
     b.addEventListener('click', () => apply({ size: b.dataset.size }));
   }
 
+  function showResetConfirm() {
+    if (!resetOverlay || !resetPanel) return;
+    resetOverlay.classList.remove('hidden');
+    resetPanel.classList.remove('hidden');
+    resetPanel.setAttribute('aria-hidden', 'false');
+    resetCancel.focus();
+  }
+  function hideResetConfirm() {
+    if (!resetOverlay || !resetPanel) return;
+    resetOverlay.classList.add('hidden');
+    resetPanel.classList.add('hidden');
+    resetPanel.setAttribute('aria-hidden', 'true');
+    if (resetBtn) resetBtn.focus();
+  }
+  if (resetBtn) {
+    resetBtn.addEventListener('click', showResetConfirm);
+  }
+  if (resetCancel) {
+    resetCancel.addEventListener('click', hideResetConfirm);
+  }
+  if (resetOverlay) {
+    resetOverlay.addEventListener('click', hideResetConfirm);
+  }
+  if (resetConfirm) {
+    resetConfirm.addEventListener('click', () => {
+      hideResetConfirm();
+      hide();
+      if (onResetProgress) onResetProgress();
+    });
+  }
+
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !overlay.classList.contains('hidden')) hide();
+    if (e.key !== 'Escape') return;
+    if (resetOverlay && !resetOverlay.classList.contains('hidden')) {
+      hideResetConfirm();
+      return;
+    }
+    if (!overlay.classList.contains('hidden')) hide();
   });
 
   refresh();

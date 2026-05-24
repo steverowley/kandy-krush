@@ -277,6 +277,40 @@
           <button data-size="large"  type="button" class="setting-size text-xl font-bold border-[3px] border-black rounded-2xl px-2 py-3 bg-white" aria-pressed="false">Huge</button>
         </div>
       </div>
+
+      <hr class="border-t-2 border-black/30 my-2" />
+
+      <button
+        id="setting-reset"
+        type="button"
+        class="setting-danger text-xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-900 text-left shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500"
+      >Reset progress&hellip;</button>
+    </div>
+  </div>
+
+  <div id="reset-overlay" class="hidden fixed inset-0 bg-black/60 z-[80]" aria-hidden="true"></div>
+  <div
+    id="reset-panel"
+    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[90] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-4 text-center"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reset-title"
+    aria-hidden="true"
+  >
+    <h2 id="reset-title" class="text-2xl sm:text-3xl font-bold">Reset all progress?</h2>
+    <p class="text-lg sm:text-xl">This erases your stars, level progress, high score, and streak. Settings like Sound and High Contrast stay the same.</p>
+    <p class="text-base text-gray-600">There's no undo.</p>
+    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+      <button
+        id="reset-cancel"
+        type="button"
+        class="flex-1 text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-3"
+      >Cancel</button>
+      <button
+        id="reset-confirm"
+        type="button"
+        class="flex-1 text-xl font-bold bg-red-500 hover:bg-red-400 active:bg-red-600 text-white border-[3px] border-black rounded-2xl px-4 py-3"
+      >Yes, reset</button>
     </div>
   </div>
 

@@ -272,6 +272,28 @@ body.theme-hc #help-open {
   border-color: #000;
 }
 
+body.theme-hc #setting-reset {
+  background: #FF006E;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #reset-panel {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #reset-panel h2,
+body.theme-hc #reset-panel p { color: #fff; }
+body.theme-hc #reset-cancel {
+  background: #fff;
+  color: #000;
+}
+body.theme-hc #reset-confirm {
+  background: #FF006E;
+  color: #fff;
+  border-color: #fff;
+}
+
 /* Jelly underlay — wraps the candy with a colored frame the player must clear */
 .tile.jelly {
   position: relative;
