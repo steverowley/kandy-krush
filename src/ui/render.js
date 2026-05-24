@@ -317,7 +317,7 @@ export function setLevelUI({ level, movesRemaining, current, target, mode }) {
   const nameEl = document.getElementById('level-name');
   if (!wrap) return;
 
-  if (mode !== 'levels' || !level) {
+  if ((mode !== 'levels' && mode !== 'roguelike') || !level) {
     wrap.classList.add('hidden');
     if (movesLabel) movesLabel.classList.add('hidden');
     return;
@@ -325,7 +325,15 @@ export function setLevelUI({ level, movesRemaining, current, target, mode }) {
 
   wrap.classList.remove('hidden');
   if (movesLabel) movesLabel.classList.remove('hidden');
-  if (nameEl) nameEl.textContent = `Level ${level.id} — ${level.name}`;
+  if (nameEl) {
+    if (mode === 'roguelike') {
+      const slot = level.runSlot || level.id;
+      const bossTag = level.isBoss ? ' · BOSS' : '';
+      nameEl.textContent = `Slot ${slot} of 30${bossTag} — ${level.name}`;
+    } else {
+      nameEl.textContent = `Level ${level.id} — ${level.name}`;
+    }
+  }
   if (objEl) objEl.textContent = level.hint;
   if (objProgEl) {
     objProgEl.textContent = `${Math.min(current, target).toLocaleString()} / ${target.toLocaleString()}`;
