@@ -272,6 +272,48 @@ body.theme-hc #help-open {
   border-color: #000;
 }
 
+/* Power-up buttons */
+.powerup-btn.armed {
+  background: #FFD60A;
+  box-shadow: 0 0 0 4px #FF006E, 0 4px 0 rgba(0,0,0,.2);
+  animation: powerup-armed-pulse 900ms ease-in-out infinite;
+}
+@keyframes powerup-armed-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+#pu-hint {
+  animation: pu-hint-bob 1.2s ease-in-out infinite;
+}
+@keyframes pu-hint-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+#board.hammer-armed .tile {
+  cursor: crosshair;
+}
+#board.hammer-armed .tile:hover {
+  background: #FFE08A;
+  box-shadow: 0 0 0 4px #FF006E;
+  transform: scale(1.06);
+  z-index: 3;
+}
+
+body.theme-hc .powerup-btn {
+  background: #fff;
+  color: #000;
+  border-color: #000;
+}
+body.theme-hc .powerup-btn.armed {
+  background: #FFD60A;
+  color: #000;
+}
+body.theme-hc #pu-hammer-count,
+body.theme-hc #pu-shuffle-count {
+  background: #FFD60A;
+  color: #000;
+}
+
 /* Match-line trail (svg polyline drawn under the popping tiles) */
 .match-trail {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));

@@ -292,6 +292,33 @@ export function flashObjectiveDelta(text) {
   }, 900);
 }
 
+export function setPowerupCounts({ hammer, shuffle }) {
+  const hCount = document.getElementById('pu-hammer-count');
+  const sCount = document.getElementById('pu-shuffle-count');
+  const hBtn = document.getElementById('pu-hammer');
+  const sBtn = document.getElementById('pu-shuffle');
+  if (hCount) hCount.textContent = String(hammer);
+  if (sCount) sCount.textContent = String(shuffle);
+  if (hBtn) hBtn.disabled = hammer <= 0;
+  if (sBtn) sBtn.disabled = shuffle <= 0;
+}
+
+export function setHammerArmed(armed) {
+  const hBtn = document.getElementById('pu-hammer');
+  const hint = document.getElementById('pu-hint');
+  const board = document.getElementById('board');
+  if (!hBtn || !hint || !board) return;
+  if (armed) {
+    hBtn.classList.add('armed');
+    hint.classList.remove('hidden');
+    board.classList.add('hammer-armed');
+  } else {
+    hBtn.classList.remove('armed');
+    hint.classList.add('hidden');
+    board.classList.remove('hammer-armed');
+  }
+}
+
 const CASCADE_LABELS = {
   2: 'CASCADE!',
   3: 'TRIPLE!',
