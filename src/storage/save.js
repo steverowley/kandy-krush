@@ -6,6 +6,7 @@ const defaults = () => ({
   highScore: 0,
   streak: 0,
   lastPlayedDate: null,
+  seenWelcome: false,
   settings: {
     sound: true,
     speech: false,
@@ -49,6 +50,7 @@ export function load() {
       highScore: Number(parsed.highScore) || 0,
       streak: Number(parsed.streak) || 0,
       lastPlayedDate: parsed.lastPlayedDate || null,
+      seenWelcome: !!parsed.seenWelcome,
       settings: {
         sound: s.sound !== false,
         speech: !!s.speech,

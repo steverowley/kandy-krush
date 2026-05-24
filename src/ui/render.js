@@ -292,6 +292,26 @@ export function flashObjectiveDelta(text) {
   }, 900);
 }
 
+export function showWelcome(onStart) {
+  const overlay = document.getElementById('welcome-overlay');
+  const panel = document.getElementById('welcome-panel');
+  const btn = document.getElementById('welcome-start');
+  if (!overlay || !panel || !btn) {
+    if (onStart) onStart();
+    return;
+  }
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  btn.focus();
+  const handler = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    btn.removeEventListener('click', handler);
+    if (onStart) onStart();
+  };
+  btn.addEventListener('click', handler);
+}
+
 let introTimer;
 export function showLevelIntro(level, totalLevels = 8) {
   const card = document.getElementById('level-intro');
