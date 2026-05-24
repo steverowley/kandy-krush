@@ -541,6 +541,16 @@ body.theme-hc [data-tip][data-tip-pos="below"]::after {
   border-bottom-color: #fff;
 }
 
+/* Ingredient (cherry) tile */
+.tile.ingredient {
+  background: #FFF8E7;
+  box-shadow: 0 0 0 3px #DC2626, 0 3px 0 rgba(0, 0, 0, 0.2);
+}
+body.theme-hc .tile.ingredient {
+  background: #fff;
+  box-shadow: 0 0 0 4px #DC2626, 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
 /* Locked tile overlay */
 .tile.locked {
   position: relative;

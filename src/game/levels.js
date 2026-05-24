@@ -374,6 +374,61 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 35,
+    name: 'Cherry drop',
+    moves: 22,
+    objective: { kind: 'dropIngredients', target: 2 },
+    hint: 'Two cherries need to reach the bottom. Clear under them.',
+    tip: 'Cherries fall like candies but cannot be matched. Clear the row below to make them drop.',
+    obstacles: {
+      ingredients: [[1, 0], [4, 0]],
+    },
+  },
+  {
+    id: 36,
+    name: 'Cherry shower',
+    moves: 26,
+    objective: { kind: 'dropIngredients', target: 3 },
+    hint: 'Three cherries — drop them all to the bottom.',
+    obstacles: {
+      ingredients: [[1, 0], [3, 0], [4, 0]],
+    },
+  },
+  {
+    id: 37,
+    name: 'Cherry orchard',
+    moves: 28,
+    objective: { kind: 'dropIngredients', target: 4 },
+    hint: 'Four cherries to harvest.',
+    obstacles: {
+      ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
+    },
+  },
+  {
+    id: 38,
+    name: 'Cherries on jelly',
+    moves: 30,
+    objective: { kind: 'dropIngredients', target: 3 },
+    hint: 'Drop 3 cherries past the jelly.',
+    obstacles: {
+      ingredients: [[1, 0], [3, 0], [4, 0]],
+      jelly: [
+        [1, 3, 1], [4, 3, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 39,
+    name: 'Sweet harvest',
+    moves: 30,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Big harvest day: 5 cherries.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
+    },
+  },
 ];
 
 export function getLevel(id) {
@@ -419,6 +474,15 @@ export function progressTowardObjective(level, score, progress) {
         current: Math.max(0, total - remaining),
         target: total,
         done: total > 0 && remaining === 0,
+      };
+    }
+    case 'dropIngredients': {
+      const total = progress.ingredientsTotal || 0;
+      const dropped = progress.ingredientsDropped || 0;
+      return {
+        current: dropped,
+        target: total,
+        done: total > 0 && dropped >= total,
       };
     }
   }
