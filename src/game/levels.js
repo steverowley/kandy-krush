@@ -112,6 +112,69 @@ export const LEVELS = [
       ],
     },
   },
+  {
+    id: 13,
+    name: 'Locked yellow',
+    moves: 24,
+    objective: { kind: 'clearType', type: 0, target: 14 },
+    hint: 'Clear 14 yellow circles. Watch out for the locks!',
+    obstacles: {
+      locks: [
+        [1, 2, 1], [4, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 14,
+    name: 'Sticky jelly',
+    moves: 26,
+    objective: { kind: 'clearJelly' },
+    hint: 'Clear the jelly — some takes two hits.',
+    obstacles: {
+      jelly: [
+        [0, 1, 1], [5, 1, 1],
+        [1, 2, 2], [4, 2, 2],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 15,
+    name: 'Crossroads',
+    moves: 28,
+    objective: { kind: 'score', target: 1600 },
+    hint: 'Reach 1,600 with jelly AND locks on the board.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [5, 0, 1],
+        [0, 5, 1], [5, 5, 1],
+      ],
+      locks: [
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 16,
+    name: 'Grand puzzle',
+    moves: 34,
+    objective: { kind: 'score', target: 2800 },
+    hint: 'The final challenge: jelly, locks, and a steep target.',
+    obstacles: {
+      jelly: [
+        [1, 0, 2], [4, 0, 2],
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+        [1, 5, 2], [4, 5, 2],
+      ],
+      locks: [
+        [2, 1, 1], [3, 1, 1],
+        [2, 4, 2], [3, 4, 2],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
