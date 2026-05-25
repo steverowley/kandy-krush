@@ -407,6 +407,10 @@ export const RELICS = [
     desc: 'Matches of 5+ tiles score ×3. Stacks with Big Match upgrade (×2 per stack).' },
   { id: 'crimson-rose',icon: '🌹', name: 'Crimson Rose',
     desc: 'The very first match of every slot scores ×5. Use specials early for huge openings.' },
+  { id: 'ladybug',     icon: '🐞', name: 'Lucky Ladybug',
+    desc: 'Every 11 matches in a slot, a random power-up appears in your bank.' },
+  { id: 'sweet-spell', icon: '📖', name: 'Sweet Spell',
+    desc: 'Every 7 swaps in a slot, your Lucky bar gains +25%.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
