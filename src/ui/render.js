@@ -386,6 +386,20 @@ function restoreFocus() {
   }
 }
 
+// Replace a previously-attached listener of a given `key` on a persistent
+// DOM element. Without this, calling show*() multiple times without
+// closing in between stacks duplicate listeners on the close button.
+const listenerRegistry = new WeakMap();
+function replaceListener(el, eventType, handler, key) {
+  if (!el || !key) return;
+  let map = listenerRegistry.get(el);
+  if (!map) { map = new Map(); listenerRegistry.set(el, map); }
+  const existing = map.get(key);
+  if (existing) el.removeEventListener(eventType, existing);
+  el.addEventListener(eventType, handler);
+  map.set(key, handler);
+}
+
 export function tileEl(c, r) {
   return document.querySelector(`#board .tile[data-c="${c}"][data-r="${r}"]`);
 }
@@ -742,13 +756,13 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   const close = () => {
     overlay.classList.add('hidden');
     panel.classList.add('hidden');
-    closeBtn.removeEventListener('click', close);
-    overlay.removeEventListener('click', close);
     restoreFocus();
     if (onClose) onClose();
   };
-  closeBtn.addEventListener('click', close);
-  overlay.addEventListener('click', close);
+  // Use replaceListener so re-opening the panel without closing it
+  // first doesn't stack duplicate listeners on the persistent buttons.
+  replaceListener(closeBtn, 'click', close, 'skill-tree-close');
+  replaceListener(overlay, 'click', close, 'skill-tree-overlay');
 
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
@@ -898,12 +912,10 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   const handleClose = () => {
     overlay.classList.add('hidden');
     panel.classList.add('hidden');
-    close.removeEventListener('click', handleClose);
-    overlay.removeEventListener('click', handleClose);
     restoreFocus();
   };
-  close.addEventListener('click', handleClose);
-  overlay.addEventListener('click', handleClose);
+  replaceListener(close, 'click', handleClose, 'run-summary-close');
+  replaceListener(overlay, 'click', handleClose, 'run-summary-overlay');
   // 🔁 New run button — only meaningful for outcome === 'complete' or 'fail'.
   const replayBtn = document.getElementById('run-summary-replay');
   if (replayBtn) {
@@ -1572,13 +1584,11 @@ export function showChangelog(items, onDismiss) {
   const dismiss = () => {
     overlay.classList.add('hidden');
     panel.classList.add('hidden');
-    btn.removeEventListener('click', dismiss);
-    overlay.removeEventListener('click', dismiss);
     restoreFocus();
     if (onDismiss) onDismiss();
   };
-  btn.addEventListener('click', dismiss);
-  overlay.addEventListener('click', dismiss);
+  replaceListener(btn, 'click', dismiss, 'changelog-dismiss');
+  replaceListener(overlay, 'click', dismiss, 'changelog-overlay');
 }
 
 export function showWelcome(onStart) {
