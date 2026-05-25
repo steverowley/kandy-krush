@@ -1,16 +1,20 @@
 import { LEVELS } from '../game/levels.js';
 
-function tileHTML(level, earnedStars, isCurrent, isUnlocked) {
+function tileHTML(level, earnedStars, isCurrent, isUnlocked, bestScore) {
   const stars =
     '★'.repeat(earnedStars) + '☆'.repeat(3 - earnedStars);
   const lockBadge = isUnlocked
     ? ''
     : `<div class="lt-lock" aria-label="locked">Locked</div>`;
+  const bestLine = isUnlocked && bestScore > 0
+    ? `<div class="lt-best text-xs opacity-70" aria-label="best score ${bestScore}">Best: ${bestScore.toLocaleString()}</div>`
+    : '';
   return `
     <div class="lt-num">${level.id}</div>
     <div class="lt-name">${level.name}</div>
     <div class="lt-hint">${level.hint}</div>
     <div class="lt-stars" aria-label="${earnedStars} of 3 stars">${stars}</div>
+    ${bestLine}
     ${lockBadge}
   `;
 }
@@ -27,7 +31,7 @@ export function createLevelSelect({ getProgress, onChoose }) {
   const titleEl = document.getElementById('ls-title');
 
   function populate() {
-    const { currentLevel, stars } = getProgress();
+    const { currentLevel, stars, bestScores = {} } = getProgress();
     const totalEarned = LEVELS.reduce(
       (sum, l) => sum + (stars[l.id] || 0),
       0
@@ -50,7 +54,7 @@ export function createLevelSelect({ getProgress, onChoose }) {
       );
       if (isCurrent) tile.classList.add('current');
       if (!unlocked) tile.classList.add('locked');
-      tile.innerHTML = tileHTML(lv, earned, isCurrent, unlocked);
+      tile.innerHTML = tileHTML(lv, earned, isCurrent, unlocked, bestScores[lv.id] || 0);
       if (unlocked) {
         tile.addEventListener('click', () => {
           hide();
