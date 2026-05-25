@@ -1978,6 +1978,15 @@ body.theme-hc #start-screen #start-screen-stats > span {
   color: #fff !important;
 }
 body.theme-hc #start-screen #start-menu-quit { color: #ffd60a !important; }
+/* The bottom "Settings" + "What's New" buttons were `bg-white` pills
+   that don't get overridden by the panel HC rules — text became white
+   on white in HC mode. Force them dark so the labels show. */
+body.theme-hc #start-menu-settings,
+body.theme-hc #start-menu-help {
+  background: #1f2937 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
 body.theme-hc #start-screen #start-screen-version {
   background: #1f2937 !important;
   color: #d4d4d4 !important;

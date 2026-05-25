@@ -287,7 +287,7 @@ function openStartMenu(subtitle = null) {
     subtitle,
     version: APP_VERSION,
     stats: {
-      best: state.best || 0,
+      best: state.highScore || 0,
       runsCompleted: state.roguelike?.runsCompleted || 0,
       gems: state.roguelike?.gems || 0,
     },
