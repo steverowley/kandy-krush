@@ -1198,6 +1198,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9u',
+    items: [
+      '✨ NEW RELIC — Stardust. Every cascade chain of 4 or more earns you a free 💎 mid-run.',
+      'Pair with cascade-king + Big Brain + Snowball for chain-heavy builds that print gems.',
+      'Relic pool now 18.',
+    ],
+  },
+  {
     id: '2026-05-25-9t',
     items: [
       '🎯 NEW UPGRADE — Snowball (Scorer). Each match in a slot multiplies the next match\'s score by 3% per stack. Compounds — match 20 with 1 stack scores ×1.80 baseline.',
@@ -3035,6 +3043,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
     spawnConfetti(36);
+    // ✨ Stardust relic — +1 gem per cascade ≥ 4.
+    if (state.inRoguelikeRun && hasRelic('stardust')) {
+      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+      flashMessage('✨ Stardust +1 💎', 800);
+      persist();
+    }
   }
   if (cascadeLevel >= 5) {
     spawnScreenFlash('rgba(255, 0, 110, 0.35)');
