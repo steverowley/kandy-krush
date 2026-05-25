@@ -1290,6 +1290,13 @@ function maybeFireRelicsOnSwap() {
     spawnCrazyTile();
     flashMessage('💫 Crazy Rain', 800);
   }
+  // 📖 Sweet Spell relic — every 7 swaps, Lucky bar +25%.
+  if (hasRelic('sweet-spell') && state.relicSwapCount % 7 === 0) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 25);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage('📖 Sweet Spell +25% 🍀', 900);
+  }
 }
 
 function ironTongueBreak() {
@@ -1390,6 +1397,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11w',
+    items: [
+      '🐞 NEW RELIC — Lucky Ladybug: every 11 matches in a slot, a random power-up appears in your bank. Stacks beautifully with Piñata for a power-up rain build.',
+      '📖 NEW RELIC — Sweet Spell: every 7 swaps in a slot, your Lucky bar gains +25%. A new path to keep Lucky-MODE flowing for builds that thrive on bursts.',
+    ],
+  },
   {
     id: '2026-05-25-11v',
     items: [
@@ -3880,6 +3894,18 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         bank[pick] = (bank[pick] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
+      }
+    }
+    // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
+    if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pick] || 0) < cap) {
+        bank[pick] = (bank[pick] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`🐞 Ladybug! +1 ${pick}`, 1000);
       }
     }
   }
