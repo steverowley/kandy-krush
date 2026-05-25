@@ -590,7 +590,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade, onReplay }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade, onReplay, highlights }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -609,6 +609,17 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     ? 'You crowned the Candy Kraken!'
     : inProgress ? `Slot ${slotReached}/${totalSlots}` : `You reached slot ${slotReached}`;
   if (stats) {
+    const highlightCards = highlights && (highlights.maxCascade > 0 || highlights.biggestMatch > 0)
+      ? `
+      <div class="text-center bg-purple-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">🔁 Max cascade</div>
+        <div class="text-2xl font-bold tabular-nums">×${highlights.maxCascade || 0}</div>
+      </div>
+      <div class="text-center bg-orange-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">💥 Biggest match</div>
+        <div class="text-2xl font-bold tabular-nums">${highlights.biggestMatch || 0}</div>
+      </div>`
+      : '';
     stats.innerHTML = `
       <div class="text-center bg-yellow-100 border-2 border-black rounded-xl p-2">
         <div class="text-xs uppercase opacity-70">Slot reached</div>
@@ -626,6 +637,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         <div class="text-xs uppercase opacity-70">Best slot</div>
         <div class="text-2xl font-bold tabular-nums">${bestSlot}</div>
       </div>
+      ${highlightCards}
     `;
   }
   if (klassEl) {
