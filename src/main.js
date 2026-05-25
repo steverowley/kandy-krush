@@ -26,6 +26,8 @@ import {
   archetypeFor,
   archetypeCounts,
   synergyStacks,
+  CLASSES,
+  getClass,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -57,6 +59,7 @@ import {
   setLuckyCharge,
   showChangelog,
   showUpgradePicker,
+  showClassPicker,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -586,6 +589,15 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8e',
+    items: [
+      '⚔ STARTING CLASSES — every roguelike run now opens with a class pick. Six classes, each grants a free starting upgrade that pushes you toward an archetype.',
+      '🎲 Wanderer (no bonus, pure freedom) · 💣 Bombardier (Bomb Maker) · 🍀 Charmer (Lucky Fast) · 🛡 Ironclad (+2 Moves) · 🌪 Stormbringer (Lightning) · ⚔ Champion (Score Boost).',
+      'Combined with the new synergy system, classes give you a head start on a build path — pick Bombardier and chase Bomber upgrades for 7×7 MEGA BOOMs, or Wanderer for a fully self-directed run.',
+      'Also: roguelike save now correctly caps at slot 100 (was clamping to 30 before — a stealth bug for anyone past slot 30).',
+    ],
+  },
+  {
     id: '2026-05-25-8d',
     items: [
       '🧬 BUILD ARCHETYPES — every upgrade now belongs to one of five archetypes: 🎯 Scorer, 💣 Bomber, 🍀 Lucky, 🛡 Sustain, ⚡ Wild. The picker shows the archetype badge so you can shape a build.',
@@ -987,8 +999,22 @@ function startRoguelikeRun() {
   if (state.roguelike.currentSlot === 1) {
     state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
     state.runUpgrades = [];
+    state.roguelike.currentClass = null;
   }
   persist();
+  // Fresh run with no class yet — show the class picker. The picker
+  // grants free starting upgrades that shape the run's archetype.
+  if (state.roguelike.currentSlot === 1 && !state.roguelike.currentClass) {
+    showClassPicker(CLASSES, ARCHETYPES, (cls) => {
+      state.roguelike.currentClass = cls.id;
+      for (const id of (cls.start || [])) state.runUpgrades.push(id);
+      flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
+      speech.speak(`${cls.name} chosen.`);
+      persist();
+      setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot, { announce: true }), 400);
+    });
+    return;
+  }
   playRoguelikeSlot(state.roguelike.currentSlot, { announce: true });
 }
 
@@ -1011,7 +1037,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     else done();
     if (lvl.isBoss) {
       // Boss fanfare on top of the intro card
-      flashMessage(slot === 30 ? 'FINAL BOSS!' : 'BOSS BATTLE!', 1600);
+      flashMessage(slot === RUN_LENGTH ? 'FINAL BOSS!' : 'BOSS BATTLE!', 1600);
       spawnScreenFlash('rgba(255, 0, 110, 0.45)');
       screenShake(8, 420);
       sfx.playObjectiveComplete('specials'); // sparkly chord
@@ -1036,6 +1062,7 @@ function advanceRoguelikeAfterWin() {
     state.roguelike.currentSlot = 1;
     state.inRoguelikeRun = false;
     state.runUpgrades = [];
+    state.roguelike.currentClass = null;
     persist();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
     speech.speak(`Run complete. You earned ${gems} gems.`);
@@ -1080,6 +1107,7 @@ function endRoguelikeRun() {
   state.roguelike.currentSlot = 1;
   state.inRoguelikeRun = false;
   state.runUpgrades = [];
+  state.roguelike.currentClass = null;
   persist();
   flashMessage(`Run over. +${gems} 💎`, 2200);
   speech.speak(`Run over. You reached slot ${reached}. You earned ${gems} gems.`);

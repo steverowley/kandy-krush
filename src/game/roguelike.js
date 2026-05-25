@@ -266,6 +266,28 @@ export const ARCHETYPES = {
   wild:    { icon: '⚡', name: 'Wild',    color: '#8338EC',
              desc: 'Stacking wild speeds up the auto-fire abilities.' },
 };
+// ===== Starting classes =====
+// Picked once at run start. Each class grants free starting upgrades
+// that push the run in a particular direction — without locking the
+// player out of any pivot. Wanderer is the neutral pick.
+export const CLASSES = [
+  { id: 'wanderer',     icon: '🎲', name: 'Wanderer',     archetype: null,
+    desc: 'No starting bonus. Total freedom to pick any path.',          start: [] },
+  { id: 'bombardier',   icon: '💣', name: 'Bombardier',   archetype: 'bomber',
+    desc: 'Start with Bomb Maker — every special drops a TNT crazy tile.', start: ['bomb-maker'] },
+  { id: 'charmer',      icon: '🍀', name: 'Charmer',      archetype: 'lucky',
+    desc: 'Start with Lucky Fast — Lucky bar fills 50% faster.',          start: ['lucky-fast'] },
+  { id: 'ironclad',     icon: '🛡', name: 'Ironclad',     archetype: 'sustain',
+    desc: 'Start with +2 Moves — every slot is roomier.',                  start: ['moves+2'] },
+  { id: 'stormbringer', icon: '🌪', name: 'Stormbringer', archetype: 'wild',
+    desc: 'Start with Lightning — bolts auto-clear rows every 4 matches.', start: ['lightning'] },
+  { id: 'champion',     icon: '⚔', name: 'Champion',     archetype: 'scorer',
+    desc: 'Start with Score Boost — all scoring +25%.',                    start: ['score+25'] },
+];
+export function getClass(id) {
+  return CLASSES.find((c) => c.id === id) || null;
+}
+
 export function archetypeFor(id) {
   const u = UPGRADES.find((x) => x.id === id);
   return u ? u.archetype : null;
