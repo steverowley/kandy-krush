@@ -548,6 +548,14 @@ function runLuckyRate() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8b',
+    items: [
+      '🎯 100 LEVELS! Levels mode expanded from 39 to 100 across 12 themed chapters: Cherry Orchard, Combo Storm, Jelly Maze, Lock Tyrant, Special Lab, Cherry Forest, Match Marathon, Rainbow Rush, Stronghold, Cherry Vault, Jelly Castle, and Mastery.',
+      'Level 100 — "Sweet Apocalypse" — is the summit: cherries + jelly + locks + 8,000 points in 50 moves.',
+      'Smooth difficulty curve: every chapter introduces a new twist on familiar mechanics. Halfway-home gets its own jelly heavyweight at level 50.',
+    ],
+  },
+  {
     id: '2026-05-25-8a',
     items: [
       '🎺 Roguelike music REPLACED with a Guile\'s-Theme-style 16-bit chiptune march — driving D-minor groove, square-wave melody, marching snare backbeat, octave-jumping bass.',
