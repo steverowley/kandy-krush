@@ -1487,9 +1487,9 @@ function applyRunUpgradesOnSlotStart() {
   const slot = state.roguelike.currentSlot;
   if (isMutatorSlot(slot)) {
     state.slotMutator = pickRandomMutator(runRng()).id;
-    if (state.runHighlights && Array.isArray(state.runHighlights.mutatorsSeen) && state.runHighlights.mutatorsSeen.length < 32) {
-      state.runHighlights.mutatorsSeen.push(state.slotMutator);
-    }
+    // 🌪 mutatorsSeen tracker migrated to a slot:start bus handler in
+    // src/game/run-effects.js (PR #17ac). The bus.emit('slot:start',...)
+    // call lower in playRoguelikeSlot drives the handler.
   } else {
     state.slotMutator = null;
   }
@@ -1948,6 +1948,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17ac',
+    items: [
+      '🚌 TWO MORE EFFECTS MIGRATED TO THE BUS — the per-slot mutator history tracker (`runHighlights.mutatorsSeen`) and the best-slot-score tracker (`runHighlights.bestSlotScore`) used to be inline branches in `applyRunUpgradesOnSlotStart` and `advanceRoguelikeAfterWin`. Both now subscribers on `bus.on(\'slot:start\', …)` and `bus.on(\'slot:complete\', …)` in run-effects.js. 5 new tests; 63 total now pass.',
+    ],
+  },
   {
     id: '2026-05-25-17ab',
     items: [
@@ -4229,17 +4235,15 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  // 🏔 bestSlotScore tracker migrated to a slot:complete bus handler in
+  // src/game/run-effects.js (PR #17ac). The emit below feeds the
+  // handler the score that used to be read inline here.
   bus.emit('slot:complete', {
     slot,
     isBoss: !!state.level?.isBoss,
     score: state.score,
     movesUsed: (state.level?.moves || 0) - (state.movesRemaining || 0),
   });
-  // 🏅 Record this slot's score as the run's best-single-slot if it tops
-  // the previous one. Surfaces in the run-stats screen at run end.
-  if (state.runHighlights && state.score > (state.runHighlights.bestSlotScore || 0)) {
-    state.runHighlights.bestSlotScore = state.score;
-  }
   telemetry.track('slot_complete', {
     slot,
     is_boss: !!state.level?.isBoss,

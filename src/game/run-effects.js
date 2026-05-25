@@ -52,6 +52,31 @@ export function registerRunEffects(state) {
     }
   }));
 
+  // 🌪 Mutator history tracker. Was inline in
+  // applyRunUpgradesOnSlotStart; now a slot:start subscriber. Pushes
+  // the active mutator (set by the surrounding slot-init code BEFORE
+  // bus.emit('slot:start')) onto state.runHighlights.mutatorsSeen so
+  // the run-summary can show which mutators the player saw.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun || !state.runHighlights) return;
+    if (!state.slotMutator) return;
+    const list = state.runHighlights.mutatorsSeen;
+    if (!Array.isArray(list)) return;
+    if (list.length >= 32) return; // cap so a long run can't bloat the save
+    list.push(state.slotMutator);
+  }));
+
+  // 🏔 Best-slot-score tracker. Was inline at the top of
+  // advanceRoguelikeAfterWin; now a slot:complete subscriber. Bumps
+  // state.runHighlights.bestSlotScore when the just-cleared slot's
+  // score beats the previous best.
+  unsubs.push(bus.on('slot:complete', (ctx) => {
+    if (!state.inRoguelikeRun || !state.runHighlights) return;
+    if (ctx && typeof ctx.score === 'number' && ctx.score > (state.runHighlights.bestSlotScore || 0)) {
+      state.runHighlights.bestSlotScore = ctx.score;
+    }
+  }));
+
   return () => {
     for (const u of unsubs) u();
     unsubs.length = 0;
