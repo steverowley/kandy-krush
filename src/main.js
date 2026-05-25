@@ -1004,6 +1004,8 @@ function applyRunUpgradesOnSlotStart() {
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
   state.ironcladHammerUsed = false;
+  // Reset Quick Draw relic's per-slot free power-up.
+  state.quickDrawUsed = false;
   // 🌬 Second Wind relic — start of slot with only 1 life → 2 lives.
   if (hasRelic('second-wind') && (state.roguelike.livesRemaining || 0) === 1) {
     state.roguelike.livesRemaining = 2;
@@ -1198,6 +1200,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9z',
+    items: [
+      '🤠 NEW RELIC — Quick Draw. The first power-up you use each slot is FREE, whatever kind it is.',
+      'Stacks with Ironclad awakening — Ironclad gets a free hammer, then Quick Draw gives you another free power-up of any kind.',
+      'Relic pool now 19.',
+    ],
+  },
   {
     id: '2026-05-25-9y',
     items: [
@@ -1694,6 +1704,12 @@ function spendPowerup(kind) {
   if (kind === 'hammer' && isClass('ironclad') && classAwakened() && !state.ironcladHammerUsed) {
     state.ironcladHammerUsed = true;
     flashMessage('🛡 Ironclad: free hammer!', 1000);
+    return true;
+  }
+  // 🤠 Quick Draw relic — first power-up of any kind per slot is free.
+  if (hasRelic('quick-draw') && !state.quickDrawUsed) {
+    state.quickDrawUsed = true;
+    flashMessage(`🤠 Quick Draw! Free ${kind}`, 1000);
     return true;
   }
   bank[kind]--;
