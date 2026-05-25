@@ -16,6 +16,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
+  <!-- Pixi.js is only loaded when the player opts into the WebGL
+       renderer via ?canvas=1 or localStorage.sweetMatchCanvas=1.
+       This keeps the default boot weight unchanged. -->
+  <script>
+    (function () {
+      try {
+        var q = new URLSearchParams(window.location.search);
+        var on = q.get('canvas') === '1' ||
+          (window.localStorage && window.localStorage.getItem('sweetMatchCanvas') === '1');
+        if (!on) return;
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/pixi.js@8.6.6/dist/pixi.min.js';
+        s.async = false; // need PIXI on globalThis before main.js runs
+        document.currentScript.parentNode.appendChild(s);
+      } catch (e) { /* canvas mode just won't be available */ }
+    })();
+  </script>
 </head>
 <body class="size-medium start-screen-active min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
   <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
@@ -509,6 +526,14 @@
         aria-pressed="true"
         data-tip="Toggle The Eater + Grumblock enemies in Roguelike mode"
       >Enemies: On</button>
+
+      <button
+        id="setting-canvas"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        aria-pressed="false"
+        data-tip="Experimental — render the board with WebGL (Pixi.js) for smoother animations. Reload required."
+      >🎨 WebGL renderer: Off</button>
 
       <button
         id="setting-home"

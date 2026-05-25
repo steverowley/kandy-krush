@@ -9,6 +9,7 @@ export function createSettingsUI({ initial, onChange, onResetProgress, onHome })
   const contrastBtn = document.getElementById('setting-contrast');
   const motionBtn = document.getElementById('setting-reduce-motion');
   const enemiesBtn = document.getElementById('setting-enemies');
+  const canvasBtn = document.getElementById('setting-canvas');
   const homeBtn = document.getElementById('setting-home');
   const resetBtn = document.getElementById('setting-reset');
   const resetOverlay = document.getElementById('reset-overlay');
@@ -52,6 +53,17 @@ export function createSettingsUI({ initial, onChange, onResetProgress, onHome })
       enemiesBtn.textContent = enemiesOn
         ? 'Enemies: On'
         : 'Enemies: Off';
+    }
+
+    if (canvasBtn) {
+      // Reflects localStorage directly — not part of the regular settings
+      // object because flipping it requires a page reload to load Pixi.
+      let on = false;
+      try { on = window.localStorage && window.localStorage.getItem('sweetMatchCanvas') === '1'; } catch {}
+      canvasBtn.setAttribute('aria-pressed', String(on));
+      canvasBtn.textContent = on
+        ? '🎨 WebGL renderer: On (reload to apply)'
+        : '🎨 WebGL renderer: Off';
     }
 
     for (const b of sizeButtons) {
@@ -104,6 +116,16 @@ export function createSettingsUI({ initial, onChange, onResetProgress, onHome })
     enemiesBtn.addEventListener('click', () =>
       apply({ enemies: !(current.enemies !== false) })
     );
+  }
+  if (canvasBtn) {
+    canvasBtn.addEventListener('click', () => {
+      let on = false;
+      try { on = window.localStorage && window.localStorage.getItem('sweetMatchCanvas') === '1'; } catch {}
+      try { window.localStorage.setItem('sweetMatchCanvas', on ? '0' : '1'); } catch {}
+      // Page reload is the cleanest way to flip Pixi on/off — it needs
+      // to be loaded (or not) at page load, before the first render.
+      window.location.reload();
+    });
   }
   if (homeBtn) {
     homeBtn.addEventListener('click', () => {

@@ -1,4 +1,28 @@
 import { LEVELS as ALL_LEVELS } from '../game/levels.js';
+import {
+  isCanvasMode,
+  initCanvasRenderer,
+  renderBoardCanvas,
+  animateSwapCanvas,
+  animatePopCanvas,
+} from './canvas-renderer.js';
+
+// Init Pixi as soon as the board element exists (after the DOM grid is
+// laid out so cell sizes are stable). The flag is checked inside every
+// canvas-renderer entry point, so calling these in DOM mode is a no-op.
+let canvasReadyPromise = null;
+function ensureCanvasReady(cols, rows) {
+  if (!isCanvasMode()) return null;
+  if (canvasReadyPromise) return canvasReadyPromise;
+  const boardEl = document.getElementById('board');
+  if (!boardEl) return null;
+  canvasReadyPromise = initCanvasRenderer({ boardEl, cols, rows }).catch((err) => {
+    canvasReadyPromise = null;
+    // eslint-disable-next-line no-console
+    console.error('[canvas-renderer] init failed, falling back to DOM:', err);
+  });
+  return canvasReadyPromise;
+}
 
 export const CANDY_DEFS = [
   { name: 'sunshine', color: '#FFD60A', shape: 'circle' },
@@ -150,6 +174,13 @@ function tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock) {
 }
 
 export function renderBoard(board, state, opts = {}) {
+  // Side-car: in canvas mode we still build the DOM grid (transparent
+  // hit targets) AND drive the Pixi pipeline. The CSS hides the SVG
+  // candies so only the canvas paint shows.
+  if (isCanvasMode()) {
+    const ready = ensureCanvasReady(board.cols, board.rows);
+    if (ready) ready.then(() => renderBoardCanvas(board, { intro: !!opts.intro }));
+  }
   const root = document.getElementById('board');
   const fallenSet = opts.fallen
     ? new Set(opts.fallen.map((p) => cellKey(p.c, p.r)))
@@ -405,6 +436,14 @@ export function tileEl(c, r) {
 }
 
 export async function animateSwap(a, b) {
+  // Canvas mode: drive the Pixi swap tween. The DOM tiles are invisible
+  // hit targets in this mode, so we still run the DOM transform tween
+  // BUT skip it visually (the canvas does the real work) — this keeps
+  // the 220ms timing as a single source of truth.
+  if (isCanvasMode()) {
+    await animateSwapCanvas(a, b);
+    return;
+  }
   const tA = tileEl(a.c, a.r);
   const tB = tileEl(b.c, b.r);
   if (!tA || !tB) return;
@@ -420,6 +459,10 @@ export async function animateSwap(a, b) {
 }
 
 export async function animatePop(positions) {
+  if (isCanvasMode()) {
+    await animatePopCanvas(positions);
+    return;
+  }
   for (const p of positions) {
     const t = tileEl(p.c, p.r);
     if (t) t.classList.add('popping');
