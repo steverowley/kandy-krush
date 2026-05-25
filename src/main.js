@@ -1398,6 +1398,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11z',
+    items: [
+      '💬 BOSS TAUNTS — every roguelike boss now opens with a one-line taunt on the battle banner. From "You shall not pass my walls of jelly!" to the Candy Kraken\'s "TASTE THE ABYSS."',
+      'Tiny touch of personality before every fight.',
+    ],
+  },
+  {
     id: '2026-05-25-11y',
     items: [
       '💎 NEW META-SKILLS — three new entries in the Skill Tree push the run economy further:',

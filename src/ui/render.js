@@ -834,6 +834,17 @@ export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
     'boss-10': '🐙',
   };
   if (icon) icon.textContent = iconByBossId[boss && boss.id] || (isFinal ? '🐙' : '👑');
+  const taunt = document.getElementById('boss-banner-taunt');
+  if (taunt) {
+    const t = boss && boss.taunt;
+    if (t) {
+      taunt.textContent = `“${t}”`;
+      taunt.classList.remove('hidden');
+    } else {
+      taunt.textContent = '';
+      taunt.classList.add('hidden');
+    }
+  }
   if (tip) tip.textContent = (boss && boss.tip) || '';
   root.classList.remove('hidden', 'fading');
   root.classList.add('show');
