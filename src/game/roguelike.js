@@ -288,6 +288,7 @@ export const UPGRADES = [
   { id: 'cherry-reload',category: 'synergy',   archetype: 'lucky',   name: 'Cherry Reload',      desc: '🍒 When Lucky fires, gain +1 Shuffle per stack. Lucky-focused builds get a stream of shuffles.' },
   { id: 'wild-card',   category: 'synergy',    archetype: 'wild',    name: 'Wild Card',          desc: '🎴 Slot start: spawn 1 random crazy tile per stack. Always start with chaos.' },
   { id: 'bee-tonic',   category: 'buff',       archetype: 'lucky',   name: 'Bee Tonic',          desc: '🐝 Slot start: Lucky bar +20% per stack. Stacks with Lucky Soul and Lucky Day.' },
+  { id: 'sweet-steady',category: 'buff',       archetype: 'sustain', name: 'Sweet Steady',       desc: '🍬 Slot start: gain +1 random power-up per stack. Drip restock.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
@@ -564,6 +565,8 @@ export const MUTATORS = [
     desc: 'Every match scores ×3 this slot. Stronger than Golden Hour.' },
   { id: 'bonus-round', icon: '🎰', name: 'Bonus Round',
     desc: '+10 💎 at slot start AND every match scores ×1.5 this slot.' },
+  { id: 'snowstorm',   icon: '🌨', name: 'Snowstorm',
+    desc: 'Every match earns a flat +10 per cleared tile (so a 5-tile match is +50 bonus score).' },
 ];
 
 export function isMutatorSlot(slot) {
