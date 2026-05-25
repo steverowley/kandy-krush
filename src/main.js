@@ -227,6 +227,8 @@ function showRunInventory() {
     awakened: classAwakened(),
     runsCompleted: state.roguelike?.runsCompleted || 0,
     classStats: stats,
+    upgradesList: (state.runUpgrades || []).slice(),
+    getUpgrade: (id) => UPGRADES.find((u) => u.id === id),
   });
 }
 
@@ -1169,6 +1171,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9p',
+    items: [
+      '📋 Run inventory now LISTS each upgrade by name (Score Boost ×2, Bomb Maker, Lightning, etc.) below the archetype tallies. Hover for description.',
+      'Combined with the relic descriptions, the inventory panel is now a real "build sheet" you can consult mid-run.',
+    ],
+  },
   {
     id: '2026-05-25-9o',
     items: [

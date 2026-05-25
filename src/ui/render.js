@@ -578,7 +578,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -639,6 +639,29 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
             builds.appendChild(chip);
           }
         }
+      }
+    }
+    // When in-progress (inventory view), also list individual upgrades
+    // by name with their stack counts and archetype colour.
+    if (inProgress && upgradesList && upgradesList.length > 0 && getUpgrade) {
+      const counts = new Map();
+      for (const id of upgradesList) counts.set(id, (counts.get(id) || 0) + 1);
+      const divider = document.createElement('div');
+      divider.className = 'w-full text-xs uppercase tracking-wider opacity-60 text-center mt-1';
+      divider.textContent = 'Upgrades held';
+      builds.appendChild(divider);
+      for (const [id, n] of counts) {
+        const u = getUpgrade(id);
+        if (!u) continue;
+        const arch = u.archetype && archetypes ? archetypes[u.archetype] : null;
+        const color = arch ? arch.color : '#444';
+        const row = document.createElement('span');
+        row.className = 'px-2 py-1 rounded-lg border-2 border-black text-xs';
+        row.style.background = `${color}11`;
+        row.style.color = color;
+        row.textContent = `${arch ? arch.icon : '•'} ${u.name}${n > 1 ? ` ×${n}` : ''}`;
+        row.title = u.desc || '';
+        builds.appendChild(row);
       }
     }
   }
