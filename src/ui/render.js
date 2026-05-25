@@ -77,6 +77,16 @@ function svgForCell(cell) {
 
 const cellKey = (c, r) => `${c},${r}`;
 
+// Pick black or white text based on the perceived luminance of a hex
+// color so chips render with enough contrast (WCAG AA at typical sizes).
+function contrastTextOn(hex) {
+  const m = String(hex || '').replace('#', '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return '#000';
+  const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luma > 160 ? '#000' : '#fff';
+}
+
 function ariaForCell(cell, c, r) {
   if (!cell) return `empty, row ${r + 1}, column ${c + 1}`;
   const def = CANDY_DEFS[cell.type];
@@ -767,8 +777,9 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
           if (meta) {
             const chip = document.createElement('span');
             chip.className = 'px-2 py-1 rounded-full border-2 border-black font-bold text-sm';
-            chip.style.background = `${meta.color}22`;
-            chip.style.color = meta.color;
+            // Solid colored bg + contrast-aware text for WCAG AA readability.
+            chip.style.background = meta.color;
+            chip.style.color = contrastTextOn(meta.color);
             chip.textContent = `${meta.icon} ${meta.name} ×${n}`;
             builds.appendChild(chip);
           }
@@ -793,9 +804,13 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         // Tier names: 1=base, 2=II, 3=III, 4=IV, 5+=MAX
         const tier = n >= 5 ? 'MAX' : (n === 4 ? 'IV' : (n === 3 ? 'III' : (n === 2 ? 'II' : '')));
         const isMax = n >= 5;
-        row.className = `px-2 py-1 rounded-lg border-2 border-black text-xs ${isMax ? 'font-bold' : ''}`;
-        row.style.background = isMax ? color : `${color}11`;
-        row.style.color = isMax ? '#fff' : color;
+        // Upgrade rows: white bg with colored left-border accent for normal,
+        // solid colored bg for MAX. Black text in both cases for readability.
+        row.className = `px-2 py-1 rounded-lg border-2 border-black text-sm ${isMax ? 'font-bold' : ''}`;
+        row.style.background = isMax ? color : '#fff';
+        row.style.color = isMax ? contrastTextOn(color) : '#000';
+        row.style.borderLeftWidth = '6px';
+        row.style.borderLeftColor = color;
         const tierBadge = tier ? ` <span style="opacity:0.85">[${tier}]</span>` : '';
         row.innerHTML = `${arch ? arch.icon : '•'} ${u.name}${n > 1 ? ` ×${n}` : ''}${tierBadge}`;
         row.title = u.desc || '';
@@ -814,7 +829,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
           const row = document.createElement('div');
           row.className = 'flex items-center gap-2 border border-yellow-500 bg-yellow-50 rounded-lg px-2 py-1';
           row.innerHTML = r
-            ? `<span class="text-xl">${r.icon}</span><span class="font-bold">${r.name}</span><span class="opacity-80 text-xs">— ${r.desc}</span>`
+            ? `<span class="text-xl">${r.icon}</span><span class="font-bold">${r.name}</span><span class="opacity-90 text-sm">— ${r.desc}</span>`
             : `<span>${id}</span>`;
           relicsEl.appendChild(row);
         }
@@ -1035,7 +1050,7 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
       ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
       : '';
     const nextStr = nextMilestone
-      ? ` · <span class="text-xs opacity-80">Next: ${nextMilestone.icon} ${nextMilestone.label} in ${nextMilestone.distance}</span>`
+      ? ` · <span class="text-sm opacity-90 font-semibold">Next: ${nextMilestone.icon} ${nextMilestone.label} in ${nextMilestone.distance}</span>`
       : '';
     klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}${nextStr}`;
   }
@@ -1045,12 +1060,12 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
       const n = archCounts[key];
       if (n > 0) {
         const meta = archetypes[key];
-        if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color}22;color:${meta.color}">${meta.icon}${n}</span>`);
+        if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color};color:${contrastTextOn(meta.color)}">${meta.icon}${n}</span>`);
       }
     }
     const vibe = dominantBuildVibe(archCounts, archetypes);
     const vibeChip = vibe
-      ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:white" title="${vibe.title}">${vibe.label}</span>`
+      ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:${contrastTextOn(vibe.color)}" title="${vibe.title}">${vibe.label}</span>`
       : '';
     buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="opacity-60">No upgrades yet</span>';
   }
@@ -1061,9 +1076,9 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
         const r = getRelic ? getRelic(id) : null;
         return r ? `<span title="${r.name}: ${r.desc.replace(/"/g, '')}">${r.icon}</span>` : '';
       }).join('');
-      relicsEl.innerHTML = `<span class="text-xs opacity-70 mr-1">Relics:</span>${icons}${buildChip}`;
+      relicsEl.innerHTML = `<span class="text-sm font-semibold mr-1">Relics:</span>${icons}${buildChip}`;
     } else {
-      relicsEl.innerHTML = `<span class="text-xs opacity-60">No relics yet — beat a boss</span>${buildChip}`;
+      relicsEl.innerHTML = `<span class="text-sm opacity-80">No relics yet — beat a boss</span>${buildChip}`;
     }
   }
 }
