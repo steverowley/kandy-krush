@@ -7,8 +7,10 @@ step and no `npm install`.
 ## Run all
 
 ```sh
-node --test tests/*.test.js
+./tests/run.sh
 ```
+
+(equivalent to `node --test tests/*.test.js` — see `tests/run.sh`.)
 
 ## Run one file
 
@@ -36,5 +38,7 @@ node --test tests/score.test.js
 | `i18n.test.js` | `t()` lookup, key-fallback, `{token}` interpolation, `formatNumber` digit grouping |
 | `purchases.test.js` | unconfigured fallback, grant-handler forwarding, provider swap |
 | `save.test.js` | round-trip persist, corrupt-save backup, sanitizer rejections |
+| `event-bus.test.js` | on / off / emit, handler isolation, payload integrity |
+| `sw-shell.test.js` | every SHELL entry resolves to a real file, no duplicates |
 
 Run them before every PR that touches pure-game modules or the save layer.

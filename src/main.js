@@ -1948,6 +1948,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17z',
+    items: [
+      '🧪 `./tests/run.sh` — single short token to run the full test suite. Updates the test README so contributors don\'t have to copy the glob.',
+    ],
+  },
+  {
     id: '2026-05-25-17x',
     items: [
       '🗺 PROJECT_PLAN.md UPDATED — refreshed the roadmap with every PR landed this session. Phase A: 9 / 10 done (A2 Tailwind build step pending). Phase B: 12 / 14. Phase C: 3 / 5. Phase D: 8 / 12. Open product-owner decisions surfaced (bundler, telemetry vendor, native packaging, cloud save backend, privacy policy). Recommended next moves listed in order of leverage.',
