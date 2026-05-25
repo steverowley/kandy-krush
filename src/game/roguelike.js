@@ -283,6 +283,8 @@ export const UPGRADES = [
   { id: 'echo-match',  category: 'synergy',    archetype: 'lucky',   name: 'Echo Match',         desc: '🪞 Cascade chains ≥4 also fill your Lucky bar by +50% per stack.' },
   { id: 'tongue-tie',  category: 'synergy',    archetype: 'sustain', name: 'Tongue Tie',         desc: '👅 The Eater attacks +1 move slower per stack. Stacks with Slow Down mutator and Time Freeze.' },
   { id: 'gold-pile',   category: 'buff',       archetype: 'scorer',  name: 'Gold Pile',          desc: '💰 Each boss kill grants +5 gems per stack. Boss-rush economy.' },
+  { id: 'plus-more',   category: 'buff',       archetype: 'sustain', name: 'Plus More',          desc: '➕ Each "+3 Moves" power-up gives +1 extra per stack (so +4, +5, +6, etc.).' },
+  { id: 'sweet-treat', category: 'synergy',    archetype: 'scorer',  name: 'Sweet Treat',        desc: '🍬 3-tile matches score +25% per stack. Tiny matches add up.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
