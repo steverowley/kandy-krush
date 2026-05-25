@@ -325,6 +325,10 @@ export const CLASSES = [
   { id: 'gambler',      icon: '🃏', name: 'Gambler',      archetype: 'lucky',
     desc: 'Start with Lucky Strike — when Lucky fires, also gain +1 hammer.',
     awaken: 'Awakens at 2+ 🍀 Lucky upgrades: Lucky-MODE (×1.5 sustain) lasts +3 extra matches.', start: ['lucky-strike'] },
+  // Phase 11a — hybrid class: starts with TWO upgrades from different archetypes
+  { id: 'wizard',       icon: '🧙', name: 'Wizard',       archetype: 'wild',
+    desc: 'Hybrid start: Combo Streak (Scorer) + Lightning (Wild). The mage life.',
+    awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['combo-streak', 'lightning'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;

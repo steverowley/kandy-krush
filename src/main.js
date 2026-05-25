@@ -1366,6 +1366,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11a',
+    items: [
+      '🧙 NEW STARTING CLASS — Wizard! First HYBRID class: starts with TWO upgrades from different archetypes — Combo Streak (Scorer) + Lightning (Wild).',
+      'Awakening matches Stormbringer (cross-blast lightning). A solid pick for cascade-heavy + auto-fire builds.',
+      'Class pool now 12.',
+    ],
+  },
+  {
     id: '2026-05-25-10z',
     items: [
       '🥪 NEW MUTATOR — Long Lunch. +10 moves at slot start. Take your time.',
