@@ -1578,6 +1578,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13u',
+    items: [
+      '🎒 NEW META-SKILL — Pocket Friend (75💎): every run starts with 1 random relic already in your inventory. Permanent early-game boost.',
+    ],
+  },
+  {
     id: '2026-05-25-13t',
     items: [
       '👑 NEW RELIC — Sweet Throne: boss kill grants +1 of EVERY power-up. Bigger restock than Boss Bounty.',
@@ -3099,6 +3105,16 @@ function startRoguelikeRun() {
     // Per-run highlights — surfaced on the run-summary panel when the
     // player finishes (or dies).
     state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
+    // 🎒 Pocket Friend meta-skill — start each run with 1 random relic.
+    if (hasMeta('pocket-friend')) {
+      const choices = pickRelicChoices([], 1);
+      if (choices.length > 0) {
+        state.runRelics = [choices[0].id];
+        setTimeout(() => {
+          flashMessage(`🎒 Pocket Friend: ${choices[0].icon} ${choices[0].name}!`, 1800);
+        }, 800);
+      }
+    }
   }
   if (!state.runHighlights) state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
   persist();
