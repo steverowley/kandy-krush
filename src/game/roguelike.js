@@ -301,6 +301,24 @@ export function formatObjectiveHint(obj) {
 // Map a roguelike slot (1..100) to a base level config. Score-style
 // objectives get scaled up per-slot so the late game stays challenging.
 export function getRoguelikeLevel(slot) {
+  // Endless mode: slots past RUN_LENGTH cycle through the non-boss
+  // LEVELS pool with continued scaling. scoreFactor / matchFactor scale
+  // linearly with slot index so slot 150 is genuinely harder than 100.
+  // Boss slots remain at the 10-multiple positions (no boss-110).
+  if (slot > RUN_LENGTH) {
+    const base = LEVELS[(slot - 1) % LEVELS.length] || getLevel(1);
+    const objective = scaleObjective(base.objective, slot, false);
+    const moves = scaleMovesForObstacleSlot(base.moves, slot, false, objective?.kind);
+    return {
+      ...base,
+      objective,
+      moves,
+      hint: `ENDLESS — ${formatObjectiveHint(objective)}`,
+      runSlot: slot,
+      isBoss: false,
+      isEndless: true,
+    };
+  }
   const idx = Math.max(1, Math.min(RUN_LENGTH, slot));
   if (BOSS_LEVELS[idx]) {
     const boss = { ...BOSS_LEVELS[idx], runSlot: idx, isBoss: true };
@@ -786,6 +804,10 @@ export const SKILL_TREE = [
   { id: 'lucky-aura',    cost: 80, name: 'Lucky Aura',          desc: 'In Roguelike runs, Lucky bar fills 25% faster on every slot. Compounds with Lucky Fast upgrades and Lucky synergy.' },
   { id: 'crit-eye',      cost: 70, name: 'Crit Eye',            desc: 'First match of every slot scores ×1.5. Stacks with Crimson Rose / Sugar Rush relics.' },
   { id: 'pocket-friend', cost: 75, name: 'Pocket Friend',       desc: 'Every run starts with 1 random relic already in your inventory.' },
+  // 🔓 System-unlock nodes — change the rules of the game, not just
+  // numbers. Comparable to StS Ascensions / Balatro vouchers.
+  { id: 'reroll-bank',   cost: 90, name: 'Reroll Bank',         desc: 'Start every run with 3 FREE upgrade rerolls in your pocket — no Shuffle required. Carries between slots.' },
+  { id: 'endless-mode',  cost: 100, name: 'Endless Mode',        desc: 'After clearing slot 100, the run KEEPS GOING. Slots scale up forever; how deep can you push? Adds a "▶ Continue" button to the run-complete summary.' },
 ];
 
 export const RUN_LIVES_BASE = 3;

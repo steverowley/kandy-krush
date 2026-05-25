@@ -57,6 +57,8 @@ const defaults = () => ({
   // 📓 Last N completed runs (most recent first). Each entry:
   // { ts, outcome, slot, class, gems, score, daily, dailyStamp }
   runHistory: [],
+  // 🔄 Banked free rerolls left in the current run (from Reroll Bank meta).
+  runFreeRerolls: 0,
 });
 
 function todayStamp(d = new Date()) {
@@ -168,6 +170,7 @@ export function load() {
         : null,
       dailySeedBestSlot: Math.min(100, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
       runHistory: sanitizeRunHistory(parsed.runHistory),
+      runFreeRerolls: Math.max(0, Math.min(20, Math.floor(Number(parsed.runFreeRerolls) || 0))),
     };
   } catch (err) {
     // A sanitizer threw — partial corruption. Back up and return defaults.
