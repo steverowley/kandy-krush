@@ -1769,3 +1769,14 @@ body.reduce-motion .mutator-flash { display: none; }
   50%      { transform: rotate(2deg)  translateY(-2px); }
 }
 body.reduce-motion .grumblock-badge svg { animation: none !important; }
+
+/* ===== Wormhole crazy tile ===== */
+.tile.crazy-wormhole {
+  animation: crazy-wormhole-spin 2.0s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(3, 83, 164, 0.7));
+}
+@keyframes crazy-wormhole-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  100% { transform: rotate(-360deg) scale(1); }
+}
+body.reduce-motion .tile.crazy-wormhole { animation: none !important; transform: none !important; }

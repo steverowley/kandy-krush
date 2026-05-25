@@ -142,6 +142,17 @@ export function renderBoard(board, state, opts = {}) {
             <circle cx="50" cy="50" r="42" fill="#1e1a30" stroke="#000" stroke-width="5"/>
             <polygon points="55,12 28,55 48,55 40,88 72,42 52,42 60,12" fill="#FFD60A" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
           </svg>`;
+        } else if (cell.crazy === 'wormhole') {
+          tile.classList.add('crazy', 'crazy-wormhole');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="worm-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#1e1a30"/><stop offset="100%" stop-color="#0353A4"/></radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="42" fill="url(#worm-${c}-${r})" stroke="#000" stroke-width="5"/>
+            <circle cx="50" cy="50" r="30" fill="none" stroke="#06A77D" stroke-width="3" stroke-dasharray="6 4"/>
+            <circle cx="50" cy="50" r="18" fill="none" stroke="#FFD60A" stroke-width="2" stroke-dasharray="3 3"/>
+            <circle cx="50" cy="50" r="6" fill="#000"/>
+          </svg>`;
         } else if (cell.crazy === 'prism') {
           tile.classList.add('crazy', 'crazy-prism');
           tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
