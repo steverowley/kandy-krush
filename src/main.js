@@ -1391,6 +1391,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11u',
+    items: [
+      '⛰ 5 MORE POST-POST-GAME LEVELS (111-115) — "True Hell" chapter for players who finished Beyond the Apocalypse.',
+      'Crimson Tide (7k/22m no obstacles) · Eternal Loop (50 matches/30) · Jelly Singularity (entire 36-cell board is double-jelly) · Cherry Symphony (7 cherries) · Sweet Infinity (15k score, the new top).',
+      'Total Levels mode count: 115. If you beat 115, you really did beat the game.',
+    ],
+  },
+  {
     id: '2026-05-25-11t',
     items: [
       '🌹 NEW RELIC — Crimson Rose. The very first match of every slot scores ×5.',
