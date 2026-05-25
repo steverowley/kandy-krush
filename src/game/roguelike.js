@@ -421,6 +421,10 @@ export const RELICS = [
     desc: 'Every 11 matches in a slot, a random power-up appears in your bank.' },
   { id: 'sweet-spell', icon: '📖', name: 'Sweet Spell',
     desc: 'Every 7 swaps in a slot, your Lucky bar gains +25%.' },
+  { id: 'spice-box',   icon: '🌶', name: 'Spice Box',
+    desc: 'Every 12 matches in a slot, a random crazy tile spawns somewhere on the board.' },
+  { id: 'honey-trap',  icon: '🍯', name: 'Honey Trap',
+    desc: 'On BOSS slots only, the first 3 matches score ×3. Big-opener for boss fights.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {

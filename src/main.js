@@ -1337,6 +1337,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🌹 Crimson Rose relic — first match of every slot is ×5.
   if (hasRelic('crimson-rose') && (state.slotMatchCount || 0) === 0) m *= 5;
+  // 🍯 Honey Trap relic — boss slots only: first 3 matches score ×3.
+  if (hasRelic('honey-trap') && state.level?.isBoss && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
@@ -1400,6 +1402,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12b',
+    items: [
+      '🌶 NEW RELIC — Spice Box: every 12 matches in a slot, a random crazy tile spawns. Constant board chaos.',
+      '🍯 NEW RELIC — Honey Trap: BOSS slots only, the first 3 matches score ×3. Build a boss-rush spike for late-run wins.',
+    ],
+  },
   {
     id: '2026-05-25-12a',
     items: [
@@ -3946,6 +3955,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         setPowerupCounts(bank);
         flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
       }
+    }
+    // 🌶 Spice Box relic — every 12 matches spawn a random crazy tile.
+    if (hasRelic('spice-box') && state.slotMatchCount % 12 === 0) {
+      spawnCrazyTile();
+      flashMessage('🌶 Spice Box!', 900);
     }
     // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
     if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
