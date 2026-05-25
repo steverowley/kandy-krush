@@ -1903,6 +1903,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17l',
+    items: [
+      '🧪 TEST SUITE — new `tests/` directory with 40 tests across 6 files (score, match, rng, i18n, purchases, save). Uses Node\'s built-in `node:test` runner so there are zero new dependencies — run `node --test tests/*.test.js`. Covers the pure-game modules (no DOM required) plus the save round-trip + corruption recovery flow with an in-memory localStorage shim.',
+    ],
+  },
+  {
     id: '2026-05-25-17k',
     items: [
       '👑 BOSSES HAVE KITS NOW — each of the 10 bosses ticks an actual mechanic instead of being a reskinned regular slot. Per-boss tooltips telegraph what to expect.',
