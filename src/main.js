@@ -1266,6 +1266,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10p',
+    items: [
+      '📰 What\'s New modal now shows the LATEST 5 versions in one go — players who skipped a few updates catch up on everything they missed without digging through history.',
+      'Each version gets a small id header for context. Top entry tagged "Today".',
+    ],
+  },
+  {
     id: '2026-05-25-10o',
     items: [
       '🧺 NEW UPGRADE — Caretaker (Sustain). Power-up bank cap +1 per stack. Stacks freely with Bigger Bank meta (9→12) and Sustain synergy.',
@@ -3839,7 +3846,9 @@ function maybeShowChangelog(after) {
     if (after) after();
     return;
   }
-  showChangelog(CHANGELOG, () => {
+  // Show the latest 5 changelog entries so a player who skipped a
+  // few updates sees what they missed in one go.
+  showChangelog(CHANGELOG_ENTRIES.slice(0, 5), () => {
     state.seenVersion = APP_VERSION;
     persist();
     if (after) after();

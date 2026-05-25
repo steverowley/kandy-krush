@@ -1245,10 +1245,29 @@ export function showChangelog(items, onDismiss) {
     return;
   }
   list.innerHTML = '';
-  for (const text of items) {
-    const li = document.createElement('li');
-    li.textContent = text;
-    list.appendChild(li);
+  // Accept either a flat array of strings (legacy) or an array of
+  // changelog ENTRIES { id, items }. Entries get a small version label.
+  const isEntries = Array.isArray(items) && items.length > 0 && typeof items[0] === 'object' && Array.isArray(items[0].items);
+  if (isEntries) {
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i];
+      const header = document.createElement('li');
+      header.style.listStyle = 'none';
+      header.className = 'mt-3 mb-1 text-xs font-bold uppercase tracking-wider opacity-70';
+      header.textContent = i === 0 ? `Today — ${entry.id}` : entry.id;
+      list.appendChild(header);
+      for (const text of entry.items) {
+        const li = document.createElement('li');
+        li.textContent = text;
+        list.appendChild(li);
+      }
+    }
+  } else {
+    for (const text of items) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    }
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
