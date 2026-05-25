@@ -440,6 +440,10 @@ export const RELICS = [
     desc: 'Each special candy created also drops a random power-up into your bank.' },
   { id: 'cracked-mirror',icon: '🪞', name: 'Cracked Mirror',
     desc: 'Matches of 5+ tiles also fill your Lucky bar by +20%.' },
+  { id: 'sundae-saturday',icon: '🍨', name: 'Sundae Saturday',
+    desc: 'Every 8 matches in a slot, gain +1 "+3 Moves" power-up. Slow drip of move income.' },
+  { id: 'sugar-crash',  icon: '💥', name: 'Sugar Crash',
+    desc: 'Every 14 matches in a slot, spawn a TNT crazy tile somewhere. Mid-late slot bursts.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
