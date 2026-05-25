@@ -371,18 +371,27 @@ async function fireEater() {
   eaterPendingColumn = -1;
   clearEaterTelegraph();
   if (col < 0) return;
-  const positions = [];
-  for (let r = 0; r < EATER_BITE && r < state.board.rows; r++) {
-    if (state.board.isIngredient(col, r)) continue;
-    if ((state.lockMap.get(`${col},${r}`) || 0) > 0) continue;
-    positions.push({ c: col, r });
+  // At slot 90+ a second eater also fires from a different column.
+  const slot = state.level && state.level.runSlot;
+  const cols = [col];
+  if (slot >= 90) {
+    let col2 = pickEaterColumn();
+    if (col2 < 0 || col2 === col) col2 = (col + 2) % state.board.cols;
+    cols.push(col2);
   }
-  spawnEater(col, EATER_BITE);
-  flashMessage('🦷 THE EATER!', 1600);
-  speech.speak('The eater');
+  const positions = [];
+  for (const c of cols) {
+    for (let r = 0; r < EATER_BITE && r < state.board.rows; r++) {
+      if (state.board.isIngredient(c, r)) continue;
+      if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+      positions.push({ c, r });
+    }
+    spawnEater(c, EATER_BITE);
+  }
+  flashMessage(cols.length > 1 ? '🦷🦷 DOUBLE EATER!' : '🦷 THE EATER!', 1600);
+  speech.speak(cols.length > 1 ? 'Double eater' : 'The eater');
   haptics.epic();
   screenShake(7, 420);
-  // Wait for the descend animation to bring the jaws down
   await delay(820);
   state.board.clear(positions);
   decrementJellyAt(positions);
@@ -1160,6 +1169,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9o',
+    items: [
+      '🦷🦷 DOUBLE EATER at slot 90+! When The Eater fires in the final stretch (slots 90-99), TWO chomps drop from different columns.',
+      'Combined with the slot 90 Eater interval of 3 moves, the late-run is genuinely intense. Stack 🛡 Sustain and ❤️‍🔥 Phoenix for survival.',
+    ],
+  },
   {
     id: '2026-05-25-9n',
     items: [
