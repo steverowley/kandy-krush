@@ -987,10 +987,11 @@ function buyMetaSkill(id) {
 
 function effectivePowerupCap() {
   let cap = hasMeta('bigger-bank') ? 12 : POWERUP_CAP;
-  // Sustain synergy: +1 cap per Sustain stack beyond the first.
   if (state.inRoguelikeRun) {
     const counts = archetypeCounts(state.roguelike?.upgrades || []);
     cap += synergyStacks(counts.sustain);
+    // 🧺 Caretaker upgrade — +1 cap per stack.
+    cap += upgradeCount('caretaker');
   }
   return cap;
 }
@@ -1264,6 +1265,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10o',
+    items: [
+      '🧺 NEW UPGRADE — Caretaker (Sustain). Power-up bank cap +1 per stack. Stacks freely with Bigger Bank meta (9→12) and Sustain synergy.',
+      'Build wide Sustain runs into a 15+ cap and never feel constrained on power-ups again.',
+      'Upgrade pool now 31.',
+    ],
+  },
   {
     id: '2026-05-25-10n',
     items: [
