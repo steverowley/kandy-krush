@@ -100,7 +100,10 @@
     <div id="run-summary-class" class="text-base sm:text-lg text-center font-bold"></div>
     <div id="run-summary-builds" class="flex flex-wrap items-center justify-center gap-2"></div>
     <div id="run-summary-relics" class="flex flex-wrap items-center justify-center gap-1 text-2xl"></div>
-    <button id="run-summary-close" class="mt-2 self-center px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Continue</button>
+    <div class="flex flex-row items-center justify-center gap-3 mt-2 flex-wrap">
+      <button id="run-summary-share" class="px-4 py-2 bg-white text-black border-[3px] border-black rounded-2xl font-bold text-base active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" title="Copy a text summary of this run">📋 Copy summary</button>
+      <button id="run-summary-close" class="px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Continue</button>
+    </div>
   </div>
 
   <div id="boss-banner" class="hidden fixed inset-0 z-[72] flex items-center justify-center pointer-events-none">
