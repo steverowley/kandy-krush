@@ -1334,6 +1334,7 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
 function runLuckyRate() {
   let m = 1;
   for (let i = 0; i < upgradeCount('lucky-fast'); i++) m *= 1.5;
+  for (let i = 0; i < upgradeCount('lucky-fast-2'); i++) m *= 2;
   // Lucky synergy: +20% fill per Lucky stack beyond the first.
   const luckySyn = synergyStacks(runArchetypeCounts().lucky);
   if (luckySyn > 0) m *= 1 + 0.2 * luckySyn;
@@ -1360,6 +1361,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10x',
+    items: [
+      '🍀 NEW UPGRADE — Lucky Fast II (Lucky). Lucky bar fills 100% faster per stack. Stronger sibling of Lucky Fast (which is 50%).',
+      'Stack both for Lucky-MODE every other match. Upgrade pool now 34.',
+    ],
+  },
   {
     id: '2026-05-25-10w',
     items: [
