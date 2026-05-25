@@ -196,6 +196,29 @@ function isClass(id) {
   return state.inRoguelikeRun && state.roguelike?.currentClass === id;
 }
 
+function showRunInventory() {
+  if (!state.inRoguelikeRun) return;
+  const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  const stats = cls && state.roguelike?.classStats ? state.roguelike.classStats[cls.id] : null;
+  showRunSummary({
+    outcome: 'in-progress',
+    inProgress: true,
+    klass: cls,
+    slotReached: state.roguelike?.currentSlot || 1,
+    totalSlots: RUN_LENGTH,
+    gemsEarned: 0,
+    totalGems: state.roguelike?.gems || 0,
+    bestSlot: state.roguelike?.bestSlot || 0,
+    archetypes: ARCHETYPES,
+    archCounts: archetypeCounts(state.runUpgrades || []),
+    relics: (state.runRelics || []).slice(),
+    getRelic,
+    awakened: classAwakened(),
+    runsCompleted: state.roguelike?.runsCompleted || 0,
+    classStats: stats,
+  });
+}
+
 function bumpClassStats(outcome, slotReached) {
   if (!state.roguelike) return;
   const id = state.roguelike.currentClass;
@@ -1116,6 +1139,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9h',
+    items: [
+      '📋 TAP THE RUN HUD to see your full build at any time — class, archetype tallies, AND each relic with its full description (not just an icon).',
+      'No more "wait what does this relic do again?" mid-run.',
+    ],
+  },
   {
     id: '2026-05-25-9g',
     items: [
@@ -3145,6 +3175,14 @@ function init({ chime = false, announceLevel = true } = {}) {
 
 applyTheme(state.settings);
 refreshRunHud();
+
+// HUD click → open the run inventory detail modal.
+const runHudEl = document.getElementById('run-hud');
+if (runHudEl) {
+  runHudEl.style.cursor = 'pointer';
+  runHudEl.title = 'Tap for run details';
+  runHudEl.addEventListener('click', () => { showRunInventory(); });
+}
 
 // If the player has a roguelike run in progress (persisted from a
 // previous session), welcome them back with a short toast naming

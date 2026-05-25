@@ -574,7 +574,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -586,10 +586,12 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   const relicsEl = document.getElementById('run-summary-relics');
   const close = document.getElementById('run-summary-close');
   const isComplete = outcome === 'complete';
-  if (tier) tier.textContent = isComplete ? '🏆 Run complete' : 'Run over';
+  if (tier) tier.textContent = isComplete
+    ? '🏆 Run complete'
+    : inProgress ? '📋 Run inventory' : 'Run over';
   if (title) title.textContent = isComplete
     ? 'You crowned the Candy Kraken!'
-    : `You reached slot ${slotReached}`;
+    : inProgress ? `Slot ${slotReached}/${totalSlots}` : `You reached slot ${slotReached}`;
   if (stats) {
     stats.innerHTML = `
       <div class="text-center bg-yellow-100 border-2 border-black rounded-xl p-2">
@@ -639,16 +641,31 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   if (relicsEl) {
     relicsEl.innerHTML = '';
     if (relics && relics.length > 0) {
-      const label = document.createElement('span');
-      label.className = 'text-xs opacity-70 mr-1 self-center';
-      label.textContent = 'Relics:';
-      relicsEl.appendChild(label);
-      for (const id of relics) {
-        const r = getRelic ? getRelic(id) : null;
-        const s = document.createElement('span');
-        s.title = r ? `${r.name}: ${r.desc}` : id;
-        s.textContent = r ? r.icon : '?';
-        relicsEl.appendChild(s);
+      if (inProgress) {
+        // Full-description inline list for the in-run inventory view.
+        relicsEl.className = 'flex flex-col items-stretch gap-1 text-sm';
+        for (const id of relics) {
+          const r = getRelic ? getRelic(id) : null;
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-2 border border-yellow-500 bg-yellow-50 rounded-lg px-2 py-1';
+          row.innerHTML = r
+            ? `<span class="text-xl">${r.icon}</span><span class="font-bold">${r.name}</span><span class="opacity-80 text-xs">— ${r.desc}</span>`
+            : `<span>${id}</span>`;
+          relicsEl.appendChild(row);
+        }
+      } else {
+        relicsEl.className = 'flex flex-wrap items-center justify-center gap-1 text-2xl';
+        const label = document.createElement('span');
+        label.className = 'text-xs opacity-70 mr-1 self-center';
+        label.textContent = 'Relics:';
+        relicsEl.appendChild(label);
+        for (const id of relics) {
+          const r = getRelic ? getRelic(id) : null;
+          const s = document.createElement('span');
+          s.title = r ? `${r.name}: ${r.desc}` : id;
+          s.textContent = r ? r.icon : '?';
+          relicsEl.appendChild(s);
+        }
       }
     }
   }
