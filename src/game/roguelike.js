@@ -450,6 +450,10 @@ export const RELICS = [
     desc: 'On slots 1-10, all scores ×1.5. Early-game ramp.' },
   { id: 'sunset-hour',  icon: '🌇', name: 'Sunset Hour',
     desc: 'On slots 96-100, all scores ×2. End-game payoff for the long haul.' },
+  { id: 'bone-charm',   icon: '🦴', name: 'Bone Charm',
+    desc: 'Locks decrement by 2 per hit instead of 1. Lock-heavy boards melt fast.' },
+  { id: 'sweet-reset',  icon: '🔄', name: 'Sweet Reset',
+    desc: 'Shuffles are FREE during boss slots. Reorganize the board for free big-match openings.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
