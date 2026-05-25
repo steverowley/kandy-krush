@@ -1422,6 +1422,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12o',
+    items: [
+      '✨ MORE CROSSROADS — events now trigger at slots 27, 47, 77, AND 87 (4 per run, up from 2).',
+      '🆕 TWO NEW OPTIONS — ❤️ The Spring (+1 max life) and 🎲 The Gamble (50/50 for +30💎). Each crossroads shows 3 random options from a pool of 5, so they stay fresh.',
+    ],
+  },
+  {
     id: '2026-05-25-12n',
     items: [
       '🏆 BIGGER ACHIEVEMENTS — new pop-up badges for Massive Match (8+), Unbelievable (12+), Mega Cascade (chain ≥6), LEGENDARY (chain ≥9), Cascade God (15+ cascades), 50k and 100k score milestones.',
@@ -2901,7 +2908,7 @@ function advanceRoguelikeAfterWin() {
     }
     // ✨ Crossroads event on slots 27 and 77 — a quick mid-run choice
     // with no cost. Three options, then standard upgrade picker.
-    const CROSSROADS_SLOTS = new Set([27, 77]);
+    const CROSSROADS_SLOTS = new Set([27, 47, 77, 87]);
     if (CROSSROADS_SLOTS.has(justFinished)) {
       runCrossroadsEvent(() => {
         let n = hasMeta('wider-choice') ? 4 : 3;
@@ -2920,13 +2927,25 @@ function advanceRoguelikeAfterWin() {
 function runCrossroadsEvent(onDone) {
   flashMessage('✨ The Crossroads!', 1400);
   speech.speak('The crossroads.');
+  // Pool of 5 possible options; show 3 random ones each event so the
+  // crossroads stays fresh on its 4 appearances per run.
+  const POOL = [
+    { icon: '🛍', name: 'The Vault',   desc: 'A FREE random relic added to your run.',         value: 'relic' },
+    { icon: '🎁', name: 'The Cache',   desc: '+2 of every power-up immediately.',               value: 'powerups' },
+    { icon: '💎', name: 'The Reserve', desc: '+20 💎 instantly. Save them for the shop.',        value: 'gems' },
+    { icon: '❤️', name: 'The Spring',  desc: '+1 max life — recover for the back half.',         value: 'life' },
+    { icon: '🎲', name: 'The Gamble',  desc: '50/50 — gain +30 💎 or just walk away.',           value: 'gamble' },
+  ];
+  // Shuffle and take 3.
+  const shuffled = POOL.slice();
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const options = shuffled.slice(0, 3);
   setTimeout(() => {
     showCrossroadsEvent({
-      options: [
-        { icon: '🛍', name: 'The Vault',   desc: 'A FREE random relic added to your run.',     value: 'relic' },
-        { icon: '🎁', name: 'The Cache',   desc: '+2 of every power-up immediately.',           value: 'powerups' },
-        { icon: '💎', name: 'The Reserve', desc: '+20 💎 instantly. Save them for the shop.',    value: 'gems' },
-      ],
+      options,
       onPick: (choice) => {
         if (choice.value === 'relic') {
           const choices = pickRelicChoices(state.runRelics || [], 1);
@@ -2953,6 +2972,20 @@ function runCrossroadsEvent(onDone) {
           flashMessage('🎁 +2 of every power-up!', 1400);
           spawnConfetti(30);
           haptics.powerup();
+        } else if (choice.value === 'life') {
+          state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
+          flashMessage('❤️ +1 max life!', 1400);
+          spawnConfetti(30);
+          haptics.epic();
+        } else if (choice.value === 'gamble') {
+          if (Math.random() < 0.5) {
+            state.roguelike.gems = (state.roguelike.gems || 0) + 30;
+            flashMessage('🎲 Lucky! +30 💎', 1500);
+            spawnConfetti(50);
+            haptics.epic();
+          } else {
+            flashMessage('🎲 The coin landed wrong. No gems.', 1500);
+          }
         } else {
           state.roguelike.gems = (state.roguelike.gems || 0) + 20;
           flashMessage('💎 +20 💎', 1300);
