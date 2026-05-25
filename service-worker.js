@@ -1,4 +1,4 @@
-const VERSION = 'sweet-match-v34';
+const VERSION = 'sweet-match-v35';
 const SHELL = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const SHELL = [
   './src/i18n.js',
   './src/strings.en.js',
   './src/game/rng.js',
+  './src/game/event-bus.js',
   './src/game/board.js',
   './src/game/cascade.js',
   './src/game/match.js',

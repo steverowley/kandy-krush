@@ -121,6 +121,7 @@ import * as telemetry from './telemetry.js';
 import * as purchases from './purchases.js';
 import * as i18n from './i18n.js';
 import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
+import * as bus from './game/event-bus.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -1946,6 +1947,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17v',
+    items: [
+      '🚌 EVENT BUS — new `src/game/event-bus.js` with on / off / emit / clear. Canonical events emit from the cascade pipeline today (match, cascade, special:birth, swap, slot:start, slot:complete) so future relics / upgrades / boss mechanics can subscribe without editing the 360-line processMatchRound monolith. Bus failures are isolated (one handler throwing doesn\'t kill the others). 9 new tests; 49 total now pass.',
+      'Existing inline relic/upgrade branches still run unchanged — the bus is purely additive. Migration is one branch at a time, no big-bang rewrite.',
+    ],
+  },
   {
     id: '2026-05-25-17u',
     items: [
@@ -4134,6 +4142,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
   resetBoard();
   applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
+  bus.emit('slot:start', { slot, isBoss: !!lvl.isBoss, mechanic: lvl.mechanic || null });
   applyRunUpgradesOnSlotStart();
   // Defensive: a previous setRunHud({ visible: false }) (e.g. from boot
   // before the run started) could leave the HUD with the `hidden` class
@@ -4188,6 +4197,12 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  bus.emit('slot:complete', {
+    slot,
+    isBoss: !!state.level?.isBoss,
+    score: state.score,
+    movesUsed: (state.level?.moves || 0) - (state.movesRemaining || 0),
+  });
   // 🏅 Record this slot's score as the run's best-single-slot if it tops
   // the previous one. Surfaces in the run-stats screen at run end.
   if (state.runHighlights && state.score > (state.runHighlights.bestSlotScore || 0)) {
@@ -5676,6 +5691,7 @@ async function trySwap(a, b) {
     }
     sfx.playSwap();
     haptics.swap();
+    bus.emit('swap', { a, b });
     await animateSwap(a, b);
     state.board.swap(a, b);
     renderBoard(state.board, state);
@@ -5778,6 +5794,23 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
     flashMessage('🌟 GLOW STICK! Lucky ready!', 1300);
+  }
+  // 🚌 Emit the canonical `match` event so subscribers (relics,
+  // upgrades, future B6 effects) can hook in without editing this
+  // function. Today the existing inline relic/upgrade branches still
+  // run; subscribers are additive until each branch migrates over.
+  bus.emit('match', {
+    positions: toClear,
+    cascadeLevel,
+    allCleared,
+    specialsCreated,
+    matchSize: allCleared.size,
+  });
+  if (cascadeLevel >= 2) {
+    bus.emit('cascade', { cascadeLevel, totalCleared: allCleared.size });
+  }
+  for (const s of specialsCreated) {
+    bus.emit('special:birth', { type: s.type, c: s.c, r: s.r, kind: s.kind });
   }
   // 🏅 Per-run highlight tracking — surfaced on the run summary.
   if (state.inRoguelikeRun && state.runHighlights) {
