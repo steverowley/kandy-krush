@@ -1173,6 +1173,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9r',
+    items: [
+      '💣 NEW UPGRADE — Crazy Magnet (Bomber). Every 3rd match per slot auto-spawns a random crazy tile (TNT 💣 / Void 🌀 / Bolt ⚡ / Prism 🌈).',
+      'Stacking spawns multiple per trigger. Combined with Chain Bomb, Bomb Maker, and Crazy Sense meta — a true Bomber build now drowns the board in crazies.',
+    ],
+  },
+  {
     id: '2026-05-25-9q',
     items: [
       '🛒 MID-RUN MERCHANT! After slots 13 and 53, a shop blocks the path. Spend your 💎 on per-run boosters before continuing.',
@@ -3090,6 +3097,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     state.slotMatchCount = (state.slotMatchCount || 0) + 1;
     if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
       flashMessage('🍰 Sugar Rush spent', 900);
+    }
+    // 💣 Crazy Magnet upgrade — every 3rd match spawns a crazy tile.
+    if (upgradeCount('crazy-magnet') > 0 && state.slotMatchCount % 3 === 0) {
+      for (let i = 0; i < upgradeCount('crazy-magnet'); i++) {
+        spawnCrazyTile(pickCrazyKind());
+      }
     }
     // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
     if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
