@@ -345,6 +345,16 @@ export const MUTATORS = [
     desc: 'A crazy tile spawns every 4 swaps.' },
   { id: 'big-spender', icon: '🏆', name: 'Big Spender',
     desc: 'Matches of 5+ score 3× more.' },
+  { id: 'eclipse',     icon: '🌑', name: 'Eclipse',
+    desc: 'Free moves! The move counter only ticks every OTHER swap.' },
+  { id: 'gift-slot',   icon: '🎁', name: 'Gift Slot',
+    desc: 'Start the slot with +1 of every power-up.' },
+  { id: 'unicorn',     icon: '🦄', name: 'Unicorn Day',
+    desc: 'Every match score is multiplied by a random ×0.5 to ×3.' },
+  { id: 'sweet-tooth', icon: '🍭', name: 'Sweet Tooth',
+    desc: 'Every special candy you create becomes a RAINBOW.' },
+  { id: 'hammer-time', icon: '🔨', name: 'Hammer Time',
+    desc: 'Hammers are FREE this slot — bank doesn\'t decrement.' },
 ];
 
 export function isMutatorSlot(slot) {
