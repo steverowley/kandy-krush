@@ -364,7 +364,14 @@ function maybeFireEater() {
   if (state.level.runSlot < EATER_FROM_SLOT) return;
   if (state.level.isBoss) return; // bosses are punishing enough
   eaterCounter++;
-  const movesUntilFire = EATER_EVERY_MOVES - eaterCounter;
+  // Eater speeds up in the late game — every 4 moves at slot 75+,
+  // every 3 moves at slot 90+. Still telegraphed with the 2-move
+  // warning so the player can plan.
+  let eaterInterval = EATER_EVERY_MOVES;
+  const slot = state.level.runSlot;
+  if (slot >= 90) eaterInterval = 3;
+  else if (slot >= 75) eaterInterval = 4;
+  const movesUntilFire = eaterInterval - eaterCounter;
   // Telegraph window: pick the column 2 moves early and show a warning
   // arrow above it each remaining turn (Slay-the-Spire intent reads).
   if (movesUntilFire === 2) {
@@ -1100,6 +1107,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9f',
+    items: [
+      '🦷⚡ The Eater accelerates in late-game roguelike — every 5 moves until slot 74, every 4 moves at slot 75+, every 3 moves at slot 90+.',
+      'Boss slots are still safe from the Eater. The Slay-the-Spire telegraph still gives you 2 moves of warning regardless of interval.',
+      'Real escalation as you approach the final boss.',
+    ],
+  },
   {
     id: '2026-05-25-9e',
     items: [
