@@ -491,6 +491,8 @@ export const RELICS = [
     desc: 'Each special candy created also fills your Lucky bar by +25%.' },
   { id: 'tea-time',     icon: '🫖', name: 'Tea Time',
     desc: 'Slot start: Lucky bar +30%. Gentle opening sip.' },
+  { id: 'sweet-wreath', icon: '🎄', name: 'Sweet Wreath',
+    desc: 'Slot start: every jelly tile loses 1 level. Mass jelly-decrement (mirrors Frosty Crown for locks).' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
