@@ -416,6 +416,8 @@ export const MUTATORS = [
     desc: 'Finishing this slot grants +5 💎 on top of the usual reward.' },
   { id: 'surprise-life',icon: '💝', name: 'Surprise Life',
     desc: '+1 Life at the start of this slot. Pure defensive buff.' },
+  { id: 'slow-down',   icon: '🐢', name: 'Slow Down',
+    desc: 'The Eater skips this slot entirely. Plan your matches in peace.' },
 ];
 
 export function isMutatorSlot(slot) {

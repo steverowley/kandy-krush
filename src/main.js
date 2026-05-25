@@ -429,6 +429,7 @@ function maybeFireEater() {
   if (!state.level || !state.level.runSlot) return;
   if (state.level.runSlot < EATER_FROM_SLOT) return;
   if (state.level.isBoss) return; // bosses are punishing enough
+  if (hasMutator('slow-down')) return; // 🐢 Slow Down mutator
   eaterCounter++;
   // Eater speeds up in the late game — every 4 moves at slot 75+,
   // every 3 moves at slot 90+. Still telegraphed with the 2-move
@@ -1247,6 +1248,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10f',
+    items: [
+      '🐢 NEW MUTATOR — Slow Down. The Eater skips this slot entirely. Pure breathing room in the late-game.',
+      'Mutator pool now 15.',
+    ],
+  },
   {
     id: '2026-05-25-10e',
     items: [
