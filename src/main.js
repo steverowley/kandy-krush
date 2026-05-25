@@ -1362,6 +1362,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // ⚔️ Big Crit mutator — all cascades (chain ≥2) score ×4.
   if (hasMutator('big-crit') && cascadeLevel >= 2) m *= 4;
+  // 🍬 Sweet Treat upgrade — 3-tile matches score +25% per stack.
+  if (matchSize === 3 && upgradeCount('sweet-treat') > 0) {
+    m *= 1 + 0.25 * upgradeCount('sweet-treat');
+  }
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   // 🪞 Twin Mirror relic — 5+ matches score ×3.
@@ -1423,6 +1427,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12q',
+    items: [
+      '➕ NEW UPGRADE — Plus More (Sustain): each "+3 Moves" power-up gives +1 extra per stack. Stack two → +5 per use.',
+      '🍬 NEW UPGRADE — Sweet Treat (Scorer): 3-tile matches score +25% per stack. Small-match builds with cascades now competitive.',
+    ],
+  },
   {
     id: '2026-05-25-12p',
     items: [
@@ -3721,12 +3732,15 @@ function usePlusMoves() {
     return;
   }
   if (!spendPowerup('plusMoves')) return;
-  state.movesRemaining += PLUS_MOVES_BONUS;
+  // ➕ Plus More upgrade — adds +1 move per stack to the bonus.
+  const extra = state.inRoguelikeRun ? upgradeCount('plus-more') : 0;
+  const total = PLUS_MOVES_BONUS + extra;
+  state.movesRemaining += total;
   state.resolved = false;
   refreshLevelUI();
   bumpMoveCounter();
-  flashMessage(`+${PLUS_MOVES_BONUS} moves!`, 1100);
-  speech.speak(`Plus ${PLUS_MOVES_BONUS} moves`);
+  flashMessage(`+${total} moves!`, 1100);
+  speech.speak(`Plus ${total} moves`);
   hideLevelOverlay();
 }
 
