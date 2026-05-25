@@ -69,3 +69,49 @@ test("returned unsubscribe removes all handlers", () => {
   bus.emit('match', { cascadeLevel: 9, matchSize: 9 });
   assert.equal(state.runHighlights.maxCascade, 4); // unchanged after unsub
 });
+
+// --- slot:start mutator tracker ---
+
+test("slot:start handler appends state.slotMutator to mutatorsSeen", () => {
+  state.runHighlights.mutatorsSeen = [];
+  state.slotMutator = 'golden-hour';
+  bus.emit('slot:start', { slot: 5 });
+  assert.deepEqual(state.runHighlights.mutatorsSeen, ['golden-hour']);
+  state.slotMutator = 'lucky-day';
+  bus.emit('slot:start', { slot: 10 });
+  assert.deepEqual(state.runHighlights.mutatorsSeen, ['golden-hour', 'lucky-day']);
+});
+
+test("slot:start handler is a no-op when slotMutator is null", () => {
+  state.runHighlights.mutatorsSeen = [];
+  state.slotMutator = null;
+  bus.emit('slot:start', { slot: 5 });
+  assert.deepEqual(state.runHighlights.mutatorsSeen, []);
+});
+
+test("slot:start handler caps mutatorsSeen at 32", () => {
+  state.runHighlights.mutatorsSeen = new Array(32).fill('old');
+  state.slotMutator = 'overflow';
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(state.runHighlights.mutatorsSeen.length, 32); // still capped
+  assert.equal(state.runHighlights.mutatorsSeen[31], 'old'); // overflow rejected
+});
+
+// --- slot:complete best-score tracker ---
+
+test("slot:complete handler bumps bestSlotScore on a higher score", () => {
+  state.runHighlights.bestSlotScore = 0;
+  bus.emit('slot:complete', { slot: 1, score: 1500 });
+  assert.equal(state.runHighlights.bestSlotScore, 1500);
+  bus.emit('slot:complete', { slot: 2, score: 800 });
+  assert.equal(state.runHighlights.bestSlotScore, 1500); // not lowered
+  bus.emit('slot:complete', { slot: 3, score: 5000 });
+  assert.equal(state.runHighlights.bestSlotScore, 5000);
+});
+
+test("slot:complete handler is a no-op outside a roguelike run", () => {
+  state.inRoguelikeRun = false;
+  state.runHighlights.bestSlotScore = 0;
+  bus.emit('slot:complete', { slot: 1, score: 9999 });
+  assert.equal(state.runHighlights.bestSlotScore, 0);
+});
