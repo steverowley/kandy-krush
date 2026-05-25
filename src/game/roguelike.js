@@ -297,6 +297,7 @@ export const UPGRADES = [
   { id: 'sweet-roar',  category: 'synergy',    archetype: 'wild',    name: 'Sweet Roar',         desc: '🐝 Slot start: fire a free Bee Storm per stack. Open big.' },
   { id: 'bomb-splash', category: 'synergy',    archetype: 'bomber',  name: 'Bomb Splash',        desc: '💧 TNT pop fills Lucky bar +15% per stack. Bomber → Lucky bridge.' },
   { id: 'lucky-reload',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Reload',       desc: '🚀 When Lucky-MODE fires, +1 "+3 Moves" power-up per stack. Stacks with Cherry Reload.' },
+  { id: 'furnace',     category: 'synergy',    archetype: 'wild',    name: 'Furnace',            desc: '🔥 Cascade chain ≥3 spawns a TNT crazy tile per stack. Cascade-bomber bridge.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
