@@ -405,6 +405,8 @@ export const RELICS = [
     desc: 'Lucky Strike now grants TWO hammers per Lucky fire instead of one.' },
   { id: 'twin-mirror', icon: '🪞', name: 'Twin Mirror',
     desc: 'Matches of 5+ tiles score ×3. Stacks with Big Match upgrade (×2 per stack).' },
+  { id: 'crimson-rose',icon: '🌹', name: 'Crimson Rose',
+    desc: 'The very first match of every slot scores ×5. Use specials early for huge openings.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
