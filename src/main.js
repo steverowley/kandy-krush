@@ -1092,6 +1092,11 @@ function applyRunUpgradesOnSlotStart() {
     flashMessage('💝 Surprise Life! +1 ❤️', 1300);
     refreshLevelUI();
   }
+  // 💵 Big Money mutator — +10 gems at slot start.
+  if (hasMutator('big-money')) {
+    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
+    flashMessage('💵 Big Money! +10 💎', 1300);
+  }
   // 🗝 Lockpick mutator — weaken every lock by 1 level.
   if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1331,6 +1336,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10u',
+    items: [
+      '💵 NEW MUTATOR — Big Money. +10💎 immediately at slot start. Pure gem income for the Skill Tree.',
+      'Mutator pool now 16.',
+    ],
+  },
   {
     id: '2026-05-25-10t',
     items: [

@@ -431,6 +431,8 @@ export const MUTATORS = [
     desc: '+1 Life at the start of this slot. Pure defensive buff.' },
   { id: 'slow-down',   icon: '🐢', name: 'Slow Down',
     desc: 'The Eater skips this slot entirely. Plan your matches in peace.' },
+  { id: 'big-money',   icon: '💵', name: 'Big Money',
+    desc: '+10 💎 immediately at slot start. Pure gem income for the Skill Tree.' },
 ];
 
 export function isMutatorSlot(slot) {
