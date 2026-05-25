@@ -1081,26 +1081,21 @@ async function triggerCrazyEffect(pos, kind) {
     screenShake(6, 320);
     await delay(220);
   } else if (kind === 'wormhole') {
-    // 🕳 Wormhole — swap a random pair of distant tiles, creating new
-    // match opportunities. Does NOT clear anything; pure rearrangement.
-    const candidates = [];
-    for (let r = 0; r < state.board.rows; r++) {
-      for (let c = 0; c < state.board.cols; c++) {
+    // 🕳 Wormhole — sucks in the 8 surrounding tiles AND spawns a new
+    // random crazy tile somewhere else on the board, so the pop both
+    // clears + plants chaos. Replaces the old "swap two random tiles"
+    // behavior, which read as "the tile did nothing" since the visual
+    // outcome was invisible on a board full of distant changes.
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const c = pos.c + dc;
+        const r = pos.r + dr;
+        if (c < 0 || c >= state.board.cols) continue;
+        if (r < 0 || r >= state.board.rows) continue;
         if (state.board.isIngredient(c, r)) continue;
-        if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
-        const cell = state.board.cell(c, r);
-        if (!cell || cell.crazy) continue;
-        candidates.push({ c, r });
+        positions.push({ c, r });
       }
-    }
-    if (candidates.length >= 2) {
-      const a = candidates[Math.floor(Math.random() * candidates.length)];
-      let b = candidates[Math.floor(Math.random() * candidates.length)];
-      let attempts = 0;
-      while (b.c === a.c && b.r === a.r && attempts++ < 10) {
-        b = candidates[Math.floor(Math.random() * candidates.length)];
-      }
-      state.board.swap(a, b);
     }
     flashMessage('🕳 WORMHOLE!', 1300);
     speech.speak('Wormhole');
@@ -1109,6 +1104,9 @@ async function triggerCrazyEffect(pos, kind) {
     screenShake(4, 240);
     // Clear the wormhole tile itself.
     positions.push({ c: pos.c, r: pos.r });
+    // After the pop resolves, plant a fresh random crazy tile elsewhere
+    // so the wormhole "outputs" something — keeps the chaos flowing.
+    setTimeout(() => spawnCrazyTile(), 400);
     await delay(220);
   } else if (kind === 'prism') {
     // 🌈 Prism — clear ALL tiles of one random color across the board.
@@ -1689,16 +1687,24 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   m *= Math.pow(1.25, upgradeCount('score+25'));
   m *= Math.pow(1.05, upgradeCount('greedy-brain'));
   if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
-  if (cascadeLevel >= 3) m *= Math.pow(2, upgradeCount('combo-streak'));
-  if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
+  // ⛔ Combo-streak + big-match used to be unbounded stacks of ×2 each,
+  // so a chain-3-size-5 with 3 stacks each landed at ×64 just from
+  // those two upgrades. Cap their *effective* stack count at 2 so the
+  // max contribution is ×4 — still strong, no longer runaway. Players
+  // can still pick the third copy; it just doesn't compound further.
+  if (cascadeLevel >= 3) m *= Math.pow(2, Math.min(upgradeCount('combo-streak'), 2));
+  if (matchSize >= 5) m *= Math.pow(2, Math.min(upgradeCount('big-match'), 2));
   if (hasMeta('score-sage')) m *= 1.1;
   // Scorer synergy: +15% per Scorer stack beyond the first.
   const scorerSyn = synergyStacks(runArchetypeCounts().scorer);
   if (scorerSyn > 0) m *= 1 + 0.15 * scorerSyn;
   // 🎯 Snowball upgrade — compounding ×1.03 per match per stack.
+  // Exponent cap lowered from 60 (max ×5.92) to 40 (max ×3.26) so
+  // Snowball stays distinct but doesn't carry the entire Scorer build
+  // on its own past the mid-late game.
   if (upgradeCount('snowball') > 0) {
     const exponent = (state.slotMatchCount || 0) * upgradeCount('snowball');
-    if (exponent > 0) m *= Math.pow(1.03, Math.min(exponent, 60));
+    if (exponent > 0) m *= Math.pow(1.03, Math.min(exponent, 40));
   }
   // 🍰 Sugar Rush relic — first 3 matches of every slot are 3×.
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
@@ -1805,6 +1811,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17f',
+    items: [
+      '🕳 WORMHOLE REDESIGN — old behavior swapped two distant random tiles, which looked like "the wormhole did nothing" to the player. New behavior: sucks in the 8 surrounding cells AND spawns a new random crazy tile somewhere else on the board. Now the pop both clears and plants chaos — distinctly "wormhole".',
+      '⚖ SCORER DOMINANCE PASS — combo-streak and big-match upgrades effectively cap at 2 stacks each (was unbounded), so chain-3-size-5 builds can\'t spiral into ×64 from those two alone. Snowball exponent cap lowered from 60 (×5.92 max standalone) to 40 (×3.26 max). Scorer is still the strongest archetype; it no longer mathematically punishes everyone else.',
+    ],
+  },
   {
     id: '2026-05-25-17e',
     items: [
