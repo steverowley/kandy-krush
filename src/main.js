@@ -1151,6 +1151,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9l',
+    items: [
+      '🌀 NEW RELIC — Whirlpool. Every 10 matches the board reshuffles in place (specials preserved). Opens new opportunities when you\'re stuck.',
+      'Relic pool now 17.',
+    ],
+  },
+  {
     id: '2026-05-25-9k',
     items: [
       '🏆 BOSS DEFEATED BANNER — replaces the tiny "BOSS DEFEATED!" toast with a full-screen gold-and-pink victory banner: trophy icon, boss name, and "Pick your relic" tip.',
@@ -2969,6 +2976,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     state.slotMatchCount = (state.slotMatchCount || 0) + 1;
     if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
       flashMessage('🍰 Sugar Rush spent', 900);
+    }
+    // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
+    if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
+      flashMessage('🌀 Whirlpool reshuffle!', 1100);
+      setTimeout(() => { if (state.board) preservingReshuffle(); }, 280);
     }
     // 🪅 Piñata relic — every 5 matches drop a random power-up.
     if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {

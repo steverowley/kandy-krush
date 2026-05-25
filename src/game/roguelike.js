@@ -355,6 +355,8 @@ export const RELICS = [
     desc: 'Every cascade level adds +25% to your score multiplier on top of the usual cascade bonus.' },
   { id: 'second-wind', icon: '🌬', name: 'Second Wind',
     desc: 'If you start a slot with only 1 life, you\'re restored to 2 instead.' },
+  { id: 'whirlpool',   icon: '🌀', name: 'Whirlpool',
+    desc: 'Every 10 matches the board re-shuffles in place — preserves specials, opens new opportunities.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
