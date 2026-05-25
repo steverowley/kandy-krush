@@ -492,6 +492,7 @@ export const SKILL_TREE = [
   { id: 'crazy-sense',  cost: 50, name: 'Crazy Sense',        desc: 'Crazy tiles spawn 50% more often from big matches.' },
   { id: 'early-awaken', cost: 60, name: 'Early Awakening',    desc: 'Your class awakens with one fewer archetype upgrade than usual.' },
   { id: 'daily-bonus',  cost: 40, name: 'Daily Bonus',        desc: 'Earn +1 extra 💎 for every slot you clear (on top of the base 1 per slot).' },
+  { id: 'generous-daily', cost: 50, name: 'Generous Daily',    desc: 'Your daily login gem bonus is doubled.' },
 ];
 
 export const RUN_LIVES_BASE = 3;

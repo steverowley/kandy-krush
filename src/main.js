@@ -116,10 +116,14 @@ const persistedRaw = loadSave();
 const persisted = bumpStreakForToday(persistedRaw);
 // Daily login gem bonus — fires once per calendar day on first
 // boot. Scales gently with streak (5 + streak, capped at 25).
+// 🌳 Generous Daily meta doubles the awarded gems.
 const isNewLoginDay = persistedRaw.lastPlayedDate !== persisted.lastPlayedDate;
 let dailyLoginGems = 0;
 if (isNewLoginDay && persisted.roguelike) {
   dailyLoginGems = Math.min(25, 5 + (persisted.streak || 1));
+  if (persisted.roguelike.skills && persisted.roguelike.skills['generous-daily']) {
+    dailyLoginGems *= 2;
+  }
   persisted.roguelike.gems = (persisted.roguelike.gems || 0) + dailyLoginGems;
 }
 
@@ -1322,6 +1326,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10s',
+    items: [
+      '🌳 NEW META SKILL — Generous Daily (50💎). Doubles your daily login gem bonus. At max streak that\'s up to 50💎/day on free.',
+      'Skill tree now 13 unlocks.',
+    ],
+  },
   {
     id: '2026-05-25-10r',
     items: [
