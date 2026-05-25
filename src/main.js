@@ -209,6 +209,39 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
   });
 }
 
+// Shows the upgrade-picker with optional reroll. Reroll is offered
+// only on the first display per slot AND only if the player has a
+// Shuffle in their power-up bank to spend.
+function showUpgradeChoicesForSlot(n, canReroll) {
+  const choices = pickUpgradeChoices(state.runUpgrades, n);
+  const counts = archetypeCounts(state.runUpgrades);
+  const bank = powerupBank();
+  const rerollAllowed = canReroll && (bank.shuffle || 0) > 0;
+  const onReroll = rerollAllowed ? () => {
+    // Charge 1 shuffle and re-show with fresh choices, no further reroll.
+    const b = powerupBank();
+    if ((b.shuffle || 0) > 0) {
+      b.shuffle--;
+      setPowerupCounts(b);
+      persist();
+    }
+    flashMessage('🔄 Rerolled!', 900);
+    showUpgradeChoicesForSlot(n, false);
+  } : null;
+  showUpgradePicker(choices, state.runUpgrades, (chosen) => {
+    state.runUpgrades.push(chosen.id);
+    const arch = archetypeFor(chosen.id);
+    const willStack = arch ? (counts[arch] || 0) + 1 : 0;
+    const synergyTag = willStack >= 2 && ARCHETYPES[arch]
+      ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
+    flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
+    speech.speak(`Picked ${chosen.name}`);
+    persist();
+    refreshRunHud();
+    setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
+  }, categoryColor, ARCHETYPES, counts, onReroll);
+}
+
 function refreshRunHud() {
   setRunHud({
     visible: !!state.inRoguelikeRun,
@@ -861,6 +894,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8o',
+    items: [
+      '🔄 REROLL the upgrade picker! Don\'t love your 3 choices? Spend 1 Shuffle from your bank to get 3 fresh ones.',
+      'Only one reroll per slot — choose wisely. Hidden if you have no Shuffles to spend.',
+      'Combined with Wider Choice meta + Wanderer awakening, you can now see up to 5 cards then reroll for 5 more — real build-shaping options.',
+    ],
+  },
+  {
     id: '2026-05-25-8n',
     items: [
       '💾 RUN STATE PERSISTS across reloads — close the tab mid-run and your class, upgrades, and relics are all there when you come back.',
@@ -1467,20 +1508,7 @@ function advanceRoguelikeAfterWin() {
     let n = hasMeta('wider-choice') ? 4 : 3;
     // 🎲 Wanderer AWAKENING — +1 upgrade card to choose from.
     if (isClass('wanderer') && classAwakened()) n += 1;
-    const choices = pickUpgradeChoices(state.runUpgrades, n);
-    const counts = archetypeCounts(state.runUpgrades);
-    showUpgradePicker(choices, state.runUpgrades, (chosen) => {
-      state.runUpgrades.push(chosen.id);
-      const arch = archetypeFor(chosen.id);
-      const willStack = arch ? (counts[arch] || 0) + 1 : 0;
-      const synergyTag = willStack >= 2 && ARCHETYPES[arch]
-        ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
-      flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
-      speech.speak(`Picked ${chosen.name}`);
-      persist();
-      refreshRunHud();
-      setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
-    }, categoryColor, ARCHETYPES, counts);
+    showUpgradeChoicesForSlot(n, true);
   }
 }
 
