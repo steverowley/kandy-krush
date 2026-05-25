@@ -1397,21 +1397,38 @@ body.reduce-motion .tile.crazy-bolt {
   pointer-events: none;
   z-index: 92;
   filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.7))
-          drop-shadow(0 0 30px rgba(220, 38, 38, 0.6));
-  animation: eater-descend 1200ms cubic-bezier(.3,.7,.2,1) forwards;
+          drop-shadow(0 0 30px rgba(220, 38, 38, 0.7));
+  animation: eater-descend 1400ms cubic-bezier(.3,.7,.2,1) forwards;
 }
 .eater svg { width: 100%; height: 100%; display: block; }
-.eater-teeth-top { transform-origin: 50% 60px; animation: eater-jaw-top 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
-.eater-teeth-bot { transform-origin: 50% 175px; animation: eater-jaw-bot 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
-.eater-throat { animation: eater-throat-anim 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
+.eater-teeth-top { transform-origin: 50% 60px; animation: eater-jaw-top 1400ms cubic-bezier(.3,.7,.2,1) forwards; }
+.eater-teeth-bot { transform-origin: 50% 175px; animation: eater-jaw-bot 1400ms cubic-bezier(.3,.7,.2,1) forwards; }
+.eater-throat { animation: eater-throat-anim 1400ms cubic-bezier(.3,.7,.2,1) forwards; }
+
+.eater-telegraph {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  pointer-events: none;
+  transform: translate(-50%, 0);
+  z-index: 91;
+  animation: eater-telegraph-bob 700ms ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(255, 0, 110, 0.9));
+}
+.eater-telegraph svg { width: 100%; height: 100%; display: block; }
+@keyframes eater-telegraph-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 8px); }
+}
+body.reduce-motion .eater-telegraph { animation: none !important; }
 
 @keyframes eater-descend {
-  0%   { transform: translateY(-60%) scale(0.85); }
-  18%  { transform: translateY(0)    scale(1); }
-  35%  { transform: translateY(0)    scale(1.08); }
-  55%  { transform: translateY(0)    scale(1); }
-  78%  { transform: translateY(-30%) scale(0.95); }
-  100% { transform: translateY(-110%) scale(0.7); opacity: 0; }
+  0%   { transform: translateY(-200%) scale(0.9); }
+  20%  { transform: translateY(0)     scale(1); }
+  38%  { transform: translateY(0)     scale(1.06); }
+  60%  { transform: translateY(0)     scale(1); }
+  82%  { transform: translateY(-60%)  scale(0.95); }
+  100% { transform: translateY(-220%) scale(0.7); opacity: 0; }
 }
 @keyframes eater-jaw-top {
   0%, 18% { transform: translateY(0); }
