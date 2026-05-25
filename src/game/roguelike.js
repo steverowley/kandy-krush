@@ -462,6 +462,8 @@ export const MUTATORS = [
     desc: 'Every match earns a flat +50 score and a burst of confetti — pure party.' },
   { id: 'long-lunch',  icon: '🥪', name: 'Long Lunch',
     desc: '+10 moves at slot start. Take your time.' },
+  { id: 'time-bonus',  icon: '⏰', name: 'Time Bonus',
+    desc: 'On slot win, each leftover move converts to +30 score. Stacks with Crown of Sweetness (50/move).' },
 ];
 
 export function isMutatorSlot(slot) {
