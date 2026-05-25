@@ -1598,6 +1598,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14e',
+    items: [
+      '👹 BOSSES ARE MEANER — every boss got 4-12 fewer moves AND tougher targets. Sweet King: 6,000 (was 5,000) in 34 moves (was 40). Padlock Pharaoh: 7,500 in 32. Echo Wraith: 36 purples in 26 moves. The Confectioner: 10,000 in 36. Candy Kraken final: 16,000 score in 48 moves with deeper locks (level-3) and an extra jelly row.',
+      '🩸 BOSS-MODE BOARD — during boss fights the board now pulses with a red border so you feel the pressure. Final boss pulses faster + harder. Reduce-Motion disables the animation but keeps the red.',
+    ],
+  },
+  {
     id: '2026-05-25-14d',
     items: [
       '📋 BUILD VIEW — the run HUD now sports a "📋 BUILD" chip and a proper cursor + tooltip ("Tap to see your full build"). Tap to open the full inventory with class, upgrades, relics, AWAKENED status, and run highlights.',
@@ -3265,15 +3272,19 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     if (lvl.isBoss) {
       // Boss intro: dramatic banner overlay + screen flash + shake.
       showBossBanner(lvl, { isFinal: slot === RUN_LENGTH });
-      spawnScreenFlash('rgba(255, 0, 110, 0.45)');
-      screenShake(8, 420);
+      spawnScreenFlash('rgba(255, 0, 110, 0.55)');
+      screenShake(10, 520);
       sfx.playBossStinger();
       haptics.epic();
       // Boss music — faster, more aggressive variant of the chiptune.
       sfx.setMusicMode('boss');
+      // Red pulsing border on the board for the whole boss fight.
+      document.body.classList.add('boss-active');
+      if (slot === RUN_LENGTH) document.body.classList.add('boss-final');
     } else {
       // Non-boss slot: back to the standard chip variant.
       sfx.setMusicMode('roguelike');
+      document.body.classList.remove('boss-active', 'boss-final');
     }
     speech.speak(
       `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
@@ -3592,6 +3603,7 @@ function endRoguelikeRun() {
   state.runUpgrades = [];
   state.runRelics = [];
   state.roguelike.currentClass = null;
+  document.body.classList.remove('boss-active', 'boss-final');
   persist();
   refreshRunHud();
   flashMessage(`Run over. +${gems} 💎`, 2200);

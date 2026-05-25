@@ -1798,3 +1798,33 @@ body.reduce-motion .tile.crazy-wormhole { animation: none !important; transform:
   pointer-events: none;
 }
 .tile-tooltip.hidden { display: none; }
+
+/* ===== Boss-active mode: scary red pulsing border around the board ===== */
+body.boss-active #board {
+  position: relative;
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 0, 60, 0.85),
+    0 0 24px 4px rgba(255, 0, 60, 0.45);
+  animation: boss-pulse 1.6s ease-in-out infinite;
+  border-radius: 18px;
+}
+@keyframes boss-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 4px rgba(255, 0, 60, 0.85),
+      0 0 18px 2px rgba(255, 0, 60, 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 6px rgba(255, 60, 90, 1),
+      0 0 36px 8px rgba(255, 0, 60, 0.65);
+  }
+}
+body.boss-final #board {
+  animation-duration: 1.0s;
+  filter: drop-shadow(0 0 12px rgba(255, 0, 60, 0.55));
+}
+body.reduce-motion #board {
+  animation: none !important;
+  filter: none !important;
+}

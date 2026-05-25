@@ -13,7 +13,7 @@ const BOSS_LEVELS = {
   10: {
     id: 'boss-1',
     name: 'Jelly Guardian',
-    moves: 28,
+    moves: 24,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 1 — clear every jelly tile to defeat the Guardian.',
     tip: 'The Guardian protects 16 hits of jelly. Stack matches over the centre to break through.',
@@ -30,9 +30,9 @@ const BOSS_LEVELS = {
   20: {
     id: 'boss-2',
     name: 'Lock Tyrant',
-    moves: 32,
-    objective: { kind: 'score', target: 3000 },
-    hint: 'BOSS 2 — reach 3,000 points through the Tyrant’s locks.',
+    moves: 28,
+    objective: { kind: 'score', target: 3500 },
+    hint: 'BOSS 2 — reach 3,500 points through the Tyrant’s locks.',
     tip: 'Locks block swaps. Free them with adjacent matches, then push for the score.',
     taunt: 'Click. Click. CLOCKED.',
     obstacles: {
@@ -50,9 +50,9 @@ const BOSS_LEVELS = {
   30: {
     id: 'boss-3',
     name: 'Sweet King',
-    moves: 40,
-    objective: { kind: 'score', target: 5000 },
-    hint: 'BOSS 3 — reach 5,000 to dethrone the Sweet King.',
+    moves: 34,
+    objective: { kind: 'score', target: 6000 },
+    hint: 'BOSS 3 — reach 6,000 to dethrone the Sweet King.',
     tip: 'Jelly, locks, and cherries all at once. Use everything in your bank.',
     taunt: 'Bow before sucrose royalty.',
     obstacles: {
@@ -71,7 +71,7 @@ const BOSS_LEVELS = {
   40: {
     id: 'boss-4',
     name: 'Chocolate Snail',
-    moves: 36,
+    moves: 30,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 4 — peel the Snail\'s shell off. Clear every jelly tile.',
     tip: 'The Snail wears a 20-jelly shell. Cascades crack it fastest.',
@@ -90,9 +90,9 @@ const BOSS_LEVELS = {
   50: {
     id: 'boss-5',
     name: 'Padlock Pharaoh',
-    moves: 38,
-    objective: { kind: 'score', target: 6000 },
-    hint: 'BOSS 5 — break the Pharaoh\'s sarcophagus. Reach 6,000.',
+    moves: 32,
+    objective: { kind: 'score', target: 7500 },
+    hint: 'BOSS 5 — break the Pharaoh\'s sarcophagus. Reach 7,500.',
     tip: 'Halfway through the run. The Pharaoh hides behind a wall of locks. Wrapped + striped combos blast through.',
     taunt: 'Forty centuries entombed in candy.',
     obstacles: {
@@ -111,7 +111,7 @@ const BOSS_LEVELS = {
   60: {
     id: 'boss-6',
     name: 'Cherry Hydra',
-    moves: 44,
+    moves: 36,
     objective: { kind: 'dropIngredients', target: 6 },
     hint: 'BOSS 6 — drop all six of the Hydra\'s cherry-heads.',
     tip: 'Six cherries, jelly clogging the lower rows. Drop the corners first to open lanes.',
@@ -128,9 +128,9 @@ const BOSS_LEVELS = {
   70: {
     id: 'boss-7',
     name: 'Echo Wraith',
-    moves: 30,
-    objective: { kind: 'clearType', type: 5, target: 30 },
-    hint: 'BOSS 7 — clear 30 purple hearts to silence the Wraith.',
+    moves: 26,
+    objective: { kind: 'clearType', type: 5, target: 36 },
+    hint: 'BOSS 7 — clear 36 purple hearts to silence the Wraith.',
     tip: 'The Wraith feeds on purple. Drain its colour and it fades.',
     taunt: 'I am every flavor you ever forgot.',
     obstacles: {
@@ -143,7 +143,7 @@ const BOSS_LEVELS = {
   80: {
     id: 'boss-8',
     name: 'Lattice Queen',
-    moves: 42,
+    moves: 34,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 8 — dismantle the Queen\'s lattice. Clear all jelly.',
     tip: 'Double-jelly weave with sentry locks. Free the locks to flow the matches.',
@@ -164,9 +164,9 @@ const BOSS_LEVELS = {
   90: {
     id: 'boss-9',
     name: 'The Confectioner',
-    moves: 44,
-    objective: { kind: 'score', target: 8000 },
-    hint: 'BOSS 9 — beat the Confectioner at her own game. 8,000 points.',
+    moves: 36,
+    objective: { kind: 'score', target: 10000 },
+    hint: 'BOSS 9 — beat the Confectioner at her own game. 10,000 points.',
     tip: 'She bakes obstacles into the recipe. Cherries fall, locks bind, jelly slows. Score through it all.',
     taunt: 'I baked this whole game from scratch, dear.',
     obstacles: {
@@ -186,9 +186,9 @@ const BOSS_LEVELS = {
   100: {
     id: 'boss-10',
     name: 'Candy Kraken',
-    moves: 60,
-    objective: { kind: 'score', target: 12000 },
-    hint: 'FINAL BOSS — the Candy Kraken. 12,000 points. 60 moves. No mercy.',
+    moves: 48,
+    objective: { kind: 'score', target: 16000 },
+    hint: 'FINAL BOSS — the Candy Kraken. 16,000 points. 48 moves. No mercy.',
     tip: 'The kraken brings every obstacle the run threw at you. Cash in EVERY power-up. Survivors live for this.',
     taunt: 'TASTE THE ABYSS.',
     obstacles: {
@@ -198,11 +198,12 @@ const BOSS_LEVELS = {
         [2, 2, 2], [3, 2, 2],
         [2, 3, 2], [3, 3, 2],
         [1, 4, 2], [4, 4, 2],
+        [0, 5, 1], [5, 5, 1],
       ],
       locks: [
-        [0, 2, 2], [5, 2, 2],
-        [0, 3, 2], [5, 3, 2],
-        [2, 5, 1], [3, 5, 1],
+        [0, 2, 3], [5, 2, 3],
+        [0, 3, 3], [5, 3, 3],
+        [2, 5, 2], [3, 5, 2],
       ],
     },
   },
