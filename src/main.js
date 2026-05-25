@@ -59,6 +59,8 @@ import {
   flashObjectiveDelta,
   showLevelIntro,
   showWelcome,
+  showStartMenu,
+  hideStartMenu,
   showCascadeBanner,
   popNewSpecial,
   setPowerupCounts,
@@ -276,6 +278,41 @@ function bumpClassStats(outcome, slotReached) {
   state.roguelike.classStats[id] = cur;
 }
 
+// Show the mode-picker start menu. Each button switches modes and
+// starts the appropriate flow. Called from app boot (when no run is
+// in progress) and from the run-summary close on game over.
+function openStartMenu(subtitle = null) {
+  showStartMenu({
+    subtitle,
+    onRoguelike: () => {
+      state.settings.mode = 'roguelike';
+      sfx.setMusicMode('roguelike');
+      persist();
+      startRoguelikeRun();
+    },
+    onLevels: () => {
+      state.settings.mode = 'levels';
+      sfx.setMusicMode('levels');
+      persist();
+      startLevel(state.levelProgress.currentLevel || 1);
+    },
+    onFreePlay: () => {
+      state.settings.mode = 'free';
+      sfx.setMusicMode('free');
+      persist();
+      startFreePlay();
+    },
+    onSettings: () => {
+      const btn = document.getElementById('settings-open');
+      if (btn) btn.click();
+    },
+    onHelp: () => {
+      const btn = document.getElementById('help-open');
+      if (btn) btn.click();
+    },
+  });
+}
+
 function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
   // Snapshot the run state BEFORE the run gets cleared.
   const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
@@ -302,6 +339,9 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
       // function returns it'll be cleared if not already). Kick off a
       // fresh run immediately.
       setTimeout(() => startRoguelikeRun(), 100);
+    },
+    onClose: () => {
+      openStartMenu(outcome === 'complete' ? '🏆 Run complete — pick where to go next.' : 'Run over — pick where to go next.');
     },
   });
 }
@@ -1001,6 +1041,13 @@ async function triggerCrazyEffect(pos, kind) {
     }
   }
   if (positions.length > 0) {
+    // Always include the crazy's own position so it visually leaves the
+    // board after firing (void / prism otherwise leave a dud behind).
+    const keys = new Set(positions.map((p) => `${p.c},${p.r}`));
+    const ownKey = `${pos.c},${pos.r}`;
+    if (!keys.has(ownKey) && !state.board.isIngredient(pos.c, pos.r)) {
+      positions.push({ c: pos.c, r: pos.r });
+    }
     spawnPopSpecks(positions);
     await animatePop(positions);
     state.board.clear(positions);
@@ -1635,6 +1682,15 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15k',
+    items: [
+      '🏁 GAME-OVER → START MENU — closing the run summary now opens a proper mode-picker (Roguelike / Levels / Free Play) so you always know where to go next instead of dumping you back into whatever the game was rendering. Settings & What\'s New shortcuts live here too.',
+      '💥 CRAZY TILES (void / black hole / prism / bomb / wormhole) NOW POP MORE RELIABLY — adjacent-match trigger added: any orthogonal neighbor that matches will fire the crazy tile, and the crazy tile itself clears off the board after its effect so you don\'t see a "dud" left behind.',
+      '🗣 SPEECH NO LONGER CUTS ITSELF OFF — voiceover lines used to cancel each other every time a new one fired, so boss intros / combo callouts got chopped mid-sentence. Now they queue (capped at 4 in-flight) and play to completion in order.',
+      '🪜 NO MORE MENU STACKING — opening the start menu now dismisses any other modal that was up (run summary, settings, changelog, etc.) so panels never pile on top of each other.',
+    ],
+  },
   {
     id: '2026-05-25-15j',
     items: [
@@ -4898,13 +4954,33 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     haptics.epic();
   }
 
-  // Collect any crazy tiles being cleared so we can trigger their
-  // effects AFTER the regular clear settles.
+  // Collect any crazy tiles to trigger this round. A crazy fires when:
+  //   1. it's in toClear (a match consumed its cell), OR
+  //   2. it's orthogonally adjacent to a tile in toClear — players were
+  //      reporting that matches "next to" a void/bolt/prism wouldn't pop
+  //      it, even though that's the obvious player intuition.
   const crazyToTrigger = [];
-  for (const p of toClear) {
-    const cellHere = state.board.cell(p.c, p.r);
-    if (cellHere && cellHere.crazy) {
-      crazyToTrigger.push({ pos: p, kind: cellHere.crazy });
+  const crazyKeys = new Set();
+  const queueCrazy = (c, r) => {
+    const key = `${c},${r}`;
+    if (crazyKeys.has(key)) return;
+    const cellHere = state.board.cell(c, r);
+    if (!cellHere || !cellHere.crazy) return;
+    crazyKeys.add(key);
+    crazyToTrigger.push({ pos: { c, r }, kind: cellHere.crazy });
+  };
+  for (const p of toClear) queueCrazy(p.c, p.r);
+  // Adjacent triggers — only fire if there's any actual match this round,
+  // otherwise stray cascades from elsewhere shouldn't pop a crazy.
+  if (toClear.length > 0) {
+    const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    for (const p of toClear) {
+      for (const [dc, dr] of DIRS) {
+        const nc = p.c + dc, nr = p.r + dr;
+        if (nc < 0 || nc >= state.board.cols) continue;
+        if (nr < 0 || nr >= state.board.rows) continue;
+        queueCrazy(nc, nr);
+      }
     }
   }
 
