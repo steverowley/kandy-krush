@@ -520,6 +520,10 @@ export const MUTATORS = [
     desc: 'Start of slot, gain +3 Hammers. Smash through the obstacles.' },
   { id: 'bomb-cache',  icon: '💣', name: 'Bomb Cache',
     desc: 'Start of slot, gain +2 Color Bombs. Big boom potential.' },
+  { id: 'diamond-mine', icon: '⛏', name: 'Diamond Mine',
+    desc: 'Every 6 matches in this slot earns you +1 💎. Pure gem mining.' },
+  { id: 'big-crit',    icon: '⚔️', name: 'Big Crit',
+    desc: 'All cascades (chain ≥2) score ×4 this slot. Build them up.' },
 ];
 
 export function isMutatorSlot(slot) {
