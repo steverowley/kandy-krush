@@ -252,13 +252,55 @@ function scaleMovesForObstacleSlot(moves, slot, isBoss, objKind) {
   return Math.max(8, Math.round(moves * (1 - reduction)));
 }
 
+// Regenerate the player-facing hint string from a (possibly scaled)
+// objective. Without this, the hint text bundled into the base level
+// config still reads the un-scaled target ("Reach 1,500 points.") even
+// when the roguelike scaling has pushed the real target to 75,000.
+// Voiceover, intro card, and level info all rely on this string.
+const CANDY_TYPE_NAMES = [
+  'yellow circles',
+  'blue squares',
+  'pink triangles',
+  'orange hexagons',
+  'green stars',
+  'purple hearts',
+];
+export function formatObjectiveHint(obj) {
+  if (!obj) return '';
+  switch (obj.kind) {
+    case 'score':
+      return `Reach ${obj.target.toLocaleString()} points.`;
+    case 'matches':
+      return `Make ${obj.target} matches.`;
+    case 'specials':
+      return obj.target === 1
+        ? 'Make 1 special candy.'
+        : `Make ${obj.target} special candies.`;
+    case 'clearType':
+      return `Clear ${obj.target} ${CANDY_TYPE_NAMES[obj.type] || 'tiles of one color'}.`;
+    case 'clearJelly':
+      return 'Clear all the jelly tiles.';
+    case 'dropIngredients':
+      return obj.target === 1
+        ? 'Drop 1 cherry to the bottom row.'
+        : `Drop ${obj.target} cherries to the bottom row.`;
+  }
+  return '';
+}
+
 // Map a roguelike slot (1..100) to a base level config. Score-style
 // objectives get scaled up per-slot so the late game stays challenging.
 export function getRoguelikeLevel(slot) {
   const idx = Math.max(1, Math.min(RUN_LENGTH, slot));
   if (BOSS_LEVELS[idx]) {
     const boss = { ...BOSS_LEVELS[idx], runSlot: idx, isBoss: true };
-    boss.objective = scaleObjective(boss.objective, idx, true);
+    const scaledObj = scaleObjective(boss.objective, idx, true);
+    boss.objective = scaledObj;
+    // Boss hints have flavor text like "BOSS 5 — break the Pharaoh's
+    // sarcophagus. Reach 6,000." Replace the trailing target with the
+    // scaled one. Keep the flavor + boss number prefix intact.
+    const bossNum = Math.floor(idx / 10);
+    boss.hint = `BOSS ${bossNum} — ${formatObjectiveHint(scaledObj)}`;
     return boss;
   }
   const base = LEVELS[(idx - 1) % LEVELS.length] || getLevel(1);
@@ -268,6 +310,7 @@ export function getRoguelikeLevel(slot) {
     ...base,
     objective,
     moves,
+    hint: formatObjectiveHint(objective),
     runSlot: idx,
     isBoss: false,
   };
