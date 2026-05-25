@@ -1331,6 +1331,13 @@ function maybeFireRelicsOnSwap() {
     setLuckyCharge(state.luckyCharge, state.luckyReady);
     flashMessage('📖 Sweet Spell +25% 🍀', 900);
   }
+  // 🍋 Sour Drop relic — every 13 swaps, Lucky bar +50%.
+  if (hasRelic('sour-drop') && state.relicSwapCount % 13 === 0) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 50);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage('🍋 Sour Drop +50% 🍀', 1000);
+  }
 }
 
 function ironTongueBreak() {
@@ -1447,6 +1454,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12x',
+    items: [
+      '👜 NEW RELIC — Pixie Pouch: every 18 matches in a slot, gain +1 of EVERY power-up. Burst restock for marathon slots.',
+      '🍋 NEW RELIC — Sour Drop: every 13 swaps in a slot, +50% Lucky bar. Bigger jolts than Sweet Spell.',
+    ],
+  },
   {
     id: '2026-05-25-12w',
     items: [
@@ -4314,6 +4328,16 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (hasRelic('sugar-crash') && state.slotMatchCount % 14 === 0) {
       spawnCrazyTile('tnt');
       flashMessage('💥 Sugar Crash!', 900);
+    }
+    // 👜 Pixie Pouch relic — every 18 matches grant +1 of EVERY power-up.
+    if (hasRelic('pixie-pouch') && state.slotMatchCount % 18 === 0) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+      }
+      setPowerupCounts(bank);
+      flashMessage('👜 Pixie Pouch! +1 of each', 1200);
     }
     // 🍨 Sundae Saturday relic — every 8 matches grant +1 plusMoves powerup.
     if (hasRelic('sundae-saturday') && state.slotMatchCount % 8 === 0) {

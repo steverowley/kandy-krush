@@ -457,6 +457,10 @@ export const RELICS = [
     desc: 'Locks decrement by 2 per hit instead of 1. Lock-heavy boards melt fast.' },
   { id: 'sweet-reset',  icon: '🔄', name: 'Sweet Reset',
     desc: 'Shuffles are FREE during boss slots. Reorganize the board for free big-match openings.' },
+  { id: 'pixie-pouch',  icon: '👜', name: 'Pixie Pouch',
+    desc: 'Every 18 matches in a slot, gain +1 of EVERY power-up. Burst restock for marathon slots.' },
+  { id: 'sour-drop',    icon: '🍋', name: 'Sour Drop',
+    desc: 'Every 13 swaps in a slot, your Lucky bar gains +50%. Bigger jolts than Sweet Spell.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
