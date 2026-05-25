@@ -894,6 +894,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8p',
+    items: [
+      '🎺💥 BOSS MUSIC! Boss slots now play a faster, more aggressive variant of the chiptune — tempo bumps from 132 to 178 BPM, bass doubles to every half-beat, snare rolls every bar.',
+      'When you survive the boss the music drops back to the standard chip groove. Feels like a real escalation.',
+    ],
+  },
+  {
     id: '2026-05-25-8o',
     items: [
       '🔄 REROLL the upgrade picker! Don\'t love your 3 choices? Spend 1 Shuffle from your bank to get 3 fresh ones.',
@@ -1442,6 +1449,11 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
       screenShake(8, 420);
       sfx.playObjectiveComplete('specials'); // sparkly chord
       haptics.epic();
+      // Boss music — faster, more aggressive variant of the chiptune.
+      sfx.setMusicMode('boss');
+    } else {
+      // Non-boss slot: back to the standard chip variant.
+      sfx.setMusicMode('roguelike');
     }
     speech.speak(
       `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
