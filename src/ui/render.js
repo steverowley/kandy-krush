@@ -851,6 +851,56 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
+// 🏅 Class-mastery modal. `classes` is the list of all 11 classes;
+// `classStats` is the per-class {runs, completes, bestSlot} record from
+// state.roguelike.classStats. Tiers derived from bestSlot + completes:
+//   🥉 Bronze — bestSlot >= 10 with this class
+//   🥈 Silver — bestSlot >= 30
+//   🥇 Gold   — at least 1 run completed (slot 100)
+export function showClassMastery({ classes, classStats, onClose }) {
+  const overlay = document.getElementById('class-mastery-overlay');
+  const panel = document.getElementById('class-mastery-panel');
+  const list = document.getElementById('class-mastery-list');
+  const close = document.getElementById('class-mastery-close');
+  if (!overlay || !panel || !list || !close) return;
+  captureFocus();
+  list.innerHTML = '';
+  for (const cls of classes) {
+    const stats = (classStats && classStats[cls.id]) || { runs: 0, completes: 0, bestSlot: 0 };
+    const gold = stats.completes >= 1;
+    const silver = stats.bestSlot >= 30 || gold;
+    const bronze = stats.bestSlot >= 10 || silver;
+    const tiers = [
+      bronze ? '🥉' : '·',
+      silver ? '🥈' : '·',
+      gold ? '🥇' : '·',
+    ].join(' ');
+    const row = document.createElement('div');
+    row.className = 'border-2 border-black rounded-xl p-3 bg-amber-50 flex items-center gap-3';
+    row.innerHTML = `
+      <span class="text-3xl" aria-hidden="true">${escapeHtml(cls.icon)}</span>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-gray-900">${escapeHtml(cls.name)}</div>
+        <div class="text-sm text-gray-700">${stats.runs} runs · ${stats.completes} cleared · best slot ${stats.bestSlot}</div>
+      </div>
+      <div class="text-2xl tabular-nums" aria-label="Mastery tiers">${tiers}</div>
+    `;
+    list.appendChild(row);
+  }
+  const handleClose = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    restoreFocus();
+    if (onClose) onClose();
+  };
+  replaceListener(close, 'click', handleClose, 'class-mastery-close');
+  replaceListener(overlay, 'click', handleClose, 'class-mastery-overlay');
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  blockClicksFor(panel, 300);
+  close.focus();
+}
+
 // 📓 Run-history modal. `entries` is an array of records from
 // state.runHistory (most recent first). `getClass` is the lookup
 // function from roguelike.js so we can render the class icon + name.
@@ -1128,10 +1178,13 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
       replayBtn.onclick = null;
     }
   }
-  // 📋 Copy summary button — builds a clipboard-friendly text recap.
+  // 📤 Share button — tries the native Web Share API first (iOS / Android
+  // PWA install gets the system share sheet), falls back to clipboard
+  // copy on desktop / unsupported browsers. Either way the player gets
+  // their run summary out of the game and into a chat / tweet / post.
   const shareBtn = document.getElementById('run-summary-share');
   if (shareBtn) {
-    shareBtn.onclick = () => {
+    shareBtn.onclick = async () => {
       const klassStr = klass ? `${klass.icon} ${klass.name}` : 'Wanderer';
       const archStr = archCounts && archetypes
         ? Object.keys(archCounts)
@@ -1143,16 +1196,34 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         ? relics.map((id) => (getRelic && getRelic(id) ? getRelic(id).icon : '?')).join('')
         : 'none';
       const lines = [
-        `Sweet Match — ${outcome === 'complete' ? '🏆 RUN COMPLETE' : 'Slot ' + slotReached + '/' + totalSlots}`,
+        `🍬 Sweet Match — ${outcome === 'complete' ? '🏆 RUN COMPLETE' : 'Slot ' + slotReached + '/' + totalSlots}`,
         `Class: ${klassStr}${awakened ? ' ✨ AWAKENED' : ''}`,
         `Build: ${archStr || '—'}`,
         `Relics: ${relicStr}`,
         `💎 +${gemsEarned} (total ${totalGems})`,
       ];
       const text = lines.join('\n');
+      const original = shareBtn.textContent;
+      // Try Web Share API first — produces the native share sheet on
+      // mobile (most useful path for a PWA).
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        try {
+          await navigator.share({ title: 'Sweet Match run', text });
+          shareBtn.textContent = '✅ Shared!';
+          setTimeout(() => { shareBtn.textContent = original; }, 1500);
+          return;
+        } catch (err) {
+          // Aborted by user, or share failed — fall through to clipboard.
+          if (err && err.name === 'AbortError') {
+            shareBtn.textContent = original;
+            return;
+          }
+        }
+      }
+      // Clipboard fallback.
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text);
+          await navigator.clipboard.writeText(text);
           shareBtn.textContent = '✅ Copied!';
         } else {
           shareBtn.textContent = '⚠ Copy failed';
@@ -1160,7 +1231,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
       } catch {
         shareBtn.textContent = '⚠ Copy failed';
       }
-      setTimeout(() => { shareBtn.textContent = '📋 Copy summary'; }, 1500);
+      setTimeout(() => { shareBtn.textContent = original; }, 1500);
     };
   }
   overlay.classList.remove('hidden');
