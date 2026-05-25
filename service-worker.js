@@ -1,4 +1,4 @@
-const VERSION = 'sweet-match-v12';
+const VERSION = 'sweet-match-v13';
 const SHELL = [
   './',
   './index.html',

@@ -786,7 +786,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   const render = () => {
     if (stats) {
       const bossLine = stats.bossesDefeated ? ` · ${stats.bossesDefeated} bosses slain` : '';
-      gemsEl.innerHTML = `${gems()} 💎 <span class="text-sm font-normal opacity-70 ml-2">— ${stats.runs || 0} runs · ${stats.completes || 0} completes · best slot ${stats.bestSlot || 0}${bossLine}</span>`;
+      gemsEl.innerHTML = `${gems()} 💎 <span class="text-sm font-semibold text-gray-700 ml-2">— ${stats.runs || 0} runs · ${stats.completes || 0} completes · best slot ${stats.bestSlot || 0}${bossLine}</span>`;
     } else {
       gemsEl.textContent = `${gems()} 💎`;
     }
@@ -795,16 +795,16 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
       const isOwned = owned().has(skill.id);
       const canAfford = gems() >= skill.cost;
       const row = document.createElement('div');
-      row.className = `flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${isOwned ? 'bg-green-100' : canAfford ? 'bg-white' : 'bg-gray-100 opacity-60'}`;
+      row.className = `flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${isOwned ? 'bg-green-100' : canAfford ? 'bg-white' : 'bg-gray-200'}`;
       row.innerHTML = `
         <div class="flex-1">
           <div class="flex items-center gap-2 text-lg sm:text-xl font-bold">
             ${skill.name}
             ${isOwned ? '<span class="text-sm font-bold uppercase tracking-wider text-green-700">Owned</span>' : ''}
           </div>
-          <div class="text-sm sm:text-base text-gray-700">${skill.desc}</div>
+          <div class="text-base sm:text-lg text-gray-900">${skill.desc}</div>
         </div>
-        ${isOwned ? '' : `<button type="button" data-skill="${skill.id}" class="text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed" ${canAfford ? '' : 'disabled'}>${skill.cost} 💎</button>`}
+        ${isOwned ? '' : `<button type="button" data-skill="${skill.id}" class="text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-4 py-3 disabled:bg-gray-300 disabled:text-gray-700 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" ${canAfford ? '' : 'disabled'}>${skill.cost} 💎</button>`}
       `;
       list.appendChild(row);
     }
@@ -855,38 +855,38 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     const highlightCards = highlights && (highlights.maxCascade > 0 || highlights.biggestMatch > 0)
       ? `
       <div class="text-center bg-purple-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">🔁 Max cascade</div>
+        <div class="text-sm font-bold uppercase text-gray-900">🔁 Max cascade</div>
         <div class="text-2xl font-bold tabular-nums">×${highlights.maxCascade || 0}</div>
       </div>
       <div class="text-center bg-orange-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">💥 Biggest match</div>
+        <div class="text-sm font-bold uppercase text-gray-900">💥 Biggest match</div>
         <div class="text-2xl font-bold tabular-nums">${highlights.biggestMatch || 0}</div>
       </div>`
       : '';
     stats.innerHTML = `
       <div class="text-center bg-yellow-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">Slot reached</div>
+        <div class="text-sm font-bold uppercase text-gray-900">Slot reached</div>
         <div class="text-2xl font-bold tabular-nums">${slotReached}/${totalSlots}</div>
       </div>
       <div class="text-center bg-pink-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">💎 Earned</div>
+        <div class="text-sm font-bold uppercase text-gray-900">💎 Earned</div>
         <div class="text-2xl font-bold tabular-nums">+${gemsEarned}</div>
       </div>
       <div class="text-center bg-blue-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">💎 Total</div>
+        <div class="text-sm font-bold uppercase text-gray-900">💎 Total</div>
         <div class="text-2xl font-bold tabular-nums">${totalGems}</div>
       </div>
       <div class="text-center bg-green-100 border-2 border-black rounded-xl p-2">
-        <div class="text-xs uppercase opacity-70">Best slot</div>
+        <div class="text-sm font-bold uppercase text-gray-900">Best slot</div>
         <div class="text-2xl font-bold tabular-nums">${bestSlot}</div>
       </div>
       ${highlightCards}
     `;
   }
   if (klassEl) {
-    const awakenStr = awakened ? ' <span class="px-2 rounded-full bg-pink-500 text-white text-xs">✨ AWAKENED</span>' : '';
+    const awakenStr = awakened ? ' <span class="px-2 py-0.5 rounded-full bg-pink-700 text-white text-sm font-bold">✨ AWAKENED</span>' : '';
     const statsStr = classStats
-      ? ` <span class="text-xs opacity-70">— Run #${classStats.runs}, ${classStats.completes} wins, best slot ${classStats.bestSlot}</span>`
+      ? ` <span class="text-sm text-gray-700">— Run #${classStats.runs}, ${classStats.completes} wins, best slot ${classStats.bestSlot}</span>`
       : '';
     klassEl.innerHTML = klass ? `Class: ${escapeHtml(klass.icon)} ${escapeHtml(klass.name)}${awakenStr}${statsStr}` : '';
   }
@@ -915,7 +915,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
       const counts = new Map();
       for (const id of upgradesList) counts.set(id, (counts.get(id) || 0) + 1);
       const divider = document.createElement('div');
-      divider.className = 'w-full text-xs uppercase tracking-wider opacity-60 text-center mt-1';
+      divider.className = 'w-full text-sm font-bold uppercase tracking-wider text-gray-700 text-center mt-1';
       divider.textContent = 'Upgrades held';
       builds.appendChild(divider);
       for (const [id, n] of counts) {
@@ -934,7 +934,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         row.style.color = isMax ? contrastTextOn(color) : '#000';
         row.style.borderLeftWidth = '6px';
         row.style.borderLeftColor = color;
-        const tierBadge = tier ? ` <span style="opacity:0.85">[${tier}]</span>` : '';
+        const tierBadge = tier ? ` <span class="font-semibold">[${tier}]</span>` : '';
         row.innerHTML = `${arch ? escapeHtml(arch.icon) : '•'} ${escapeHtml(u.name)}${n > 1 ? ` ×${n}` : ''}${tierBadge}`;
         row.title = u.desc || '';
         builds.appendChild(row);
@@ -950,16 +950,16 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         for (const id of relics) {
           const r = getRelic ? getRelic(id) : null;
           const row = document.createElement('div');
-          row.className = 'flex items-center gap-2 border border-yellow-500 bg-yellow-50 rounded-lg px-2 py-1';
+          row.className = 'flex items-center gap-2 border-2 border-yellow-700 bg-yellow-50 rounded-lg px-2 py-1';
           row.innerHTML = r
-            ? `<span class="text-xl">${escapeHtml(r.icon)}</span><span class="font-bold">${escapeHtml(r.name)}</span><span class="opacity-90 text-sm">— ${escapeHtml(r.desc)}</span>`
-            : `<span>${escapeHtml(id)}</span>`;
+            ? `<span class="text-xl">${escapeHtml(r.icon)}</span><span class="font-bold text-gray-900">${escapeHtml(r.name)}</span><span class="text-sm text-gray-800">— ${escapeHtml(r.desc)}</span>`
+            : `<span class="text-gray-900">${escapeHtml(id)}</span>`;
           relicsEl.appendChild(row);
         }
       } else {
         relicsEl.className = 'flex flex-wrap items-center justify-center gap-1 text-2xl';
         const label = document.createElement('span');
-        label.className = 'text-xs opacity-70 mr-1 self-center';
+        label.className = 'text-sm font-semibold text-gray-700 mr-1 self-center';
         label.textContent = 'Relics:';
         relicsEl.appendChild(label);
         for (const id of relics) {
@@ -1166,15 +1166,15 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
   const buildsEl = document.getElementById('run-hud-builds');
   const relicsEl = document.getElementById('run-hud-relics');
   if (klassEl) {
-    const slotStr = (slot != null && totalSlots) ? `<span class="opacity-70">${slot}/${totalSlots}</span> · ` : '';
+    const slotStr = (slot != null && totalSlots) ? `<span class="text-gray-700 font-semibold">${slot}/${totalSlots}</span> · ` : '';
     const awakenedStr = awakened && klass
-      ? ` <span class="px-2 rounded-full font-bold bg-pink-500 text-white border-2 border-black animate-pulse" title="${escapeHtml(klass.awaken || '')}">✨ AWAKENED</span>`
+      ? ` <span class="px-2 py-0.5 rounded-full font-bold bg-pink-700 text-white border-2 border-black animate-pulse" title="${escapeHtml(klass.awaken || '')}">✨ AWAKENED</span>`
       : '';
     const mutStr = mutator
       ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${escapeHtml(mutator.desc)}">${escapeHtml(mutator.icon)} ${escapeHtml(mutator.name)}</span>`
       : '';
     const nextStr = nextMilestone
-      ? ` · <span class="text-sm opacity-90 font-semibold">Next: ${escapeHtml(nextMilestone.icon)} ${escapeHtml(nextMilestone.label)} in ${escapeHtml(nextMilestone.distance)}</span>`
+      ? ` · <span class="text-base font-semibold text-gray-900">Next: ${escapeHtml(nextMilestone.icon)} ${escapeHtml(nextMilestone.label)} in ${escapeHtml(nextMilestone.distance)}</span>`
       : '';
     klassEl.innerHTML = `${slotStr}${klass ? `${escapeHtml(klass.icon)} ${escapeHtml(klass.name)}` : '🎲 No class'}${awakenedStr}${mutStr}${nextStr}`;
   }
@@ -1191,18 +1191,18 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
     const vibeChip = vibe
       ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:${contrastTextOn(vibe.color)}" title="${escapeHtml(vibe.title)}">${escapeHtml(vibe.label)}</span>`
       : '';
-    buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="opacity-60">No upgrades yet</span>';
+    buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="text-gray-800 font-semibold">No upgrades yet</span>';
   }
   if (relicsEl) {
-    const buildChip = '<span class="px-2 py-0.5 rounded-full bg-black text-white text-xs font-bold border-2 border-yellow-400 ml-1" title="Tap the HUD for full build details">📋 BUILD</span>';
+    const buildChip = '<span class="px-2 py-0.5 rounded-full bg-black text-white text-sm font-bold border-2 border-yellow-400 ml-1" title="Tap the HUD for full build details">📋 BUILD</span>';
     if (relics && relics.length > 0) {
       const icons = relics.map((id) => {
         const r = getRelic ? getRelic(id) : null;
         return r ? `<span title="${escapeHtml(r.name + ': ' + r.desc)}">${escapeHtml(r.icon)}</span>` : '';
       }).join('');
-      relicsEl.innerHTML = `<span class="text-sm font-semibold mr-1">Relics:</span>${icons}${buildChip}`;
+      relicsEl.innerHTML = `<span class="text-sm font-semibold text-gray-900 mr-1">Relics:</span>${icons}${buildChip}`;
     } else {
-      relicsEl.innerHTML = `<span class="text-sm opacity-80">No relics yet — beat a boss</span>${buildChip}`;
+      relicsEl.innerHTML = `<span class="text-sm font-semibold text-gray-800">No relics yet — beat a boss</span>${buildChip}`;
     }
   }
 }
@@ -1230,9 +1230,9 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
       <div class="flex items-center gap-2">
         <span class="text-3xl">${escapeHtml(r.icon)}</span>
         <span class="text-lg sm:text-xl font-bold">${escapeHtml(r.name)}</span>
-        <span class="text-xs font-bold uppercase tracking-wider ml-auto text-yellow-700">RELIC</span>
+        <span class="text-sm font-bold uppercase tracking-wider ml-auto text-yellow-800">RELIC</span>
       </div>
-      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(r.desc)}</span>
+      <span class="text-base sm:text-lg text-gray-900">${escapeHtml(r.desc)}</span>
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
@@ -1326,7 +1326,7 @@ export function showShop({ items, getGems, onBuy, onContinue }) {
       const row = document.createElement('button');
       row.type = 'button';
       row.disabled = !afford;
-      row.className = `text-left flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${afford ? 'bg-white hover:bg-amber-50 active:bg-amber-100' : 'bg-gray-100 opacity-60 cursor-not-allowed'}`;
+      row.className = `text-left flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${afford ? 'bg-white hover:bg-amber-50 active:bg-amber-100' : 'bg-gray-200 text-gray-700 cursor-not-allowed'}`;
       row.innerHTML = `
         <span class="text-3xl">${escapeHtml(it.icon)}</span>
         <span class="flex-1">
@@ -1374,7 +1374,7 @@ export function showRoguelikeIntro(onProceed) {
   const prevGridClass = list.className;
   if (subtitle) subtitle.textContent = 'Welcome to Roguelike!';
   if (title) title.textContent = 'Quick run-down before we start';
-  list.className = 'flex flex-col gap-2 text-sm sm:text-base';
+  list.className = 'flex flex-col gap-2 text-base sm:text-lg';
   list.innerHTML = `
     <div class="bg-amber-50 border-2 border-amber-700 rounded-xl p-3 text-gray-900">
       <div class="font-bold">⚔ CLASS</div>
@@ -1439,14 +1439,14 @@ export function showClassPicker(classes, archetypes, onPick, classStats = null) 
     const stats = classStats && classStats[cls.id] ? classStats[cls.id] : null;
     const statsLine = stats
       ? `<span class="text-xs text-gray-600">📊 Run #${(stats.runs || 0) + 1} · ${stats.completes || 0} ✓ · best slot ${stats.bestSlot || 0}</span>`
-      : '<span class="text-xs text-gray-500 italic">Never played — your first run.</span>';
+      : '<span class="text-sm text-gray-700 font-semibold">Never played — your first run.</span>';
     btn.innerHTML = `
       <div class="flex items-center gap-2">
         <span class="text-2xl">${escapeHtml(cls.icon)}</span>
         <span class="text-lg sm:text-xl font-bold">${escapeHtml(cls.name)}</span>
         ${arch ? `<span class="text-xs font-bold uppercase tracking-wider ml-auto" style="color:${color}">${escapeHtml(arch.icon)} ${escapeHtml(arch.name)}</span>` : ''}
       </div>
-      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(cls.desc)}</span>
+      <span class="text-base sm:text-lg text-gray-900">${escapeHtml(cls.desc)}</span>
       ${cls.awaken ? `<span class="text-xs font-bold text-pink-700">✨ ${escapeHtml(cls.awaken)}</span>` : ''}
       ${statsLine}
     `;
@@ -1502,10 +1502,10 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
     btn.innerHTML = `
       <div class="flex items-center justify-between gap-2">
         ${archBadge}
-        <span class="text-xs font-bold uppercase tracking-wider opacity-60" style="color:${categoryColor(u.category)}">${u.category}</span>
+        <span class="text-sm font-bold uppercase tracking-wider" style="color:${categoryColor(u.category)}">${u.category}</span>
       </div>
       <span class="text-lg sm:text-xl font-bold">${escapeHtml(u.name)}</span>
-      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(u.desc)}</span>
+      <span class="text-base sm:text-lg text-gray-900">${escapeHtml(u.desc)}</span>
       ${synergyHint}
       ${awakenHint}
     `;
@@ -1626,7 +1626,7 @@ export function showChangelog(items, onDismiss) {
       const entry = items[i];
       const header = document.createElement('li');
       header.style.listStyle = 'none';
-      header.className = 'mt-3 mb-1 text-xs font-bold uppercase tracking-wider opacity-70';
+      header.className = 'mt-3 mb-1 text-sm font-bold uppercase tracking-wider text-gray-700';
       header.textContent = i === 0 ? `Today — ${entry.id}` : entry.id;
       list.appendChild(header);
       for (const text of entry.items) {
