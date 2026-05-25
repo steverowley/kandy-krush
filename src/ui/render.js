@@ -880,6 +880,66 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
   if (firstBtn) firstBtn.focus();
 }
 
+// Mid-run merchant — three fixed items. `onBuy(item)` returns true if
+// purchase was successful (gems spent + effect applied). Player can
+// buy any/all they can afford then press Continue.
+export function showShop({ items, getGems, onBuy, onContinue }) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const active = document.getElementById('upgrade-active-list');
+  const subtitle = document.getElementById('upgrade-subtitle');
+  const title = document.getElementById('upgrade-title');
+  if (!overlay || !panel || !list) { if (onContinue) onContinue(); return; }
+  const prevSubtitle = subtitle?.textContent;
+  const prevTitle = title?.textContent;
+  const prevGridClass = list.className;
+  if (subtitle) subtitle.textContent = '🛒 The Merchant';
+  if (title) title.textContent = 'Spend gems on per-run boosts.';
+  list.className = 'flex flex-col gap-3';
+  const render = () => {
+    list.innerHTML = '';
+    for (const it of items) {
+      const gems = getGems();
+      const afford = gems >= it.cost;
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.disabled = !afford;
+      row.className = `text-left flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${afford ? 'bg-white hover:bg-amber-50 active:bg-amber-100' : 'bg-gray-100 opacity-60 cursor-not-allowed'}`;
+      row.innerHTML = `
+        <span class="text-3xl">${it.icon}</span>
+        <span class="flex-1">
+          <span class="block text-lg font-bold">${it.name}</span>
+          <span class="block text-sm text-gray-700">${it.desc}</span>
+        </span>
+        <span class="px-3 py-2 bg-yellow-300 border-2 border-black rounded-xl font-bold">${it.cost} 💎</span>
+      `;
+      row.addEventListener('click', () => {
+        if (!afford) return;
+        if (onBuy(it)) render();
+      });
+      list.appendChild(row);
+    }
+    const cont = document.createElement('button');
+    cont.type = 'button';
+    cont.className = 'mt-2 self-center px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500';
+    cont.textContent = 'Continue';
+    cont.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      panel.classList.add('hidden');
+      if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
+      if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
+      list.className = prevGridClass;
+      if (onContinue) onContinue();
+    });
+    list.appendChild(cont);
+    if (active) active.textContent = `You have ${getGems()} 💎`;
+  };
+  render();
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+}
+
 export function showRoguelikeIntro(onProceed) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
