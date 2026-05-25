@@ -1003,6 +1003,48 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
 // Mid-run merchant — three fixed items. `onBuy(item)` returns true if
 // purchase was successful (gems spent + effect applied). Player can
 // buy any/all they can afford then press Continue.
+// Mid-run "crossroads" event — 3 hard-coded options, pick one and
+// the chosen effect is applied via onPick. Lighter weight than the
+// merchant since there's no cost and no continue button.
+export function showCrossroadsEvent({ options, onPick }) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const subtitle = document.getElementById('upgrade-subtitle');
+  const title = document.getElementById('upgrade-title');
+  if (!overlay || !panel || !list) { if (onPick) onPick(options[0]); return; }
+  const prevSubtitle = subtitle?.textContent;
+  const prevTitle = title?.textContent;
+  const prevGridClass = list.className;
+  if (subtitle) subtitle.textContent = '✨ The Crossroads';
+  if (title) title.textContent = 'Pick one — a brief detour before the next slot';
+  list.className = 'grid grid-cols-1 sm:grid-cols-3 gap-3';
+  list.innerHTML = '';
+  for (const opt of options) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'upgrade-card flex flex-col gap-2 p-4 text-left border-[3px] border-purple-700 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-100 hover:from-purple-100 hover:to-pink-200 active:from-purple-200 active:to-pink-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-500 shadow-md';
+    btn.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-3xl">${opt.icon}</span>
+        <span class="text-lg font-bold">${opt.name}</span>
+      </div>
+      <div class="text-sm text-gray-800">${opt.desc}</div>
+    `;
+    btn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      panel.classList.add('hidden');
+      if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
+      if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
+      list.className = prevGridClass;
+      if (onPick) onPick(opt);
+    });
+    list.appendChild(btn);
+  }
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+}
+
 export function showShop({ items, getGems, onBuy, onContinue }) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');

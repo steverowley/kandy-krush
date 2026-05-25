@@ -74,6 +74,7 @@ import {
   showRunSummary,
   showRoguelikeIntro,
   showShop,
+  showCrossroadsEvent,
   flashMutatorActivation,
   showSkillTree,
 } from './ui/render.js';
@@ -1420,6 +1421,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12l',
+    items: [
+      '✨ NEW EVENT — The Crossroads. At slots 27 and 77 a brief no-cost detour appears: pick from 🛍 The Vault (FREE relic), 🎁 The Cache (+2 of every power-up), or 💎 The Reserve (+20 💎).',
+      'Slay-the-Spire-style mid-run decision points that reward planning your build path.',
+    ],
+  },
   {
     id: '2026-05-25-12k',
     items: [
@@ -2878,11 +2886,72 @@ function advanceRoguelikeAfterWin() {
       });
       return;
     }
+    // ✨ Crossroads event on slots 27 and 77 — a quick mid-run choice
+    // with no cost. Three options, then standard upgrade picker.
+    const CROSSROADS_SLOTS = new Set([27, 77]);
+    if (CROSSROADS_SLOTS.has(justFinished)) {
+      runCrossroadsEvent(() => {
+        let n = hasMeta('wider-choice') ? 4 : 3;
+        if (isClass('wanderer') && classAwakened()) n += 1;
+        showUpgradeChoicesForSlot(n, true);
+      });
+      return;
+    }
     let n = hasMeta('wider-choice') ? 4 : 3;
     // 🎲 Wanderer AWAKENING — +1 upgrade card to choose from.
     if (isClass('wanderer') && classAwakened()) n += 1;
     showUpgradeChoicesForSlot(n, true);
   }
+}
+
+function runCrossroadsEvent(onDone) {
+  flashMessage('✨ The Crossroads!', 1400);
+  speech.speak('The crossroads.');
+  setTimeout(() => {
+    showCrossroadsEvent({
+      options: [
+        { icon: '🛍', name: 'The Vault',   desc: 'A FREE random relic added to your run.',     value: 'relic' },
+        { icon: '🎁', name: 'The Cache',   desc: '+2 of every power-up immediately.',           value: 'powerups' },
+        { icon: '💎', name: 'The Reserve', desc: '+20 💎 instantly. Save them for the shop.',    value: 'gems' },
+      ],
+      onPick: (choice) => {
+        if (choice.value === 'relic') {
+          const choices = pickRelicChoices(state.runRelics || [], 1);
+          if (choices.length > 0) {
+            const relic = choices[0];
+            state.runRelics = state.runRelics || [];
+            state.runRelics.push(relic.id);
+            flashMessage(`${relic.icon} ${relic.name}!`, 1500);
+            speech.speak(`${relic.name} acquired.`);
+            spawnConfetti(40);
+            spawnStarRain(15);
+            haptics.specialBirth();
+          } else {
+            flashMessage('No new relics — +20 💎 instead', 1500);
+            state.roguelike.gems = (state.roguelike.gems || 0) + 20;
+          }
+        } else if (choice.value === 'powerups') {
+          const bank = powerupBank();
+          const cap = effectivePowerupCap();
+          for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+            bank[key] = Math.min(cap, (bank[key] || 0) + 2);
+          }
+          setPowerupCounts(bank);
+          flashMessage('🎁 +2 of every power-up!', 1400);
+          spawnConfetti(30);
+          haptics.powerup();
+        } else {
+          state.roguelike.gems = (state.roguelike.gems || 0) + 20;
+          flashMessage('💎 +20 💎', 1300);
+          spawnConfetti(40);
+          haptics.epic();
+        }
+        persist();
+        refreshRunHud();
+        setTimeout(onDone, 600);
+      },
+    });
+  }, 500);
 }
 
 function runMidRunShop(onDone) {
