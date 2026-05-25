@@ -69,6 +69,7 @@ import {
   showClassPicker,
   showRelicPicker,
   setRunHud,
+  showBossBanner,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -840,6 +841,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8l',
+    items: [
+      '🐙 BOSS INTRO BANNER — every boss slot now opens with a dramatic full-screen reveal: tier label, boss icon, name, and tip. Pink-purple gradient with a yellow border that bursts in and gracefully fades.',
+      'Each of the 10 bosses gets a thematic icon: 🍮 Jelly Guardian · 🔒 Lock Tyrant · 👑 Sweet King · 🐌 Snail · 🗿 Pharaoh · 🍒 Hydra · 👻 Wraith · 🕷 Lattice Queen · 🧁 Confectioner · 🐙 Candy Kraken.',
+      'Reduce-motion users get the banner without the bouncy animation.',
+    ],
+  },
+  {
     id: '2026-05-25-8k',
     items: [
       '🃏 FOUR NEW UPGRADE CARDS — Combo Streak (cascade chain ≥3 ×2 score) · Chain Bomb (TNT pops spawn more TNT) · First Swap Free (first swap of every slot is free) · ☄️ Meteor Shower (every 8 matches, 3 random tiles explode).',
@@ -1348,8 +1357,8 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     if (p && typeof p.then === 'function') p.then(done);
     else done();
     if (lvl.isBoss) {
-      // Boss fanfare on top of the intro card
-      flashMessage(slot === RUN_LENGTH ? 'FINAL BOSS!' : 'BOSS BATTLE!', 1600);
+      // Boss intro: dramatic banner overlay + screen flash + shake.
+      showBossBanner(lvl, { isFinal: slot === RUN_LENGTH });
       spawnScreenFlash('rgba(255, 0, 110, 0.45)');
       screenShake(8, 420);
       sfx.playObjectiveComplete('specials'); // sparkly chord

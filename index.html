@@ -92,6 +92,15 @@
     <span id="run-hud-relics" class="flex items-center gap-1 ml-auto"></span>
   </section>
 
+  <div id="boss-banner" class="hidden fixed inset-0 z-[72] flex items-center justify-center pointer-events-none">
+    <div class="boss-banner-card flex flex-col items-center gap-2 px-8 py-6 sm:px-12 sm:py-8 bg-gradient-to-br from-pink-700 via-red-700 to-purple-800 text-white border-[5px] border-yellow-400 rounded-3xl shadow-2xl">
+      <div id="boss-banner-tier" class="text-base sm:text-xl font-bold uppercase tracking-[0.3em] text-yellow-300">Boss Battle</div>
+      <div id="boss-banner-icon" class="text-6xl sm:text-7xl">👑</div>
+      <div id="boss-banner-name" class="text-3xl sm:text-5xl font-extrabold text-center tracking-tight">Sweet King</div>
+      <div id="boss-banner-tip" class="text-sm sm:text-base text-yellow-100 text-center max-w-md"></div>
+    </div>
+  </div>
+
   <section class="w-full max-w-3xl flex items-end justify-between gap-4" aria-live="polite">
     <div class="relative">
       <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Score</div>

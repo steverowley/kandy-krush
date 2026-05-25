@@ -547,6 +547,39 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
+export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
+  const root = document.getElementById('boss-banner');
+  if (!root) return Promise.resolve();
+  const tier = document.getElementById('boss-banner-tier');
+  const icon = document.getElementById('boss-banner-icon');
+  const name = document.getElementById('boss-banner-name');
+  const tip = document.getElementById('boss-banner-tip');
+  if (tier) tier.textContent = isFinal ? 'FINAL BOSS' : 'BOSS BATTLE';
+  if (name) name.textContent = (boss && boss.name) || 'Boss';
+  // Pick an icon based on boss id (matches the in-game lore naming).
+  const iconByBossId = {
+    'boss-1': '🍮', 'boss-2': '🔒', 'boss-3': '👑',
+    'boss-4': '🐌', 'boss-5': '🗿', 'boss-6': '🍒',
+    'boss-7': '👻', 'boss-8': '🕷', 'boss-9': '🧁',
+    'boss-10': '🐙',
+  };
+  if (icon) icon.textContent = iconByBossId[boss && boss.id] || (isFinal ? '🐙' : '👑');
+  if (tip) tip.textContent = (boss && boss.tip) || '';
+  root.classList.remove('hidden', 'fading');
+  root.classList.add('show');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      root.classList.remove('show');
+      root.classList.add('fading');
+      setTimeout(() => {
+        root.classList.add('hidden');
+        root.classList.remove('fading');
+        resolve();
+      }, 350);
+    }, holdMs);
+  });
+}
+
 export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator, awakened }) {
   const root = document.getElementById('run-hud');
   if (!root) return;

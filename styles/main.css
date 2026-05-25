@@ -1670,3 +1670,24 @@ body.theme-hc #run-hud {
 body.theme-hc #run-hud span {
   color: #fff;
 }
+
+/* ===== Boss intro banner ===== */
+@keyframes bossIntroIn {
+  0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes bossIntroOut {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+#boss-banner.show .boss-banner-card {
+  animation: bossIntroIn 0.55s cubic-bezier(0.16, 1.2, 0.4, 1) both;
+}
+#boss-banner.fading .boss-banner-card {
+  animation: bossIntroOut 0.35s ease-in both;
+}
+body.reduce-motion #boss-banner.show .boss-banner-card,
+body.reduce-motion #boss-banner.fading .boss-banner-card {
+  animation: none;
+}
