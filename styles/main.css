@@ -1785,16 +1785,17 @@ body.reduce-motion .tile.crazy-wormhole { animation: none !important; transform:
 .tile-tooltip {
   position: fixed;
   z-index: 80;
-  max-width: 240px;
-  padding: 8px 12px;
-  background: #1a1a2e;
+  max-width: 280px;
+  padding: 10px 14px;
+  background: #0f0f1a;
   color: #fff;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
   white-space: pre-line;
   border-radius: 10px;
-  border: 2px solid #000;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  border: 2px solid #FFD60A;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
   pointer-events: none;
 }
 .tile-tooltip.hidden { display: none; }

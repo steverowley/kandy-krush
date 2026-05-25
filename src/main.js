@@ -1598,6 +1598,16 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14f',
+    items: [
+      '👁 ACCESSIBILITY PASS — archetype + build-vibe chips no longer render yellow-on-yellow. Text color now picks black or white based on the background\'s luminance for WCAG-friendly contrast.',
+      '🔎 BIGGER FONTS — run HUD bumped from text-sm/base to text-base/lg. "Next milestone" hint, "Relics:" label, and inventory relic descriptions all go from text-xs → text-sm.',
+      '⌨ KEYBOARD ACCESS — the run HUD chip is now a real button (role/tabindex/aria-label) and opens the inventory with Enter / Space, not just tap.',
+      '💬 TILE TOOLTIPS — bumped from 13px → 15px font, wider, with a yellow accent border. Easier to read at a glance on touch devices.',
+      '📋 INVENTORY ROWS — upgrade rows in the inventory now use black text on white with a colored left-border accent for readability (instead of low-contrast tinted backgrounds with same-color text).',
+    ],
+  },
+  {
     id: '2026-05-25-14e',
     items: [
       '👹 BOSSES ARE MEANER — every boss got 4-12 fewer moves AND tougher targets. Sweet King: 6,000 (was 5,000) in 34 moves (was 40). Padlock Pharaoh: 7,500 in 32. Echo Wraith: 36 purples in 26 moves. The Confectioner: 10,000 in 36. Candy Kraken final: 16,000 score in 48 moves with deeper locks (level-3) and an extra jelly row.',
@@ -5156,8 +5166,14 @@ if (dailyLoginGems > 0) {
 const runHudEl = document.getElementById('run-hud');
 if (runHudEl) {
   runHudEl.style.cursor = 'pointer';
-  runHudEl.title = 'Tap for run details';
+  runHudEl.title = 'Tap (or press Enter / Space) for run details';
   runHudEl.addEventListener('click', () => { showRunInventory(); });
+  runHudEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      showRunInventory();
+    }
+  });
 }
 
 // If the player has a roguelike run in progress (persisted from a
