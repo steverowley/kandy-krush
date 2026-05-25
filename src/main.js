@@ -1369,6 +1369,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11k',
+    items: [
+      '🔇 Music auto-pauses when you switch tabs — saves CPU + battery, and stops audio leaking out of background tabs.',
+      'Restores to your music preference when you return to the tab.',
+    ],
+  },
+  {
     id: '2026-05-25-11j',
     items: [
       '✨ Picking a CLASS or an UPGRADE now also fires confetti + haptic — consistent with relic acquisition. Awakening-trigger picks get BIGGER confetti + star rain.',
@@ -3996,6 +4003,17 @@ function init({ chime = false, announceLevel = true } = {}) {
 
 applyTheme(state.settings);
 refreshRunHud();
+
+// Pause music when the tab is hidden — saves CPU + battery, and stops
+// any audio leaking out when the user switches tabs. Restores to the
+// user's settings.music preference when the tab returns to view.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    sfx.setMusicEnabled(false);
+  } else if (state.settings.music) {
+    sfx.setMusicEnabled(true);
+  }
+});
 
 // Daily login bonus toast (only if we awarded gems on this boot).
 if (dailyLoginGems > 0) {
