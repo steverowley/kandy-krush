@@ -1464,6 +1464,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13a',
+    items: [
+      '🧚 NEW RELIC — Fairy Light: hint sparkles appear after just 0.8 sec idle (fastest hint relic, beats Goldfish 1.5s).',
+      '🧠 NEW RELIC — Sweet Memory: every power-up use grants +5% Lucky bar. Build Lucky-MODE off your power-up bank.',
+    ],
+  },
+  {
     id: '2026-05-25-12z',
     items: [
       '🐝 NEW CLASS — Hivemind: hybrid start with Bee Tonic + Lucky Magnet. Lucky-MODE on tap from move one.',
@@ -2562,6 +2569,12 @@ function spendPowerup(kind) {
   bank[kind]--;
   setPowerupCounts(bank);
   persist();
+  // 🧠 Sweet Memory relic — using any power-up grants +5% Lucky bar.
+  if (hasRelic('sweet-memory') && state.inRoguelikeRun) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 5);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
   return true;
 }
 
@@ -2603,9 +2616,10 @@ function isSwappable(c, r) {
 
 function scheduleHint() {
   cancelHint();
-  // 🐟 Goldfish relic — hints appear after 1.5s idle (beats Hawkeye).
+  // 🧚 Fairy Light relic — hints appear after 0.8s idle (fastest).
+  // 🐟 Goldfish relic — hints appear after 1.5s idle.
   // 🦅 Hawkeye relic — hints appear after 3s idle instead of 7s.
-  const delay = hasRelic('goldfish') ? 1500 : (hasRelic('hawkeye') ? 3000 : HINT_IDLE_MS);
+  const delay = hasRelic('fairy-light') ? 800 : (hasRelic('goldfish') ? 1500 : (hasRelic('hawkeye') ? 3000 : HINT_IDLE_MS));
   hintTimer = setTimeout(() => {
     if (state.busy) {
       scheduleHint();
