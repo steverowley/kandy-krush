@@ -1080,6 +1080,8 @@ function applyRunUpgradesOnSlotStart() {
   if (hasRelic('slow-turtle')) state.movesRemaining += 5;
   // 🌪 Quick Slot mutator — +5 moves
   if (hasMutator('quick-slot')) state.movesRemaining += 5;
+  // 🥪 Long Lunch mutator — +10 moves
+  if (hasMutator('long-lunch')) state.movesRemaining += 10;
   // 🍀 Lucky Day mutator — fill the lucky bar immediately
   if (hasMutator('lucky-day')) {
     state.luckyCharge = 100;
@@ -1363,6 +1365,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10z',
+    items: [
+      '🥪 NEW MUTATOR — Long Lunch. +10 moves at slot start. Take your time.',
+      'Mutator pool now 18.',
+    ],
+  },
   {
     id: '2026-05-25-10y',
     items: [
