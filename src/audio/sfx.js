@@ -103,6 +103,35 @@ export function playEpicCascade() {
   tone(110, 600, 'triangle', 0.05, 0);
 }
 
+// 🦷 The Eater chomp — low sawtooth growl + filtered noise crunch.
+export function playEaterChomp() {
+  if (muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  // Descending growl
+  tone(180, 220, 'sawtooth', 0.14, 0);
+  tone(80, 420, 'sawtooth', 0.11, 80);
+  // Crunch
+  const sr = c.sampleRate;
+  const buf = c.createBuffer(1, Math.floor(0.22 * sr), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.4);
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const filter = c.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(900, c.currentTime + 0.12);
+  filter.Q.setValueAtTime(0.7, c.currentTime + 0.12);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.09, c.currentTime + 0.12);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.34);
+  src.connect(filter).connect(g).connect(c.destination);
+  src.start(c.currentTime + 0.12);
+  src.stop(c.currentTime + 0.36);
+}
+
 // Boss-intro stinger — short orchestral hit (descending minor 6th).
 export function playBossStinger() {
   if (muted) return;

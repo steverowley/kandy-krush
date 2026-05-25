@@ -413,6 +413,7 @@ async function fireEater() {
   }
   flashMessage(cols.length > 1 ? '🦷🦷 DOUBLE EATER!' : '🦷 THE EATER!', 1600);
   speech.speak(cols.length > 1 ? 'Double eater' : 'The eater');
+  sfx.playEaterChomp();
   haptics.epic();
   screenShake(7, 420);
   await delay(820);
@@ -1261,6 +1262,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10i',
+    items: [
+      '🦷🔊 The Eater now has a dedicated CHOMP sound effect — low descending growl + filtered noise crunch when the jaws bite down. Much more menacing than the generic match sound.',
+    ],
+  },
   {
     id: '2026-05-25-10h',
     items: [
