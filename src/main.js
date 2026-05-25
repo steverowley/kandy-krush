@@ -328,7 +328,23 @@ function openStartMenu(subtitle = null) {
       // block it for non-script-opened tabs). Show a goodbye screen and
       // try window.close() best-effort. The "Back to start screen"
       // button lets the player bounce back if they change their mind.
+      // If a roguelike run is in flight, forfeit it SILENTLY (award
+      // gems for slots reached, clear run state) — we don't want the
+      // run-summary modal on top of the goodbye screen.
+      if (state.inRoguelikeRun && state.roguelike) {
+        const reached = state.roguelike.currentSlot || 1;
+        const gems = gemsEarned(reached, false, metaSkills());
+        state.roguelike.gems = (state.roguelike.gems || 0) + gems;
+        state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
+        state.roguelike.currentSlot = 1;
+        state.inRoguelikeRun = false;
+        state.runUpgrades = [];
+        state.runRelics = [];
+        state.roguelike.currentClass = null;
+        document.body.classList.remove('boss-active', 'boss-final');
+      }
       sfx.setMusicEnabled(false);
+      persist();
       showGoodbye(() => { openStartMenu(null); });
       try { window.close(); } catch { /* ignore */ }
     },
@@ -867,6 +883,10 @@ function spawnCrazyTile(kind) {
   // only fires inside a run, but big-match natural spawns + a few relic
   // hooks reach here from any mode, so gate at the entry point.
   if (!state.inRoguelikeRun) return;
+  // Default to a weighted random kind when callers (relics, mutators,
+  // upgrade hooks) call spawnCrazyTile() with no argument — without
+  // this we'd write cell.crazy = undefined and leave a dud tile.
+  if (!kind) kind = pickCrazyKind();
   const target = findCrazyHostCell();
   if (!target) return;
   const cell = state.board.cell(target.c, target.r);
@@ -1195,8 +1215,8 @@ function buyMetaSkill(id) {
   state.roguelike.gems -= skill.cost;
   if (!state.roguelike.skills) state.roguelike.skills = {};
   state.roguelike.skills[id] = true;
-  // Bigger Bank — bump POWERUP_CAP behaviour by widening when banking
-  // is computed; the cap effectively becomes 12.
+  // Bigger Bank — applied inside effectivePowerupCap(): +2 to every
+  // per-type cap when this skill is owned.
   persist();
   flashMessage(`Unlocked: ${skill.name}`, 1500);
   speech.speak(`Unlocked ${skill.name}`);
@@ -1718,6 +1738,16 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15p',
+    items: [
+      '🐛 BUG HUNT — fixed a ReferenceError when the Surprise Drop kicked in (was referencing the removed POWERUP_CAP constant), so the random in-game power-up gift no longer crashes.',
+      '🚪 QUIT GAME NOW WORKS — the goodbye screen was being CSS-hidden by the same rule that hides the game UI on the start screen. Now it actually appears. Quitting mid-roguelike-run also forfeits the run silently (awards gems for slots reached) and persists state before leaving.',
+      '🏠 HOME MID-ANIMATION IS SAFE — pressing 🏠 while a boss banner, level intro, or any in-flight overlay is up now closes them cleanly instead of leaving them stuck behind the start screen. Pending level-intro promises also resolve so callers don\'t leak.',
+      '🌀 NO MORE DUD CRAZY TILES — relics that called spawnCrazyTile() with no kind argument were leaving cells with `crazy=undefined`. They now pick a weighted-random kind so each spawn is a real tile.',
+      '♿ OS REDUCE-MOTION RESPECTED — the start screen logo float now stops when the operating system requests reduce-motion, not just the in-app toggle.',
+    ],
+  },
   {
     id: '2026-05-25-15o',
     items: [
@@ -4164,7 +4194,7 @@ function maybeDropSurprise(positions, cascadeLevel) {
   haptics.specialBirth();
   animateSurpriseIcon(kind, fromX, fromY, toX, toY, () => {
     const bank = powerupBank();
-    bank[kind] = Math.min(POWERUP_CAP, (bank[kind] || 0) + 1);
+    bank[kind] = Math.min(effectivePowerupCap(kind), (bank[kind] || 0) + 1);
     setPowerupCounts(bank);
     persist();
     targetBtn.classList.remove('surprise-land');
