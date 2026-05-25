@@ -597,6 +597,10 @@ export const MUTATORS = [
     desc: 'Lucky bar fills 3× faster this slot. Burst-mode every few swaps.' },
   { id: 'coin-toss',   icon: '🪙', name: 'Coin Toss',
     desc: 'Every match has a 25% chance to drop a random power-up. Big variance.' },
+  { id: 'power-friday',icon: '🎉', name: 'Power Friday',
+    desc: 'Power-up bank cap doubled this slot (e.g. 9 → 18, 12 → 24).' },
+  { id: 'lock-free-day',icon: '🗝', name: 'Lock-Free Day',
+    desc: 'All locks vanish at slot start. Free movement.' },
 ];
 
 export function isMutatorSlot(slot) {
