@@ -94,6 +94,24 @@ body.theme-hc .tile.adjacent {
   100% { transform: translateY(0) scale(1, 1); }
 }
 
+/* 🏁 Full-page start screen.
+   When body has .start-screen-active, hide the whole game shell (header,
+   board, HUD, etc.) so the start screen behaves like a proper "main
+   menu" page instead of a modal sitting on top of an active game. */
+body.start-screen-active > header,
+body.start-screen-active > main,
+body.start-screen-active > #level-info,
+body.start-screen-active > #run-hud,
+body.start-screen-active > #powerups,
+body.start-screen-active > #boss-banner,
+body.start-screen-active > #pu-hint,
+body.start-screen-active > section:not(#start-screen) {
+  display: none !important;
+}
+#start-screen {
+  background: linear-gradient(180deg, #fff7ed 0%, #fce7f3 60%, #ddd6fe 100%);
+}
+
 /* Reduce-motion overrides — driven by Settings toggle (body.reduce-motion)
    or by the OS preference. Kills the continuous pulses and any motion that
    amplifies vestibular discomfort. Match-essential animations (swap, pop,
