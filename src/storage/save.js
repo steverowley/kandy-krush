@@ -135,6 +135,7 @@ const ROGUELIKE_DEFAULTS = {
   runsStarted: 0,
   bestSlot: 0,
   livesRemaining: 0, // refreshed by startRoguelikeRun
+  bossesDefeated: 0,
 };
 
 function sanitizeRoguelike(raw) {
