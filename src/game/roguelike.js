@@ -468,6 +468,10 @@ export const RELICS = [
     desc: 'Every 18 matches in a slot, gain +1 of EVERY power-up. Burst restock for marathon slots.' },
   { id: 'sour-drop',    icon: '🍋', name: 'Sour Drop',
     desc: 'Every 13 swaps in a slot, your Lucky bar gains +50%. Bigger jolts than Sweet Spell.' },
+  { id: 'fairy-light',  icon: '🧚', name: 'Fairy Light',
+    desc: 'Hint sparkles appear after just 0.8 sec idle. The fastest hint relic.' },
+  { id: 'sweet-memory', icon: '🧠', name: 'Sweet Memory',
+    desc: 'Every power-up use grants +5% Lucky bar. Build Lucky-MODE off your power-up bank.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
