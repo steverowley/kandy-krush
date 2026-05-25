@@ -22,6 +22,10 @@ import {
   SKILL_TREE,
   ownedSkills,
   RUN_LIVES_BASE,
+  ARCHETYPES,
+  archetypeFor,
+  archetypeCounts,
+  synergyStacks,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -262,7 +266,9 @@ function maybeTriggerLightning() {
   if (stacks <= 0) return;
   lightningCounter++;
   // Each stack reduces the threshold by 1, minimum every 2 matches.
-  const threshold = Math.max(2, 4 - (stacks - 1));
+  // Wild synergy speeds it up further by dividing the threshold.
+  let threshold = Math.max(2, 4 - (stacks - 1));
+  threshold = Math.max(1, Math.round(threshold / wildSpeedup()));
   if (lightningCounter >= threshold) {
     lightningCounter = 0;
     fireLightning();
@@ -324,8 +330,9 @@ function maybeSpawnCrazyOnMatch(matchSize, cascadeLevel) {
 async function triggerCrazyEffect(pos, kind) {
   let positions = [];
   if (kind === 'tnt') {
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
+    const rad = tntRadius();
+    for (let dr = -rad; dr <= rad; dr++) {
+      for (let dc = -rad; dc <= rad; dc++) {
         const c = pos.c + dc, r = pos.r + dr;
         if (c < 0 || c >= state.board.cols) continue;
         if (r < 0 || r >= state.board.rows) continue;
@@ -333,7 +340,7 @@ async function triggerCrazyEffect(pos, kind) {
         positions.push({ c, r });
       }
     }
-    flashMessage('💣 BOOM!', 1300);
+    flashMessage(rad >= 2 ? `💣 MEGA BOOM! ×${rad}` : '💣 BOOM!', 1300);
     speech.speak('Boom!');
     sfx.playMatch(positions.length, 2);
     haptics.epic();
@@ -490,7 +497,17 @@ function buyMetaSkill(id) {
 }
 
 function effectivePowerupCap() {
-  return hasMeta('bigger-bank') ? 12 : POWERUP_CAP;
+  let cap = hasMeta('bigger-bank') ? 12 : POWERUP_CAP;
+  // Sustain synergy: +1 cap per Sustain stack beyond the first.
+  if (state.inRoguelikeRun) {
+    const counts = archetypeCounts(state.roguelike?.upgrades || []);
+    cap += synergyStacks(counts.sustain);
+  }
+  return cap;
+}
+
+function runArchetypeCounts() {
+  return archetypeCounts(state.roguelike?.upgrades || []);
 }
 
 function applyRunUpgradesOnSlotStart() {
@@ -533,13 +550,34 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
   if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
   if (hasMeta('score-sage')) m *= 1.1;
+  // Scorer synergy: +15% per Scorer stack beyond the first.
+  const scorerSyn = synergyStacks(runArchetypeCounts().scorer);
+  if (scorerSyn > 0) m *= 1 + 0.15 * scorerSyn;
   return Math.round(amount * m);
 }
 
 function runLuckyRate() {
   let m = 1;
   for (let i = 0; i < upgradeCount('lucky-fast'); i++) m *= 1.5;
+  // Lucky synergy: +20% fill per Lucky stack beyond the first.
+  const luckySyn = synergyStacks(runArchetypeCounts().lucky);
+  if (luckySyn > 0) m *= 1 + 0.2 * luckySyn;
   return LUCKY_PER_MOVE * m;
+}
+
+// Bomber synergy: TNT explosion radius expands by 1 cell per Bomber
+// stack beyond the first (1 -> 3x3, 2 -> 5x5, 3 -> 7x7).
+function tntRadius() {
+  if (!state.inRoguelikeRun) return 1;
+  return 1 + synergyStacks(runArchetypeCounts().bomber);
+}
+
+// Wild synergy: ability counters trigger 25% faster per Wild stack
+// beyond the first. Returns a divisor (e.g. 1.0 normal, 1.5 = 33%
+// faster, 2.0 = 50% faster).
+function wildSpeedup() {
+  if (!state.inRoguelikeRun) return 1;
+  return 1 + 0.25 * synergyStacks(runArchetypeCounts().wild);
 }
 
 // Changelog — newest entry first. APP_VERSION auto-derives from the
@@ -547,6 +585,15 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8d',
+    items: [
+      '🧬 BUILD ARCHETYPES — every upgrade now belongs to one of five archetypes: 🎯 Scorer, 💣 Bomber, 🍀 Lucky, 🛡 Sustain, ⚡ Wild. The picker shows the archetype badge so you can shape a build.',
+      'Synergy bonuses kick in at 2+ stacks in the same archetype: Scorer +15% score per stack · Bomber +1 TNT radius per stack (3×3 → 5×5 → 7×7 MEGA BOOM) · Lucky +20% bar fill per stack · Sustain +1 power-up bank cap per stack · Wild abilities cool down 25% faster per stack.',
+      'Pick the same archetype repeatedly and your run takes a distinct shape: Survivors-style snowball.',
+      'Build tracker chip in the picker shows your current archetype tallies. Synergy hints appear on every card.',
+    ],
+  },
   {
     id: '2026-05-25-8c',
     items: [
@@ -1011,12 +1058,17 @@ function advanceRoguelikeAfterWin() {
   } else {
     const n = hasMeta('wider-choice') ? 4 : 3;
     const choices = pickUpgradeChoices(state.runUpgrades, n);
+    const counts = archetypeCounts(state.runUpgrades);
     showUpgradePicker(choices, state.runUpgrades, (chosen) => {
       state.runUpgrades.push(chosen.id);
-      flashMessage(`Picked: ${chosen.name}`, 1200);
+      const arch = archetypeFor(chosen.id);
+      const willStack = arch ? (counts[arch] || 0) + 1 : 0;
+      const synergyTag = willStack >= 2 && ARCHETYPES[arch]
+        ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
+      flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
       speech.speak(`Picked ${chosen.name}`);
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
-    }, categoryColor);
+    }, categoryColor, ARCHETYPES, counts);
   }
 }
 
