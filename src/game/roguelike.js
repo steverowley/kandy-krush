@@ -347,6 +347,12 @@ export const RELICS = [
     desc: 'Upgrade rerolls are FREE — no Shuffle cost.' },
   { id: 'prism-lens',  icon: '🔭', name: 'Prism Lens',
     desc: '🌈 Prism crazy tiles clear TWO random colors instead of one — boardwipe potential.' },
+  { id: 'pinata',      icon: '🪅', name: 'Piñata',
+    desc: 'Every 5 matches drops a random power-up into your bank.' },
+  { id: 'big-brain',   icon: '🧠', name: 'Big Brain',
+    desc: 'Every cascade level adds +25% to your score multiplier on top of the usual cascade bonus.' },
+  { id: 'second-wind', icon: '🌬', name: 'Second Wind',
+    desc: 'If you start a slot with only 1 life, you\'re restored to 2 instead.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
