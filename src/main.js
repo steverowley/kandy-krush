@@ -327,6 +327,9 @@ function showUpgradeChoicesForSlot(n, canReroll) {
     const wasAwakened = awakenInfo && !awakenInfo.alreadyAwakened && classAwakened();
     flashMessage(`Picked: ${chosen.name}${synergyTag}${wasAwakened ? ' · ✨ AWAKENED!' : ''}`, 1600);
     speech.speak(`Picked ${chosen.name}${wasAwakened ? '. Awakened!' : ''}`);
+    spawnConfetti(wasAwakened ? 50 : 20);
+    if (wasAwakened) spawnStarRain(20);
+    haptics.specialBirth();
     persist();
     refreshRunHud();
     setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
@@ -1365,6 +1368,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11j',
+    items: [
+      '✨ Picking a CLASS or an UPGRADE now also fires confetti + haptic — consistent with relic acquisition. Awakening-trigger picks get BIGGER confetti + star rain.',
+      'Every roguelike reward now FEELS like a reward.',
+    ],
+  },
   {
     id: '2026-05-25-11i',
     items: [
@@ -2446,6 +2456,8 @@ function startRoguelikeRun() {
       for (const id of (cls.start || [])) state.runUpgrades.push(id);
       flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
       speech.speak(`${cls.name} chosen.`);
+      spawnConfetti(30);
+      haptics.specialBirth();
       persist();
       refreshRunHud();
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot, { announce: true }), 400);
