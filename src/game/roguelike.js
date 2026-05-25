@@ -485,6 +485,10 @@ export const RELICS = [
     desc: 'When Lucky-MODE triggers, also drop a random power-up into your bank.' },
   { id: 'healing-hum',  icon: '🎶', name: 'Healing Hum',
     desc: 'When Lucky-MODE ends naturally (window expires), gain +1 max life.' },
+  { id: 'cherry-wand',  icon: '🌸', name: 'Cherry Wand',
+    desc: 'Each special candy created also fills your Lucky bar by +25%.' },
+  { id: 'tea-time',     icon: '🫖', name: 'Tea Time',
+    desc: 'Slot start: Lucky bar +30%. Gentle opening sip.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
