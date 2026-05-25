@@ -1636,6 +1636,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15j',
+    items: [
+      '🗣 VOICEOVER + GOAL TEXT NOW MATCH THE SCALED TARGETS — roguelike score targets scale ×0.5 per slot and clearJelly / cherry slots get tighter move budgets, but the hint text bundled into the original level configs was still announcing the OLD numbers. Now every hint regenerates from the actual scaled objective, so the spoken intro, intro card, and level info bar all read the correct goal (e.g. "Reach 130,000 points." at slot 50 instead of "Reach 5,000 points.").',
+    ],
+  },
+  {
     id: '2026-05-25-15i',
     items: [
       '♾️ INFINITE TRIGGER IS NOW SCORE-BASED — crossing 1,000,000 points in a single level / slot grants the INSTANT WIN with the ∞ score (was 25-cascade chain depth). Easier to hit on purpose with a strong build, and reads as a clear "you broke a million" milestone. First infinite of your session is ∞, then ∞+1, ∞+2, …',
