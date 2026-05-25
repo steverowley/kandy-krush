@@ -1307,6 +1307,15 @@ function applyRunUpgradesOnSlotStart() {
     if (state.luckyCharge >= 100) state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // 🛏 Sweet Cushion relic — slot starts at 1 life: +5 moves and +50% Lucky bar.
+  if (hasRelic('sweet-cushion') && state.roguelike?.livesRemaining === 1) {
+    state.movesRemaining = (state.movesRemaining || 0) + 5;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 50);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    refreshLevelUI();
+    flashMessage('🛏 Sweet Cushion: +5 moves, +50% 🍀', 1400);
+  }
   // 🎄 Sweet Wreath relic — slot start: every jelly tile loses 1 level.
   if (hasRelic('sweet-wreath') && state.jellyMap && state.jellyMap.size > 0) {
     const toDelete = [];
@@ -1454,6 +1463,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sunrise-hour') && state.level?.runSlot && state.level.runSlot <= 10) m *= 1.5;
   // 🌇 Sunset Hour relic — slots 96-100 score ×2.
   if (hasRelic('sunset-hour') && state.level?.runSlot && state.level.runSlot >= 96) m *= 2;
+  // ⛈ Storm Heart relic — at 1 life remaining, all matches score ×2.
+  if (hasRelic('storm-heart') && state.roguelike?.livesRemaining === 1) m *= 2;
   // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // ⚔️ Big Crit mutator — all cascades (chain ≥2) score ×4.
@@ -1545,6 +1556,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13n',
+    items: [
+      '⛈ NEW RELIC — Storm Heart: at 1 life remaining, ALL matches score ×2. High-stakes comeback push.',
+      '🛏 NEW RELIC — Sweet Cushion: slot starts at 1 life → +5 moves AND +50% Lucky bar. Last-stand cushion to climb back.',
+    ],
+  },
   {
     id: '2026-05-25-13m',
     items: [
