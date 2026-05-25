@@ -1,5 +1,10 @@
 node_modules/
 package.json
 package-lock.json
+# Agent-generated Playwright scripts dropped at the repo root during
+# reviews/audits — keep them out of source control.
 audit*.mjs
+*review*.mjs
 .DS_Store
+
+
