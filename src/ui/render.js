@@ -1035,17 +1035,47 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     ? 'You crowned the Candy Kraken!'
     : inProgress ? `Slot ${slotReached}/${totalSlots}` : `You reached slot ${slotReached}`;
   if (stats) {
-    const highlightCards = highlights && (highlights.maxCascade > 0 || highlights.biggestMatch > 0)
-      ? `
+    // 🏅 Extended end-of-run stats. Hide the section entirely when no
+    // run is in progress / no data; otherwise render whatever fields
+    // are populated. PC-roguelike players love stat-stalking.
+    const has = (v) => v != null && v > 0;
+    const cards = [];
+    if (highlights && has(highlights.maxCascade)) {
+      cards.push(`
       <div class="text-center bg-purple-100 border-2 border-black rounded-xl p-2">
         <div class="text-sm font-bold uppercase text-gray-900">🔁 Max cascade</div>
-        <div class="text-2xl font-bold tabular-nums">×${highlights.maxCascade || 0}</div>
-      </div>
+        <div class="text-2xl font-bold tabular-nums">×${highlights.maxCascade}</div>
+      </div>`);
+    }
+    if (highlights && has(highlights.biggestMatch)) {
+      cards.push(`
       <div class="text-center bg-orange-100 border-2 border-black rounded-xl p-2">
         <div class="text-sm font-bold uppercase text-gray-900">💥 Biggest match</div>
-        <div class="text-2xl font-bold tabular-nums">${highlights.biggestMatch || 0}</div>
-      </div>`
-      : '';
+        <div class="text-2xl font-bold tabular-nums">${highlights.biggestMatch}</div>
+      </div>`);
+    }
+    if (highlights && has(highlights.totalMatches)) {
+      cards.push(`
+      <div class="text-center bg-teal-100 border-2 border-black rounded-xl p-2">
+        <div class="text-sm font-bold uppercase text-gray-900">🎯 Matches</div>
+        <div class="text-2xl font-bold tabular-nums">${highlights.totalMatches.toLocaleString()}</div>
+      </div>`);
+    }
+    if (highlights && has(highlights.bestSlotScore)) {
+      cards.push(`
+      <div class="text-center bg-amber-100 border-2 border-black rounded-xl p-2">
+        <div class="text-sm font-bold uppercase text-gray-900">🏔 Best slot score</div>
+        <div class="text-2xl font-bold tabular-nums">${highlights.bestSlotScore.toLocaleString()}</div>
+      </div>`);
+    }
+    if (highlights && has(highlights.infiniteCount)) {
+      cards.push(`
+      <div class="text-center bg-fuchsia-100 border-2 border-black rounded-xl p-2">
+        <div class="text-sm font-bold uppercase text-gray-900">♾ Infinites</div>
+        <div class="text-2xl font-bold tabular-nums">×${highlights.infiniteCount}</div>
+      </div>`);
+    }
+    const highlightCards = cards.join('');
     stats.innerHTML = `
       <div class="text-center bg-yellow-100 border-2 border-black rounded-xl p-2">
         <div class="text-sm font-bold uppercase text-gray-900">Slot reached</div>
