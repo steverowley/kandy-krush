@@ -1739,6 +1739,19 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15q',
+    items: [
+      '👀 BIG READABILITY PASS — text everywhere is now bigger and higher-contrast. The faded `opacity-70` uppercase labels on the run-summary stat cards (SCORE / SLOT REACHED / GEMS EARNED / BEST EVER) are now bold gray-900 at text-sm; the AWAKENED chip uses pink-700 instead of pink-500 so the white text actually shows; the run HUD\'s "Next milestone" / "No upgrades yet" / "Relics:" lines drop their opacity tricks for proper gray-700/900.',
+      '🎨 START SCREEN IS LEGIBLE NOW — the subtitle, stats badges, Quit Game link, and version footer were all gray-500/600/700 italic on the pink/purple gradient (failing AA). Now bold gray-900 / pink-900, no italic on critical text, and version sits in a white pill.',
+      '♿ HIGH-CONTRAST MODE NO LONGER HIDES THE START SCREEN — in HC mode the global `h1 { color: #fff }` rule was making the "Sweet Match" title invisible against the light gradient background. Added explicit HC overrides for the start screen, goodbye screen, and boss banner so titles, buttons, and labels all render on dark backgrounds.',
+      '🗣 BOSS BANNER TAUNT + TIP — were pale pink italic + pale yellow over a red gradient (≈3:1 contrast). Now white-bold (with a black/40 plate behind the taunt) and yellow-200 bold.',
+      '💬 TOOLTIPS WRAP NICELY — `data-tip` tooltips were `white-space: nowrap` and used to clip horizontally off small screens (the Settings panel tip "Spend gems on permanent roguelike boosts" overlapped the next button). Now wrap and max-width 280px.',
+      '🎯 FOCUS RINGS ON SETTINGS BUTTONS — every `.setting-toggle` / `.setting-size` now shows a 3px pink (yellow in HC) outline when keyboard-focused. Skill-tree buy and install-prompt buttons too.',
+      '👆 BIGGER TAP TARGETS — Install prompt CTA and dismiss × now meet the 44×44 px touch target. Skill-tree buy button bumped to py-3.',
+      '📜 OTHER COPY BUMPS — level-intro "Tap anywhere to start" is now text-sm gray-700 (was text-xs gray-500). Skill-tree desc, class picker desc, upgrade picker desc all bumped to text-base sm:text-lg gray-900. Class picker "Never played" no longer italic gray-500.',
+    ],
+  },
+  {
     id: '2026-05-25-16a',
     items: [
       '🎨 EXPERIMENTAL WEBGL RENDERER — opt in via ⚙ Settings → "🎨 WebGL renderer" (page reload required) or by appending `?canvas=1` to the URL. Pixi.js v8 paints the candies in a Canvas2D/WebGL layer overlaid on the board for smoother sprite movement, while the DOM tiles stay as transparent hit targets so input is unchanged.',

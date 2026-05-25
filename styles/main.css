@@ -522,15 +522,19 @@ body.theme-hc .tile.jelly-2 {
   color: #fff;
   padding: 6px 12px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  white-space: nowrap;
+  /* Tooltips with long copy used to spill horizontally off the screen
+     (white-space: nowrap). Allow wrapping and cap the width so they
+     stack vertically instead of clipping. */
+  white-space: normal;
+  max-width: min(280px, 80vw);
+  text-align: center;
   opacity: 0;
   pointer-events: none;
   transition: opacity 180ms ease-out, transform 180ms ease-out;
   z-index: 100;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  max-width: 80vw;
 }
 [data-tip]::after {
   content: '';
@@ -1955,3 +1959,65 @@ body.theme-hc #skill-tree-panel button:disabled {
 body.theme-hc #skill-tree-overlay {
   background: rgba(0, 0, 0, 0.85);
 }
+
+/* ♿ High-contrast theme: top-level screens (start screen, goodbye, boss
+   banner) had no HC override, so the global `body.theme-hc h1 { color: #fff }`
+   rule was making titles invisible against their light pastel
+   backgrounds. Each gets a dark background + light text override. */
+body.theme-hc #start-screen {
+  background: #111 !important;
+  color: #fff !important;
+}
+body.theme-hc #start-screen #start-screen-title { color: #fff !important; }
+body.theme-hc #start-screen p { color: #fff !important; }
+body.theme-hc #start-screen #start-screen-subtitle { color: #ffd60a !important; }
+body.theme-hc #start-screen #start-screen-stats { color: #fff !important; }
+body.theme-hc #start-screen #start-screen-stats > span {
+  background: #1f2937 !important;
+  border-color: #fff !important;
+  color: #fff !important;
+}
+body.theme-hc #start-screen #start-menu-quit { color: #ffd60a !important; }
+body.theme-hc #start-screen #start-screen-version {
+  background: #1f2937 !important;
+  color: #d4d4d4 !important;
+}
+
+body.theme-hc #goodbye-screen {
+  background: #111 !important;
+  color: #fff !important;
+}
+body.theme-hc #goodbye-screen #goodbye-title,
+body.theme-hc #goodbye-screen p { color: #fff !important; }
+
+body.theme-hc #boss-banner > div {
+  background: #111 !important;
+  border: 3px solid #ffd60a !important;
+}
+body.theme-hc #boss-banner-tier { color: #ffd60a !important; }
+body.theme-hc #boss-banner-name,
+body.theme-hc #boss-banner-tip { color: #fff !important; }
+body.theme-hc #boss-banner-taunt {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+/* ♿ Focus rings on settings toggles. The `.setting-toggle` / `.setting-size`
+   classes had no `focus-visible:ring-*` Tailwind utilities, so keyboard
+   focus was invisible. One global rule covers every settings button. */
+.setting-toggle:focus-visible,
+.setting-size:focus-visible {
+  outline: 3px solid #FF006E;
+  outline-offset: 2px;
+}
+body.theme-hc .setting-toggle:focus-visible,
+body.theme-hc .setting-size:focus-visible {
+  outline: 3px solid #FFD60A;
+}
+
+/* Small-text bumps in the level select tile so the hint + lock pill read
+   clearly on mobile (was 11/12px, now 12/14px). */
+.lt-hint { font-size: 14px; }
+.lt-lock { font-size: 12px; padding: 3px 8px; }
+body.theme-hc .lt-hint,
+body.mode-roguelike .lt-hint { color: #d4d4d4; }
