@@ -271,6 +271,9 @@ const state = {
   dailySeedBestSlot: persisted.dailySeedBestSlot || 0,
   // 📓 Last 20 runs, most recent first. Updated in recordRunHistory().
   runHistory: Array.isArray(persisted.runHistory) ? persisted.runHistory.slice(0, 20) : [],
+  // 🔄 Banked free rerolls for the current run (from Reroll Bank meta).
+  // Survives reloads mid-run.
+  runFreeRerolls: Number(persisted.runFreeRerolls) || 0,
   runRng: null,
   runIsDaily: false,
   runDailyStamp: null,
@@ -471,7 +474,7 @@ function openStartMenu(subtitle = null) {
         state.inRoguelikeRun = false;
         state.runUpgrades = [];
         state.runRelics = [];
-        state.roguelike.currentClass = null;
+        state.roguelike.currentClass = null; state.runFreeRerolls = 0;
         document.body.classList.remove('boss-active', 'boss-final');
       }
       sfx.setMusicEnabled(false);
@@ -524,9 +527,11 @@ function showUpgradeChoicesForSlot(n, canReroll) {
   const bank = powerupBank();
   // 🐘 Elephant Memory relic — all rerolls free + repeatable.
   // 🔄 Free First Reroll meta — first reroll per slot is free (one shot).
+  // 🔄 Reroll Bank meta — start each run with 3 free rerolls in your pocket.
   const eleMemory = hasRelic('free-reroll');
   const firstFreeMeta = hasMeta('free-reroll-1') && canReroll && !state.firstRerollUsed;
-  const free = eleMemory || firstFreeMeta;
+  const bankedReroll = canReroll && (state.runFreeRerolls || 0) > 0;
+  const free = eleMemory || firstFreeMeta || bankedReroll;
   const rerollAllowed = canReroll && (free || (bank.shuffle || 0) > 0);
   const onReroll = rerollAllowed ? () => {
     if (!free) {
@@ -538,8 +543,18 @@ function showUpgradeChoicesForSlot(n, canReroll) {
       }
     } else if (firstFreeMeta) {
       state.firstRerollUsed = true;
+    } else if (bankedReroll) {
+      state.runFreeRerolls = Math.max(0, (state.runFreeRerolls || 0) - 1);
+      persist();
     }
-    flashMessage(free ? (eleMemory ? '🐘 Free reroll!' : '🔄 Free reroll!') : '🔄 Rerolled!', 900);
+    const flashStr = eleMemory
+      ? '🐘 Free reroll!'
+      : firstFreeMeta
+        ? '🔄 Free reroll!'
+        : bankedReroll
+          ? `🔄 Bank reroll! (${state.runFreeRerolls} left)`
+          : '🔄 Rerolled!';
+    flashMessage(flashStr, 900);
     showUpgradeChoicesForSlot(n, eleMemory); // Elephant keeps button alive
   } : null;
   // Build awakening info so the picker can flag any card whose pick
@@ -1905,6 +1920,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17p',
+    items: [
+      '🔓 ENDLESS MODE — new 100💎 skill-tree node. After clearing slot 100 the run KEEPS GOING — slot 101, 102, … with continued scaling. Boss-defeated banner still fires on the Kraken kill; the run only ends when you die. Beat the boss, eat the boss, keep eating bosses.',
+      '🔄 REROLL BANK — new 90💎 skill-tree node. Start every run with 3 FREE upgrade rerolls in your pocket, no Shuffle required. Carries between slots; persists across reloads. Toast tells you how many rerolls you have left.',
+      'Both are "system unlocks" — the kind of skill-tree pick the gameplay review flagged as missing (Slay-the-Spire Ascensions / Balatro vouchers territory) versus the 21 existing numerical-buff nodes. Best-in-slot end-game purchases.',
+    ],
+  },
   {
     id: '2026-05-25-17o',
     items: [
@@ -3777,6 +3800,7 @@ function persist() {
     dailySeedDate: state.dailySeedDate || null,
     dailySeedBestSlot: state.dailySeedBestSlot || 0,
     runHistory: state.runHistory || [],
+    runFreeRerolls: state.runFreeRerolls || 0,
   });
   // Warn the player ONCE if persist() fails (private mode / quota
   // exceeded / SecurityError). Without this, progress silently doesn't
@@ -3915,7 +3939,7 @@ function startDailySeedRun() {
   state.roguelike.currentSlot = 1;
   state.runUpgrades = [];
   state.runRelics = [];
-  state.roguelike.currentClass = null;
+  state.roguelike.currentClass = null; state.runFreeRerolls = 0;
   startRoguelikeRun();
 }
 
@@ -3932,10 +3956,13 @@ function startRoguelikeRun() {
     state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
     state.runUpgrades = [];
     state.runRelics = [];
-    state.roguelike.currentClass = null;
+    state.roguelike.currentClass = null; state.runFreeRerolls = 0;
     // Per-run highlights — surfaced on the run-summary panel when the
     // player finishes (or dies).
     state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
+    // 🔄 Reroll Bank meta — start each run with 3 free upgrade rerolls.
+    // Carries between slots; consumed by the upgrade picker.
+    state.runFreeRerolls = hasMeta('reroll-bank') ? 3 : 0;
     // 🎒 Pocket Friend meta-skill — start each run with 1 random relic.
     if (hasMeta('pocket-friend')) {
       const choices = pickRelicChoices([], 1, runRng());
@@ -4061,8 +4088,16 @@ function advanceRoguelikeAfterWin() {
     state.roguelike.gems = (state.roguelike.gems || 0) + bonus;
     flashMessage(`💰 Treasure Slot! +${bonus} 💎`, 1400);
   }
-  if (slot >= RUN_LENGTH) {
-    // Full run cleared
+  // 🔓 Endless mode: if the player owns `endless-mode` and they've
+  // already cleared the Kraken (runsCompleted > 0 OR currentSlot === 100),
+  // treat any slot win the same as a regular advance — increment +1
+  // and play on. The "run complete" run-summary still fires the first
+  // time they clear slot 100 (so they get the reward beat), but
+  // subsequent endless-mode slots flow into the regular slot-advance
+  // logic below.
+  const endlessOn = hasMeta('endless-mode');
+  if (slot >= RUN_LENGTH && !endlessOn) {
+    // Full run cleared — normal cap path.
     const gems = gemsEarned(slot + 1, true, metaSkills());
     state.roguelike.gems = (state.roguelike.gems || 0) + gems;
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
@@ -4102,7 +4137,7 @@ function advanceRoguelikeAfterWin() {
     state.inRoguelikeRun = false;
     state.runUpgrades = [];
     state.runRelics = [];
-    state.roguelike.currentClass = null;
+    state.roguelike.currentClass = null; state.runFreeRerolls = 0;
     document.body.classList.remove('boss-active', 'boss-final');
     persist();
     refreshRunHud();
@@ -4433,7 +4468,7 @@ function endRoguelikeRun() {
   state.inRoguelikeRun = false;
   state.runUpgrades = [];
   state.runRelics = [];
-  state.roguelike.currentClass = null;
+  state.roguelike.currentClass = null; state.runFreeRerolls = 0;
   document.body.classList.remove('boss-active', 'boss-final');
   persist();
   refreshRunHud();
@@ -5080,7 +5115,7 @@ function checkLevelOutcome() {
         state.inRoguelikeRun = false;
         state.runUpgrades = [];
         state.runRelics = [];
-        state.roguelike.currentClass = null;
+        state.roguelike.currentClass = null; state.runFreeRerolls = 0;
         document.body.classList.remove('boss-active', 'boss-final');
         persist();
         refreshRunHud();
