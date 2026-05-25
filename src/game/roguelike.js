@@ -254,6 +254,7 @@ export const UPGRADES = [
   { id: 'gold-rush',   category: 'buff',       archetype: 'scorer',  name: 'Gold Rush',         desc: 'Every match earns a flat +20 score per stack on top of the multiplier.' },
   { id: 'thunder-foot',category: 'consumable', archetype: 'sustain', name: 'Thunder Foot',      desc: 'Every 8 swaps in a slot, gain +2 moves automatically.' },
   { id: 'crazy-magnet',category: 'synergy',    archetype: 'bomber',  name: 'Crazy Magnet',       desc: 'Every 3rd match (per slot) automatically spawns a random crazy tile.' },
+  { id: 'snowball',    category: 'synergy',    archetype: 'scorer',  name: 'Snowball',           desc: 'Each match in a slot boosts the next match\'s score by 3% per stack (compounds — late slot matches are huge).' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
