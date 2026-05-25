@@ -116,6 +116,8 @@ import {
   getSaveStatus,
 } from './storage/save.js';
 import * as telemetry from './telemetry.js';
+import * as purchases from './purchases.js';
+import * as i18n from './i18n.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -159,6 +161,37 @@ telemetry.setUserProps({
   runs_completed: persisted.roguelike?.runsCompleted || 0,
   save_ok: _bootLoadStatus.ok,
   save_version_from: _bootLoadStatus.versionFrom,
+});
+
+// 💳 IAP plumbing. No provider wired today — purchases.purchase(sku)
+// returns { ok: false, error: 'IAP_NOT_CONFIGURED' }. Grant handlers
+// are wired up so the day a provider lands (RevenueCat / native /
+// Stripe), `purchases.grantGems(50, 'iap-gem-pack')` already does the
+// right thing. Telemetry tracks every grant so we can audit later.
+purchases.init(null, {
+  grantGems: (n, reason) => {
+    if (!state.roguelike) return { ok: false, error: 'NO_ROGUELIKE_STATE' };
+    state.roguelike.gems = (state.roguelike.gems || 0) + n;
+    persist();
+    telemetry.track('grant_gems', { n, reason: reason || null });
+    return { ok: true, granted: { kind: 'gems', qty: n } };
+  },
+  grantPowerup: (kind, n) => {
+    const bank = state.levelProgress?.powerupBank;
+    if (!bank) return { ok: false, error: 'NO_BANK' };
+    bank[kind] = Math.min(20, (bank[kind] || 0) + n);
+    persist();
+    telemetry.track('grant_powerup', { kind, n });
+    return { ok: true, granted: { kind: 'powerup', subkind: kind, qty: n } };
+  },
+  unlockSkipForLevel: (id) => {
+    state.levelProgress = state.levelProgress || {};
+    state.levelProgress.skipUnlocked = state.levelProgress.skipUnlocked || {};
+    state.levelProgress.skipUnlocked[id] = true;
+    persist();
+    telemetry.track('grant_level_skip', { level_id: id });
+    return { ok: true, granted: { kind: 'skip', level_id: id } };
+  },
 });
 // Daily login gem bonus — fires once per calendar day on first
 // boot. Scales gently with streak (5 + streak, capped at 25).
@@ -1811,6 +1844,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17h',
+    items: [
+      '💳 IAP PLUMBING — new `src/purchases.js` provider-agnostic shim. Grant handlers wired today (`grantGems(n)`, `grantPowerup(kind, n)`, `unlockSkipForLevel(id)`) so when a real provider (RevenueCat / native StoreKit / Stripe) is picked, every existing call site already does the right thing. `purchases.purchase(sku)` returns `IAP_NOT_CONFIGURED` until then. Every grant emits a telemetry event for audit.',
+      '🌍 i18n PRIMITIVES — new `src/i18n.js` with `t(key, params)` lookup against a dotted dictionary, locale switching, `Intl.NumberFormat`-backed `formatNumber()`. Seed `strings.en.js` with the highest-impact surfaces (start screen, goodbye, save errors). Missing keys render as the key itself for dev visibility. Unblocks LATAM/JP localization without a code sweep.',
+    ],
+  },
   {
     id: '2026-05-25-17g',
     items: [
