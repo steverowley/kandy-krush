@@ -1360,6 +1360,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('honey-trap') && state.level?.isBoss && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
+  // ⚔️ Big Crit mutator — all cascades (chain ≥2) score ×4.
+  if (hasMutator('big-crit') && cascadeLevel >= 2) m *= 4;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   // 🪞 Twin Mirror relic — 5+ matches score ×3.
@@ -1421,6 +1423,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12p',
+    items: [
+      '⛏ NEW MUTATOR — Diamond Mine: every 6 matches in a slot earns +1 💎. Mine ore.',
+      '⚔️ NEW MUTATOR — Big Crit: all cascades (chain ≥2) score ×4 this slot. Cascade-focus payoff.',
+      'Mutator pool: 28.',
+    ],
+  },
   {
     id: '2026-05-25-12o',
     items: [
@@ -4184,6 +4194,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (hasRelic('coin-purse') && state.slotMatchCount % 10 === 0) {
       state.roguelike.gems = (state.roguelike.gems || 0) + 1;
       flashMessage('👛 Coin Purse +1 💎', 900);
+      persist();
+    }
+    // ⛏ Diamond Mine mutator — every 6 matches earns +1 gem.
+    if (hasMutator('diamond-mine') && state.slotMatchCount % 6 === 0) {
+      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+      flashMessage('⛏ Diamond Mine +1 💎', 800);
       persist();
     }
     // 🪅 Piñata relic — every 5 matches drop a random power-up.
