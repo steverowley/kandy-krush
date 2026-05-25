@@ -429,6 +429,10 @@ export const RELICS = [
     desc: 'Every 12 matches in a slot, a random crazy tile spawns somewhere on the board.' },
   { id: 'honey-trap',  icon: '🍯', name: 'Honey Trap',
     desc: 'On BOSS slots only, the first 3 matches score ×3. Big-opener for boss fights.' },
+  { id: 'confectionery',icon: '🧁', name: 'Confectionery',
+    desc: 'Each special candy created also drops a random power-up into your bank.' },
+  { id: 'cracked-mirror',icon: '🪞', name: 'Cracked Mirror',
+    desc: 'Matches of 5+ tiles also fill your Lucky bar by +20%.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
