@@ -1948,6 +1948,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17aa',
+    items: [
+      '🪟 SETTINGS-LAUNCHED MODALS NO LONGER HIDE BEHIND SETTINGS — Skill Tree / Run History / Class Mastery overlays live at z-[58]/[68], but the Settings panel itself was bumped to z-[115] back in 17g (so Settings could overlay the start screen). Result: clicking those Settings entries appeared to do nothing because the modal painted behind Settings. Now each entry closes the Settings panel first, then opens the modal — cleaner UX, one panel at a time.',
+    ],
+  },
+  {
     id: '2026-05-25-17z',
     items: [
       '🧪 `./tests/run.sh` — single short token to run the full test suite. Updates the test README so contributors don\'t have to copy the glob.',
@@ -6485,6 +6491,7 @@ document.getElementById('level-chip').addEventListener('click', () => {
 const skillTreeBtn = document.getElementById('setting-skill-tree');
 if (skillTreeBtn) {
   skillTreeBtn.addEventListener('click', () => {
+    closeSettingsPanel();
     showSkillTree({
       skills: SKILL_TREE,
       gems: () => state.roguelike.gems || 0,
@@ -6500,10 +6507,22 @@ if (skillTreeBtn) {
   });
 }
 
+// 🪟 Close the Settings panel before launching a modal that lives at
+// a lower z-index than Settings itself (z-115). Without this the new
+// modal renders BEHIND Settings and the player sees nothing happen.
+// One panel at a time is cleaner UX anyway.
+function closeSettingsPanel() {
+  const o = document.getElementById('settings-overlay');
+  const p = document.getElementById('settings-panel');
+  if (o) o.classList.add('hidden');
+  if (p) p.classList.add('hidden');
+}
+
 // 📓 Run-history modal (Phase 17n / D1).
 const runHistoryBtn = document.getElementById('setting-run-history');
 if (runHistoryBtn) {
   runHistoryBtn.addEventListener('click', () => {
+    closeSettingsPanel();
     showRunHistory({
       entries: state.runHistory || [],
       getClass,
@@ -6515,6 +6534,7 @@ if (runHistoryBtn) {
 const classMasteryBtn = document.getElementById('setting-class-mastery');
 if (classMasteryBtn) {
   classMasteryBtn.addEventListener('click', () => {
+    closeSettingsPanel();
     showClassMastery({
       classes: CLASSES,
       classStats: state.roguelike?.classStats || {},
