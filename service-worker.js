@@ -1,4 +1,24 @@
-const VERSION = 'sweet-match-v35';
+// Sweet Match service worker — cache-first with stale-while-revalidate
+// (Phase 17w / D5).
+//
+// Old behavior: network-first → cache fallback. On a slow / flaky
+// network the player had to wait for the network round-trip before
+// painting, even though the cache had a perfectly good copy. The
+// perf review flagged this as the main reason the start screen
+// "feels slow" on mid-tier Android with a weak signal.
+//
+// New behavior:
+//   - Cache hit returns immediately (fast paint).
+//   - In the background, we still fetch + put the latest copy so
+//     the next visit gets fresh code. The next reload picks up the
+//     updated cache.
+//   - Cache miss falls through to the network.
+//
+// SHELL is exhaustive — `install` precaches every source module +
+// asset so an offline cold-boot works even without a prior online
+// visit.
+
+const VERSION = 'sweet-match-v36';
 const SHELL = [
   './',
   './index.html',
@@ -60,14 +80,23 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(req)
-      .then((res) => {
-        if (res && res.ok) {
-          const clone = res.clone();
-          caches.open(VERSION).then((cache) => cache.put(req, clone)).catch(() => {});
-        }
-        return res;
-      })
-      .catch(() => caches.match(req))
+    caches.match(req).then((cached) => {
+      // 🚀 Cache-first: return cached response immediately.
+      // 🔄 Stale-while-revalidate: regardless of cache hit, kick off
+      //    a network fetch in the background and put the result back
+      //    in the cache so the NEXT load sees fresh bytes. Silent on
+      //    error (offline, etc.) — the cache stays whatever we had.
+      const networkUpdate = fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((cache) => cache.put(req, clone)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => null);
+      // Prefer cache; fall back to network if not cached.
+      return cached || networkUpdate;
+    })
   );
 });

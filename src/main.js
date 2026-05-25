@@ -1948,6 +1948,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17w',
+    items: [
+      '⚡ FASTER COLD-BOOT — service worker flipped from network-first to cache-first + stale-while-revalidate. Cached responses now return immediately while the network fetch updates the cache in the background. On a slow signal that\'s the difference between "waiting for the round-trip" and "the start screen is already there." Deploys take one extra reload to be seen (normal SW behaviour); offline boot from cold cache still works.',
+      '🧪 SHELL HYGIENE TESTS — new `tests/sw-shell.test.js` verifies every entry in the SW SHELL list resolves to a real file on disk (catches typos at PR time) and that no duplicates slipped in. Brings the test count to 52 / 52.',
+    ],
+  },
+  {
     id: '2026-05-25-17v',
     items: [
       '🚌 EVENT BUS — new `src/game/event-bus.js` with on / off / emit / clear. Canonical events emit from the cascade pipeline today (match, cascade, special:birth, swap, slot:start, slot:complete) so future relics / upgrades / boss mechanics can subscribe without editing the 360-line processMatchRound monolith. Bus failures are isolated (one handler throwing doesn\'t kill the others). 9 new tests; 49 total now pass.',
