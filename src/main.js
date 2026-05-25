@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17ad',
+    items: [
+      '🔤 ATKINSON FONT NOW LOADS LOCALLY — dropped the Google Fonts `<link>` + preconnects. styles/main.css now carries a `@font-face` block pointing at `assets/fonts/atkinson-hyperlegible-{regular,bold}.woff2` with `font-display: swap`. New `tools/fetch-fonts.sh` populates the WOFF2 files from the upstream Google Fonts repo (open-source, SIL OFL). If the font binaries aren\'t dropped in yet the font-family chain falls back to system-ui — game stays readable regardless. Removes the last third-party network dependency at boot.',
+    ],
+  },
+  {
     id: '2026-05-25-17ac',
     items: [
       '🚌 TWO MORE EFFECTS MIGRATED TO THE BUS — the per-slot mutator history tracker (`runHighlights.mutatorsSeen`) and the best-slot-score tracker (`runHighlights.bestSlotScore`) used to be inline branches in `applyRunUpgradesOnSlotStart` and `advanceRoguelikeAfterWin`. Both now subscribers on `bus.on(\'slot:start\', …)` and `bus.on(\'slot:complete\', …)` in run-effects.js. 5 new tests; 63 total now pass.',

@@ -11,9 +11,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Sweet Match" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Atkinson Hyperlegible is now loaded locally via the @font-face
+       declaration in styles/main.css; no Google Fonts dependency. If
+       the font files aren't dropped in yet, the CSS font-family
+       falls back to system-ui via the chain. See tools/fetch-fonts.sh
+       to populate assets/fonts/ from the Atkinson upstream repo. -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
   <!-- Pixi.js is only loaded when the player opts into the WebGL
