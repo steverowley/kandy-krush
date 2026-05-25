@@ -652,6 +652,13 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   close.focus();
 }
 
+export function flashMutatorActivation() {
+  const flash = document.createElement('div');
+  flash.className = 'mutator-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 1000);
+}
+
 export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
   const root = document.getElementById('boss-banner');
   if (!root) return Promise.resolve();
@@ -699,7 +706,7 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
       ? ` <span class="px-2 rounded-full font-bold bg-pink-500 text-white border-2 border-black animate-pulse" title="${klass.awaken ? klass.awaken.replace(/"/g, '') : ''}">✨ AWAKENED</span>`
       : '';
     const mutStr = mutator
-      ? ` · <span class="px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
+      ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
       : '';
     klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}`;
   }

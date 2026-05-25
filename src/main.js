@@ -71,6 +71,7 @@ import {
   setRunHud,
   showBossBanner,
   showRunSummary,
+  flashMutatorActivation,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -834,6 +835,7 @@ function applyRunUpgradesOnSlotStart() {
     const m = activeMutator();
     if (m) {
       setTimeout(() => {
+        flashMutatorActivation();
         flashMessage(`${m.icon} ${m.name} — ${m.desc}`, 2400);
         speech.speak(`${m.name} mutator active.`);
       }, 900);
@@ -972,6 +974,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8y',
+    items: [
+      '✨ MUTATOR juice — mutator activation now shows a brief radial yellow flash across the screen + the HUD chip pulses softly while the mutator is active.',
+      'Hard to miss when a slot lights up with a buff.',
+      'Reduce-motion users get the chip without the pulse or flash.',
+    ],
+  },
   {
     id: '2026-05-25-8x',
     items: [
