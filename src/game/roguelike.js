@@ -292,6 +292,8 @@ export const UPGRADES = [
   { id: 'power-surge', category: 'synergy',    archetype: 'scorer',  name: 'Power Surge',        desc: '⚡ 6+ tile matches score ×2 per stack. Big-match scoring explosion.' },
   { id: 'sweet-glow',  category: 'synergy',    archetype: 'lucky',   name: 'Sweet Glow',         desc: '🌅 Lucky-MODE lasts +1 extra match per stack. Stretch the burst window.' },
   { id: 'bigger-bomb', category: 'synergy',    archetype: 'bomber',  name: 'Bigger Bomb',        desc: '💥 TNT explosion radius +1 per stack (on top of Bomber synergy). Stack 2 → 5×5 → 7×7 → 9×9.' },
+  { id: 'heart-steal', category: 'buff',       archetype: 'sustain', name: 'Heart Steal',        desc: '❤️ Boss kills restore +1 life per stack. Keep your hearts full through the marathon.' },
+  { id: 'spark-strike',category: 'synergy',    archetype: 'wild',    name: 'Spark Strike',       desc: '✨ Every 12 matches in a slot, fire a free Lightning bolt (no Lightning upgrade required).' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
