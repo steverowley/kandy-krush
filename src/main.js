@@ -1105,6 +1105,7 @@ function applyRunUpgradesOnSlotStart() {
     bank.hammer = Math.min(cap, (bank.hammer || 0) + 1);
   }
   bank.hammer = Math.min(cap, (bank.hammer || 0) + upgradeCount('hammer+1'));
+  bank.hammer = Math.min(cap, (bank.hammer || 0) + upgradeCount('hammer-rain') * 2);
   bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
   bank.shuffle = Math.min(cap, (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
   bank.plusMoves = Math.min(cap, (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
@@ -1262,6 +1263,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10j',
+    items: [
+      '🔨 NEW UPGRADE — Hammer Shower (Sustain). Start of each slot, gain +2 Hammers per stack to your bank.',
+      'Stack 3× and you start every slot with 6 free hammers. Perfect for lock-heavy + Ironclad-awakening builds.',
+      'Upgrade pool now 28.',
+    ],
+  },
   {
     id: '2026-05-25-10i',
     items: [
