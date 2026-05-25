@@ -429,6 +429,834 @@ export const LEVELS = [
       ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
     },
   },
+
+  // ===== Chapter: Cherry Orchard (40-44) =====
+  {
+    id: 40,
+    name: 'Cherry & key',
+    moves: 28,
+    objective: { kind: 'dropIngredients', target: 3 },
+    hint: 'Three cherries — locks block the lanes.',
+    obstacles: {
+      ingredients: [[1, 0], [3, 0], [4, 0]],
+      locks: [
+        [1, 2, 1], [4, 2, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 41,
+    name: 'Cherry rapids',
+    moves: 30,
+    objective: { kind: 'dropIngredients', target: 4 },
+    hint: 'Four cherries with jelly underfoot.',
+    obstacles: {
+      ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
+      jelly: [
+        [0, 3, 1], [5, 3, 1],
+        [1, 4, 1], [4, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 42,
+    name: 'Cherry maze',
+    moves: 32,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Five cherries — locks pinch the middle rows.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [4, 0], [5, 0]],
+      locks: [
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 43,
+    name: 'Cherry kingdom',
+    moves: 34,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries — every column has one.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+    },
+  },
+  {
+    id: 44,
+    name: 'Cherry vault',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 4 },
+    hint: 'Four cherries through jelly AND locks.',
+    obstacles: {
+      ingredients: [[1, 0], [2, 0], [3, 0], [4, 0]],
+      jelly: [
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+      ],
+      locks: [
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+
+  // ===== Chapter: Combo Storm (45-49) =====
+  {
+    id: 45,
+    name: 'Cascade dream',
+    moves: 24,
+    objective: { kind: 'score', target: 2500 },
+    hint: 'Look for falling cascades — they score huge.',
+    tip: 'After a match, the candies above fall and can chain into new matches. Each chain link scores more.',
+  },
+  {
+    id: 46,
+    name: 'Quick specials',
+    moves: 20,
+    objective: { kind: 'specials', target: 3 },
+    hint: 'Three specials in 20 moves. Plan ahead!',
+  },
+  {
+    id: 47,
+    name: 'Stripe shower',
+    moves: 24,
+    objective: { kind: 'specials', target: 4 },
+    hint: 'Four specials — match in straight lines of 4.',
+  },
+  {
+    id: 48,
+    name: 'Marathon match',
+    moves: 30,
+    objective: { kind: 'matches', target: 24 },
+    hint: '24 matches. Quantity over quality.',
+  },
+  {
+    id: 49,
+    name: 'Score spike',
+    moves: 22,
+    objective: { kind: 'score', target: 3200 },
+    hint: 'Reach 3,200 in just 22 moves.',
+    tip: 'Specials are worth way more than triples. Aim for 4s and 5s.',
+  },
+
+  // ===== Chapter: Jelly Maze (50-54) =====
+  {
+    id: 50,
+    name: 'Halfway home',
+    moves: 35,
+    objective: { kind: 'clearJelly' },
+    hint: 'Level 50 — a jelly heavyweight. Clear it all.',
+    tip: 'Halfway to 100! Every jelly tile must be cleared.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [5, 0, 2],
+        [1, 1, 1], [4, 1, 1],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 4, 1], [4, 4, 1],
+        [0, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 51,
+    name: 'Jelly fortress',
+    moves: 34,
+    objective: { kind: 'clearJelly' },
+    hint: 'Top and bottom rows are all jelly.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 1], [4, 0, 1], [5, 0, 1],
+        [0, 5, 1], [1, 5, 1], [2, 5, 1], [3, 5, 1], [4, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 52,
+    name: 'Jelly spine',
+    moves: 32,
+    objective: { kind: 'clearJelly' },
+    hint: 'A vertical spine of double-jelly down the middle.',
+    obstacles: {
+      jelly: [
+        [2, 0, 2], [3, 0, 2],
+        [2, 1, 2], [3, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [2, 4, 2], [3, 4, 2],
+        [2, 5, 2], [3, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 53,
+    name: 'Jelly + locks',
+    moves: 32,
+    objective: { kind: 'clearJelly' },
+    hint: 'Locks pin the jelly in place — free them first.',
+    obstacles: {
+      jelly: [
+        [1, 1, 1], [4, 1, 1],
+        [1, 4, 1], [4, 4, 1],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+      ],
+      locks: [
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 54,
+    name: 'Jelly maelstrom',
+    moves: 36,
+    objective: { kind: 'clearJelly' },
+    hint: 'Two-deep jelly fills the corners and centre.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 2], [4, 0, 2], [5, 0, 2],
+        [0, 1, 2], [5, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [0, 4, 2], [5, 4, 2],
+        [0, 5, 2], [1, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+
+  // ===== Chapter: Lock Tyrant (55-59) =====
+  {
+    id: 55,
+    name: 'Iron gates',
+    moves: 28,
+    objective: { kind: 'score', target: 2200 },
+    hint: 'Locks frame the centre. Break through.',
+    obstacles: {
+      locks: [
+        [1, 1, 1], [2, 1, 1], [3, 1, 1], [4, 1, 1],
+        [1, 4, 1], [2, 4, 1], [3, 4, 1], [4, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 56,
+    name: 'Padlock parade',
+    moves: 30,
+    objective: { kind: 'clearType', type: 1, target: 16 },
+    hint: 'Clear 16 blue squares — locks block half the board.',
+    obstacles: {
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [2, 0, 1], [3, 0, 1],
+        [2, 5, 1], [3, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 57,
+    name: 'Steel ring',
+    moves: 32,
+    objective: { kind: 'score', target: 2800 },
+    hint: 'A full ring of double-locks. Reach 2,800.',
+    obstacles: {
+      locks: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [1, 2, 2], [4, 2, 2],
+        [1, 3, 2], [4, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 58,
+    name: 'Lockdown',
+    moves: 34,
+    objective: { kind: 'clearType', type: 4, target: 18 },
+    hint: '18 green stars and a board of locks.',
+    obstacles: {
+      locks: [
+        [0, 0, 1], [5, 0, 1],
+        [2, 1, 2], [3, 1, 2],
+        [1, 2, 1], [4, 2, 1],
+        [1, 3, 1], [4, 3, 1],
+        [2, 4, 2], [3, 4, 2],
+        [0, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 59,
+    name: 'Tyrant\'s wall',
+    moves: 32,
+    objective: { kind: 'score', target: 3200 },
+    hint: 'Locks across the middle two rows. Crack them open.',
+    obstacles: {
+      locks: [
+        [0, 2, 2], [1, 2, 2], [2, 2, 2], [3, 2, 2], [4, 2, 2], [5, 2, 2],
+        [0, 3, 2], [1, 3, 2], [2, 3, 2], [3, 3, 2], [4, 3, 2], [5, 3, 2],
+      ],
+    },
+  },
+
+  // ===== Chapter: Special Lab (60-64) =====
+  {
+    id: 60,
+    name: 'Special spree',
+    moves: 28,
+    objective: { kind: 'specials', target: 5 },
+    hint: 'Five specials. Combine them — wrapped + striped = wow.',
+    tip: 'Match 4 in a row → striped. 5 in a row → rainbow. L or T shape → wrapped.',
+  },
+  {
+    id: 61,
+    name: 'Rainbow runner',
+    moves: 30,
+    objective: { kind: 'specials', target: 6 },
+    hint: 'Six specials — go for 5-in-a-rows.',
+  },
+  {
+    id: 62,
+    name: 'Big chain',
+    moves: 28,
+    objective: { kind: 'matches', target: 28 },
+    hint: '28 matches — cascades count too.',
+  },
+  {
+    id: 63,
+    name: 'Power play',
+    moves: 26,
+    objective: { kind: 'specials', target: 4 },
+    hint: 'Four specials AND clear the jelly.',
+    obstacles: {
+      jelly: [
+        [1, 2, 1], [4, 2, 1],
+        [1, 3, 1], [4, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 64,
+    name: 'Lab finale',
+    moves: 30,
+    objective: { kind: 'specials', target: 5 },
+    hint: 'Five specials with locks in the way.',
+    obstacles: {
+      locks: [
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+
+  // ===== Chapter: Cherry Forest (65-69) =====
+  {
+    id: 65,
+    name: 'Forest path',
+    moves: 32,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Five cherries with jelly waiting.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [2, 3, 1], [3, 3, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 66,
+    name: 'Forest grove',
+    moves: 34,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries through locks.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      locks: [
+        [0, 3, 1], [5, 3, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 67,
+    name: 'Forest gauntlet',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries past double-jelly.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [0, 4, 2], [5, 4, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 68,
+    name: 'Cherry crown',
+    moves: 30,
+    objective: { kind: 'dropIngredients', target: 4 },
+    hint: 'Four cherries — narrow path between locks.',
+    obstacles: {
+      ingredients: [[1, 0], [2, 0], [3, 0], [4, 0]],
+      locks: [
+        [0, 1, 1], [5, 1, 1],
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [0, 4, 1], [5, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 69,
+    name: 'Forest finale',
+    moves: 38,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Five cherries, both jelly AND locks.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [2, 3, 1], [3, 3, 1],
+      ],
+      locks: [
+        [2, 4, 1], [3, 4, 1],
+        [2, 5, 1], [3, 5, 1],
+      ],
+    },
+  },
+
+  // ===== Chapter: Match Marathon (70-74) =====
+  {
+    id: 70,
+    name: 'Marathon mile',
+    moves: 30,
+    objective: { kind: 'matches', target: 30 },
+    hint: '30 matches. Every swap matters.',
+  },
+  {
+    id: 71,
+    name: 'Sprint score',
+    moves: 18,
+    objective: { kind: 'score', target: 2000 },
+    hint: 'Tight 18 moves. Hit 2,000.',
+  },
+  {
+    id: 72,
+    name: 'Pink purge',
+    moves: 24,
+    objective: { kind: 'clearType', type: 2, target: 20 },
+    hint: 'Clear 20 pink triangles.',
+  },
+  {
+    id: 73,
+    name: 'Yellow blitz',
+    moves: 24,
+    objective: { kind: 'clearType', type: 0, target: 22 },
+    hint: 'Clear 22 yellow circles.',
+  },
+  {
+    id: 74,
+    name: 'Marathon finale',
+    moves: 32,
+    objective: { kind: 'matches', target: 32 },
+    hint: '32 matches — cascades welcome.',
+    obstacles: {
+      jelly: [
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+
+  // ===== Chapter: Rainbow Rush (75-79) =====
+  {
+    id: 75,
+    name: 'Sweet symphony',
+    moves: 32,
+    objective: { kind: 'score', target: 4000 },
+    hint: 'Reach 4,000 — your highest yet.',
+  },
+  {
+    id: 76,
+    name: 'Rainbow wave',
+    moves: 30,
+    objective: { kind: 'specials', target: 6 },
+    hint: 'Six specials — chase the rainbow.',
+  },
+  {
+    id: 77,
+    name: 'Golden hour',
+    moves: 26,
+    objective: { kind: 'clearType', type: 0, target: 20 },
+    hint: '20 yellows through a lock maze.',
+    obstacles: {
+      locks: [
+        [1, 1, 1], [4, 1, 1],
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+        [1, 4, 1], [4, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 78,
+    name: 'Ocean roar',
+    moves: 26,
+    objective: { kind: 'clearType', type: 1, target: 22 },
+    hint: '22 blues. Jelly slows the board.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [5, 0, 1],
+        [0, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 79,
+    name: 'Rainbow apex',
+    moves: 36,
+    objective: { kind: 'score', target: 4500 },
+    hint: 'Reach 4,500 — the score grows steep.',
+    tip: 'Bombs from your bank are worth their weight in points.',
+  },
+
+  // ===== Chapter: Stronghold (80-84) =====
+  {
+    id: 80,
+    name: 'Stronghold gate',
+    moves: 32,
+    objective: { kind: 'score', target: 3500 },
+    hint: 'Double locks ring the board.',
+    obstacles: {
+      locks: [
+        [1, 0, 2], [4, 0, 2],
+        [0, 1, 2], [5, 1, 2],
+        [0, 4, 2], [5, 4, 2],
+        [1, 5, 2], [4, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 81,
+    name: 'Stronghold keep',
+    moves: 36,
+    objective: { kind: 'clearJelly' },
+    hint: 'Jelly fortress with sentry locks.',
+    obstacles: {
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 82,
+    name: 'Stronghold breach',
+    moves: 30,
+    objective: { kind: 'specials', target: 5 },
+    hint: 'Five specials despite the lock-up.',
+    obstacles: {
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+      ],
+    },
+  },
+  {
+    id: 83,
+    name: 'Stronghold siege',
+    moves: 38,
+    objective: { kind: 'score', target: 4200 },
+    hint: 'Push to 4,200 through every obstacle.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [5, 0, 1],
+        [0, 5, 1], [5, 5, 1],
+      ],
+      locks: [
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+      ],
+    },
+  },
+  {
+    id: 84,
+    name: 'Stronghold falls',
+    moves: 40,
+    objective: { kind: 'clearJelly' },
+    hint: 'Bring the jelly tower down. Lots of it.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 2], [4, 0, 2], [5, 0, 2],
+        [2, 1, 2], [3, 1, 2],
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+        [2, 4, 2], [3, 4, 2],
+        [0, 5, 2], [1, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+
+  // ===== Chapter: Cherry Vault (85-89) =====
+  {
+    id: 85,
+    name: 'Vault entrance',
+    moves: 34,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Five cherries past the vault locks.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
+      locks: [
+        [0, 3, 2], [5, 3, 2],
+      ],
+    },
+  },
+  {
+    id: 86,
+    name: 'Vault corridor',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries — jelly + locks.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [1, 4, 1], [4, 4, 1],
+      ],
+      locks: [
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 87,
+    name: 'Vault chamber',
+    moves: 38,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries through the locked chamber.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      locks: [
+        [0, 2, 1], [5, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+        [0, 4, 2], [5, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 88,
+    name: 'Vault treasury',
+    moves: 40,
+    objective: { kind: 'dropIngredients', target: 5 },
+    hint: 'Five cherries — jelly fortress around them.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [0, 3, 2], [5, 3, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 89,
+    name: 'Vault unlocked',
+    moves: 40,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries with the toughest mix yet.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [0, 3, 1], [5, 3, 1],
+      ],
+      locks: [
+        [2, 4, 2], [3, 4, 2],
+      ],
+    },
+  },
+
+  // ===== Chapter: Jelly Castle (90-94) =====
+  {
+    id: 90,
+    name: 'Castle gates',
+    moves: 36,
+    objective: { kind: 'clearJelly' },
+    hint: 'Most of the board is jelly. Clear it all.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 1], [4, 0, 1], [5, 0, 1],
+        [0, 1, 2], [5, 1, 2],
+        [0, 4, 2], [5, 4, 2],
+        [0, 5, 1], [1, 5, 1], [2, 5, 1], [3, 5, 1], [4, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 91,
+    name: 'Castle walls',
+    moves: 38,
+    objective: { kind: 'clearJelly' },
+    hint: 'Two-deep jelly ring. Work the corners hard.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 2], [4, 0, 2], [5, 0, 2],
+        [0, 1, 1], [5, 1, 1],
+        [0, 4, 1], [5, 4, 1],
+        [0, 5, 2], [1, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 92,
+    name: 'Castle court',
+    moves: 36,
+    objective: { kind: 'clearJelly' },
+    hint: 'Jelly in the centre court — locks at the entrances.',
+    obstacles: {
+      jelly: [
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 2, 1], [4, 2, 1],
+        [1, 3, 1], [4, 3, 1],
+      ],
+      locks: [
+        [0, 2, 1], [5, 2, 1],
+        [0, 3, 1], [5, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 93,
+    name: 'Castle throne',
+    moves: 40,
+    objective: { kind: 'clearJelly' },
+    hint: 'Big jelly throne room.',
+    obstacles: {
+      jelly: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [1, 2, 2], [4, 2, 2],
+        [1, 3, 2], [4, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 94,
+    name: 'Castle falls',
+    moves: 42,
+    objective: { kind: 'score', target: 5000 },
+    hint: 'Push past the jelly to 5,000.',
+    obstacles: {
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+        [1, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 0, 2], [5, 0, 2],
+        [0, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+
+  // ===== Chapter: Mastery (95-99) =====
+  {
+    id: 95,
+    name: 'Master\'s test',
+    moves: 28,
+    objective: { kind: 'specials', target: 7 },
+    hint: 'Seven specials. Plan every swap.',
+  },
+  {
+    id: 96,
+    name: 'Master\'s climb',
+    moves: 30,
+    objective: { kind: 'score', target: 5000 },
+    hint: 'Reach 5,000 in 30 moves.',
+    obstacles: {
+      jelly: [
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 97,
+    name: 'Master\'s gauntlet',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 6 },
+    hint: 'Six cherries through the gauntlet.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [0, 3, 1], [5, 3, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+      locks: [
+        [1, 4, 1], [4, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 98,
+    name: 'Master\'s jelly',
+    moves: 38,
+    objective: { kind: 'clearJelly' },
+    hint: 'The biggest jelly board yet.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 1], [2, 0, 2], [3, 0, 2], [4, 0, 1], [5, 0, 2],
+        [0, 1, 1], [5, 1, 1],
+        [0, 4, 1], [5, 4, 1],
+        [0, 5, 2], [1, 5, 1], [2, 5, 2], [3, 5, 2], [4, 5, 1], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 99,
+    name: 'Champion\'s mile',
+    moves: 36,
+    objective: { kind: 'score', target: 6000 },
+    hint: 'Reach 6,000. One level from the summit.',
+    obstacles: {
+      jelly: [
+        [1, 2, 1], [4, 2, 1],
+        [1, 3, 1], [4, 3, 1],
+      ],
+      locks: [
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 100,
+    name: 'Sweet Apocalypse',
+    moves: 50,
+    objective: { kind: 'score', target: 8000 },
+    hint: 'Level 100 — the Sweet Apocalypse. Every obstacle. Every cherry. 8,000 points.',
+    tip: 'Use everything in your bank. This is the summit.',
+    obstacles: {
+      ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [2, 5, 1], [3, 5, 1],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
