@@ -512,6 +512,10 @@ export const MUTATORS = [
     desc: 'EVERY power-up is FREE this slot. Bank doesn\'t decrement on use.' },
   { id: 'buffet-day',  icon: '🥪', name: 'Buffet Day',
     desc: 'Every match counts double toward the objective. Slots end fast.' },
+  { id: 'hammer-storm',icon: '🔨', name: 'Hammer Storm',
+    desc: 'Start of slot, gain +3 Hammers. Smash through the obstacles.' },
+  { id: 'bomb-cache',  icon: '💣', name: 'Bomb Cache',
+    desc: 'Start of slot, gain +2 Color Bombs. Big boom potential.' },
 ];
 
 export function isMutatorSlot(slot) {

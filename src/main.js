@@ -1143,6 +1143,20 @@ function applyRunUpgradesOnSlotStart() {
     }
     setPowerupCounts(giftBank);
   }
+  // 🔨🌧 Hammer Storm mutator — +3 hammers at slot start.
+  if (hasMutator('hammer-storm')) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    bank.hammer = Math.min(cap, (bank.hammer || 0) + 3);
+    setPowerupCounts(bank);
+  }
+  // 💣💣 Bomb Cache mutator — +2 color bombs at slot start.
+  if (hasMutator('bomb-cache')) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + 2);
+    setPowerupCounts(bank);
+  }
   // Reset eclipse parity each slot.
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
@@ -1406,6 +1420,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12k',
+    items: [
+      '🔨 NEW MUTATOR — Hammer Storm: start of slot, gain +3 Hammers. Smash through obstacles.',
+      '💣 NEW MUTATOR — Bomb Cache: start of slot, gain +2 Color Bombs. Big boom potential.',
+      'Mutator pool is now 26.',
+    ],
+  },
   {
     id: '2026-05-25-12j',
     items: [
