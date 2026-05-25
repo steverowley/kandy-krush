@@ -348,6 +348,8 @@ function showUpgradeChoicesForSlot(n, canReroll) {
   }, categoryColor, ARCHETYPES, counts, onReroll, awakenInfo);
 }
 
+const CROSSROADS_SLOT_LIST = [27, 47, 77, 87];
+
 function nextMilestoneAhead() {
   if (!state.inRoguelikeRun) return null;
   const slot = state.roguelike?.currentSlot || 1;
@@ -358,10 +360,23 @@ function nextMilestoneAhead() {
   let nextMut = slot + 1;
   while (nextMut <= RUN_LENGTH && !isMutatorSlot(nextMut)) nextMut++;
   if (nextMut > RUN_LENGTH) nextMut = -1;
+  // Next crossroads triggers AFTER a crossroads slot is finished, so the
+  // event hits the start of slot+1. Find the next slot > current where
+  // (slot - 1) is a crossroads slot.
+  let nextCross = -1;
+  for (const c of CROSSROADS_SLOT_LIST) {
+    const eventSlot = c + 1; // event fires before playing slot c+1
+    if (eventSlot > slot && (nextCross === -1 || eventSlot < nextCross)) nextCross = eventSlot;
+  }
   const bossDist = nextBoss > 0 ? nextBoss - slot : 999;
   const mutDist = nextMut > 0 ? nextMut - slot : 999;
-  if (Math.min(bossDist, mutDist) === 999) return null;
-  if (bossDist <= mutDist) {
+  const crossDist = nextCross > 0 ? nextCross - slot : 999;
+  const minDist = Math.min(bossDist, mutDist, crossDist);
+  if (minDist === 999) return null;
+  if (minDist === crossDist) {
+    return { icon: '✨', label: 'Crossroads', distance: crossDist === 1 ? '1 slot' : `${crossDist} slots` };
+  }
+  if (minDist === bossDist) {
     return { icon: '⚔', label: nextBoss === RUN_LENGTH ? 'FINAL BOSS' : 'Boss', distance: bossDist === 1 ? '1 slot' : `${bossDist} slots` };
   }
   return { icon: '🌪', label: 'Mutator', distance: mutDist === 1 ? '1 slot' : `${mutDist} slots` };
@@ -1486,6 +1501,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13d',
+    items: [
+      '✨ HUD UPGRADE — the "Next" milestone chip on the run HUD now also flags incoming Crossroads events. Plan your power-up spending around the next stop.',
+    ],
+  },
   {
     id: '2026-05-25-13c',
     items: [
