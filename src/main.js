@@ -61,6 +61,7 @@ import {
   showWelcome,
   showStartMenu,
   hideStartMenu,
+  showGoodbye,
   showCascadeBanner,
   popNewSpecial,
   setPowerupCounts,
@@ -284,6 +285,12 @@ function bumpClassStats(outcome, slotReached) {
 function openStartMenu(subtitle = null) {
   showStartMenu({
     subtitle,
+    version: APP_VERSION,
+    stats: {
+      best: state.best || 0,
+      runsCompleted: state.roguelike?.runsCompleted || 0,
+      gems: state.roguelike?.gems || 0,
+    },
     onRoguelike: () => {
       sfx.unlockAudio();
       state.settings.mode = 'roguelike';
@@ -315,6 +322,15 @@ function openStartMenu(subtitle = null) {
     onHelp: () => {
       const btn = document.getElementById('help-open');
       if (btn) btn.click();
+    },
+    onQuit: () => {
+      // Web app — we can't truly close the window from script (browsers
+      // block it for non-script-opened tabs). Show a goodbye screen and
+      // try window.close() best-effort. The "Back to start screen"
+      // button lets the player bounce back if they change their mind.
+      sfx.setMusicEnabled(false);
+      showGoodbye(() => { openStartMenu(null); });
+      try { window.close(); } catch { /* ignore */ }
     },
   });
 }
@@ -1702,6 +1718,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15o',
+    items: [
+      '🎮 PROPER GAME FLOW — launch goes STRAIGHT to the start screen now: no tutorial pop-up, no changelog pop-up, no auto-resume into your last mode. Pick a mode → play → tap 🏠 to quit back to the start screen. From there: pick another mode or 🚪 Quit Game.',
+      '👋 GOODBYE SCREEN — Quit Game shows a "Thanks for playing" screen with a button to bounce back to the start screen if you change your mind. Music stops cleanly.',
+      '🍬 START SCREEN POLISH — animated 🍬 logo, your best score / runs / gems shown as small badges, app version at the bottom. Tutorial + changelog still reachable via ⚙ / 📖 / ? buttons.',
+    ],
+  },
   {
     id: '2026-05-25-15n',
     items: [
@@ -5684,50 +5708,21 @@ document.addEventListener(
 // Initialize lucky bar display
 setLuckyCharge(0, false);
 
-// Show changelog for returning players who haven't seen this version,
-// only after the welcome flow (or instead of it, for returning players).
-function maybeShowChangelog(after) {
-  if (state.seenVersion === APP_VERSION || !state.seenWelcome) {
-    if (after) after();
-    return;
-  }
-  // Show the latest 5 changelog entries so a player who skipped a
-  // few updates sees what they missed in one go.
-  showChangelog(CHANGELOG_ENTRIES.slice(0, 5), () => {
-    state.seenVersion = APP_VERSION;
-    persist();
-    if (after) after();
-  });
-}
 
-// Boot flow: always land on the start menu so the player chooses their
-// mode explicitly. The one exception is a mid-run roguelike — we
-// auto-resume that so in-flight progress isn't lost.
-function bootIntoStartMenu() {
-  if (state.inRoguelikeRun && state.roguelike?.currentClass) {
-    // Resume the run already in progress. The body class is set by the
-    // HTML default (so the start screen doesn't flash before JS boots);
-    // hide it here so the resumed game UI is visible.
-    hideStartMenu();
-    state.settings.mode = 'roguelike';
-    sfx.setMusicMode('roguelike');
-    init({ chime: false });
-    return;
-  }
-  openStartMenu(null);
-}
 
-if (state.seenWelcome) {
-  maybeShowChangelog(() => { bootIntoStartMenu(); });
-} else {
-  showWelcome(() => {
-    state.seenWelcome = true;
-    state.seenVersion = APP_VERSION; // first-time players have effectively "seen" it
-    persist();
-    sfx.unlockAudio();
-    bootIntoStartMenu();
-  });
+// Boot flow: ALWAYS land on the start screen. No tutorial, no changelog,
+// no auto-resume — the player chooses. Help (?) and What's New on the
+// start screen still surface the tutorial / changelog. A roguelike run
+// in progress will resume when the player picks Roguelike (startRoguelikeRun
+// preserves currentSlot when > 1).
+if (!state.seenWelcome) {
+  // Mark as seen on first boot so we never block the start screen with
+  // the tutorial again. The tutorial stays available via the ? button.
+  state.seenWelcome = true;
+  state.seenVersion = APP_VERSION;
+  persist();
 }
+openStartMenu(null);
 persist();
 
 if ('serviceWorker' in navigator) {
