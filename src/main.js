@@ -39,6 +39,8 @@ import {
 import {
   renderBoard,
   setScore,
+  setScoreOverride,
+  clearScoreOverride,
   setBest,
   setStreak,
   flashMessage,
@@ -113,6 +115,13 @@ const COLS = 6;
 const ROWS = 6;
 const CANDY_TYPES = 6;
 
+// Safety net: cascades aren't supposed to chain forever, but with the
+// roguelike's crazy-tile spawn upgrades, prism activations, hungry-snake,
+// and bomber-class synergies, it's possible to set up a board where every
+// gravity refill creates a new match. If a chain reaches this threshold
+// we bail out and grant the player an INSTANT WIN. They earned it.
+const INFINITE_COMBO_THRESHOLD = 25;
+
 const persistedRaw = loadSave();
 const persisted = bumpStreakForToday(persistedRaw);
 // Daily login gem bonus — fires once per calendar day on first
@@ -135,6 +144,15 @@ const state = {
   streak: persisted.streak,
   lastPlayedDate: persisted.lastPlayedDate,
   busy: false,
+  // Set true when an infinite combo trips. Each cascade loop bails on
+  // its next iteration so we don't stall the game.
+  cascadeAbort: false,
+  // Number of infinite-combo auto-wins triggered this session. First
+  // shows as "∞", second as "∞+1", third as "∞+2", etc.
+  infiniteCount: 0,
+  // When set, overrides the displayed score string (e.g. on infinity
+  // auto-win). Cleared on slot / level start.
+  scoreOverride: null,
   selected: null,
   settings: { ...persisted.settings },
   levelProgress: { ...persisted.levelProgress },
@@ -627,7 +645,7 @@ async function fireLightning() {
   // Cascade any resulting matches
   let result = findMatches(state.board);
   let lvl = 1;
-  while (result.positions.length > 0) {
+  while (result.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(result, lvl, null);
     result = findMatches(state.board);
     lvl++;
@@ -706,7 +724,7 @@ async function fireBeeStorm() {
   renderBoard(state.board, state, { fallen });
   let result = findMatches(state.board);
   let lvl = 1;
-  while (result.positions.length > 0) {
+  while (result.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(result, lvl, null);
     result = findMatches(state.board);
     lvl++;
@@ -744,7 +762,7 @@ async function fireMeteor() {
   renderBoard(state.board, state, { fallen });
   let result = findMatches(state.board);
   let lvl = 1;
-  while (result.positions.length > 0) {
+  while (result.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(result, lvl, null);
     result = findMatches(state.board);
     lvl++;
@@ -1618,6 +1636,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15g',
+    items: [
+      '♾️ INFINITE COMBO = AUTO WIN — if a cascade ever chains past 25 rounds, the game declares INSTANT WIN, force-satisfies whatever the objective was, and paints the score as the infinity symbol. First infinite of your session is "∞", second is "∞+1", third "∞+2", and so on — earn bragging rights for breaking the game.',
+      'Belt + suspenders: state.cascadeAbort flag bails every cascade loop the moment the threshold trips, so we don\'t actually stall the JS thread.',
+    ],
+  },
   {
     id: '2026-05-25-15f',
     items: [
@@ -3104,11 +3129,60 @@ async function cascadePendingMatches() {
   if (!state.board) return;
   let result = findMatches(state.board);
   let cascadeLevel = 1;
-  while (result.positions.length > 0) {
+  while (result.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(result, cascadeLevel, null);
     result = findMatches(state.board);
     cascadeLevel++;
   }
+}
+
+// Detect an infinite-combo loop and short-circuit it into an auto-win.
+// processMatchRound calls this at the top of each round; once tripped,
+// state.cascadeAbort is set and every cascade loop in the code bails on
+// its next iteration. The flag clears on the next swap / slot start.
+function maybeTriggerInfiniteCombo(cascadeLevel) {
+  if (cascadeLevel < INFINITE_COMBO_THRESHOLD) return false;
+  if (state.cascadeAbort) return true; // already firing
+  state.cascadeAbort = true;
+  state.infiniteCount = (state.infiniteCount || 0) + 1;
+  const n = state.infiniteCount;
+  // First infinite of the session is "∞"; second is "∞+1"; third "∞+2"; …
+  const label = n === 1 ? '∞' : `∞+${n - 1}`;
+  state.scoreOverride = label;
+  // Force-satisfy whatever the level objective is so checkLevelOutcome
+  // resolves as a win. clearJelly / dropIngredients use board state;
+  // others use state.progress / state.score.
+  const obj = state.level && state.level.objective;
+  if (obj) {
+    if (obj.kind === 'score') state.score = Math.max(state.score, obj.target);
+    else if (obj.kind === 'matches') state.progress.matches = Math.max(state.progress.matches, obj.target);
+    else if (obj.kind === 'specials') state.progress.specials = Math.max(state.progress.specials, obj.target);
+    else if (obj.kind === 'clearJelly') {
+      state.jellyMap.clear();
+      state.progress.jellyRemaining = 0;
+    } else if (obj.kind === 'dropIngredients') {
+      state.progress.ingredientsDropped = Math.max(
+        state.progress.ingredientsDropped,
+        state.progress.ingredientsTotal || obj.target || 0
+      );
+    } else if (obj.kind === 'clearType') {
+      state.progress.type[obj.type] = Math.max(state.progress.type[obj.type] || 0, obj.target);
+    }
+    refreshLevelUI();
+  }
+  // Paint the score field as the infinity label, locking against
+  // further setScore overwrites until the next slot / level start.
+  setScoreOverride(label);
+  // Big spectacle.
+  flashMessage(`♾️ INFINITE COMBO — INSTANT WIN! (${label})`, 3200);
+  speech.speak('Infinite combo. Instant win.');
+  spawnConfetti(140);
+  spawnStarRain(70);
+  spawnScreenFlash('rgba(255, 0, 255, 0.55)');
+  screenShake(12, 800);
+  haptics.epic();
+  sfx.playEpicCascade();
+  return true;
 }
 
 // Shuffle the candies in place while keeping powered-up sweets,
@@ -4128,7 +4202,7 @@ function checkLevelOutcome() {
         showLevelComplete({
           level: { ...state.level, id: state.roguelike.currentSlot, name: state.level.name },
           stars,
-          score: state.score,
+          score: state.scoreOverride || state.score,
           isLast: isLastSlot,
           onNext: () => advanceRoguelikeAfterWin(),
           onReplay: () => playRoguelikeSlot(state.roguelike.currentSlot),
@@ -4158,7 +4232,7 @@ function checkLevelOutcome() {
       showLevelComplete({
         level: state.level,
         stars,
-        score: state.score,
+        score: state.scoreOverride || state.score,
         isLast: isLastLevel(state.level.id),
         onNext: () => startLevel(state.levelProgress.currentLevel),
         onReplay: () => startLevel(state.level.id),
@@ -4302,6 +4376,7 @@ async function useHammer(pos) {
   }
   if (!spendPowerup('hammer')) return;
   state.busy = true;
+  state.cascadeAbort = false;
   cancelHint();
   sfx.unlockAudio();
   sfx.playMatch(1, 1);
@@ -4318,7 +4393,7 @@ async function useHammer(pos) {
 
   let cascadeResult = findMatches(state.board);
   let cascadeLevel = 1;
-  while (cascadeResult.positions.length > 0) {
+  while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(cascadeResult, cascadeLevel, null);
     cascadeResult = findMatches(state.board);
     cascadeLevel++;
@@ -4349,6 +4424,7 @@ async function useColorBomb(pos) {
   const targetType = targetCell.type;
   if (!spendPowerup('colorBomb')) return;
   state.busy = true;
+  state.cascadeAbort = false;
   cancelHint();
   sfx.unlockAudio();
 
@@ -4398,7 +4474,7 @@ async function useColorBomb(pos) {
 
   let cascadeResult = findMatches(state.board);
   let cascadeLevel = 2;
-  while (cascadeResult.positions.length > 0) {
+  while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(cascadeResult, cascadeLevel, null);
     cascadeResult = findMatches(state.board);
     cascadeLevel++;
@@ -4452,6 +4528,7 @@ async function useShuffle() {
   cancelHint();
   sfx.unlockAudio();
   state.busy = true;
+  state.cascadeAbort = false;
   flashMessage('Shuffled!', 1100);
   speech.speak('Shuffled!');
   // Same spin-out animation as the auto-shuffle so the manual action
@@ -4616,6 +4693,7 @@ async function runComboTurn(combo) {
 
 async function trySwap(a, b) {
   state.busy = true;
+  state.cascadeAbort = false;
   if (state.board.isIngredient(a.c, a.r) || state.board.isIngredient(b.c, b.r)) {
     sfx.playInvalid();
     haptics.invalid();
@@ -4656,7 +4734,7 @@ async function trySwap(a, b) {
     await runComboTurn(combo);
     let cascadeResult = findMatches(state.board);
     let cascadeLevel = 2;
-    while (cascadeResult.positions.length > 0) {
+    while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
       await processMatchRound(cascadeResult, cascadeLevel, null);
       cascadeResult = findMatches(state.board);
       cascadeLevel++;
@@ -4686,7 +4764,7 @@ async function trySwap(a, b) {
   consumeMove();
   let cascadeLevel = 1;
   let swapTarget = b;
-  while (result.positions.length > 0) {
+  while (result.positions.length > 0 && !state.cascadeAbort) {
     await processMatchRound(result, cascadeLevel, swapTarget);
     result = findMatches(state.board);
     cascadeLevel++;
@@ -4703,6 +4781,9 @@ async function trySwap(a, b) {
 }
 
 async function processMatchRound(result, cascadeLevel, swapTarget) {
+  // Infinite-combo safety net. If a cascade chains past the threshold,
+  // declare auto-win and short-circuit the rest of the round.
+  if (maybeTriggerInfiniteCombo(cascadeLevel)) return;
   const specialsCreated = deriveNewSpecials(result.groups, swapTarget);
   const newSpecialKeys = new Set(specialsCreated.map((s) => `${s.c},${s.r}`));
 
@@ -5056,10 +5137,13 @@ function resetBoard() {
     reshuffle(state.board, CANDY_TYPES);
   }
   state.score = 0;
+  state.scoreOverride = null;
+  clearScoreOverride();
   state.selected = null;
   state.busy = false;
   state.resolved = false;
   state.almostFired = false;
+  state.cascadeAbort = false;
   state.jellyMap = new Map();
   state.lockMap = new Map();
   state.progress = {
