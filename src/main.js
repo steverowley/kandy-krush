@@ -1637,6 +1637,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15h',
+    items: [
+      '⏳ JELLY + CHERRY SLOTS TIGHTEN UP — clearJelly and dropIngredients objectives have fixed board counts (can\'t scale the target). Their MOVE BUDGET now shrinks per slot instead: slot 25 → -10%, slot 50 → -20%, slot 100 → -40%. Bosses stay hand-tuned and exempt.',
+    ],
+  },
+  {
     id: '2026-05-25-15g',
     items: [
       '♾️ INFINITE COMBO = AUTO WIN — if a cascade ever chains past 25 rounds, the game declares INSTANT WIN, force-satisfies whatever the objective was, and paints the score as the infinity symbol. First infinite of your session is "∞", second is "∞+1", third "∞+2", and so on — earn bragging rights for breaking the game.',
