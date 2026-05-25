@@ -788,7 +788,7 @@ export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
   });
 }
 
-export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator, awakened }) {
+export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator, awakened, nextMilestone }) {
   const root = document.getElementById('run-hud');
   if (!root) return;
   if (!visible) { root.classList.add('hidden'); return; }
@@ -804,7 +804,10 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
     const mutStr = mutator
       ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
       : '';
-    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}`;
+    const nextStr = nextMilestone
+      ? ` · <span class="text-xs opacity-80">Next: ${nextMilestone.icon} ${nextMilestone.label} in ${nextMilestone.distance}</span>`
+      : '';
+    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}${nextStr}`;
   }
   if (buildsEl && archCounts && archetypes) {
     const tags = [];

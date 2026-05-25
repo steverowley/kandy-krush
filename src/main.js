@@ -324,6 +324,25 @@ function showUpgradeChoicesForSlot(n, canReroll) {
   }, categoryColor, ARCHETYPES, counts, onReroll, awakenInfo);
 }
 
+function nextMilestoneAhead() {
+  if (!state.inRoguelikeRun) return null;
+  const slot = state.roguelike?.currentSlot || 1;
+  // Next boss = next multiple of 10 strictly after current slot.
+  let nextBoss = Math.ceil((slot + 0.0001) / 10) * 10;
+  if (nextBoss > RUN_LENGTH) nextBoss = -1;
+  // Next mutator = next slot > current that's a mutator slot.
+  let nextMut = slot + 1;
+  while (nextMut <= RUN_LENGTH && !isMutatorSlot(nextMut)) nextMut++;
+  if (nextMut > RUN_LENGTH) nextMut = -1;
+  const bossDist = nextBoss > 0 ? nextBoss - slot : 999;
+  const mutDist = nextMut > 0 ? nextMut - slot : 999;
+  if (Math.min(bossDist, mutDist) === 999) return null;
+  if (bossDist <= mutDist) {
+    return { icon: '⚔', label: nextBoss === RUN_LENGTH ? 'FINAL BOSS' : 'Boss', distance: bossDist === 1 ? '1 slot' : `${bossDist} slots` };
+  }
+  return { icon: '🌪', label: 'Mutator', distance: mutDist === 1 ? '1 slot' : `${mutDist} slots` };
+}
+
 function refreshRunHud() {
   setRunHud({
     visible: !!state.inRoguelikeRun,
@@ -336,6 +355,7 @@ function refreshRunHud() {
     totalSlots: RUN_LENGTH,
     mutator: activeMutator(),
     awakened: classAwakened(),
+    nextMilestone: nextMilestoneAhead(),
   });
 }
 
@@ -1172,6 +1192,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9s',
+    items: [
+      '🔮 NEXT MILESTONE HINT — the run HUD now shows what\'s coming up: "Next: ⚔ Boss in 3 slots" or "Next: 🌪 Mutator in 2 slots".',
+      'Plan your build around the upcoming challenge — save power-ups for the boss, or rush a Lucky Day mutator.',
+    ],
+  },
   {
     id: '2026-05-25-9r',
     items: [
