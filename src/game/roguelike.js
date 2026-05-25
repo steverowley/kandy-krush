@@ -320,6 +320,14 @@ export const RELICS = [
     desc: 'Every special candy you make also adds +10% to the Lucky bar.' },
   { id: 'mirror',      icon: '🪞', name: 'Mirror Shard',
     desc: '4-in-a-row matches score 50% more on top of any other bonuses.' },
+  { id: 'penny-pincher',icon: '🪙', name: 'Penny Pincher',
+    desc: 'Earn +2 extra gems for every boss you defeat.' },
+  { id: 'phoenix',     icon: '❤️‍🔥', name: 'Phoenix',
+    desc: 'Once per run, when you would lose your last life, you instead keep 1 — and the relic is consumed.' },
+  { id: 'hawkeye',     icon: '🦅', name: 'Hawkeye',
+    desc: 'Hint sparkles appear after 3 idle seconds instead of the usual 8.' },
+  { id: 'free-reroll', icon: '🐘', name: 'Elephant Memory',
+    desc: 'Upgrade rerolls are FREE — no Shuffle cost.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {

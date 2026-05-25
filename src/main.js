@@ -216,17 +216,20 @@ function showUpgradeChoicesForSlot(n, canReroll) {
   const choices = pickUpgradeChoices(state.runUpgrades, n);
   const counts = archetypeCounts(state.runUpgrades);
   const bank = powerupBank();
-  const rerollAllowed = canReroll && (bank.shuffle || 0) > 0;
+  // 🐘 Elephant Memory relic — rerolls are free, no Shuffle needed.
+  const free = hasRelic('free-reroll');
+  const rerollAllowed = canReroll && (free || (bank.shuffle || 0) > 0);
   const onReroll = rerollAllowed ? () => {
-    // Charge 1 shuffle and re-show with fresh choices, no further reroll.
-    const b = powerupBank();
-    if ((b.shuffle || 0) > 0) {
-      b.shuffle--;
-      setPowerupCounts(b);
-      persist();
+    if (!free) {
+      const b = powerupBank();
+      if ((b.shuffle || 0) > 0) {
+        b.shuffle--;
+        setPowerupCounts(b);
+        persist();
+      }
     }
-    flashMessage('🔄 Rerolled!', 900);
-    showUpgradeChoicesForSlot(n, false);
+    flashMessage(free ? '🐘 Free reroll!' : '🔄 Rerolled!', 900);
+    showUpgradeChoicesForSlot(n, free); // free relic keeps the reroll button alive!
   } : null;
   // Build awakening info so the picker can flag any card whose pick
   // would awaken the current class.
@@ -908,6 +911,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8r',
+    items: [
+      '🪙❤️‍🔥🦅🐘 FOUR MORE RELICS — pool grows from 8 to 12. Pick from a wider variety after every boss.',
+      '🪙 Penny Pincher — +2 gems per boss · ❤️‍🔥 Phoenix — auto-revive once when you\'d lose your last life (consumes the relic) · 🦅 Hawkeye — hints appear after 3s idle instead of 7s · 🐘 Elephant Memory — every upgrade reroll is FREE (no Shuffle cost) and you can reroll repeatedly.',
+    ],
+  },
+  {
     id: '2026-05-25-8q',
     items: [
       '✨ Upgrade picker now CALLS OUT the card that would awaken your class — pulsing pink hint: "This pick AWAKENS your class!"',
@@ -1198,6 +1208,8 @@ function isSwappable(c, r) {
 
 function scheduleHint() {
   cancelHint();
+  // 🦅 Hawkeye relic — hints appear after 3s idle instead of 7s.
+  const delay = hasRelic('hawkeye') ? 3000 : HINT_IDLE_MS;
   hintTimer = setTimeout(() => {
     if (state.busy) {
       scheduleHint();
@@ -1205,7 +1217,7 @@ function scheduleHint() {
     }
     const swap = findAnyValidSwap(state.board, isSwappable);
     if (swap) showHintGlow(swap.a, swap.b);
-  }, HINT_IDLE_MS);
+  }, delay);
 }
 
 async function ensureMovesAvailable() {
@@ -1520,6 +1532,12 @@ function advanceRoguelikeAfterWin() {
     screenShake(7, 400);
     haptics.levelComplete();
     speech.speak('Boss defeated!');
+    // 🪙 Penny Pincher relic — +2 gems per boss defeated.
+    if (hasRelic('penny-pincher')) {
+      state.roguelike.gems = (state.roguelike.gems || 0) + 2;
+      flashMessage('🪙 Penny Pincher! +2💎', 1100);
+      persist();
+    }
     // Boss reward: relic picker. The final boss skips it (no next slot).
     const isFinalBoss = justFinished >= RUN_LENGTH;
     if (isFinalBoss) {
@@ -1920,6 +1938,30 @@ function checkLevelOutcome() {
     speech.speak('Try again');
     if (state.inRoguelikeRun) {
       const slotAtFail = state.roguelike.currentSlot;
+      // ❤️‍🔥 Phoenix relic — if you'd lose your last life, consume the
+      // relic instead so you stay at 1 life and can retry the slot.
+      const wouldBeZero = (state.roguelike.livesRemaining || 0) <= 1;
+      if (wouldBeZero && hasRelic('phoenix')) {
+        state.runRelics = (state.runRelics || []).filter((id) => id !== 'phoenix');
+        flashMessage('❤️‍🔥 PHOENIX REVIVES YOU!', 2400);
+        speech.speak('Phoenix relic revives you!');
+        spawnConfetti(60);
+        spawnStarRain(20);
+        // Don't decrement lives. Fall through to retry dialog with
+        // current life still intact.
+        persist();
+        refreshLevelUI();
+        refreshRunHud();
+        const livesLeft = state.roguelike.livesRemaining;
+        showLevelFail({
+          level: { ...state.level, id: slotAtFail },
+          score: state.score,
+          canSkip: false,
+          onReplay: () => playRoguelikeSlot(slotAtFail),
+          onSkip: () => {},
+        });
+        return;
+      }
       // Decrement a life. If lives remain, offer a retry.
       // If lives hit zero, the run is over.
       state.roguelike.livesRemaining = Math.max(0, (state.roguelike.livesRemaining || 0) - 1);
