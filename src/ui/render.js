@@ -1704,7 +1704,7 @@ export function hideAllOverlays({ except = [] } = {}) {
 // Show the start menu (mode-picker). Each `on*` is invoked when the
 // player taps that mode button; `subtitle` is optional flavor text
 // (e.g. "Run over — pick where to go next" on game-over).
-export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, onQuit, subtitle, stats, version }) {
+export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, onQuit, onResume, onAbandon, subtitle, stats, version, runInProgress }) {
   const screen = document.getElementById('start-screen');
   const btnRogue = document.getElementById('start-menu-roguelike');
   const btnLevels = document.getElementById('start-menu-levels');
@@ -1712,6 +1712,8 @@ export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, o
   const btnSettings = document.getElementById('start-menu-settings');
   const btnHelp = document.getElementById('start-menu-help');
   const btnQuit = document.getElementById('start-menu-quit');
+  const btnResume = document.getElementById('start-menu-resume');
+  const btnAbandon = document.getElementById('start-menu-abandon');
   const subEl = document.getElementById('start-screen-subtitle');
   const statsEl = document.getElementById('start-screen-stats');
   const versionEl = document.getElementById('start-screen-version');
@@ -1747,6 +1749,32 @@ export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, o
     document.body.classList.remove('start-screen-active');
   };
   const wrap = (fn) => () => { hide(); if (fn) fn(); };
+  // 📂 Resume affordance — surfaced when a roguelike run is in progress.
+  // The Resume button takes the player straight back to their slot;
+  // Abandon forfeits (awards gems for slots reached) and unhides the
+  // normal "⚔ Roguelike Run" entry for a fresh start.
+  if (btnResume && btnAbandon) {
+    if (runInProgress) {
+      const slotStr = runInProgress.slot && runInProgress.totalSlots
+        ? ` · Slot ${runInProgress.slot} / ${runInProgress.totalSlots}`
+        : '';
+      const classStr = runInProgress.classIcon
+        ? `${runInProgress.classIcon} `
+        : '';
+      btnResume.innerHTML = `▶ Resume ${classStr}Run${slotStr}`;
+      btnResume.classList.remove('hidden');
+      btnAbandon.classList.remove('hidden');
+      // Hide the regular "Roguelike Run" button to prevent confusion —
+      // the player must Resume or Abandon first.
+      btnRogue.classList.add('hidden');
+    } else {
+      btnResume.classList.add('hidden');
+      btnAbandon.classList.add('hidden');
+      btnRogue.classList.remove('hidden');
+    }
+    replaceListener(btnResume, 'click', wrap(onResume), 'start-menu-resume');
+    replaceListener(btnAbandon, 'click', () => { if (onAbandon) onAbandon(); }, 'start-menu-abandon');
+  }
   replaceListener(btnRogue, 'click', wrap(onRoguelike), 'start-menu-rogue');
   replaceListener(btnLevels, 'click', wrap(onLevels), 'start-menu-levels');
   replaceListener(btnFree, 'click', wrap(onFreePlay), 'start-menu-free');
@@ -1760,7 +1788,10 @@ export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, o
   screen.classList.remove('hidden');
   document.body.classList.add('start-screen-active');
   blockClicksFor(screen, 400);
-  btnRogue.focus();
+  // Focus the resume button if it's visible (run in progress); otherwise
+  // the regular Roguelike entry point.
+  if (runInProgress && btnResume) btnResume.focus();
+  else btnRogue.focus();
 }
 
 // "Thanks for playing" screen shown when the player taps Quit Game.
