@@ -1307,6 +1307,17 @@ function applyRunUpgradesOnSlotStart() {
     if (state.luckyCharge >= 100) state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // 🎄 Sweet Wreath relic — slot start: every jelly tile loses 1 level.
+  if (hasRelic('sweet-wreath') && state.jellyMap && state.jellyMap.size > 0) {
+    const toDelete = [];
+    for (const [k, v] of state.jellyMap) {
+      if (v <= 1) toDelete.push(k);
+      else state.jellyMap.set(k, v - 1);
+    }
+    for (const k of toDelete) state.jellyMap.delete(k);
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('🎄 Sweet Wreath: jelly weakened!', 1200);
+  }
   // ❄️ Frosty Crown relic — slot start: every lock loses 1 level.
   if (hasRelic('frosty-crown') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1533,6 +1544,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13l',
+    items: [
+      '🎄 NEW RELIC — Sweet Wreath: slot start, every jelly tile loses 1 level. Mirrors Frosty Crown for jelly-heavy boards.',
+    ],
+  },
   {
     id: '2026-05-25-13k',
     items: [
