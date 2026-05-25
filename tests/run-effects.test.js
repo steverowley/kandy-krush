@@ -115,3 +115,20 @@ test("slot:complete handler is a no-op outside a roguelike run", () => {
   bus.emit('slot:complete', { slot: 1, score: 9999 });
   assert.equal(state.runHighlights.bestSlotScore, 0);
 });
+
+// --- infinite event tracker ---
+
+test("infinite event bumps runHighlights.infiniteCount", () => {
+  state.runHighlights.infiniteCount = 0;
+  bus.emit('infinite', { nth_this_session: 1, score: 1_000_001 });
+  assert.equal(state.runHighlights.infiniteCount, 1);
+  bus.emit('infinite', { nth_this_session: 2, score: 1_500_000 });
+  assert.equal(state.runHighlights.infiniteCount, 2);
+});
+
+test("infinite handler is a no-op outside a roguelike run", () => {
+  state.inRoguelikeRun = false;
+  state.runHighlights.infiniteCount = 0;
+  bus.emit('infinite', { nth_this_session: 1, score: 1_000_001 });
+  assert.equal(state.runHighlights.infiniteCount, 0);
+});
