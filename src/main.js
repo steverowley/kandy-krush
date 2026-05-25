@@ -122,6 +122,7 @@ import * as purchases from './purchases.js';
 import * as i18n from './i18n.js';
 import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
 import * as bus from './game/event-bus.js';
+import { registerRunEffects } from './game/run-effects.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -1947,6 +1948,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17ab',
+    items: [
+      '🚌 FIRST EFFECT MIGRATED TO THE BUS — the per-run highlights tracker (maxCascade / biggestMatch / totalMatches) used to be a 13-line inline branch in the middle of processMatchRound. Now it lives in `src/game/run-effects.js` as a `bus.on(\'match\', …)` subscriber. Sets the pattern for the rest of the B6 migration: pull one inline branch at a time, add a focused test, delete the original. 6 new tests; 58 total now pass.',
+    ],
+  },
   {
     id: '2026-05-25-17aa',
     items: [
@@ -5837,20 +5844,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const s of specialsCreated) {
     bus.emit('special:birth', { type: s.type, c: s.c, r: s.r, kind: s.kind });
   }
-  // 🏅 Per-run highlight tracking — surfaced on the run summary.
-  if (state.inRoguelikeRun && state.runHighlights) {
-    if (cascadeLevel > (state.runHighlights.maxCascade || 0)) {
-      state.runHighlights.maxCascade = cascadeLevel;
-    }
-    if (allCleared.size > (state.runHighlights.biggestMatch || 0)) {
-      state.runHighlights.biggestMatch = allCleared.size;
-    }
-    // Total matches across the run (counted at cascade level 1 so a chain
-    // of N counts as 1 match event, not N).
-    if (cascadeLevel === 1) {
-      state.runHighlights.totalMatches = (state.runHighlights.totalMatches || 0) + 1;
-    }
-  }
+  // 🏅 Per-run highlight tracking now lives in src/game/run-effects.js
+  // as a `bus.on('match', ...)` subscriber. The bus.emit('match', …)
+  // call earlier in this function feeds the handler with the same
+  // payload this inline block used to read directly. Migrated PR #17ab.
   if (cascadeLevel >= 3) {
     spawnConfetti(20);
     // 🔥 Furnace upgrade — cascade chain ≥3 spawns a TNT crazy tile per stack.
@@ -6392,6 +6389,9 @@ function init({ chime = false, announceLevel = true } = {}) {
 }
 
 applyTheme(state.settings);
+// 🚌 Register event-bus subscribers for run effects (first migration
+// from the inline-branch maze in processMatchRound — see B6).
+registerRunEffects(state);
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
 // down to the current effective cap so the UI doesn't show "9 hammers"
