@@ -790,6 +790,7 @@ export function showClassPicker(classes, archetypes, onPick) {
         ${arch ? `<span class="text-xs font-bold uppercase tracking-wider ml-auto" style="color:${color}">${arch.icon} ${arch.name}</span>` : ''}
       </div>
       <span class="text-sm sm:text-base text-gray-700">${cls.desc}</span>
+      ${cls.awaken ? `<span class="text-xs font-bold text-pink-700">✨ ${cls.awaken}</span>` : ''}
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
@@ -809,7 +810,7 @@ export function showClassPicker(classes, archetypes, onPick) {
   if (firstBtn) firstBtn.focus();
 }
 
-export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts, onReroll = null) {
+export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts, onReroll = null, awakenInfo = null) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
   const list = document.getElementById('upgrade-choices');
@@ -823,6 +824,17 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
     const synergyHint = arch && willStack >= 2
       ? `<span class="text-xs font-bold" style="color:${arch.color}">Synergy ${willStack}× — ${arch.desc}</span>`
       : '';
+    // If this pick would cross the player's class-awakening threshold,
+    // call it out so they can chase the synergy on purpose.
+    let awakenHint = '';
+    if (awakenInfo && !awakenInfo.alreadyAwakened) {
+      const wouldAwaken =
+        (awakenInfo.archetype && u.archetype === awakenInfo.archetype && willStack === awakenInfo.threshold) ||
+        (awakenInfo.anyUpgrade && (awakenInfo.totalCount + 1) === awakenInfo.threshold);
+      if (wouldAwaken) {
+        awakenHint = '<span class="text-xs font-bold text-pink-700 animate-pulse">✨ This pick AWAKENS your class!</span>';
+      }
+    }
     const archBadge = arch
       ? `<span class="text-xs font-bold uppercase tracking-wider" style="color:${arch.color}">${arch.icon} ${arch.name}${stacks > 0 ? ` ×${willStack}` : ''}</span>`
       : '';
@@ -837,6 +849,7 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
       <span class="text-lg sm:text-xl font-bold">${u.name}</span>
       <span class="text-sm sm:text-base text-gray-700">${u.desc}</span>
       ${synergyHint}
+      ${awakenHint}
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
