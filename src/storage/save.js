@@ -54,6 +54,9 @@ const defaults = () => ({
   // player reached on that day's daily. Only the first attempt counts.
   dailySeedDate: null,
   dailySeedBestSlot: 0,
+  // 📓 Last N completed runs (most recent first). Each entry:
+  // { ts, outcome, slot, class, gems, score, daily, dailyStamp }
+  runHistory: [],
 });
 
 function todayStamp(d = new Date()) {
@@ -164,6 +167,7 @@ export function load() {
         ? parsed.dailySeedDate
         : null,
       dailySeedBestSlot: Math.min(100, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
+      runHistory: sanitizeRunHistory(parsed.runHistory),
     };
   } catch (err) {
     // A sanitizer threw — partial corruption. Back up and return defaults.
@@ -192,6 +196,27 @@ function sanitizeRunArray(raw, max = 200) {
     if (typeof v !== 'string') continue;
     if (v.length > 64) continue;
     out.push(v);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+function sanitizeRunHistory(raw, max = 20) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const v of raw) {
+    if (!v || typeof v !== 'object') continue;
+    const entry = {
+      ts: Number(v.ts) || 0,
+      outcome: v.outcome === 'complete' ? 'complete' : 'fail',
+      slot: Math.max(0, Math.min(100, Math.floor(Number(v.slot) || 0))),
+      class: typeof v.class === 'string' && v.class.length <= 32 ? v.class : null,
+      gems: Math.max(0, Math.floor(Number(v.gems) || 0)),
+      score: Math.max(0, Math.floor(Number(v.score) || 0)),
+      daily: !!v.daily,
+      dailyStamp: typeof v.dailyStamp === 'string' && v.dailyStamp.length <= 16 ? v.dailyStamp : null,
+    };
+    out.push(entry);
     if (out.length >= max) break;
   }
   return out;

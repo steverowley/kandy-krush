@@ -292,6 +292,23 @@
     <button id="install-dismiss" type="button" class="text-2xl font-bold text-gray-800 hover:text-black w-11 h-11 inline-flex items-center justify-center rounded-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Dismiss install prompt">×</button>
   </div>
 
+  <div id="run-history-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
+  <div
+    id="run-history-panel"
+    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="run-history-title"
+  >
+    <div class="flex items-center justify-between gap-3">
+      <h2 id="run-history-title" class="text-2xl sm:text-3xl font-bold">📓 Run History</h2>
+      <button id="run-history-close" type="button" class="text-xl font-bold bg-white hover:bg-amber-100 border-[3px] border-black rounded-2xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Done</button>
+    </div>
+    <p class="text-base text-gray-700">Your last 20 roguelike runs, most recent first.</p>
+    <div id="run-history-list" class="flex flex-col gap-2"></div>
+    <div id="run-history-empty" class="hidden text-center text-gray-600 italic py-6">No runs yet. Pick a class and run starts here.</div>
+  </div>
+
   <div id="skill-tree-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
   <div
     id="skill-tree-panel"
@@ -551,6 +568,13 @@
         class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
         data-tip="Spend gems on permanent roguelike boosts"
       >Skill Tree</button>
+
+      <button
+        id="setting-run-history"
+        type="button"
+        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        data-tip="See your last 20 roguelike runs"
+      >📓 Run History</button>
 
       <div>
         <div class="text-xl font-bold mb-2">Tile size</div>

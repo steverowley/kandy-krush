@@ -851,6 +851,62 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
+// 📓 Run-history modal. `entries` is an array of records from
+// state.runHistory (most recent first). `getClass` is the lookup
+// function from roguelike.js so we can render the class icon + name.
+export function showRunHistory({ entries, getClass, onClose }) {
+  const overlay = document.getElementById('run-history-overlay');
+  const panel = document.getElementById('run-history-panel');
+  const list = document.getElementById('run-history-list');
+  const empty = document.getElementById('run-history-empty');
+  const close = document.getElementById('run-history-close');
+  if (!overlay || !panel || !list || !close) return;
+  captureFocus();
+  list.innerHTML = '';
+  if (!entries || entries.length === 0) {
+    if (empty) empty.classList.remove('hidden');
+  } else {
+    if (empty) empty.classList.add('hidden');
+    for (const e of entries) {
+      const row = document.createElement('div');
+      const isWin = e.outcome === 'complete';
+      const cls = e.class ? (getClass ? getClass(e.class) : null) : null;
+      const date = e.ts ? new Date(e.ts) : null;
+      const dateStr = date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '';
+      const dailyChip = e.daily ? '<span class="px-2 py-0.5 rounded-full bg-purple-300 text-black font-bold text-sm">🌅 DAILY</span>' : '';
+      const outcomeChip = isWin
+        ? '<span class="px-2 py-0.5 rounded-full bg-yellow-300 text-black font-bold text-sm">🏆 WIN</span>'
+        : `<span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-900 font-bold text-sm">Slot ${e.slot}/100</span>`;
+      row.className = 'border-2 border-black rounded-xl p-3 bg-amber-50 flex flex-col gap-1';
+      row.innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap">
+          ${outcomeChip}
+          ${dailyChip}
+          <span class="font-bold text-gray-900">${cls ? `${escapeHtml(cls.icon)} ${escapeHtml(cls.name)}` : escapeHtml(e.class || '—')}</span>
+          <span class="ml-auto text-sm text-gray-700">${escapeHtml(dateStr)}</span>
+        </div>
+        <div class="flex items-center gap-3 text-base">
+          <span>💎 <span class="font-bold tabular-nums">${e.gems}</span></span>
+          <span>Score <span class="font-bold tabular-nums">${(e.score || 0).toLocaleString()}</span></span>
+        </div>
+      `;
+      list.appendChild(row);
+    }
+  }
+  const handleClose = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    restoreFocus();
+    if (onClose) onClose();
+  };
+  replaceListener(close, 'click', handleClose, 'run-history-close');
+  replaceListener(overlay, 'click', handleClose, 'run-history-overlay');
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  blockClicksFor(panel, 300);
+  close.focus();
+}
+
 export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   const overlay = document.getElementById('skill-tree-overlay');
   const panel = document.getElementById('skill-tree-panel');

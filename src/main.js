@@ -82,6 +82,7 @@ import {
   showCrossroadsEvent,
   flashMutatorActivation,
   showSkillTree,
+  showRunHistory,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -268,6 +269,8 @@ const state = {
   // reached in today's daily — surfaces on the start screen.
   dailySeedDate: persisted.dailySeedDate || null,
   dailySeedBestSlot: persisted.dailySeedBestSlot || 0,
+  // 📓 Last 20 runs, most recent first. Updated in recordRunHistory().
+  runHistory: Array.isArray(persisted.runHistory) ? persisted.runHistory.slice(0, 20) : [],
   runRng: null,
   runIsDaily: false,
   runDailyStamp: null,
@@ -1902,6 +1905,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17n',
+    items: [
+      '📓 RUN HISTORY — new Settings entry "📓 Run History" opens a modal listing your last 20 roguelike runs (most recent first). Each row shows the date, class, outcome (🏆 WIN or "Slot X/100"), gems earned, final score, and a 🌅 DAILY chip when the run was a daily seed. PC-roguelike players love stat-stalking.',
+    ],
+  },
   {
     id: '2026-05-25-17m',
     items: [
@@ -3761,6 +3770,7 @@ function persist() {
     runRelics: state.runRelics || [],
     dailySeedDate: state.dailySeedDate || null,
     dailySeedBestSlot: state.dailySeedBestSlot || 0,
+    runHistory: state.runHistory || [],
   });
   // Warn the player ONCE if persist() fails (private mode / quota
   // exceeded / SecurityError). Without this, progress silently doesn't
@@ -4061,6 +4071,16 @@ function advanceRoguelikeAfterWin() {
       daily: !!state.runIsDaily,
       daily_stamp: state.runDailyStamp || null,
     });
+    recordRunHistory({
+      ts: Date.now(),
+      outcome: 'complete',
+      slot: RUN_LENGTH,
+      class: state.roguelike.currentClass,
+      gems,
+      score: state.score || 0,
+      daily: !!state.runIsDaily,
+      dailyStamp: state.runDailyStamp || null,
+    });
     // Daily-seed full clear is the ceiling — record it.
     if (state.runIsDaily) {
       state.dailySeedDate = state.runDailyStamp;
@@ -4350,6 +4370,16 @@ function runMidRunShop(onDone) {
   }, 800);
 }
 
+// 📓 Push an entry onto the run-history journal. Most recent first,
+// capped at 20 — anything older falls off. Used by the Run History
+// modal accessible from Settings.
+function recordRunHistory(entry) {
+  state.runHistory = state.runHistory || [];
+  state.runHistory.unshift(entry);
+  if (state.runHistory.length > 20) state.runHistory.length = 20;
+  // persist() runs as part of the broader run-end flow, no need here.
+}
+
 function endRoguelikeRun() {
   const reached = state.roguelike.currentSlot;
   const gems = gemsEarned(reached, false, metaSkills());
@@ -4363,6 +4393,16 @@ function endRoguelikeRun() {
     relics: (state.runRelics || []).length,
     daily: wasDaily,
     daily_stamp: state.runDailyStamp || null,
+  });
+  recordRunHistory({
+    ts: Date.now(),
+    outcome: 'fail',
+    slot: reached,
+    class: state.roguelike.currentClass,
+    gems,
+    score: state.score || 0,
+    daily: wasDaily,
+    dailyStamp: state.runDailyStamp || null,
   });
   // Record the best slot for today's daily so the start-screen badge
   // shows it. Only the FIRST daily attempt per calendar day counts
@@ -6231,6 +6271,17 @@ if (skillTreeBtn) {
         bestSlot: state.roguelike?.bestSlot || 0,
         bossesDefeated: state.roguelike?.bossesDefeated || 0,
       },
+    });
+  });
+}
+
+// 📓 Run-history modal (Phase 17n / D1).
+const runHistoryBtn = document.getElementById('setting-run-history');
+if (runHistoryBtn) {
+  runHistoryBtn.addEventListener('click', () => {
+    showRunHistory({
+      entries: state.runHistory || [],
+      getClass,
     });
   });
 }
