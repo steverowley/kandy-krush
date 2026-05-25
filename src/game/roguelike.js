@@ -466,6 +466,8 @@ export const MUTATORS = [
     desc: 'On slot win, each leftover move converts to +30 score. Stacks with Crown of Sweetness (50/move).' },
   { id: 'eraser',      icon: '✏️', name: 'Eraser',
     desc: 'Clears 3 random tiles at slot start (could create a cascade — or just open the board).' },
+  { id: 'bottomless-cup',icon: '🍵', name: 'Bottomless Cup',
+    desc: 'Every match adds +20% to the Lucky bar. Trigger Lucky-MODE almost every move.' },
 ];
 
 export function isMutatorSlot(slot) {

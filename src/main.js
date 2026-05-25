@@ -1373,6 +1373,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11m',
+    items: [
+      '🍵 NEW MUTATOR — Bottomless Cup. Every match adds +20% to the Lucky bar. Trigger Lucky-MODE almost every move.',
+      'Mutator pool now 21.',
+    ],
+  },
+  {
     id: '2026-05-25-11l',
     items: [
       '✏️ NEW MUTATOR — Eraser. Clears 3 random tiles at slot start, often triggering a free cascade.',
@@ -3752,6 +3759,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         setLuckyCharge(state.luckyCharge, state.luckyReady);
         flashMessage('🍀 Lucky Magnet! Bar full!', 1000);
       }
+    }
+    // 🍵 Bottomless Cup mutator — +20% Lucky bar per match.
+    if (hasMutator('bottomless-cup')) {
+      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
+      if (state.luckyCharge >= 100) state.luckyReady = true;
+      setLuckyCharge(state.luckyCharge, state.luckyReady);
     }
     // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
     if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
