@@ -1,4 +1,4 @@
-const VERSION = 'sweet-match-v4';
+const VERSION = 'sweet-match-v5';
 const SHELL = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const SHELL = [
   './src/game/score.js',
   './src/game/hint.js',
   './src/game/levels.js',
+  './src/game/roguelike.js',
   './src/ui/render.js',
   './src/ui/input.js',
   './src/ui/settings.js',
@@ -19,6 +20,7 @@ const SHELL = [
   './src/ui/levelSelect.js',
   './src/audio/sfx.js',
   './src/audio/speech.js',
+  './src/audio/haptics.js',
   './src/storage/save.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
