@@ -1514,6 +1514,68 @@ export const LEVELS = [
       ],
     },
   },
+  // ===== Chapter: Encore (121-125) — for the curious that kept playing =====
+  {
+    id: 121,
+    name: 'Curtain Call',
+    moves: 30,
+    objective: { kind: 'score', target: 10000 },
+    hint: '10,000 score, 30 moves, nothing in the way.',
+  },
+  {
+    id: 122,
+    name: 'Sticky Web',
+    moves: 36,
+    objective: { kind: 'clearJelly' },
+    hint: 'A diagonal stripe of double-jelly. Read the angle.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2],
+        [1, 1, 2],
+        [2, 2, 2],
+        [3, 3, 2],
+        [4, 4, 2],
+        [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 123,
+    name: 'Locked Garden',
+    moves: 42,
+    objective: { kind: 'score', target: 12000 },
+    hint: '12,000 score through a ring of locked tiles.',
+    obstacles: {
+      locks: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [1, 2, 2],                       [4, 2, 2],
+        [1, 3, 2],                       [4, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 124,
+    name: 'Cherry Fountain',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 8 },
+    hint: '8 cherries plus a center jelly wall.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [1, 1], [4, 1]],
+      jelly: [
+        [2, 2, 1], [3, 2, 1],
+        [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 125,
+    name: 'Encore!',
+    moves: 50,
+    objective: { kind: 'matches', target: 60 },
+    hint: '60 matches in 50 moves. Cascades or it doesn\'t happen.',
+    tip: 'If you got here, you really love this game. Thanks for playing.',
+  },
 ];
 
 export function getLevel(id) {
