@@ -1494,6 +1494,45 @@ export function showShop({ items, getGems, onBuy, onContinue }) {
   panel.classList.remove('hidden');
 }
 
+// Roguelike intro tour. Old design dumped 5 dense cards on the player
+// at once — gameplay review flagged this as a D1 churn risk. New
+// design: same 5 concepts, but step through them ONE at a time with
+// Prev / Next / Skip controls so the player can chew on each idea
+// before moving on. "Skip" jumps straight to class pick for returning
+// players or anyone who'd rather discover the rest in play.
+const INTRO_STEPS = [
+  {
+    bg: 'bg-amber-50 border-amber-700',
+    icon: '⚔',
+    title: 'CLASS',
+    body: 'Pick 1 of 11 classes at run start. Each grants a free starting upgrade and unlocks a unique passive (your AWAKENING) once you stack 2+ upgrades of its archetype.',
+  },
+  {
+    bg: 'bg-purple-50 border-purple-700',
+    icon: '🧬',
+    title: 'UPGRADES + SYNERGY',
+    body: 'Pick 1 upgrade between slots. Cards belong to 5 archetypes (🎯 Scorer · 💣 Bomber · 🍀 Lucky · 🛡 Sustain · ⚡ Wild). Stack the same archetype for SYNERGY bonuses and your class awakening.',
+  },
+  {
+    bg: 'bg-yellow-50 border-yellow-700',
+    icon: '👑',
+    title: 'BOSSES + RELICS',
+    body: 'Every 10 slots is a BOSS — each has its own mechanic (jelly regen, lock harden, wraith heal, …). Beat one and pick 1 of 3 random RELICS. Relics rewrite your run.',
+  },
+  {
+    bg: 'bg-pink-50 border-pink-700',
+    icon: '🌪',
+    title: 'MUTATORS',
+    body: 'Every 5 slots (skipping bosses), a random MUTATOR rolls — a one-slot buff like ☀️ Golden Hour (×2 score) or 🍀 Lucky Day (Lucky bar starts full). Pure upside.',
+  },
+  {
+    bg: 'bg-gray-100 border-gray-700',
+    icon: '🦷🪨',
+    title: 'ENEMIES',
+    body: 'The Eater (slot 9+) chomps the top of a random column every few moves. Grumblock (slot 50+) wanders the board, locking tiles. Both are telegraphed so you can plan around them.',
+  },
+];
+
 export function showRoguelikeIntro(onProceed) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
@@ -1505,45 +1544,54 @@ export function showRoguelikeIntro(onProceed) {
   const prevSubtitle = subtitle?.textContent;
   const prevTitle = title?.textContent;
   const prevGridClass = list.className;
-  if (subtitle) subtitle.textContent = 'Welcome to Roguelike!';
-  if (title) title.textContent = 'Quick run-down before we start';
-  list.className = 'flex flex-col gap-2 text-base sm:text-lg';
-  list.innerHTML = `
-    <div class="bg-amber-50 border-2 border-amber-700 rounded-xl p-3 text-gray-900">
-      <div class="font-bold">⚔ CLASS</div>
-      <div>Pick 1 of 11 classes at run start. Each grants a free starting upgrade and unlocks a unique passive (your AWAKENING) once you stack 2+ upgrades of its archetype.</div>
-    </div>
-    <div class="bg-purple-50 border-2 border-purple-700 rounded-xl p-3 text-gray-900">
-      <div class="font-bold">🧬 UPGRADES + SYNERGY</div>
-      <div>Pick 1 upgrade between slots. Cards belong to 5 archetypes (🎯 Scorer · 💣 Bomber · 🍀 Lucky · 🛡 Sustain · ⚡ Wild). Stack the same archetype for SYNERGY bonuses and your class awakening.</div>
-    </div>
-    <div class="bg-yellow-50 border-2 border-yellow-700 rounded-xl p-3 text-gray-900">
-      <div class="font-bold">👑 RELICS</div>
-      <div>Beat a boss (every 10 slots) and choose 1 of 3 random RELICS — rare per-run passives that completely change the feel of your run.</div>
-    </div>
-    <div class="bg-pink-50 border-2 border-pink-700 rounded-xl p-3 text-gray-900">
-      <div class="font-bold">🌪 MUTATORS</div>
-      <div>Every 5 slots (skipping bosses), a random MUTATOR rolls — a one-slot buff like ☀️ Golden Hour (×2 score) or 🍀 Lucky Day (Lucky bar starts full). Pure upside.</div>
-    </div>
-    <div class="bg-gray-100 border-2 border-gray-700 rounded-xl p-3 text-gray-900">
-      <div class="font-bold">🦷🪨 ENEMIES</div>
-      <div>The Eater (slot 9+) chomps the top of a random column every few moves. Grumblock (slot 50+) wanders the board, locking tiles. Both are telegraphed so you can plan around them.</div>
-    </div>
-    <button id="intro-go" class="mt-2 px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Let's go — pick my class</button>
-  `;
-  const button = list.querySelector('#intro-go');
-  button.addEventListener('click', () => {
+  let step = 0;
+  const total = INTRO_STEPS.length;
+
+  function finish() {
     overlay.classList.add('hidden');
     panel.classList.add('hidden');
     if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
     if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
     list.className = prevGridClass;
     if (onProceed) onProceed();
-  });
+  }
+
+  function render() {
+    const s = INTRO_STEPS[step];
+    if (subtitle) subtitle.textContent = `Welcome to Roguelike! (${step + 1} of ${total})`;
+    if (title) title.textContent = `${s.icon} ${s.title}`;
+    list.className = 'flex flex-col gap-3 text-base sm:text-lg';
+    const isLast = step === total - 1;
+    list.innerHTML = `
+      <div class="${s.bg} border-2 rounded-xl p-4 text-gray-900 text-lg">
+        ${s.body}
+      </div>
+      <div class="flex w-full gap-2 mt-1">
+        <button id="intro-prev" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500 ${step === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${step === 0 ? 'disabled' : ''}>← Back</button>
+        <button id="intro-skip" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">Skip — I know how to play</button>
+        <button id="intro-next" class="flex-1 text-base sm:text-lg font-bold bg-yellow-400 hover:bg-yellow-300 text-black border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">${isLast ? "Let's go — pick my class →" : 'Next →'}</button>
+      </div>
+      <div class="flex justify-center gap-1.5 mt-1" aria-hidden="true">
+        ${INTRO_STEPS.map((_, i) => `<span class="w-2 h-2 rounded-full ${i === step ? 'bg-black' : 'bg-gray-300'}"></span>`).join('')}
+      </div>
+    `;
+    const prevBtn = list.querySelector('#intro-prev');
+    const nextBtn = list.querySelector('#intro-next');
+    const skipBtn = list.querySelector('#intro-skip');
+    if (prevBtn && step > 0) prevBtn.addEventListener('click', () => { step--; render(); });
+    if (skipBtn) skipBtn.addEventListener('click', finish);
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      if (isLast) { finish(); return; }
+      step++;
+      render();
+    });
+    nextBtn?.focus();
+  }
+
   if (active) active.textContent = '';
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
-  button.focus();
+  render();
 }
 
 export function showClassPicker(classes, archetypes, onPick, classStats = null) {
