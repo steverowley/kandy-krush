@@ -9,6 +9,7 @@ const defaults = () => ({
   streak: 0,
   lastPlayedDate: null,
   seenWelcome: false,
+  seenRoguelikeIntro: false,
   seenVersion: null,
   installPromptDismissedAt: 0,
   settings: {
@@ -74,6 +75,7 @@ export function load() {
       streak: Number(parsed.streak) || 0,
       lastPlayedDate: parsed.lastPlayedDate || null,
       seenWelcome: !!parsed.seenWelcome,
+      seenRoguelikeIntro: !!parsed.seenRoguelikeIntro,
       seenVersion: typeof parsed.seenVersion === 'string' ? parsed.seenVersion : null,
       installPromptDismissedAt: Number(parsed.installPromptDismissedAt) || 0,
       settings: {

@@ -814,6 +814,58 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
   if (firstBtn) firstBtn.focus();
 }
 
+export function showRoguelikeIntro(onProceed) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const active = document.getElementById('upgrade-active-list');
+  const subtitle = document.getElementById('upgrade-subtitle');
+  const title = document.getElementById('upgrade-title');
+  if (!overlay || !panel || !list) { if (onProceed) onProceed(); return; }
+  const prevSubtitle = subtitle?.textContent;
+  const prevTitle = title?.textContent;
+  const prevGridClass = list.className;
+  if (subtitle) subtitle.textContent = 'Welcome to Roguelike!';
+  if (title) title.textContent = 'Quick run-down before we start';
+  list.className = 'flex flex-col gap-2 text-sm sm:text-base';
+  list.innerHTML = `
+    <div class="bg-amber-50 border-2 border-amber-700 rounded-xl p-3 text-gray-900">
+      <div class="font-bold">⚔ CLASS</div>
+      <div>Pick 1 of 11 classes at run start. Each grants a free starting upgrade and unlocks a unique passive (your AWAKENING) once you stack 2+ upgrades of its archetype.</div>
+    </div>
+    <div class="bg-purple-50 border-2 border-purple-700 rounded-xl p-3 text-gray-900">
+      <div class="font-bold">🧬 UPGRADES + SYNERGY</div>
+      <div>Pick 1 upgrade between slots. Cards belong to 5 archetypes (🎯 Scorer · 💣 Bomber · 🍀 Lucky · 🛡 Sustain · ⚡ Wild). Stack the same archetype for SYNERGY bonuses and your class awakening.</div>
+    </div>
+    <div class="bg-yellow-50 border-2 border-yellow-700 rounded-xl p-3 text-gray-900">
+      <div class="font-bold">👑 RELICS</div>
+      <div>Beat a boss (every 10 slots) and choose 1 of 3 random RELICS — rare per-run passives that completely change the feel of your run.</div>
+    </div>
+    <div class="bg-pink-50 border-2 border-pink-700 rounded-xl p-3 text-gray-900">
+      <div class="font-bold">🌪 MUTATORS</div>
+      <div>Every 5 slots (skipping bosses), a random MUTATOR rolls — a one-slot buff like ☀️ Golden Hour (×2 score) or 🍀 Lucky Day (Lucky bar starts full). Pure upside.</div>
+    </div>
+    <div class="bg-gray-100 border-2 border-gray-700 rounded-xl p-3 text-gray-900">
+      <div class="font-bold">🦷🪨 ENEMIES</div>
+      <div>The Eater (slot 9+) chomps the top of a random column every few moves. Grumblock (slot 50+) wanders the board, locking tiles. Both are telegraphed so you can plan around them.</div>
+    </div>
+    <button id="intro-go" class="mt-2 px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Let's go — pick my class</button>
+  `;
+  const button = list.querySelector('#intro-go');
+  button.addEventListener('click', () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
+    if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
+    list.className = prevGridClass;
+    if (onProceed) onProceed();
+  });
+  if (active) active.textContent = '';
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  button.focus();
+}
+
 export function showClassPicker(classes, archetypes, onPick, classStats = null) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');

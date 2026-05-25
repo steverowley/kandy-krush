@@ -71,6 +71,7 @@ import {
   setRunHud,
   showBossBanner,
   showRunSummary,
+  showRoguelikeIntro,
   flashMutatorActivation,
   showSkillTree,
 } from './ui/render.js';
@@ -142,6 +143,7 @@ const state = {
   resolved: false,
   almostFired: false,
   seenWelcome: persisted.seenWelcome,
+  seenRoguelikeIntro: !!persisted.seenRoguelikeIntro,
   seenVersion: persisted.seenVersion,
   installPromptDismissedAt: persisted.installPromptDismissedAt || 0,
   armedTool: null,
@@ -1140,6 +1142,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9i',
+    items: [
+      '📚 First-time Roguelike WELCOME — new players entering Roguelike for the first time get a one-page rundown of all the new systems: Classes, Synergy, Relics, Mutators, and Enemies. Click "Let\'s go" to pick your class.',
+      'Persists "seen" status so you only see it once. Veterans skip straight to the class picker.',
+    ],
+  },
+  {
     id: '2026-05-25-9h',
     items: [
       '📋 TAP THE RUN HUD to see your full build at any time — class, archetype tallies, AND each relic with its full description (not just an icon).',
@@ -1673,6 +1682,7 @@ function persist() {
     streak: state.streak,
     lastPlayedDate: state.lastPlayedDate,
     seenWelcome: state.seenWelcome,
+    seenRoguelikeIntro: !!state.seenRoguelikeIntro,
     seenVersion: state.seenVersion,
     installPromptDismissedAt: state.installPromptDismissedAt || 0,
     settings: state.settings,
@@ -1792,6 +1802,16 @@ function startRoguelikeRun() {
     state.roguelike.currentClass = null;
   }
   persist();
+  // First-ever roguelike run: pop a one-time intro explaining the
+  // class / archetype / relic / mutator / enemy systems. Then class.
+  if (state.roguelike.currentSlot === 1 && !state.roguelike.currentClass && !state.seenRoguelikeIntro) {
+    showRoguelikeIntro(() => {
+      state.seenRoguelikeIntro = true;
+      persist();
+      startRoguelikeRun(); // re-enter to hit the class picker branch
+    });
+    return;
+  }
   // Fresh run with no class yet — show the class picker. The picker
   // grants free starting upgrades that shape the run's archetype.
   if (state.roguelike.currentSlot === 1 && !state.roguelike.currentClass) {
