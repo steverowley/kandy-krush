@@ -1662,6 +1662,29 @@ body.theme-hc #level-info #moves-label,
 body.theme-hc #level-info #objective-text,
 body.theme-hc #level-info #objective-progress,
 body.theme-hc #level-info #level-name { color: #fff; }
+/* Run-inventory / run-summary modal — make it readable on the dark
+   high-contrast canvas. */
+body.theme-hc #run-summary-panel {
+  background: #111 !important;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #run-summary-panel #run-summary-title,
+body.theme-hc #run-summary-panel #run-summary-tier,
+body.theme-hc #run-summary-panel #run-summary-class,
+body.theme-hc #run-summary-panel .opacity-70 { color: #fff !important; opacity: 1; }
+body.theme-hc #run-summary-panel > div[id^="run-summary-stats"] > div {
+  background: #1a1a2e !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+body.theme-hc #run-summary-builds > span,
+body.theme-hc #run-summary-relics > div {
+  border-color: #fff !important;
+}
+body.theme-hc #run-summary-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
 body.theme-hc #level-complete,
 body.theme-hc #level-fail {
   background: #111;
