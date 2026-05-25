@@ -1382,6 +1382,71 @@ export const LEVELS = [
       ],
     },
   },
+  // ===== Chapter: True Hell (111-115) — way beyond grandma mode =====
+  {
+    id: 111,
+    name: 'Crimson Tide',
+    moves: 22,
+    objective: { kind: 'score', target: 7000 },
+    hint: '7,000 points in 22 moves, zero obstacles. Pure skill.',
+  },
+  {
+    id: 112,
+    name: 'Eternal Loop',
+    moves: 30,
+    objective: { kind: 'matches', target: 50 },
+    hint: '50 matches in 30 moves. Cascades count — chain everything.',
+  },
+  {
+    id: 113,
+    name: 'Jelly Singularity',
+    moves: 45,
+    objective: { kind: 'clearJelly' },
+    hint: 'The ENTIRE board is double-jelly. 36 cells. Good luck.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 2], [2, 0, 2], [3, 0, 2], [4, 0, 2], [5, 0, 2],
+        [0, 1, 2], [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2], [5, 1, 2],
+        [0, 2, 2], [1, 2, 2], [2, 2, 2], [3, 2, 2], [4, 2, 2], [5, 2, 2],
+        [0, 3, 2], [1, 3, 2], [2, 3, 2], [3, 3, 2], [4, 3, 2], [5, 3, 2],
+        [0, 4, 2], [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2], [5, 4, 2],
+        [0, 5, 2], [1, 5, 2], [2, 5, 2], [3, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 114,
+    name: 'Cherry Symphony',
+    moves: 40,
+    objective: { kind: 'dropIngredients', target: 7 },
+    hint: 'Seven cherries — every column has one, plus one extra to crown.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [3, 1]],
+    },
+  },
+  {
+    id: 115,
+    name: 'Sweet Infinity',
+    moves: 60,
+    objective: { kind: 'score', target: 15000 },
+    hint: 'The new top: 15,000 score through every obstacle. ∞ build complexity.',
+    tip: 'If you beat this, you really did beat the game.',
+    obstacles: {
+      ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 1, 2], [5, 1, 2],
+        [0, 4, 2], [5, 4, 2],
+        [2, 0, 2], [3, 0, 2],
+        [2, 5, 2], [3, 5, 2],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
