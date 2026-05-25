@@ -1101,6 +1101,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9e',
+    items: [
+      '⛰ POST-GAME LEVELS 101-110 — "Beyond the Apocalypse" — ten brutal challenges for players who cleared the Sweet Apocalypse and want more.',
+      'Aftermath (5k in 25 moves, no obstacles) · Cascade Trial (8 specials in 22) · Jelly Armageddon (full board of double-jelly) · Cherry Purgatory (7 cherries) · Iron Grip (24 type clears through a lock maze) · Centurion (50 matches in 50) · Champion\'s Ladder (8k in 30) · Locked-down Vault (almost every cell locked) · Rainbow Rite (10 specials!) · Beyond the Summit (12k score through everything — the new top).',
+    ],
+  },
+  {
     id: '2026-05-25-9d',
     items: [
       '👑 3 MORE RELICS — pool now 16. Try them all.',
