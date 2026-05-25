@@ -1109,6 +1109,8 @@ function effectivePowerupCap() {
     cap += synergyStacks(counts.sustain);
     // 🧺 Caretaker upgrade — +1 cap per stack.
     cap += upgradeCount('caretaker');
+    // 🎉 Power Friday mutator — bank cap doubled this slot.
+    if (hasMutator('power-friday')) cap *= 2;
   }
   return cap;
 }
@@ -1340,6 +1342,12 @@ function applyRunUpgradesOnSlotStart() {
     if (state.board) renderBoard(state.board, state);
     flashMessage('🎄 Sweet Wreath: jelly weakened!', 1200);
   }
+  // 🗝 Lock-Free Day mutator — clear ALL locks at slot start.
+  if (hasMutator('lock-free-day') && state.lockMap && state.lockMap.size > 0) {
+    state.lockMap.clear();
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('🗝 Lock-Free Day: all locks gone!', 1400);
+  }
   // ❄️ Frosty Crown relic — slot start: every lock loses 1 level.
   if (hasRelic('frosty-crown') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1569,6 +1577,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13s',
+    items: [
+      '🎉 NEW MUTATOR — Power Friday: power-up bank cap is doubled this slot. Hoard everything.',
+      '🗝 NEW MUTATOR — Lock-Free Day: ALL locks on the board vanish at slot start. Free movement.',
+    ],
+  },
   {
     id: '2026-05-25-13r',
     items: [
