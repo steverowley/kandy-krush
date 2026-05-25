@@ -1432,6 +1432,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12s',
+    items: [
+      '🎭 NEW CHAPTER — "Encore" (levels 121-125). For the player who beat True End and wants more: Curtain Call, Sticky Web, Locked Garden, Cherry Fountain, and the cascade-only Encore!',
+      'Level count is now 125.',
+    ],
+  },
+  {
     id: '2026-05-25-12r',
     items: [
       '🌅 NEW RELIC — Sunrise Hour: on slots 1-10, all scores ×1.5. Early-game ramp.',
