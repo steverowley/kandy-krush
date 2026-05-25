@@ -547,6 +547,42 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
+export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots }) {
+  const root = document.getElementById('run-hud');
+  if (!root) return;
+  if (!visible) { root.classList.add('hidden'); return; }
+  root.classList.remove('hidden');
+  const klassEl = document.getElementById('run-hud-class');
+  const buildsEl = document.getElementById('run-hud-builds');
+  const relicsEl = document.getElementById('run-hud-relics');
+  if (klassEl) {
+    const slotStr = (slot != null && totalSlots) ? `<span class="opacity-70">${slot}/${totalSlots}</span> · ` : '';
+    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}`;
+  }
+  if (buildsEl && archCounts && archetypes) {
+    const tags = [];
+    for (const key of Object.keys(archCounts)) {
+      const n = archCounts[key];
+      if (n > 0) {
+        const meta = archetypes[key];
+        if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color}22;color:${meta.color}">${meta.icon}${n}</span>`);
+      }
+    }
+    buildsEl.innerHTML = tags.length ? tags.join('') : '<span class="opacity-60">No upgrades yet</span>';
+  }
+  if (relicsEl) {
+    if (relics && relics.length > 0) {
+      const icons = relics.map((id) => {
+        const r = getRelic ? getRelic(id) : null;
+        return r ? `<span title="${r.name}: ${r.desc.replace(/"/g, '')}">${r.icon}</span>` : '';
+      }).join('');
+      relicsEl.innerHTML = `<span class="text-xs opacity-70 mr-1">Relics:</span>${icons}`;
+    } else {
+      relicsEl.innerHTML = '<span class="text-xs opacity-60">No relics yet — beat a boss</span>';
+    }
+  }
+}
+
 export function showRelicPicker(choices, ownedRelics, onPick) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');

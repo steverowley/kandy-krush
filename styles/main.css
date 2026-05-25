@@ -1652,3 +1652,21 @@ body.theme-hc #lc-next,
 body.theme-hc #lf-replay {
   background: #FFD60A;
 }
+
+/* ===== Run HUD (roguelike build tracker) ===== */
+body.mode-roguelike:not(.theme-hc) #run-hud {
+  background: #1a1a2e;
+  color: #fff;
+  border-color: #FFD60A;
+}
+body.mode-roguelike:not(.theme-hc) #run-hud span {
+  color: #fff;
+}
+body.theme-hc #run-hud {
+  background: #111;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #run-hud span {
+  color: #fff;
+}
