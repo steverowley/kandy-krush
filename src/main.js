@@ -845,6 +845,12 @@ function findCrazyHostCell() {
 }
 
 function spawnCrazyTile(kind) {
+  // 🌀 Crazy tiles (void / bolt / prism / TNT / wormhole) are a
+  // roguelike-only mechanic — they shouldn't exist in Levels or Free
+  // Play. Every upgrade / relic / mutator that triggers a spawn already
+  // only fires inside a run, but big-match natural spawns + a few relic
+  // hooks reach here from any mode, so gate at the entry point.
+  if (!state.inRoguelikeRun) return;
   const target = findCrazyHostCell();
   if (!target) return;
   const cell = state.board.cell(target.c, target.r);
@@ -857,6 +863,9 @@ function spawnCrazyTile(kind) {
 }
 
 function maybeSpawnCrazyOnMatch(matchSize, cascadeLevel) {
+  // Roguelike-only — spawnCrazyTile is also gated, but bail early here
+  // so we don't even roll the chance outside a run.
+  if (!state.inRoguelikeRun) return;
   let chance = 0;
   if (matchSize >= 5) chance += 0.18;
   if (matchSize >= 6) chance += 0.14;
@@ -901,10 +910,9 @@ async function triggerCrazyEffect(pos, kind) {
     // 💣 Bombardier AWAKENING — TNT pop also grants a random power-up.
     if (isClass('bombardier') && classAwakened()) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pickP = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pickP] || 0) < cap) {
+      if ((bank[pickP] || 0) < effectivePowerupCap(pickP)) {
         bank[pickP] = (bank[pickP] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🎁 +1 ${pickP}!`, 900);
@@ -920,10 +928,9 @@ async function triggerCrazyEffect(pos, kind) {
     // 💣 Bomb Squad relic — TNT pop also grants a random power-up.
     if (hasRelic('bomb-squad')) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pickP = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pickP] || 0) < cap) {
+      if ((bank[pickP] || 0) < effectivePowerupCap(pickP)) {
         bank[pickP] = (bank[pickP] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`💣 Bomb Squad! +1 ${pickP}`, 900);
@@ -1182,17 +1189,33 @@ function buyMetaSkill(id) {
   return true;
 }
 
-function effectivePowerupCap() {
-  let cap = hasMeta('bigger-bank') ? 12 : POWERUP_CAP;
-  if (state.inRoguelikeRun) {
-    const counts = archetypeCounts(state.roguelike?.upgrades || []);
-    cap += synergyStacks(counts.sustain);
-    // 🧺 Caretaker upgrade — +1 cap per stack.
-    cap += upgradeCount('caretaker');
-    // 🎉 Power Friday mutator — bank cap doubled this slot.
-    if (hasMutator('power-friday')) cap *= 2;
+// Effective per-type powerup cap. `kind` is one of hammer / shuffle /
+// colorBomb / plusMoves; if omitted, returns the LARGEST cap across
+// kinds (defensive fallback for older callers that didn't pass a kind).
+function effectivePowerupCap(kind) {
+  const computeFor = (k) => {
+    let cap = BASE_POWERUP_CAPS[k] || 1;
+    // 🏦 Bigger Bank meta-skill — uniform +2 across all stash caps.
+    if (hasMeta('bigger-bank')) cap += 2;
+    if (state.inRoguelikeRun) {
+      const counts = archetypeCounts(state.roguelike?.upgrades || []);
+      cap += synergyStacks(counts.sustain);
+      // 🧺 Caretaker upgrade — +1 cap per stack.
+      cap += upgradeCount('caretaker');
+      // 🎉 Power Friday mutator — bank cap doubled this slot.
+      if (hasMutator('power-friday')) cap *= 2;
+    }
+    return cap;
+  };
+  if (kind) return computeFor(kind);
+  // Fallback: max across all kinds (so old code that didn't pass a kind
+  // still picks the most permissive cap and doesn't accidentally clamp
+  // a colorBomb award to a smaller cap than intended).
+  let max = 0;
+  for (const k of Object.keys(BASE_POWERUP_CAPS)) {
+    max = Math.max(max, computeFor(k));
   }
-  return cap;
+  return max;
 }
 
 function runArchetypeCounts() {
@@ -1280,24 +1303,21 @@ function applyRunUpgradesOnSlotStart() {
   // 🎁 Gift Slot mutator — +1 of every power-up at slot start
   if (hasMutator('gift-slot')) {
     const giftBank = powerupBank();
-    const giftCap = effectivePowerupCap();
     for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      giftBank[key] = Math.min(giftCap, (giftBank[key] || 0) + 1);
+      giftBank[key] = Math.min(effectivePowerupCap(key), (giftBank[key] || 0) + 1);
     }
     setPowerupCounts(giftBank);
   }
   // 🔨🌧 Hammer Storm mutator — +3 hammers at slot start.
   if (hasMutator('hammer-storm')) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
-    bank.hammer = Math.min(cap, (bank.hammer || 0) + 3);
+    bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + 3);
     setPowerupCounts(bank);
   }
   // 💣💣 Bomb Cache mutator — +2 color bombs at slot start.
   if (hasMutator('bomb-cache')) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
-    bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + 2);
+    bank.colorBomb = Math.min(effectivePowerupCap('colorBomb'), (bank.colorBomb || 0) + 2);
     setPowerupCounts(bank);
   }
   // Reset eclipse parity each slot.
@@ -1319,10 +1339,9 @@ function applyRunUpgradesOnSlotStart() {
   // 💪 Powerful Start meta doubles it to +2.
   if (state.roguelike.currentSlot === 1) {
     const startBank = powerupBank();
-    const startCap = effectivePowerupCap();
     const bonus = hasMeta('powerful-start') ? 2 : 1;
     for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      startBank[key] = Math.min(startCap, (startBank[key] || 0) + bonus);
+      startBank[key] = Math.min(effectivePowerupCap(key), (startBank[key] || 0) + bonus);
     }
     setPowerupCounts(startBank);
     flashMessage(`🎁 Welcome gift: +${bonus} of each power-up`, 1600);
@@ -1357,17 +1376,16 @@ function applyRunUpgradesOnSlotStart() {
       });
     }
   }
-  const cap = effectivePowerupCap();
   const bank = powerupBank();
   // Meta: Sweet Start — at slot 1 only
   if (hasMeta('sweet-start') && state.roguelike.currentSlot === 1) {
-    bank.hammer = Math.min(cap, (bank.hammer || 0) + 1);
+    bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + 1);
   }
-  bank.hammer = Math.min(cap, (bank.hammer || 0) + upgradeCount('hammer+1'));
-  bank.hammer = Math.min(cap, (bank.hammer || 0) + upgradeCount('hammer-rain') * 2);
-  bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
-  bank.shuffle = Math.min(cap, (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
-  bank.plusMoves = Math.min(cap, (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
+  bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + upgradeCount('hammer+1'));
+  bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + upgradeCount('hammer-rain') * 2);
+  bank.colorBomb = Math.min(effectivePowerupCap('colorBomb'), (bank.colorBomb || 0) + upgradeCount('slot-bomb'));
+  bank.shuffle = Math.min(effectivePowerupCap('shuffle'), (bank.shuffle || 0) + upgradeCount('slot-shuffle'));
+  bank.plusMoves = Math.min(effectivePowerupCap('plusMoves'), (bank.plusMoves || 0) + upgradeCount('slot-plus3'));
   setPowerupCounts(bank);
   // Meta: Lucky Soul — Lucky starts at 25%
   if (hasMeta('lucky-soul')) {
@@ -1389,11 +1407,10 @@ function applyRunUpgradesOnSlotStart() {
   // 🍬 Sweet Steady upgrade — slot start: gain +1 random powerup per stack.
   if (upgradeCount('sweet-steady') > 0) {
     const bank2 = powerupBank();
-    const cap2 = effectivePowerupCap();
     const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
     for (let i = 0; i < upgradeCount('sweet-steady'); i++) {
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank2[pick] || 0) < cap2) bank2[pick] = (bank2[pick] || 0) + 1;
+      if ((bank2[pick] || 0) < effectivePowerupCap(pick)) bank2[pick] = (bank2[pick] || 0) + 1;
     }
     setPowerupCounts(bank2);
   }
@@ -1488,12 +1505,11 @@ function maybeFireRelicsOnSwap() {
   // 🛠 Sweet Smith relic — every 5 swaps, +1 to the lowest-count power-up.
   if (hasRelic('sweet-smith') && state.relicSwapCount % 5 === 0) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
     let lowestKey = null;
     let lowestCount = Infinity;
     for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
       const n = bank[key] || 0;
-      if (n < cap && n < lowestCount) {
+      if (n < effectivePowerupCap(key) && n < lowestCount) {
         lowestCount = n;
         lowestKey = key;
       }
@@ -1507,10 +1523,9 @@ function maybeFireRelicsOnSwap() {
   // 🎩 Top Hat relic — every 5 swaps, grant +1 of a random power-up.
   if (hasRelic('top-hat') && state.relicSwapCount % 5 === 0) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
     const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    if ((bank[pick] || 0) < cap) {
+    if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
       bank[pick] = (bank[pick] || 0) + 1;
       setPowerupCounts(bank);
       flashMessage(`🎩 Top Hat! +1 ${pick}`, 1100);
@@ -1536,9 +1551,8 @@ function maybeFireRelicsOnSwap() {
   // 🔋 Power Up relic — every 10 swaps, +1 of every power-up.
   if (hasRelic('power-up') && state.relicSwapCount % 10 === 0) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
     for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+      bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
     }
     setPowerupCounts(bank);
     flashMessage('🔋 Power Up! +1 of each', 1100);
@@ -1688,6 +1702,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15m',
+    items: [
+      '🚫 CRAZY TILES ARE ROGUELIKE-ONLY — TNT, Void, Bolt, Prism, and Wormhole tiles no longer spawn in Levels or Free Play. They\'re a deliberate roguelike chaos mechanic, so confining them there keeps Levels honest and Free Play relaxed.',
+      '🎒 POWERUP STASH CAPPED PER-TYPE — base caps are now 3 hammers, 3 shuffles, 1 color bomb, 1 +3 moves. Bigger Bank meta-skill / Caretaker upgrade / Sustain synergy / Power Friday mutator all still raise these. Old saves that stockpiled past the new cap get trimmed on next launch.',
+      '🏠 START MENU IS ACCESSIBLE FROM ANYWHERE — added a 🏠 button to the header that takes you back to the start screen from any mode. Properly closes any in-flight roguelike run (with the usual run summary → gems award) before swapping.',
+    ],
+  },
   {
     id: '2026-05-25-15l',
     items: [
@@ -3076,14 +3098,31 @@ const LUCKY_DRAIN_PER_SEC = 6;        // % per second once draining
 const SURPRISE_DROP_MIN_TILES = 6; // Match must clear this many tiles to roll
 const SURPRISE_DROP_CHANCE = 0.28; // 28% on a 6+ match
 
-const POWERUP_CAP = 9;
+// Per-type stash caps. Hammer / shuffle are "consumable utilities" so the
+// base ceiling is higher; color bomb / +moves are run-bending, so the
+// base ceiling is tight. The skill tree's "Bigger Bank" + roguelike
+// sustain synergy + Caretaker upgrade + Power Friday mutator each raise
+// these — see effectivePowerupCap().
+const BASE_POWERUP_CAPS = { hammer: 3, shuffle: 3, colorBomb: 1, plusMoves: 1 };
 const PLUS_MOVES_BONUS = 3;
 
 function powerupBank() {
   if (!state.levelProgress.powerupBank) {
-    state.levelProgress.powerupBank = { hammer: 3, shuffle: 2, colorBomb: 1, plusMoves: 1 };
+    state.levelProgress.powerupBank = { hammer: 3, shuffle: 3, colorBomb: 1, plusMoves: 1 };
   }
   return state.levelProgress.powerupBank;
+}
+
+// Clamp every power-up in the bank to its current per-type cap. Used
+// after caps shrink (e.g., player respec/refresh) or as a defensive
+// post-condition after award sites.
+function clampPowerupBank() {
+  const bank = powerupBank();
+  for (const key of Object.keys(BASE_POWERUP_CAPS)) {
+    const cap = effectivePowerupCap(key);
+    if ((bank[key] || 0) > cap) bank[key] = cap;
+  }
+  setPowerupCounts(bank);
 }
 
 function spendPowerup(kind) {
@@ -3136,14 +3175,13 @@ function spendPowerup(kind) {
 
 function earnPowerups(stars) {
   const bank = powerupBank();
-  const cap = effectivePowerupCap();
-  bank.hammer = Math.min(cap, (bank.hammer || 0) + 1);
+  bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + 1);
   if (stars >= 2) {
-    bank.shuffle = Math.min(cap, (bank.shuffle || 0) + 1);
+    bank.shuffle = Math.min(effectivePowerupCap('shuffle'), (bank.shuffle || 0) + 1);
   }
   if (stars >= 3) {
-    bank.colorBomb = Math.min(cap, (bank.colorBomb || 0) + 1);
-    bank.plusMoves = Math.min(cap, (bank.plusMoves || 0) + 1);
+    bank.colorBomb = Math.min(effectivePowerupCap('colorBomb'), (bank.colorBomb || 0) + 1);
+    bank.plusMoves = Math.min(effectivePowerupCap('plusMoves'), (bank.plusMoves || 0) + 1);
   }
   setPowerupCounts(bank);
 }
@@ -3642,9 +3680,8 @@ function advanceRoguelikeAfterWin() {
     // 👑 Sweet Throne relic — boss kill grants +1 of EVERY power-up.
     if (hasRelic('sweet-throne')) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+        bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
       }
       setPowerupCounts(bank);
       flashMessage('👑 Sweet Throne! +1 of each', 1300);
@@ -3659,10 +3696,9 @@ function advanceRoguelikeAfterWin() {
     // 🎁 Boss Bounty meta-skill — +1 random power-up per boss kill.
     if (hasMeta('boss-bounty')) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < cap) {
+      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
         bank[pick] = (bank[pick] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🎁 Boss Bounty! +1 ${pick}`, 1200);
@@ -3771,9 +3807,8 @@ function runCrossroadsEvent(onDone) {
           }
         } else if (choice.value === 'powerups') {
           const bank = powerupBank();
-          const cap = effectivePowerupCap();
           for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-            bank[key] = Math.min(cap, (bank[key] || 0) + 2);
+            bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 2);
           }
           setPowerupCounts(bank);
           flashMessage('🎁 +2 of every power-up!', 1400);
@@ -3847,9 +3882,8 @@ function runMidRunShop(onDone) {
           flashMessage('❤️ +1 Life', 1000);
         } else if (it.id === 'shop-pups') {
           const bank = powerupBank();
-          const cap = effectivePowerupCap();
           for (const k of ['hammer','shuffle','colorBomb','plusMoves']) {
-            bank[k] = Math.min(cap, (bank[k] || 0) + 1);
+            bank[k] = Math.min(effectivePowerupCap(k), (bank[k] || 0) + 1);
           }
           setPowerupCounts(bank);
           flashMessage('🎁 Bank topped up', 1000);
@@ -3925,9 +3959,8 @@ function bumpLuckyCharge() {
     // 🪆 Voodoo Doll upgrade — +1 of every power-up when Lucky goes ready.
     if (!wasReady && upgradeCount('voodoo-doll') > 0) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+        bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
       }
       setPowerupCounts(bank);
       flashMessage('🪆 Voodoo Doll! +1 of each', 1100);
@@ -4023,16 +4056,15 @@ function consumeLuckyIfReady(baseScore) {
   if (state.inRoguelikeRun && upgradeCount('lucky-strike') > 0) {
     const bank = powerupBank();
     const multi = hasRelic('lucky-twin') ? 2 : 1;
-    bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike') * multi);
+    bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + upgradeCount('lucky-strike') * multi);
     setPowerupCounts(bank);
   }
   // 🎺 Lucky Whistle relic — when Lucky fires, also drop a random power-up.
   if (state.inRoguelikeRun && hasRelic('lucky-whistle')) {
     const bank = powerupBank();
-    const cap = effectivePowerupCap();
     const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    if ((bank[pick] || 0) < cap) {
+    if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
       bank[pick] = (bank[pick] || 0) + 1;
       setPowerupCounts(bank);
       flashMessage(`🎺 Lucky Whistle! +1 ${pick}`, 1100);
@@ -4041,13 +4073,13 @@ function consumeLuckyIfReady(baseScore) {
   // 🍒 Cherry Reload upgrade — Lucky fire also adds +1 Shuffle per stack.
   if (state.inRoguelikeRun && upgradeCount('cherry-reload') > 0) {
     const bank = powerupBank();
-    bank.shuffle = Math.min(effectivePowerupCap(), (bank.shuffle || 0) + upgradeCount('cherry-reload'));
+    bank.shuffle = Math.min(effectivePowerupCap('shuffle'), (bank.shuffle || 0) + upgradeCount('cherry-reload'));
     setPowerupCounts(bank);
   }
   // 🚀 Lucky Reload upgrade — Lucky fire also adds +1 +3 Moves per stack.
   if (state.inRoguelikeRun && upgradeCount('lucky-reload') > 0) {
     const bank = powerupBank();
-    bank.plusMoves = Math.min(effectivePowerupCap(), (bank.plusMoves || 0) + upgradeCount('lucky-reload'));
+    bank.plusMoves = Math.min(effectivePowerupCap('plusMoves'), (bank.plusMoves || 0) + upgradeCount('lucky-reload'));
     setPowerupCounts(bank);
   }
   // 🧠 Mind Reader upgrade — +1 to burst multiplier per stack.
@@ -5037,11 +5069,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 🧁 Confectionery relic — each special spawned also drops a random power-up.
     if (hasRelic('confectionery')) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       for (let i = 0; i < specialsCreated.length; i++) {
         const pick = pool[Math.floor(Math.random() * pool.length)];
-        if ((bank[pick] || 0) < cap) bank[pick] = (bank[pick] || 0) + 1;
+        if ((bank[pick] || 0) < effectivePowerupCap(pick)) bank[pick] = (bank[pick] || 0) + 1;
       }
       setPowerupCounts(bank);
       flashMessage(`🧁 Confectionery! +${specialsCreated.length} 🎁`, 1000);
@@ -5134,10 +5165,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 🪅 Piñata relic — every 5 matches drop a random power-up.
     if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < cap) {
+      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
         bank[pick] = (bank[pick] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
@@ -5152,10 +5182,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 🪙 Coin Toss mutator — 25% chance per match to grant +1 random powerup.
     if (hasMutator('coin-toss') && Math.random() < 0.25) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < cap) {
+      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
         bank[pick] = (bank[pick] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
@@ -5174,9 +5203,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 👜 Pixie Pouch relic — every 18 matches grant +1 of EVERY power-up.
     if (hasRelic('pixie-pouch') && state.slotMatchCount % 18 === 0) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+        bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
       }
       setPowerupCounts(bank);
       flashMessage('👜 Pixie Pouch! +1 of each', 1200);
@@ -5184,8 +5212,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 🍨 Sundae Saturday relic — every 8 matches grant +1 plusMoves powerup.
     if (hasRelic('sundae-saturday') && state.slotMatchCount % 8 === 0) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
-      if ((bank.plusMoves || 0) < cap) {
+      if ((bank.plusMoves || 0) < effectivePowerupCap('plusMoves')) {
         bank.plusMoves = (bank.plusMoves || 0) + 1;
         setPowerupCounts(bank);
         flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
@@ -5199,10 +5226,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
     if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
       const bank = powerupBank();
-      const cap = effectivePowerupCap();
       const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < cap) {
+      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
         bank[pick] = (bank[pick] || 0) + 1;
         setPowerupCounts(bank);
         flashMessage(`🐞 Ladybug! +1 ${pick}`, 1000);
@@ -5460,6 +5486,10 @@ function init({ chime = false, announceLevel = true } = {}) {
 
 applyTheme(state.settings);
 refreshRunHud();
+// Old saves may have stockpiles above the new per-type caps. Clamp
+// down to the current effective cap so the UI doesn't show "9 hammers"
+// after the cap dropped to 3.
+clampPowerupBank();
 
 // Pause music when the tab is hidden — saves CPU + battery, and stops
 // any audio leaking out when the user switches tabs. Restores to the
@@ -5579,6 +5609,23 @@ document.getElementById('help-open').addEventListener('click', () => {
     }
   });
 });
+
+// 🏠 Header Home button — always-on shortcut back to the start menu so
+// the player can swap modes (Roguelike / Levels / Free Play) from any
+// game state, not just after a roguelike run ends.
+const homeOpenBtn = document.getElementById('home-open');
+if (homeOpenBtn) {
+  homeOpenBtn.addEventListener('click', () => {
+    sfx.unlockAudio();
+    if (state.inRoguelikeRun) {
+      // endRoguelikeRun() shows the run summary; its onClose chains
+      // into openStartMenu, so we don't double-open.
+      endRoguelikeRun();
+    } else {
+      openStartMenu(null);
+    }
+  });
+}
 
 document.getElementById('restart').addEventListener('click', () => {
   sfx.unlockAudio();
