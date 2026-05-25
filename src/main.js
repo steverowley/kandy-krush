@@ -1619,6 +1619,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15c',
+    items: [
+      '🌑 HIGH-CONTRAST PANELS — changelog and skill-tree panels now properly render dark in High Contrast mode. Previously they inherited white text on a default white background and became unreadable.',
+    ],
+  },
+  {
     id: '2026-05-25-15b',
     items: [
       '🛡 XSS HARDENING — every innerHTML site that interpolates game-catalog text (class / relic / upgrade / mutator names and descriptions) now runs through escapeHtml. Safe-by-source today; corrupted saves or future import features can\'t inject markup.',

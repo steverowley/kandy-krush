@@ -1864,3 +1864,47 @@ body.theme-hc .tile:not(:has(svg)):not(.crazy) {
   background: #1a1a2e;
   box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.5);
 }
+
+/* ===== High-contrast theme: changelog + skill-tree panels =====
+   Previously these panels had no HC overrides; inherited body.theme-hc
+   white text on default bg-white made them unreadable. */
+body.theme-hc #changelog-panel {
+  background: #111 !important;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #changelog-panel h2,
+body.theme-hc #changelog-panel li,
+body.theme-hc #changelog-panel p { color: #fff !important; }
+body.theme-hc #changelog-panel #changelog-dismiss {
+  background: #FFD60A;
+  color: #000;
+  border-color: #fff;
+}
+body.theme-hc #changelog-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+body.theme-hc #skill-tree-panel {
+  background: #111 !important;
+  color: #fff;
+  border-color: #fff;
+}
+body.theme-hc #skill-tree-panel h2,
+body.theme-hc #skill-tree-panel p,
+body.theme-hc #skill-tree-panel span,
+body.theme-hc #skill-tree-panel .opacity-70,
+body.theme-hc #skill-tree-panel .text-gray-700,
+body.theme-hc #skill-tree-panel .text-gray-600 { color: #fff !important; opacity: 1; }
+body.theme-hc #skill-tree-panel button {
+  background: #FFD60A;
+  color: #000;
+  border-color: #fff;
+}
+body.theme-hc #skill-tree-panel button:disabled {
+  background: #444;
+  color: #999;
+}
+body.theme-hc #skill-tree-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
