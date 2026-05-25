@@ -1,10 +1,11 @@
-const VERSION = 'sweet-match-v16';
+const VERSION = 'sweet-match-v17';
 const SHELL = [
   './',
   './index.html',
   './styles/main.css',
   './manifest.json',
   './src/main.js',
+  './src/telemetry.js',
   './src/game/board.js',
   './src/game/cascade.js',
   './src/game/match.js',
