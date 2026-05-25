@@ -181,16 +181,29 @@ export function renderBoard(board, state, opts = {}) {
       if (state.lockMap) {
         const lk = state.lockMap.get(cellKey(c, r));
         if (lk && lk > 0) {
+          const isGrumblock = state.grumblockSet && state.grumblockSet.has(cellKey(c, r));
           tile.classList.add('locked');
           if (lk === 2) tile.classList.add('locked-2');
+          if (isGrumblock) tile.classList.add('grumblock');
           const badge = document.createElement('span');
-          badge.className = 'lock-badge';
+          badge.className = isGrumblock ? 'grumblock-badge' : 'lock-badge';
           badge.setAttribute('aria-hidden', 'true');
-          badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="5" y="11" width="14" height="10" rx="2" fill="#FFD60A" stroke="#000" stroke-width="2"/>
-            <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="15" r="1.5" fill="#000"/>
-          </svg>${lk === 2 ? '<span class="lock-hits">2</span>' : ''}`;
+          if (isGrumblock) {
+            // 🪨 — wandering enemy. Distinct rock SVG.
+            badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 17 L7 9 L13 7 L19 11 L21 17 L17 21 L7 21 Z" fill="#555" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="10" cy="13" r="1.2" fill="#fff"/>
+              <circle cx="15" cy="14" r="1.2" fill="#fff"/>
+              <circle cx="10.4" cy="13" r="0.5" fill="#000"/>
+              <circle cx="15.4" cy="14" r="0.5" fill="#000"/>
+            </svg>`;
+          } else {
+            badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="10" rx="2" fill="#FFD60A" stroke="#000" stroke-width="2"/>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="15" r="1.5" fill="#000"/>
+            </svg>${lk === 2 ? '<span class="lock-hits">2</span>' : ''}`;
+          }
           tile.appendChild(badge);
         }
       }

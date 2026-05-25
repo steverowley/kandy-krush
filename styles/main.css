@@ -1730,3 +1730,25 @@ body.reduce-motion .mutator-chip-active { animation: none !important; }
   animation: mutator-flash-in 0.9s ease-out forwards;
 }
 body.reduce-motion .mutator-flash { display: none; }
+
+/* ===== Grumblock — wandering grey-rock enemy ===== */
+.tile.grumblock { filter: grayscale(0.6) brightness(0.85); }
+.grumblock-badge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.grumblock-badge svg {
+  width: 70%;
+  height: 70%;
+  filter: drop-shadow(0 2px 0 rgba(0,0,0,0.4));
+  animation: grumblock-wobble 1.8s ease-in-out infinite;
+}
+@keyframes grumblock-wobble {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50%      { transform: rotate(2deg)  translateY(-2px); }
+}
+body.reduce-motion .grumblock-badge svg { animation: none !important; }

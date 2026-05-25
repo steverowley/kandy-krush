@@ -135,6 +135,10 @@ const state = {
   },
   jellyMap: new Map(),
   lockMap: new Map(),
+  // 🪨 Grumblock — a wandering enemy that locks its current tile. Set
+  // of "c,r" keys. Moves every few swaps; gone when adjacent matches
+  // break it.
+  grumblockSet: new Set(),
   resolved: false,
   almostFired: false,
   seenWelcome: persisted.seenWelcome,
@@ -376,6 +380,91 @@ function maybeFireEater() {
   } else if (movesUntilFire <= 0) {
     eaterCounter = 0;
     setTimeout(() => fireEater(), 400);
+  }
+}
+
+// ---------- Grumblock — a wandering enemy ----------
+// Appears at slot 50+ (non-boss). Each grumblock locks one tile so
+// the player can't match it. Every few swaps, it picks a random
+// adjacent tile and moves there. Cleared by adjacent matches.
+const GRUMBLOCK_SLOT_MIN = 50;
+const GRUMBLOCK_MOVE_EVERY = 4;
+let grumblockCounter = 0;
+
+function spawnGrumblock() {
+  const candidates = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      const key = `${c},${r}`;
+      if (state.board.isIngredient(c, r)) continue;
+      if ((state.lockMap.get(key) || 0) > 0) continue;
+      if (state.grumblockSet.has(key)) continue;
+      candidates.push({ c, r });
+    }
+  }
+  if (candidates.length === 0) return;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  const key = `${pick.c},${pick.r}`;
+  state.grumblockSet.add(key);
+  state.lockMap.set(key, 1);
+  renderBoard(state.board, state);
+}
+
+function moveGrumblocks() {
+  if (state.grumblockSet.size === 0) return;
+  const toMove = [...state.grumblockSet];
+  for (const key of toMove) {
+    if (!state.grumblockSet.has(key)) continue;
+    const [c, r] = key.split(',').map(Number);
+    const neighbours = [];
+    for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      const nc = c + dc, nr = r + dr;
+      if (nc < 0 || nc >= state.board.cols) continue;
+      if (nr < 0 || nr >= state.board.rows) continue;
+      const nkey = `${nc},${nr}`;
+      if (state.grumblockSet.has(nkey)) continue;
+      if (state.board.isIngredient(nc, nr)) continue;
+      if ((state.lockMap.get(nkey) || 0) > 0) continue;
+      neighbours.push({ c: nc, r: nr });
+    }
+    if (neighbours.length === 0) continue;
+    const target = neighbours[Math.floor(Math.random() * neighbours.length)];
+    state.grumblockSet.delete(key);
+    state.lockMap.delete(key);
+    const nkey = `${target.c},${target.r}`;
+    state.grumblockSet.add(nkey);
+    state.lockMap.set(nkey, 1);
+  }
+  flashMessage('🪨 Grumblock shuffles…', 900);
+  renderBoard(state.board, state);
+}
+
+function maybeMoveGrumblocks() {
+  if (state.grumblockSet.size === 0) return;
+  grumblockCounter++;
+  if (grumblockCounter >= GRUMBLOCK_MOVE_EVERY) {
+    grumblockCounter = 0;
+    moveGrumblocks();
+  }
+}
+
+// Sweep grumblockSet to keep it in sync with lockMap. Any grumblock
+// whose lock has dropped to 0 (broken by an adjacent match) is
+// removed from the set.
+function syncGrumblocks() {
+  if (state.grumblockSet.size === 0) return;
+  const dead = [];
+  for (const key of state.grumblockSet) {
+    if (!state.lockMap.has(key) || (state.lockMap.get(key) || 0) <= 0) {
+      dead.push(key);
+    }
+  }
+  for (const key of dead) {
+    state.grumblockSet.delete(key);
+    state.lockMap.delete(key);
+  }
+  if (dead.length > 0) {
+    flashMessage(`🪨 Grumblock smashed! (-${dead.length})`, 1000);
   }
 }
 
@@ -830,6 +919,17 @@ function applyRunUpgradesOnSlotStart() {
   state.firstRerollUsed = false;
   // meteor counter resets per slot.
   state.meteorCounter = 0;
+  // 🪨 Grumblock — wandering enemy, slot 50+ non-boss.
+  state.grumblockSet = new Set();
+  grumblockCounter = 0;
+  const slotN = state.roguelike.currentSlot;
+  if (slotN >= GRUMBLOCK_SLOT_MIN && !state.level?.isBoss) {
+    const count = slotN >= 80 ? 2 : 1;
+    setTimeout(() => {
+      for (let i = 0; i < count; i++) spawnGrumblock();
+      flashMessage(`🪨 Grumblock${count > 1 ? 's' : ''} appears!`, 1400);
+    }, 1100);
+  }
   refreshRunHud();
   if (state.slotMutator) {
     const m = activeMutator();
@@ -974,6 +1074,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9b',
+    items: [
+      '🪨 NEW ENEMY — Grumblock! A wandering grey rock with little eyes that drifts around the board. It locks its current tile so you can\'t match it.',
+      'Spawns on slot 50+ (non-boss). Every 4 swaps it picks a random adjacent tile and moves there. Pop it by clearing matches in an adjacent tile.',
+      'Slot 80+ gets TWO Grumblocks shuffling around at once. Plan your matches around the moving threat.',
+    ],
+  },
   {
     id: '2026-05-25-9a',
     items: [
@@ -1957,6 +2065,7 @@ function consumeMove() {
   bumpLuckyCharge();
   maybeFireEater();
   maybeFireRelicsOnSwap();
+  maybeMoveGrumblocks();
   // Free Play has unlimited moves. Levels and Roguelike both count down.
   if (state.settings.mode === 'free' || !state.level) return;
   // 🌑 Eclipse mutator — only every OTHER swap consumes a move.
@@ -2214,6 +2323,7 @@ async function useHammer(pos) {
   }
 
   maybeUpdateBest();
+  syncGrumblocks();
   refreshLevelUI();
   await ensureMovesAvailable();
   checkLevelOutcome();
@@ -2289,6 +2399,7 @@ async function useColorBomb(pos) {
   }
 
   maybeUpdateBest();
+  syncGrumblocks();
   refreshLevelUI();
   await ensureMovesAvailable();
   checkLevelOutcome();
@@ -2558,6 +2669,7 @@ async function trySwap(a, b) {
   }
 
   maybeUpdateBest();
+  syncGrumblocks();
   refreshLevelUI();
   await ensureMovesAvailable();
   checkLevelOutcome();
