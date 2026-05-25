@@ -317,13 +317,41 @@ function bumpClassStats(outcome, slotReached) {
 // starts the appropriate flow. Called from app boot (when no run is
 // in progress) and from the run-summary close on game over.
 function openStartMenu(subtitle = null) {
+  // 📂 Surface a Resume affordance when there's a persisted roguelike
+  // run. The Resume button reuses startRoguelikeRun (which preserves
+  // currentSlot when > 1); Abandon ends the run and re-opens the start
+  // menu so the player gets a clean Roguelike / Levels / Free Play list.
+  const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  const inProgress = state.inRoguelikeRun
+    ? {
+        slot: state.roguelike?.currentSlot || 1,
+        totalSlots: RUN_LENGTH,
+        classIcon: cls?.icon || null,
+      }
+    : null;
   showStartMenu({
     subtitle,
     version: APP_VERSION,
+    runInProgress: inProgress,
     stats: {
       best: state.highScore || 0,
       runsCompleted: state.roguelike?.runsCompleted || 0,
       gems: state.roguelike?.gems || 0,
+    },
+    onResume: () => {
+      sfx.unlockAudio();
+      state.settings.mode = 'roguelike';
+      sfx.setMusicMode('roguelike');
+      persist();
+      playModeTransition('roguelike');
+      startRoguelikeRun();
+    },
+    onAbandon: () => {
+      sfx.unlockAudio();
+      // endRoguelikeRun shows the run-summary modal which chains into
+      // openStartMenu on close — so the player sees their reward
+      // breakdown and lands back on a fresh start screen.
+      endRoguelikeRun();
     },
     onRoguelike: () => {
       sfx.unlockAudio();
@@ -1777,6 +1805,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17e',
+    items: [
+      '▶ RESUME RUN — when you have a roguelike run in progress, the start screen now shows a green "▶ Resume <class> Run · Slot X / 100" button at the top so it\'s obvious you can pick it back up. PC-game-on-mobile framing: close the tab anywhere, come back, hit Resume, you\'re back at the slot you left.',
+      '⨯ ABANDON CURRENT RUN — small link under the mode buttons. Ends the run cleanly (awards gems for slots reached) and unhides the regular "⚔ Roguelike Run" entry so you can start fresh. The "⚔ Roguelike Run" button is hidden while a run is in flight to remove the "wait, will this overwrite my run?" ambiguity.',
+    ],
+  },
   {
     id: '2026-05-25-17d',
     items: [
