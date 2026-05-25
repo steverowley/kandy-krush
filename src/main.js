@@ -115,12 +115,11 @@ const COLS = 6;
 const ROWS = 6;
 const CANDY_TYPES = 6;
 
-// Safety net: cascades aren't supposed to chain forever, but with the
-// roguelike's crazy-tile spawn upgrades, prism activations, hungry-snake,
-// and bomber-class synergies, it's possible to set up a board where every
-// gravity refill creates a new match. If a chain reaches this threshold
-// we bail out and grant the player an INSTANT WIN. They earned it.
-const INFINITE_COMBO_THRESHOLD = 25;
+// Reward the player when their score crosses one million in a single
+// level / slot — they get an INSTANT WIN and the score field shows the
+// infinity symbol. Each subsequent infinite this session shows as
+// ∞+1, ∞+2, etc.
+const INFINITE_SCORE_THRESHOLD = 1_000_000;
 
 const persistedRaw = loadSave();
 const persisted = bumpStreakForToday(persistedRaw);
@@ -1637,6 +1636,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15i',
+    items: [
+      '♾️ INFINITE TRIGGER IS NOW SCORE-BASED — crossing 1,000,000 points in a single level / slot grants the INSTANT WIN with the ∞ score (was 25-cascade chain depth). Easier to hit on purpose with a strong build, and reads as a clear "you broke a million" milestone. First infinite of your session is ∞, then ∞+1, ∞+2, …',
+    ],
+  },
+  {
     id: '2026-05-25-15h',
     items: [
       '⏳ JELLY + CHERRY SLOTS TIGHTEN UP — clearJelly and dropIngredients objectives have fixed board counts (can\'t scale the target). Their MOVE BUDGET now shrinks per slot instead: slot 25 → -10%, slot 50 → -20%, slot 100 → -40%. Bosses stay hand-tuned and exempt.',
@@ -3142,12 +3147,13 @@ async function cascadePendingMatches() {
   }
 }
 
-// Detect an infinite-combo loop and short-circuit it into an auto-win.
-// processMatchRound calls this at the top of each round; once tripped,
-// state.cascadeAbort is set and every cascade loop in the code bails on
-// its next iteration. The flag clears on the next swap / slot start.
-function maybeTriggerInfiniteCombo(cascadeLevel) {
-  if (cascadeLevel < INFINITE_COMBO_THRESHOLD) return false;
+// Trigger the ♾️ auto-win when score crosses INFINITE_SCORE_THRESHOLD
+// in a single level / slot. Called by processMatchRound after the score
+// is updated. Once tripped, state.cascadeAbort is set so every cascade
+// loop in the code bails on its next iteration. The flag clears on the
+// next swap / slot start.
+function maybeTriggerInfiniteScore() {
+  if (state.score < INFINITE_SCORE_THRESHOLD) return false;
   if (state.cascadeAbort) return true; // already firing
   state.cascadeAbort = true;
   state.infiniteCount = (state.infiniteCount || 0) + 1;
@@ -4470,6 +4476,7 @@ async function useColorBomb(pos) {
   );
   state.score += earned;
   setScore(state.score, { animate: true });
+  maybeTriggerInfiniteScore();
   spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
   maybeDropSurprise(positions, 2);
   achievements.onScore(state.score);
@@ -4686,6 +4693,7 @@ async function runComboTurn(combo) {
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, cleared, { color: '#FF006E' });
   achievements.onScore(state.score);
+  maybeTriggerInfiniteScore();
   const banner = comboFanfare(combo.kind);
   flashMessage(banner);
   speech.speak(banner);
@@ -4787,9 +4795,6 @@ async function trySwap(a, b) {
 }
 
 async function processMatchRound(result, cascadeLevel, swapTarget) {
-  // Infinite-combo safety net. If a cascade chains past the threshold,
-  // declare auto-win and short-circuit the rest of the round.
-  if (maybeTriggerInfiniteCombo(cascadeLevel)) return;
   const specialsCreated = deriveNewSpecials(result.groups, swapTarget);
   const newSpecialKeys = new Set(specialsCreated.map((s) => `${s.c},${s.r}`));
 
@@ -5111,6 +5116,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, toClear);
+  // ♾️ Score crossed 1M — declare INSTANT WIN.
+  maybeTriggerInfiniteScore();
   maybeDropSurprise(toClear, cascadeLevel);
   updateComboMeter(cascadeLevel);
   achievements.onScore(state.score);
