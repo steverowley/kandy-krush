@@ -1005,6 +1005,13 @@ function applyRunUpgradesOnSlotStart() {
 function maybeFireRelicsOnSwap() {
   if (!state.inRoguelikeRun) return;
   state.relicSwapCount = (state.relicSwapCount || 0) + 1;
+  // 🛡 Thunder Foot upgrade — every 8 swaps, +2 moves per stack.
+  if (upgradeCount('thunder-foot') > 0 && state.relicSwapCount % 8 === 0) {
+    const bonus = 2 * upgradeCount('thunder-foot');
+    state.movesRemaining += bonus;
+    refreshLevelUI();
+    flashMessage(`⚡ Thunder Foot! +${bonus} moves`, 1000);
+  }
   // 🎩 Top Hat relic — every 5 swaps, grant +1 of a random power-up.
   if (hasRelic('top-hat') && state.relicSwapCount % 5 === 0) {
     const bank = powerupBank();
@@ -1073,6 +1080,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
     m *= 5;
   }
   let scored = Math.round(amount * m);
+  // 🎯 Gold Rush upgrade — +20 flat per stack.
+  if (upgradeCount('gold-rush') > 0) scored += 20 * upgradeCount('gold-rush');
   // Mutator: 💎 Diamond Day — flat +100 per match (after multipliers).
   if (hasMutator('diamond-day')) scored += 100;
   return scored;
@@ -1107,6 +1116,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9g',
+    items: [
+      '🎯⚡ 2 NEW UPGRADES — pool now 23 across all archetypes.',
+      '🎯 Gold Rush (Scorer) — every match earns a flat +20 score per stack on top of any multiplier · ⚡ Thunder Foot (Sustain) — every 8 swaps in a slot, gain +2 free moves per stack.',
+    ],
+  },
   {
     id: '2026-05-25-9f',
     items: [
