@@ -506,6 +506,31 @@ const CHIP_SONGS = [
       melody:[N.E5, N.G5, N.A5, N.C6, N.A5, N.G5, N.E5, N.D5],
     },
   ],
+  // Song C — heroic stage-clear march. Strong walking bass, rising
+  // brassy melody. Inspired by 16-bit fighting game themes.
+  // Dm - F - Bb - C - back to Dm cadence.
+  [
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, N.F2, N.A2, N.D3],
+      melody:[N.D5, N.F5, N.A5, N.D6, N.A5, N.F5, N.D5, N.A4],
+    },
+    {
+      chord: [N.F4, N.A4, N.C5],     // F major (the IIIᴹᴬᴶ lift)
+      bass:  [N.F2, N.A2, N.C3, N.F3],
+      melody:[N.F5, N.A5, N.C6, N.A5, N.F5, N.A5, N.C6, N.D6],
+    },
+    {
+      chord: [N.Bb3, N.D4, N.F4],
+      bass:  [N.Bb2, N.D3, N.F3, N.Bb3],
+      melody:[N.Bb5, N.A5, N.G5, N.F5, N.D5, N.F5, N.A5, N.Bb5],
+    },
+    {
+      chord: [N.A3, N.C4, N.E4],     // V-of-Dm payoff
+      bass:  [N.A2, N.C3, N.E4/2, N.A2],
+      melody:[N.A5, N.G5, N.F5, N.E5, N.D5, N.E5, N.F5, N.A5],
+    },
+  ],
 ];
 
 let musicMode = 'normal'; // 'normal' | 'chip' | 'boss'
