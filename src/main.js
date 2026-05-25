@@ -1129,11 +1129,32 @@ function runArchetypeCounts() {
   return archetypeCounts(state.roguelike?.upgrades || []);
 }
 
+// Run the queue of visual side-effects that applyRunUpgradesOnSlotStart
+// deferred (Black Hole spawn, Storm Caller, mutator banner, etc.).
+// Called once the intro card dismisses so the animations are actually
+// visible and don't fire under the overlay. Effects fire with a small
+// stagger so they don't all step on each other.
+function runDeferredSlotEffects() {
+  if (!state.deferredSlotFx || state.deferredSlotFx.length === 0) return;
+  const fx = state.deferredSlotFx;
+  state.deferredSlotFx = [];
+  let i = 0;
+  for (const f of fx) {
+    setTimeout(() => { try { f(); } catch {} }, 200 + i * 250);
+    i++;
+  }
+}
+
 function applyRunUpgradesOnSlotStart() {
   if (!state.inRoguelikeRun) return;
   // Reset per-slot relic counters.
   state.slotMatchCount = 0;
   state.relicSwapCount = 0;
+  // Queue for visual side-effects (Black Hole, Storm Caller, mutator
+  // banner, eraser meteor, grumblock spawn, etc.). These get drained
+  // by runDeferredSlotEffects() once the intro card is dismissed so
+  // they don't fire under the intro overlay.
+  state.deferredSlotFx = [];
   // Roll a fresh mutator only on mutator slots.
   const slot = state.roguelike.currentSlot;
   if (isMutatorSlot(slot)) {
@@ -1173,7 +1194,7 @@ function applyRunUpgradesOnSlotStart() {
   }
   // ✏️ Eraser mutator — clears 3 random tiles at slot start.
   if (hasMutator('eraser')) {
-    setTimeout(() => { if (state.board) fireMeteor(); }, 1400);
+    state.deferredSlotFx.push(() => { if (state.board) fireMeteor(); });
   }
   // 🗝 Lockpick mutator — weaken every lock by 1 level.
   if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
@@ -1250,20 +1271,20 @@ function applyRunUpgradesOnSlotStart() {
   const slotN = state.roguelike.currentSlot;
   if (slotN >= GRUMBLOCK_SLOT_MIN && !state.level?.isBoss && state.settings?.enemies !== false) {
     const count = slotN >= 80 ? 2 : 1;
-    setTimeout(() => {
+    state.deferredSlotFx.push(() => {
       for (let i = 0; i < count; i++) spawnGrumblock();
       flashMessage(`🪨 Grumblock${count > 1 ? 's' : ''} appears!`, 1400);
-    }, 1100);
+    });
   }
   refreshRunHud();
   if (state.slotMutator) {
     const m = activeMutator();
     if (m) {
-      setTimeout(() => {
+      state.deferredSlotFx.push(() => {
         flashMutatorActivation();
         flashMessage(`${m.icon} ${m.name} — ${m.desc}`, 2400);
         speech.speak(`${m.name} mutator active.`);
-      }, 900);
+      });
     }
   }
   const cap = effectivePowerupCap();
@@ -1285,15 +1306,15 @@ function applyRunUpgradesOnSlotStart() {
   }
   // Reset ability counters at slot start
   resetAbilityCounters();
-  // Trigger Black Hole on slot start, if owned (slight delay so the
-  // intro card has time to dismiss).
+  // Trigger Black Hole on slot start, if owned. Deferred until the
+  // intro card is dismissed so the animation doesn't run under it.
   if (upgradeCount('black-hole') > 0) {
-    setTimeout(() => fireBlackHole(), 1200);
+    state.deferredSlotFx.push(() => fireBlackHole());
   }
   if (upgradeCount('storm-caller') > 0) {
-    setTimeout(() => {
+    state.deferredSlotFx.push(() => {
       for (let i = 0; i < upgradeCount('storm-caller'); i++) spawnCrazyTile('bolt');
-    }, 1300);
+    });
   }
   // 🍬 Sweet Steady upgrade — slot start: gain +1 random powerup per stack.
   if (upgradeCount('sweet-steady') > 0) {
@@ -1308,15 +1329,15 @@ function applyRunUpgradesOnSlotStart() {
   }
   // 🎴 Wild Card upgrade — slot start: spawn 1 random crazy tile per stack.
   if (upgradeCount('wild-card') > 0) {
-    setTimeout(() => {
+    state.deferredSlotFx.push(() => {
       for (let i = 0; i < upgradeCount('wild-card'); i++) spawnCrazyTile();
-    }, 1350);
+    });
   }
   // 🐝 Sweet Roar upgrade — slot start: fire Bee Storm once per stack.
   if (upgradeCount('sweet-roar') > 0) {
-    setTimeout(() => {
+    state.deferredSlotFx.push(() => {
       for (let i = 0; i < upgradeCount('sweet-roar'); i++) fireBeeStorm();
-    }, 1500);
+    });
   }
   // 🐝 Bee Tonic upgrade — slot start: Lucky bar +20% per stack.
   if (upgradeCount('bee-tonic') > 0) {
@@ -1325,7 +1346,7 @@ function applyRunUpgradesOnSlotStart() {
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
   // 🦴 Iron Tongue relic — at slot start, one random lock loses one level.
-  if (hasRelic('iron-tongue')) setTimeout(() => ironTongueBreak(), 1400);
+  if (hasRelic('iron-tongue')) state.deferredSlotFx.push(() => ironTongueBreak());
   // 🫖 Tea Time relic — slot start: Lucky bar +30%.
   if (hasRelic('tea-time')) {
     state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 30);
@@ -1597,6 +1618,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-14h',
+    items: [
+      '🌑 NO MORE INTRO-OVERLAP — Black Hole, Storm Caller, Eraser, Grumblock spawn, Wild Card, Sweet Roar, Iron Tongue, and the mutator banner all wait for you to tap the intro before they fire. They used to play under the intro card.',
+      '🎬 EMPTY-TILE STATE — when a tile pops and is briefly empty, it now shows a soft gray inset (or dark in high-contrast) instead of flashing pure white. Cascades read smoother.',
+      '🐌 SLOWER CASCADES — base round delays bumped from 160/260ms → 220/340ms with bigger bonuses at chain ≥3 / ≥5. More time to enjoy the combo.',
+    ],
+  },
   {
     id: '2026-05-25-14g',
     items: [
@@ -3281,6 +3310,9 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     state.busy = true;
     const done = async () => {
       state.busy = true;
+      // Fire any visual slot-start FX (Black Hole, Storm Caller, etc.)
+      // now that the intro is gone so they don't run under the overlay.
+      runDeferredSlotEffects();
       await cascadePendingMatches();
       state.busy = false;
       scheduleHint();
@@ -3309,6 +3341,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
       `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
     );
   } else {
+    runDeferredSlotEffects();
     cascadePendingMatches().then(() => scheduleHint());
   }
 }
@@ -4925,10 +4958,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   speech.speak(msg);
   achievements.onMatch(ctx);
 
-  // Slow down the rhythm on big combos so players can actually see
-  // each cascade resolve. Small matches stay snappy.
-  const preGrav = 160 + (cascadeLevel >= 3 ? 80 : 0) + (cascadeLevel >= 5 ? 80 : 0);
-  const postGrav = 260 + (cascadeLevel >= 3 ? 120 : 0) + (cascadeLevel >= 5 ? 160 : 0);
+  // Slow down the rhythm so the player can see each cascade resolve.
+  // Bigger combos get extra breathing room.
+  const preGrav = 220 + (cascadeLevel >= 3 ? 100 : 0) + (cascadeLevel >= 5 ? 100 : 0);
+  const postGrav = 340 + (cascadeLevel >= 3 ? 160 : 0) + (cascadeLevel >= 5 ? 200 : 0);
   await delay(preGrav);
   const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
