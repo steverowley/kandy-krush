@@ -20,6 +20,7 @@ const defaults = () => ({
     mode: 'levels',
     music: false,
     reduceMotion: false,
+    enemies: true,
   },
   levelProgress: {
     currentLevel: 1,
@@ -86,6 +87,8 @@ export function load() {
         mode: MODES.includes(s.mode) ? s.mode : 'levels',
         music: !!s.music,
         reduceMotion: !!s.reduceMotion,
+        // Default true — only false if the user explicitly turned them off.
+        enemies: s.enemies !== false,
       },
       levelProgress: {
         currentLevel: deriveCurrentLevel(lp.currentLevel, stars),

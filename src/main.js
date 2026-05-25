@@ -449,6 +449,8 @@ function maybeFireEater() {
   if (state.level.runSlot < EATER_FROM_SLOT) return;
   if (state.level.isBoss) return; // bosses are punishing enough
   if (hasMutator('slow-down')) return; // 🐢 Slow Down mutator
+  // Settings: Enemies toggle — disables The Eater entirely.
+  if (state.settings && state.settings.enemies === false) return;
   // ❄️ Time Freeze upgrade — Eater paused while Lucky-MODE active.
   if (state.luckyMode && upgradeCount('time-freeze') > 0) return;
   eaterCounter++;
@@ -1171,7 +1173,7 @@ function applyRunUpgradesOnSlotStart() {
   state.grumblockSet = new Set();
   grumblockCounter = 0;
   const slotN = state.roguelike.currentSlot;
-  if (slotN >= GRUMBLOCK_SLOT_MIN && !state.level?.isBoss) {
+  if (slotN >= GRUMBLOCK_SLOT_MIN && !state.level?.isBoss && state.settings?.enemies !== false) {
     const count = slotN >= 80 ? 2 : 1;
     setTimeout(() => {
       for (let i = 0; i < count; i++) spawnGrumblock();
@@ -1384,6 +1386,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11r',
+    items: [
+      '⚙️ NEW SETTING — Enemies On/Off (default On). Toggle off to disable both The Eater AND Grumblock in roguelike mode — chill survival mode for grandma or anyone who wants the build variety without the threats.',
+      'Persisted across sessions like all other settings.',
+    ],
+  },
   {
     id: '2026-05-25-11q',
     items: [
