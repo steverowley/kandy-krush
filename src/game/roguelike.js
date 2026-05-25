@@ -100,6 +100,10 @@ export const UPGRADES = [
   { id: 'lucky-strike',category: 'synergy',    name: 'Lucky Strike',   desc: 'When Lucky fires, also gain +1 hammer.' },
   { id: 'cascade-king',category: 'synergy',    name: 'Cascade King',   desc: 'Cascades (chain ≥2) score 50% more on top of the usual bonus.' },
   { id: 'big-match',   category: 'synergy',    name: 'Big Match',      desc: 'Matches of 5+ tiles score double.' },
+  // Wild abilities — they FIRE on their own with big animated effects
+  { id: 'lightning',   category: 'synergy',    name: 'Lightning Strike', desc: '⚡ Every 4 matches a lightning bolt clears a random row.' },
+  { id: 'black-hole',  category: 'consumable', name: 'Black Hole',       desc: '🌀 At the start of each slot, a black hole devours 5 random candies.' },
+  { id: 'hungry-snake',category: 'synergy',    name: 'Hungry Snake',     desc: '🐍 Make a special candy and a snake slithers across, eating 4 random tiles.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
