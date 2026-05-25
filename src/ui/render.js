@@ -523,7 +523,7 @@ export function popNewSpecial(c, r) {
   setTimeout(() => tile.classList.remove('spawn-special'), 720);
 }
 
-export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
+export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   const overlay = document.getElementById('skill-tree-overlay');
   const panel = document.getElementById('skill-tree-panel');
   const list = document.getElementById('skill-tree-list');
@@ -532,7 +532,11 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   if (!overlay || !panel || !list) return;
 
   const render = () => {
-    gemsEl.textContent = `${gems()} 💎`;
+    if (stats) {
+      gemsEl.innerHTML = `${gems()} 💎 <span class="text-sm font-normal opacity-70 ml-2">— ${stats.runs || 0} runs · ${stats.completes || 0} completes · best slot ${stats.bestSlot || 0}</span>`;
+    } else {
+      gemsEl.textContent = `${gems()} 💎`;
+    }
     list.innerHTML = '';
     for (const skill of skills) {
       const isOwned = owned().has(skill.id);
