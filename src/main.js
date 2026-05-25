@@ -1407,6 +1407,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12j',
+    items: [
+      '🎼 TWO MORE CHIPTUNES — Song D (slinky shuffle, Bb–Eb feel, syncopated) and Song E (slow waltz ballad). The roguelike music bank is now 5 songs deep; runs feel less repetitive.',
+    ],
+  },
+  {
     id: '2026-05-25-12i',
     items: [
       '✨ BUILD VIBE — the run HUD now shows a colored playstyle label next to your archetype chips. Bomber-heavy? "🔥 Demolisher." Mixed? "🌈 Polymath." Lucky-heavy? "🍀 Charmlord." Identifies your build at a glance.',

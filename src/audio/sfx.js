@@ -531,6 +531,54 @@ const CHIP_SONGS = [
       melody:[N.A5, N.G5, N.F5, N.E5, N.D5, N.E5, N.F5, N.A5],
     },
   ],
+  // Song D — slinky shuffle. Bb-Eb feel, syncopated bass, sneaky
+  // melody. Good for mutator slots / "tricky" rounds.
+  [
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, N.A2, N.F2, N.A2],
+      melody:[null, N.D5, null, N.F5, N.A5, N.F5, N.A5, N.G5],
+    },
+    {
+      chord: [N.G3, N.Bb3, N.D4],
+      bass:  [N.G3/2, N.G3, N.D3, N.G3],
+      melody:[N.G5, null, N.Bb5, N.G5, null, N.D5, N.G5, N.A5],
+    },
+    {
+      chord: [N.F4, N.A4, N.C5],
+      bass:  [N.F2, N.A2, N.F2, N.C3],
+      melody:[null, N.F5, N.A5, N.C6, N.A5, null, N.F5, N.A5],
+    },
+    {
+      chord: [N.A3, N.C4, N.E4],
+      bass:  [N.A2, N.E4/2, N.A2, N.E4/2],
+      melody:[N.A5, N.G5, N.E5, N.G5, N.A5, null, N.E5, N.D5],
+    },
+  ],
+  // Song E — slow waltz-ish ballad. Pad chord stabs spread, melody
+  // breathes. Good for the quieter early slots.
+  [
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, null, N.A2, null],
+      melody:[N.D5, null, null, N.F5, null, null, N.A5, null],
+    },
+    {
+      chord: [N.Bb3, N.D4, N.F4],
+      bass:  [N.Bb2, null, N.F3, null],
+      melody:[N.Bb5, null, N.A5, null, N.G5, null, N.F5, null],
+    },
+    {
+      chord: [N.G3, N.Bb3, N.D4],
+      bass:  [N.G3/2, null, N.D3, null],
+      melody:[N.G5, null, null, N.A5, null, null, N.Bb5, null],
+    },
+    {
+      chord: [N.A3, N.C4, N.E4],
+      bass:  [N.A2, null, N.E4/2, null],
+      melody:[N.A5, null, N.G5, null, N.F5, null, N.E5, null],
+    },
+  ],
 ];
 
 let musicMode = 'normal'; // 'normal' | 'chip' | 'boss'
