@@ -295,6 +295,22 @@ export const CLASSES = [
   { id: 'champion',     icon: '⚔', name: 'Champion',     archetype: 'scorer',
     desc: 'Start with Score Boost — all scoring +25%.',
     awaken: 'Awakens at 2+ 🎯 Scorer upgrades: the FIRST match of every slot scores 5×.', start: ['score+25'] },
+  // Phase 8v — additional class variety, one per archetype
+  { id: 'pyromaniac',   icon: '🔥', name: 'Pyromaniac',   archetype: 'bomber',
+    desc: 'Start with Chain Bomb — TNT pops have a 30% chance to chain another TNT.',
+    awaken: 'Awakens at 2+ 💣 Bomber upgrades: every TNT crazy tile also spawns a 🎁 power-up nearby.', start: ['chain-bomb'] },
+  { id: 'comet',        icon: '🌟', name: 'Comet',        archetype: 'wild',
+    desc: 'Start with Meteor Shower — every 8 matches, 3 random tiles explode.',
+    awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['meteor'] },
+  { id: 'merchant',     icon: '💰', name: 'Merchant',     archetype: 'scorer',
+    desc: 'Start with Combo Streak — cascade chain ≥3 doubles score.',
+    awaken: 'Awakens at 2+ 🎯 Scorer upgrades: the FIRST match of every slot scores 5×.', start: ['combo-streak'] },
+  { id: 'druid',        icon: '🍃', name: 'Druid',        archetype: 'sustain',
+    desc: 'Start with First Swap Free — first swap of every slot is free.',
+    awaken: 'Awakens at 2+ 🛡 Sustain upgrades: hammers cost no power-up on the first use per slot.', start: ['first-free'] },
+  { id: 'gambler',      icon: '🃏', name: 'Gambler',      archetype: 'lucky',
+    desc: 'Start with Lucky Strike — when Lucky fires, also gain +1 hammer.',
+    awaken: 'Awakens at 2+ 🍀 Lucky upgrades: Lucky-MODE (×1.5 sustain) lasts +3 extra matches.', start: ['lucky-strike'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
