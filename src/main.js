@@ -1366,6 +1366,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11c',
+    items: [
+      '🔮 NEW CLASS — Witch! Lucky/Wild hybrid starting with Lucky Strike + Hungry Snake. Channels chaos magic.',
+      '🪆 NEW UPGRADE — Voodoo Doll (Lucky). When Lucky bar reaches READY, also gain +1 of every power-up.',
+      'Class pool 15, Upgrade pool 36.',
+    ],
+  },
+  {
     id: '2026-05-25-11b',
     items: [
       '🥷👑 TWO MORE HYBRID CLASSES — class pool grows from 12 to 14.',
@@ -2617,6 +2625,7 @@ function bumpLuckyCharge() {
     scheduleLuckyDrainCheck();
     return;
   }
+  const wasReady = state.luckyReady;
   state.luckyCharge = Math.min(100, state.luckyCharge + runLuckyRate());
   if (state.luckyCharge >= 100) {
     state.luckyReady = true;
@@ -2625,6 +2634,16 @@ function bumpLuckyCharge() {
     speech.speak('Lucky ready. Your next match scores triple.');
     haptics.specialBirth();
     spawnConfetti(18);
+    // 🪆 Voodoo Doll upgrade — +1 of every power-up when Lucky goes ready.
+    if (!wasReady && upgradeCount('voodoo-doll') > 0) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+      }
+      setPowerupCounts(bank);
+      flashMessage('🪆 Voodoo Doll! +1 of each', 1100);
+    }
   }
   refreshLucky();
   scheduleLuckyDrainCheck();
