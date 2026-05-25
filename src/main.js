@@ -1739,6 +1739,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-16a',
+    items: [
+      '🎨 EXPERIMENTAL WEBGL RENDERER — opt in via ⚙ Settings → "🎨 WebGL renderer" (page reload required) or by appending `?canvas=1` to the URL. Pixi.js v8 paints the candies in a Canvas2D/WebGL layer overlaid on the board for smoother sprite movement, while the DOM tiles stay as transparent hit targets so input is unchanged.',
+      'Scope of this first phase: base candy shapes, swap / pop / intro-drop animations. Specials (line / rainbow) and crazy tiles (TNT / void / bolt / prism / wormhole) still fall back to the DOM renderer in this phase — toggling on the WebGL mode will paint them as plain candies for now.',
+    ],
+  },
+  {
     id: '2026-05-25-15p',
     items: [
       '🐛 BUG HUNT — fixed a ReferenceError when the Surprise Drop kicked in (was referencing the removed POWERUP_CAP constant), so the random in-game power-up gift no longer crashes.',
