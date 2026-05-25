@@ -1464,6 +1464,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12z',
+    items: [
+      '🐝 NEW CLASS — Hivemind: hybrid start with Bee Tonic + Lucky Magnet. Lucky-MODE on tap from move one.',
+      '🐱 NEW CLASS — Crazy Cat: hybrid start with Wild Card + Storm Caller. Slot start is pure chaos — TWO crazy tiles already on the board.',
+      'Class roster: 19.',
+    ],
+  },
+  {
     id: '2026-05-25-12y',
     items: [
       '💪 NEW MUTATOR — Mega Mode: every match scores ×3 this slot. Stronger than Golden Hour.',
