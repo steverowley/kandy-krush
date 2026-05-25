@@ -1780,3 +1780,21 @@ body.reduce-motion .grumblock-badge svg { animation: none !important; }
   100% { transform: rotate(-360deg) scale(1); }
 }
 body.reduce-motion .tile.crazy-wormhole { animation: none !important; transform: none !important; }
+
+/* ===== Tile tooltip (long-press on mobile, hover on desktop via title) ===== */
+.tile-tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: 240px;
+  padding: 8px 12px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: pre-line;
+  border-radius: 10px;
+  border: 2px solid #000;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.tile-tooltip.hidden { display: none; }
