@@ -1436,6 +1436,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12v',
+    items: [
+      '🍒 NEW UPGRADE — Cherry Reload (Lucky): when Lucky fires, gain +1 Shuffle per stack. Lucky-focused builds now have a stream of shuffles to reshape the board.',
+    ],
+  },
+  {
     id: '2026-05-25-12u',
     items: [
       '🦴 NEW RELIC — Bone Charm: locks decrement by 2 per hit instead of 1. Lock-heavy boards melt fast.',
@@ -3247,6 +3253,12 @@ function consumeLuckyIfReady(baseScore) {
     const bank = powerupBank();
     const multi = hasRelic('lucky-twin') ? 2 : 1;
     bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike') * multi);
+    setPowerupCounts(bank);
+  }
+  // 🍒 Cherry Reload upgrade — Lucky fire also adds +1 Shuffle per stack.
+  if (state.inRoguelikeRun && upgradeCount('cherry-reload') > 0) {
+    const bank = powerupBank();
+    bank.shuffle = Math.min(effectivePowerupCap(), (bank.shuffle || 0) + upgradeCount('cherry-reload'));
     setPowerupCounts(bank);
   }
   // 🧠 Mind Reader upgrade — +1 to burst multiplier per stack.
