@@ -975,6 +975,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9a',
+    items: [
+      '👋 RESUME-RUN TOAST — when you reopen the app with a roguelike run in progress, a "Welcome back!" toast names your class, slot, and how many upgrades + relics you\'re holding.',
+      'Spoken aloud too: "Welcome back. Resuming slot 47."',
+    ],
+  },
+  {
     id: '2026-05-25-8z',
     items: [
       '🎵 AUDIO POLISH — cascade chains now climb in pitch much more aggressively (+80Hz per chain level, was +40Hz). Chain ×5+ feels twice as triumphant.',
@@ -2935,6 +2942,21 @@ function init({ chime = false, announceLevel = true } = {}) {
 
 applyTheme(state.settings);
 refreshRunHud();
+
+// If the player has a roguelike run in progress (persisted from a
+// previous session), welcome them back with a short toast naming
+// their class + slot.
+if (state.inRoguelikeRun && state.roguelike) {
+  const cls = state.roguelike.currentClass ? getClass(state.roguelike.currentClass) : null;
+  const slot = state.roguelike.currentSlot || 1;
+  const upgradeN = (state.runUpgrades || []).length;
+  const relicN = (state.runRelics || []).length;
+  setTimeout(() => {
+    const klassStr = cls ? `${cls.icon} ${cls.name}` : 'your';
+    flashMessage(`Welcome back! ${klassStr} run · Slot ${slot}/${RUN_LENGTH} · ${upgradeN} upgrades · ${relicN} relics`, 3600);
+    speech.speak(`Welcome back. Resuming slot ${slot}.`);
+  }, 600);
+}
 
 createSettingsUI({
   initial: state.settings,
