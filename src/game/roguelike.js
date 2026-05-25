@@ -328,6 +328,38 @@ export function getRelic(id) {
   return RELICS.find((r) => r.id === id) || null;
 }
 
+// ===== Slot mutators =====
+// Random "weather" events that fire on every 5th slot (skipping
+// bosses). They last for that one slot only and grant a powerful
+// short-term buff that changes how the slot plays.
+export const MUTATORS = [
+  { id: 'golden-hour', icon: '☀️', name: 'Golden Hour',
+    desc: 'ALL scores ×2 this slot.' },
+  { id: 'diamond-day', icon: '💎', name: 'Diamond Day',
+    desc: 'Every match earns a flat +100 bonus.' },
+  { id: 'lucky-day',   icon: '🍀', name: 'Lucky Day',
+    desc: 'Lucky bar starts at FULL charge — first match is a triple.' },
+  { id: 'quick-slot',  icon: '🌪', name: 'Quick Slot',
+    desc: '+5 free moves and the move counter feels fast.' },
+  { id: 'crazy-rain',  icon: '💫', name: 'Crazy Rain',
+    desc: 'A crazy tile spawns every 4 swaps.' },
+  { id: 'big-spender', icon: '🏆', name: 'Big Spender',
+    desc: 'Matches of 5+ score 3× more.' },
+];
+
+export function isMutatorSlot(slot) {
+  // Every slot ending in 5 (5, 15, 25, ...) and never a boss slot.
+  return slot > 0 && slot % 5 === 0 && !BOSS_SLOTS.has(slot);
+}
+
+export function pickRandomMutator() {
+  return MUTATORS[Math.floor(Math.random() * MUTATORS.length)];
+}
+
+export function getMutator(id) {
+  return MUTATORS.find((m) => m.id === id) || null;
+}
+
 export function archetypeFor(id) {
   const u = UPGRADES.find((x) => x.id === id);
   return u ? u.archetype : null;
