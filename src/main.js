@@ -1407,6 +1407,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12g',
+    items: [
+      '🧁 NEW RELIC — Confectionery: each special candy you create also drops a random power-up. Pairs huge with Prism Maker / Bomb Maker chains.',
+      '🪞 NEW RELIC — Cracked Mirror: matches of 5+ tiles fill the Lucky bar by +20%. Big-match builds now bridge into Lucky-MODE bursts.',
+    ],
+  },
+  {
     id: '2026-05-25-12f',
     items: [
       '👅 NEW UPGRADE — Tongue Tie (Sustain): The Eater attacks +1 move slower per stack. Stacks with Slow Down mutator and Time Freeze.',
@@ -3930,6 +3937,18 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       const chance = Math.min(0.6, 0.15 * upgradeCount('prism-maker') * specialsCreated.length);
       if (Math.random() < chance) spawnCrazyTile('prism');
     }
+    // 🧁 Confectionery relic — each special spawned also drops a random power-up.
+    if (hasRelic('confectionery')) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      for (let i = 0; i < specialsCreated.length; i++) {
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        if ((bank[pick] || 0) < cap) bank[pick] = (bank[pick] || 0) + 1;
+      }
+      setPowerupCounts(bank);
+      flashMessage(`🧁 Confectionery! +${specialsCreated.length} 🎁`, 1000);
+    }
   }
   // Trigger crazy-tile pops (after clear, before scoring so the
   // visual chain reads in the right order).
@@ -4020,6 +4039,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         setPowerupCounts(bank);
         flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
       }
+    }
+    // 🪞 Cracked Mirror relic — matches of 5+ tiles fill Lucky bar +20%.
+    if (hasRelic('cracked-mirror') && allCleared.size >= 5) {
+      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
+      if (state.luckyCharge >= 100) state.luckyReady = true;
+      setLuckyCharge(state.luckyCharge, state.luckyReady);
     }
     // 🌶 Spice Box relic — every 12 matches spawn a random crazy tile.
     if (hasRelic('spice-box') && state.slotMatchCount % 12 === 0) {
