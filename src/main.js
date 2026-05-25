@@ -1944,6 +1944,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17t',
+    items: [
+      '⌨ KEYBOARD INPUT — Arrow keys (or WASD) move the focus cursor across the board. Space / Enter selects + commits swaps. Esc opens the new Pause overlay (or deselects first if a tile is selected). 1 / 2 / 3 / 4 fire hammer / shuffle / color bomb / +3 moves. H requests a hint. PC-game-on-mobile means actually being playable on a keyboard.',
+      '⏸ PAUSE OVERLAY — Esc now opens a proper Pause overlay (▶ Resume / ⚙ Settings / 🏠 Quit to start screen) instead of instantly home-buttoning out of the run. Resume is the default focus so a second Esc gets you back fast.',
+    ],
+  },
+  {
     id: '2026-05-25-17s',
     items: [
       '🏅 CLASS MASTERY — new Settings entry "🏅 Class Mastery" opens a per-class progress grid. Each of the 11 classes shows three tier badges: 🥉 Bronze (cleared slot 10), 🥈 Silver (cleared slot 30), 🥇 Gold (full run completed). Derived from the existing classStats record; no new state required. Encourages cycling through every class instead of one-shotting Champion forever.',
@@ -6500,6 +6507,101 @@ async function onSwipe(origin, target) {
 }
 
 attachInput({ onTap, onSwap: onSwipe });
+
+// ⏸ Pause overlay (Phase 17t / C3).
+//
+// Esc opens this if there's nothing else to dismiss. PC-game framing —
+// "quit to start menu" shouldn't be an instant button press; the
+// player wants a chance to back out. Resume just hides the overlay
+// and returns to the live board.
+function openPauseMenu() {
+  const overlay = document.getElementById('pause-overlay');
+  const panel = document.getElementById('pause-panel');
+  if (!overlay || !panel) return;
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  const resume = document.getElementById('pause-resume');
+  const settings = document.getElementById('pause-settings');
+  const quit = document.getElementById('pause-quit');
+  const close = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+  };
+  if (resume) resume.onclick = close;
+  if (overlay) overlay.onclick = close;
+  if (settings) settings.onclick = () => {
+    close();
+    const btn = document.getElementById('settings-open');
+    if (btn) btn.click();
+  };
+  if (quit) quit.onclick = () => {
+    close();
+    const btn = document.getElementById('home-open');
+    if (btn) btn.click();
+  };
+  if (resume) resume.focus();
+}
+
+// ⌨ Keyboard input (Phase 17t / C1).
+//
+// Arrow keys: move the focus cursor across the board.
+// Space / Enter: select the focused tile (and commit a swap if a
+//   neighbor is already selected and adjacent).
+// Esc: deselect / clear cursor. If no selection, opens the Pause Menu.
+// 1 / 2 / 3 / 4: arm hammer / shuffle / color bomb / +3 moves.
+// h: trigger a hint glow.
+//
+// We don't draw a separate cursor — we reuse the existing `.kb-focus`
+// class on the focused tile so the visual is consistent with the
+// `:focus-visible` outline on every other button.
+let kbCursor = { c: 0, r: 0 };
+function paintKbCursor() {
+  document.querySelectorAll('#board .tile.kb-focus').forEach((el) => el.classList.remove('kb-focus'));
+  const tile = document.querySelector(`#board .tile[data-c="${kbCursor.c}"][data-r="${kbCursor.r}"]`);
+  if (tile) tile.classList.add('kb-focus');
+}
+function nudgeCursor(dc, dr) {
+  const c = Math.max(0, Math.min(COLS - 1, kbCursor.c + dc));
+  const r = Math.max(0, Math.min(ROWS - 1, kbCursor.r + dr));
+  kbCursor = { c, r };
+  paintKbCursor();
+}
+document.addEventListener('keydown', (e) => {
+  // Bail if the focus is on a real form element (e.g. someone is typing
+  // a username one day). We currently have no text inputs but be safe.
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  // Don't fight modal close handlers — Esc inside a modal goes to the
+  // existing settings/overlay handlers via DOM bubbling.
+  if (document.body.classList.contains('start-screen-active')) return;
+  if (e.key === 'Escape') {
+    if (state.selected) {
+      state.selected = null;
+      renderBoard(state.board, state);
+      e.preventDefault();
+      return;
+    }
+    // No selection → open pause overlay.
+    openPauseMenu();
+    e.preventDefault();
+    return;
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { nudgeCursor(-1, 0); e.preventDefault(); return; }
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { nudgeCursor(1, 0); e.preventDefault(); return; }
+  if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { nudgeCursor(0, -1); e.preventDefault(); return; }
+  if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { nudgeCursor(0, 1); e.preventDefault(); return; }
+  if (e.key === ' ' || e.key === 'Enter') {
+    sfx.unlockAudio();
+    onTap({ c: kbCursor.c, r: kbCursor.r });
+    e.preventDefault();
+    return;
+  }
+  if (e.key === '1') { const b = document.getElementById('pu-hammer'); if (b) b.click(); e.preventDefault(); return; }
+  if (e.key === '2') { const b = document.getElementById('pu-shuffle'); if (b) b.click(); e.preventDefault(); return; }
+  if (e.key === '3') { const b = document.getElementById('pu-colorbomb'); if (b) b.click(); e.preventDefault(); return; }
+  if (e.key === '4') { const b = document.getElementById('pu-plusmoves'); if (b) b.click(); e.preventDefault(); return; }
+  if (e.key === 'h' || e.key === 'H') { const b = document.getElementById('hint-btn'); if (b) b.click(); e.preventDefault(); return; }
+});
 
 // 🚑 Recovery: if an unhandled error escapes any async board pipeline
 // (swap, cascade, hammer, color bomb, plus moves, slot intro), the
