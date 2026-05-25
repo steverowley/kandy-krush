@@ -236,6 +236,22 @@ function scaleObjective(obj, slot, isBoss) {
   return obj;
 }
 
+// For clearJelly / dropIngredients slots the obstacle count is tied
+// to the board layout and we can't scale the *target* — so we
+// instead reduce the move budget per-slot to make the same target
+// harder to reach late game.
+//   Slot 1:   -0.4% (basically unchanged)
+//   Slot 25:  -10%
+//   Slot 50:  -20%
+//   Slot 100: -40% (capped)
+// Boss slots are exempt (they're hand-tuned).
+function scaleMovesForObstacleSlot(moves, slot, isBoss, objKind) {
+  if (isBoss) return moves;
+  if (objKind !== 'clearJelly' && objKind !== 'dropIngredients') return moves;
+  const reduction = Math.min(0.40, slot * 0.004);
+  return Math.max(8, Math.round(moves * (1 - reduction)));
+}
+
 // Map a roguelike slot (1..100) to a base level config. Score-style
 // objectives get scaled up per-slot so the late game stays challenging.
 export function getRoguelikeLevel(slot) {
@@ -246,9 +262,12 @@ export function getRoguelikeLevel(slot) {
     return boss;
   }
   const base = LEVELS[(idx - 1) % LEVELS.length] || getLevel(1);
+  const objective = scaleObjective(base.objective, idx, false);
+  const moves = scaleMovesForObstacleSlot(base.moves, idx, false, objective?.kind);
   return {
     ...base,
-    objective: scaleObjective(base.objective, idx, false),
+    objective,
+    moves,
     runSlot: idx,
     isBoss: false,
   };
