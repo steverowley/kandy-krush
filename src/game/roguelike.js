@@ -288,6 +288,46 @@ export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
 }
 
+// ===== Relics =====
+// Awarded after every boss win — pick 1 of 3 random relics. Each
+// relic is rare (max ~9 per run) and gives the run a distinct twist
+// distinct from the stacking upgrade system.
+export const RELICS = [
+  { id: 'top-hat',     icon: '🎩', name: 'Top Hat',
+    desc: 'Every 5 swaps, a random power-up appears in your bank.' },
+  { id: 'slow-turtle', icon: '🐢', name: 'Slow Turtle',
+    desc: 'Start each slot with +5 extra moves.' },
+  { id: 'sugar-rush',  icon: '🍰', name: 'Sugar Rush',
+    desc: 'First 3 matches of every slot score 3×.' },
+  { id: 'crown',       icon: '👑', name: 'Crown of Sweetness',
+    desc: 'On slot win, every leftover move converts to 50 bonus points.' },
+  { id: 'slot-machine',icon: '🎰', name: 'Slot Machine',
+    desc: 'Every swap has an 8% chance to spawn a random crazy tile.' },
+  { id: 'iron-tongue', icon: '🦴', name: 'Iron Tongue',
+    desc: 'Slot start: one random lock auto-breaks one level.' },
+  { id: 'echo-drone',  icon: '🛰', name: 'Echo Drone',
+    desc: 'Every special candy you make also adds +10% to the Lucky bar.' },
+  { id: 'mirror',      icon: '🪞', name: 'Mirror Shard',
+    desc: '4-in-a-row matches score 50% more on top of any other bonuses.' },
+];
+
+export function pickRelicChoices(owned = [], n = 3) {
+  const ownedSet = new Set(owned);
+  const pool = RELICS.filter((r) => !ownedSet.has(r.id));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  // If the player has somehow collected every relic, recycle the pool
+  // (lets the run keep awarding picks even past the cap).
+  if (pool.length < n) return RELICS.slice(0, n);
+  return pool.slice(0, n);
+}
+
+export function getRelic(id) {
+  return RELICS.find((r) => r.id === id) || null;
+}
+
 export function archetypeFor(id) {
   const u = UPGRADES.find((x) => x.id === id);
   return u ? u.archetype : null;

@@ -547,6 +547,56 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
+export function showRelicPicker(choices, ownedRelics, onPick) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const active = document.getElementById('upgrade-active-list');
+  const subtitle = document.getElementById('upgrade-subtitle');
+  const title = document.getElementById('upgrade-title');
+  if (!overlay || !panel || !list) return;
+  const prevSubtitle = subtitle?.textContent;
+  const prevTitle = title?.textContent;
+  if (subtitle) subtitle.textContent = 'Boss reward';
+  if (title) title.textContent = 'Choose a RELIC — one of a kind, lasts the run';
+  list.innerHTML = '';
+  const prevGridClass = list.className;
+  list.className = 'grid grid-cols-1 sm:grid-cols-3 gap-3';
+  for (const r of choices) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'upgrade-card relic-card flex flex-col gap-1 p-4 text-left border-[3px] border-yellow-600 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-100 hover:from-yellow-100 hover:to-amber-200 active:from-yellow-200 active:to-amber-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-500 shadow-md';
+    btn.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-3xl">${r.icon}</span>
+        <span class="text-lg sm:text-xl font-bold">${r.name}</span>
+        <span class="text-xs font-bold uppercase tracking-wider ml-auto text-yellow-700">RELIC</span>
+      </div>
+      <span class="text-sm sm:text-base text-gray-700">${r.desc}</span>
+    `;
+    btn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      panel.classList.add('hidden');
+      if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
+      if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
+      list.className = prevGridClass;
+      onPick(r);
+    });
+    list.appendChild(btn);
+  }
+  if (active) {
+    if (ownedRelics && ownedRelics.length > 0) {
+      active.textContent = `Held relics: ${ownedRelics.map((id) => id).join(' · ')}`;
+    } else {
+      active.textContent = 'Your first relic — it stays with you for the rest of the run.';
+    }
+  }
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  const firstBtn = list.querySelector('button');
+  if (firstBtn) firstBtn.focus();
+}
+
 export function showClassPicker(classes, archetypes, onPick) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
