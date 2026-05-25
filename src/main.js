@@ -1366,6 +1366,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11i',
+    items: [
+      '✨ Relic acquisition now FEELS rewarding — confetti burst + star rain + special-birth haptic when you pick a relic from a boss reward.',
+      'Subtle polish that makes each rare boss reward feel earned.',
+    ],
+  },
+  {
     id: '2026-05-25-11h',
     items: [
       '⏰ NEW MUTATOR — Time Bonus. On slot win, each leftover move converts to +30 score. Stacks with Crown of Sweetness (50/move) for huge end-of-slot bonuses.',
@@ -2548,6 +2555,10 @@ function advanceRoguelikeAfterWin() {
         state.runRelics.push(relic.id);
         flashMessage(`${relic.icon} ${relic.name} acquired!`, 1600);
         speech.speak(`${relic.name} acquired.`);
+        // Celebratory effects on relic acquisition.
+        spawnConfetti(40);
+        spawnStarRain(15);
+        haptics.specialBirth();
         persist();
         refreshRunHud();
         // Boss BONUS: also offer a free upgrade pick on top of the relic.
