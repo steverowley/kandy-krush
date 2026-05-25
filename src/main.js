@@ -228,18 +228,32 @@ function showUpgradeChoicesForSlot(n, canReroll) {
     flashMessage('🔄 Rerolled!', 900);
     showUpgradeChoicesForSlot(n, false);
   } : null;
+  // Build awakening info so the picker can flag any card whose pick
+  // would awaken the current class.
+  const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  const awakenInfo = cls
+    ? {
+        alreadyAwakened: classAwakened(),
+        archetype: cls.archetype || null,
+        anyUpgrade: !cls.archetype, // Wanderer awakens on TOTAL upgrades
+        totalCount: (state.runUpgrades || []).length,
+        threshold: cls.archetype ? 2 : 3,
+      }
+    : null;
   showUpgradePicker(choices, state.runUpgrades, (chosen) => {
     state.runUpgrades.push(chosen.id);
     const arch = archetypeFor(chosen.id);
     const willStack = arch ? (counts[arch] || 0) + 1 : 0;
     const synergyTag = willStack >= 2 && ARCHETYPES[arch]
       ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
-    flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
-    speech.speak(`Picked ${chosen.name}`);
+    // Was this the awakening pick?
+    const wasAwakened = awakenInfo && !awakenInfo.alreadyAwakened && classAwakened();
+    flashMessage(`Picked: ${chosen.name}${synergyTag}${wasAwakened ? ' · ✨ AWAKENED!' : ''}`, 1600);
+    speech.speak(`Picked ${chosen.name}${wasAwakened ? '. Awakened!' : ''}`);
     persist();
     refreshRunHud();
     setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
-  }, categoryColor, ARCHETYPES, counts, onReroll);
+  }, categoryColor, ARCHETYPES, counts, onReroll, awakenInfo);
 }
 
 function refreshRunHud() {
@@ -893,6 +907,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8q',
+    items: [
+      '✨ Upgrade picker now CALLS OUT the card that would awaken your class — pulsing pink hint: "This pick AWAKENS your class!"',
+      'Class picker now shows the awakening details so you can plan your build from the very first choice.',
+      'Pick that triggers awakening prints a celebratory "AWAKENED!" in the toast + speech.',
+    ],
+  },
   {
     id: '2026-05-25-8p',
     items: [
