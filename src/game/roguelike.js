@@ -279,6 +279,8 @@ export const UPGRADES = [
   { id: 'caretaker',   category: 'buff',       archetype: 'sustain', name: 'Caretaker',          desc: 'Power-up bank cap +1 per stack. Stacks with Bigger Bank meta and Sustain synergy.' },
   { id: 'buttered',    category: 'consumable', archetype: 'sustain', name: 'Buttered Bread',     desc: 'When you would run out of moves, gain +3 moves per stack — once per slot.' },
   { id: 'heart-beat',  category: 'buff',       archetype: 'sustain', name: 'Heart Beat',         desc: 'Adds +1 to your run\'s max lives per stack. Bigger life pool for the marathon.' },
+  { id: 'cascade-splash',category: 'synergy',  archetype: 'wild',    name: 'Cascade Splash',     desc: '🌊 Every cascade chain ≥2 has a 60% chance per stack to spawn a random crazy tile.' },
+  { id: 'echo-match',  category: 'synergy',    archetype: 'lucky',   name: 'Echo Match',         desc: '🪞 Cascade chains ≥4 also fill your Lucky bar by +50% per stack.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
