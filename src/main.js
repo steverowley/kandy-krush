@@ -76,6 +76,8 @@ import {
   spawnBlackHole,
   spawnSnake,
   spawnEater,
+  showEaterTelegraph,
+  clearEaterTelegraph,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -142,17 +144,19 @@ function upgradeCount(id) {
 // Counters for upgrades that trigger on a schedule. Reset per slot.
 let lightningCounter = 0;
 let eaterCounter = 0;
+let eaterPendingColumn = -1;
 const EATER_FROM_SLOT = 9;
 const EATER_EVERY_MOVES = 5;
 const EATER_BITE = 3;
 function resetAbilityCounters() {
   lightningCounter = 0;
   eaterCounter = 0;
+  eaterPendingColumn = -1;
+  clearEaterTelegraph();
 }
 
-async function fireEater() {
-  if (!state.board) return;
-  // Pick a column with bite-able cells (skip ingredients/locks)
+function pickEaterColumn() {
+  if (!state.board) return -1;
   const cols = [];
   for (let c = 0; c < state.board.cols; c++) {
     for (let r = 0; r < EATER_BITE; r++) {
@@ -162,8 +166,16 @@ async function fireEater() {
       }
     }
   }
-  if (cols.length === 0) return;
-  const col = cols[Math.floor(Math.random() * cols.length)];
+  if (cols.length === 0) return -1;
+  return cols[Math.floor(Math.random() * cols.length)];
+}
+
+async function fireEater() {
+  if (!state.board) return;
+  const col = eaterPendingColumn >= 0 ? eaterPendingColumn : pickEaterColumn();
+  eaterPendingColumn = -1;
+  clearEaterTelegraph();
+  if (col < 0) return;
   const positions = [];
   for (let r = 0; r < EATER_BITE && r < state.board.rows; r++) {
     if (state.board.isIngredient(col, r)) continue;
@@ -175,11 +187,12 @@ async function fireEater() {
   speech.speak('The eater');
   haptics.epic();
   screenShake(7, 420);
-  await delay(620);
+  // Wait for the descend animation to bring the jaws down
+  await delay(820);
   state.board.clear(positions);
   decrementJellyAt(positions);
   renderBoard(state.board, state);
-  await delay(180);
+  await delay(220);
   const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
 }
@@ -190,11 +203,23 @@ function maybeFireEater() {
   if (state.level.runSlot < EATER_FROM_SLOT) return;
   if (state.level.isBoss) return; // bosses are punishing enough
   eaterCounter++;
-  if (eaterCounter < EATER_EVERY_MOVES) return;
-  eaterCounter = 0;
-  // Fire after a short beat so the player's match animation has time
-  // to finish before the mouth descends.
-  setTimeout(() => fireEater(), 600);
+  const movesUntilFire = EATER_EVERY_MOVES - eaterCounter;
+  // Telegraph window: pick the column 2 moves early and show a warning
+  // arrow above it each remaining turn (Slay-the-Spire intent reads).
+  if (movesUntilFire === 2) {
+    eaterPendingColumn = pickEaterColumn();
+    if (eaterPendingColumn >= 0) {
+      showEaterTelegraph(eaterPendingColumn, movesUntilFire);
+      flashMessage('🦷 The Eater is coming…', 1400);
+      speech.speak('The eater is coming');
+    }
+  } else if (movesUntilFire === 1 && eaterPendingColumn >= 0) {
+    showEaterTelegraph(eaterPendingColumn, 1);
+    flashMessage('🦷 The Eater is HERE next turn!', 1400);
+  } else if (movesUntilFire <= 0) {
+    eaterCounter = 0;
+    setTimeout(() => fireEater(), 400);
+  }
 }
 
 async function fireLightning() {
@@ -522,6 +547,14 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-7p',
+    items: [
+      '🦷 You can actually SEE The Eater now — repositioned + bigger entrance. It descends from above and the jaws land squarely over the top 3 cells of the target column.',
+      'Slay-the-Spire-style telegraph: two moves before The Eater chomps, a hot-pink warning arrow appears above the doomed column with a countdown (2 → 1 → CHOMP). Plan around it.',
+      'Reduce-motion users get the warning text without the bobbing arrow.',
+    ],
+  },
   {
     id: '2026-05-25-7o',
     items: [
