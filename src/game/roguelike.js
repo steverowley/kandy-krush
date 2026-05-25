@@ -439,6 +439,8 @@ export const MUTATORS = [
     desc: '+10 💎 immediately at slot start. Pure gem income for the Skill Tree.' },
   { id: 'confetti-day',icon: '🎊', name: 'Confetti Day',
     desc: 'Every match earns a flat +50 score and a burst of confetti — pure party.' },
+  { id: 'long-lunch',  icon: '🥪', name: 'Long Lunch',
+    desc: '+10 moves at slot start. Take your time.' },
 ];
 
 export function isMutatorSlot(slot) {
