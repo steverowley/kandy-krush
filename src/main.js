@@ -976,6 +976,16 @@ function applyRunUpgradesOnSlotStart() {
     state.roguelike.livesRemaining = 2;
     flashMessage('🌬 Second Wind! +1 life', 1300);
   }
+  // 🎁 Generous starter — slot 1 of every run grants +1 of every power-up.
+  if (state.roguelike.currentSlot === 1) {
+    const startBank = powerupBank();
+    const startCap = effectivePowerupCap();
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      startBank[key] = Math.min(startCap, (startBank[key] || 0) + 1);
+    }
+    setPowerupCounts(startBank);
+    flashMessage('🎁 Welcome gift: +1 of each power-up', 1600);
+  }
   // first-free upgrade — fresh first-swap flag.
   state.firstSwapUsed = false;
   // first-free-reroll meta — fresh per slot.
@@ -1150,6 +1160,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9m',
+    items: [
+      '🎁 GENEROUS STARTER — slot 1 of every roguelike run now grants +1 of every power-up to your bank (hammer, shuffle, colour bomb, +3 moves).',
+      'Smoother on-ramp for the long marathon. Combine with Sweet Start meta (+1 hammer at slot 1) to set up an even fatter opening.',
+    ],
+  },
   {
     id: '2026-05-25-9l',
     items: [
