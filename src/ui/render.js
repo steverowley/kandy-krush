@@ -547,7 +547,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
-export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator }) {
+export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator, awakened }) {
   const root = document.getElementById('run-hud');
   if (!root) return;
   if (!visible) { root.classList.add('hidden'); return; }
@@ -557,10 +557,13 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
   const relicsEl = document.getElementById('run-hud-relics');
   if (klassEl) {
     const slotStr = (slot != null && totalSlots) ? `<span class="opacity-70">${slot}/${totalSlots}</span> · ` : '';
+    const awakenedStr = awakened && klass
+      ? ` <span class="px-2 rounded-full font-bold bg-pink-500 text-white border-2 border-black animate-pulse" title="${klass.awaken ? klass.awaken.replace(/"/g, '') : ''}">✨ AWAKENED</span>`
+      : '';
     const mutStr = mutator
       ? ` · <span class="px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
       : '';
-    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${mutStr}`;
+    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}`;
   }
   if (buildsEl && archCounts && archetypes) {
     const tags = [];
