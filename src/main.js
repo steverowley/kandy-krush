@@ -745,6 +745,17 @@ async function triggerCrazyEffect(pos, kind) {
     screenShake(6, 380);
     await delay(220);
   }
+  // 💥 CHAIN REACTION — any OTHER crazy tile inside this blast zone
+  // chains and pops too (collect them before clearing so the kind
+  // info isn't lost).
+  const chainCrazy = [];
+  for (const p of positions) {
+    if (p.c === pos.c && p.r === pos.r) continue;
+    const cellHere = state.board.cell(p.c, p.r);
+    if (cellHere && cellHere.crazy) {
+      chainCrazy.push({ pos: { c: p.c, r: p.r }, kind: cellHere.crazy });
+    }
+  }
   if (positions.length > 0) {
     spawnPopSpecks(positions);
     await animatePop(positions);
@@ -753,6 +764,12 @@ async function triggerCrazyEffect(pos, kind) {
   }
   renderBoard(state.board, state);
   await delay(160);
+  // Fire the chained crazy tiles. They run sequentially for the visual
+  // chain-bang feel, before gravity reflows the board.
+  for (const { pos: cpos, kind: ckind } of chainCrazy) {
+    flashMessage('💥 CHAIN!', 700);
+    await triggerCrazyEffect(cpos, ckind);
+  }
   const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
 }
@@ -1074,6 +1091,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9c',
+    items: [
+      '💥 CRAZY TILE CHAIN REACTIONS — if a crazy tile\'s blast zone contains ANOTHER crazy tile, the second one chains and pops too. Stack them for spectacular combos.',
+      'TNT next to a Bolt = explosion + row+column clear. Prism + TNT = colour wipe + bomb. Chain potentially extends through Void → TNT → Bolt → Prism cascades.',
+      'Visible "💥 CHAIN!" toast on each link.',
+    ],
+  },
   {
     id: '2026-05-25-9b',
     items: [
