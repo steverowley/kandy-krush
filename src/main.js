@@ -1619,6 +1619,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15b',
+    items: [
+      '🛡 XSS HARDENING — every innerHTML site that interpolates game-catalog text (class / relic / upgrade / mutator names and descriptions) now runs through escapeHtml. Safe-by-source today; corrupted saves or future import features can\'t inject markup.',
+    ],
+  },
+  {
     id: '2026-05-25-15a',
     items: [
       '🩸 RED-BORDER CLEANUP — the boss-fight red pulsing border now properly clears when you finish or fail a run (was lingering into the main menu and Levels mode after a boss-slot end).',
