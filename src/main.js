@@ -1116,6 +1116,11 @@ function applyRunUpgradesOnSlotStart() {
     refreshLevelUI();
   }
   // 💵 Big Money mutator — +10 gems at slot start.
+  if (hasMutator('bonus-round')) {
+    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
+    flashMessage('🎰 Bonus Round! +10 💎', 1300);
+    persist();
+  }
   if (hasMutator('big-money')) {
     state.roguelike.gems = (state.roguelike.gems || 0) + 10;
     flashMessage('💵 Big Money! +10 💎', 1300);
@@ -1387,6 +1392,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // ⚔️ Big Crit mutator — all cascades (chain ≥2) score ×4.
   if (hasMutator('big-crit') && cascadeLevel >= 2) m *= 4;
+  // 💪 Mega Mode mutator — every match scores ×3.
+  if (hasMutator('mega-mode')) m *= 3;
+  // 🎰 Bonus Round mutator — every match scores ×1.5.
+  if (hasMutator('bonus-round')) m *= 1.5;
   // 🍬 Sweet Treat upgrade — 3-tile matches score +25% per stack.
   if (matchSize === 3 && upgradeCount('sweet-treat') > 0) {
     m *= 1 + 0.25 * upgradeCount('sweet-treat');
@@ -1454,6 +1463,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12y',
+    items: [
+      '💪 NEW MUTATOR — Mega Mode: every match scores ×3 this slot. Stronger than Golden Hour.',
+      '🎰 NEW MUTATOR — Bonus Round: +10💎 instantly AND every match scores ×1.5 this slot.',
+      'Mutator pool: 30.',
+    ],
+  },
   {
     id: '2026-05-25-12x',
     items: [
