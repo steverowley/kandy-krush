@@ -62,7 +62,10 @@ export function playSwap() {
 //   4-match  -> brighter triangle arpeggio (striped-candy worthy)
 //   5+ match -> full chord burst (rainbow-candy worthy)
 export function playMatch(tileCount, cascadeLevel = 1) {
-  const base = 440 + cascadeLevel * 40;
+  // Each cascade level boosts the base frequency more aggressively
+  // (was +40Hz/level, now +80Hz/level) so a chain ×5 sounds way
+  // brighter and more excited than a chain ×1.
+  const base = 440 + cascadeLevel * 80;
   if (tileCount >= 5) {
     // Big chord: maj7 stacked with sparkle on top
     const chord = [1, 1.25, 1.5, 1.875, 2.5];
@@ -86,6 +89,47 @@ export function playCascade() {
   tone(660, 80, 'sine', 0.06, 0);
   tone(880, 80, 'sine', 0.06, 70);
   tone(1175, 130, 'sine', 0.08, 140);
+}
+
+// Epic cascade — fires when chain >= 5. Soaring rising sweep.
+export function playEpicCascade() {
+  if (muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  const start = c.currentTime;
+  const seq = [660, 988, 1318, 1760, 2349, 2960];
+  seq.forEach((f, i) => tone(f, 220, 'sine', 0.1, i * 50));
+  // Add a low triangle sub-rumble underneath
+  tone(110, 600, 'triangle', 0.05, 0);
+}
+
+// Boss-intro stinger — short orchestral hit (descending minor 6th).
+export function playBossStinger() {
+  if (muted) return;
+  const c = ensureCtx();
+  if (!c) return;
+  tone(220, 220, 'sawtooth', 0.16, 0);
+  tone(165, 360, 'sawtooth', 0.14, 60);
+  tone(110, 720, 'triangle', 0.12, 80);
+  // Snare/cymbal-like noise hit
+  const sr = c.sampleRate;
+  const buf = c.createBuffer(1, Math.floor(0.42 * sr), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.8);
+  }
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const filter = c.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(4500, c.currentTime);
+  filter.Q.setValueAtTime(0.6, c.currentTime);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.05, c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.42);
+  src.connect(filter).connect(g).connect(c.destination);
+  src.start();
+  src.stop(c.currentTime + 0.44);
 }
 
 export function playInvalid() {
