@@ -1391,6 +1391,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11v',
+    items: [
+      '🎉 EPIC RUN-COMPLETE FANFARE — completing a full 100-slot roguelike run now triggers waves of confetti, star rain, screen flashes, AND multiple audio stingers timed across ~2 seconds.',
+      'It really feels like the triumph it is. 100 slots, 10 bosses, the final Candy Kraken — you deserve it.',
+    ],
+  },
+  {
     id: '2026-05-25-11u',
     items: [
       '⛰ 5 MORE POST-POST-GAME LEVELS (111-115) — "True Hell" chapter for players who finished Beyond the Apocalypse.',
@@ -2632,6 +2639,15 @@ function advanceRoguelikeAfterWin() {
     refreshRunHud();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
     speech.speak(`Run complete. You earned ${gems} gems.`);
+    // EPIC FANFARE — celebrate the 100-slot triumph in waves so it really lands.
+    spawnConfetti(120);
+    spawnStarRain(80);
+    spawnScreenFlash('rgba(255, 214, 10, 0.4)');
+    screenShake(8, 600);
+    haptics.epic();
+    setTimeout(() => { spawnConfetti(80); spawnStarRain(40); sfx.playObjectiveComplete('specials'); }, 600);
+    setTimeout(() => { spawnConfetti(60); spawnStarRain(30); spawnScreenFlash('rgba(255, 0, 110, 0.3)'); }, 1200);
+    setTimeout(() => { spawnConfetti(80); sfx.playEpicCascade(); }, 1800);
     return;
   }
   state.roguelike.currentSlot = slot + 1;
