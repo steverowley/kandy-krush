@@ -1353,6 +1353,42 @@ body.reduce-motion .snake-body {
   opacity: 0 !important;
 }
 
+/* Crazy tiles — rare poppable board tiles that trigger big effects
+   when matched. Each kind has its own pulse so the player sees them. */
+.tile.crazy {
+  z-index: 2;
+}
+.tile.crazy-tnt {
+  animation: crazy-tnt-pulse 1.1s ease-in-out infinite;
+  filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.6));
+}
+@keyframes crazy-tnt-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(220, 38, 38, 0.5)); }
+  50%      { filter: drop-shadow(0 0 18px rgba(220, 38, 38, 1)); transform: scale(1.03); }
+}
+.tile.crazy-void {
+  animation: crazy-void-spin 2.4s linear infinite;
+  filter: drop-shadow(0 0 12px rgba(131, 56, 236, 0.7));
+}
+@keyframes crazy-void-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.tile.crazy-bolt {
+  animation: crazy-bolt-pulse 1.0s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 214, 10, 0.8));
+}
+@keyframes crazy-bolt-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(255, 214, 10, 0.5)); }
+  50%      { transform: scale(1.06); filter: drop-shadow(0 0 18px rgba(255, 214, 10, 1)); }
+}
+body.reduce-motion .tile.crazy-tnt,
+body.reduce-motion .tile.crazy-void,
+body.reduce-motion .tile.crazy-bolt {
+  animation: none !important;
+  transform: none !important;
+}
+
 /* The Eater — a giant chomping mouth that descends, opens wide,
    chomps shut, then retracts. The keyframes target the SVG groups
    inside so we can animate teeth independently of the descent. */
