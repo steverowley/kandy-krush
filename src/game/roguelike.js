@@ -285,6 +285,7 @@ export const UPGRADES = [
   { id: 'gold-pile',   category: 'buff',       archetype: 'scorer',  name: 'Gold Pile',          desc: '💰 Each boss kill grants +5 gems per stack. Boss-rush economy.' },
   { id: 'plus-more',   category: 'buff',       archetype: 'sustain', name: 'Plus More',          desc: '➕ Each "+3 Moves" power-up gives +1 extra per stack (so +4, +5, +6, etc.).' },
   { id: 'sweet-treat', category: 'synergy',    archetype: 'scorer',  name: 'Sweet Treat',        desc: '🍬 3-tile matches score +25% per stack. Tiny matches add up.' },
+  { id: 'cherry-reload',category: 'synergy',   archetype: 'lucky',   name: 'Cherry Reload',      desc: '🍒 When Lucky fires, gain +1 Shuffle per stack. Lucky-focused builds get a stream of shuffles.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
