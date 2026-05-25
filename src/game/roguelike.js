@@ -471,6 +471,8 @@ export const MUTATORS = [
     desc: 'Clears 3 random tiles at slot start (could create a cascade — or just open the board).' },
   { id: 'bottomless-cup',icon: '🍵', name: 'Bottomless Cup',
     desc: 'Every match adds +20% to the Lucky bar. Trigger Lucky-MODE almost every move.' },
+  { id: 'sweet-boost', icon: '🧁', name: 'Sweet Boost',
+    desc: 'First 5 matches of every slot score ×2 (think Sugar Rush relic but more).' },
 ];
 
 export function isMutatorSlot(slot) {
