@@ -1198,6 +1198,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9v',
+    items: [
+      '🎁 BOSS BONUS — defeating a boss now grants BOTH a Relic pick AND a free Upgrade pick (instead of just the relic).',
+      'Boss fights now compound your build twice as fast. Earlier bosses snowball into stronger builds for the late-run challenges.',
+    ],
+  },
+  {
     id: '2026-05-25-9u',
     items: [
       '✨ NEW RELIC — Stardust. Every cascade chain of 4 or more earns you a free 💎 mid-run.',
@@ -2068,7 +2075,13 @@ function advanceRoguelikeAfterWin() {
         speech.speak(`${relic.name} acquired.`);
         persist();
         refreshRunHud();
-        setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 350);
+        // Boss BONUS: also offer a free upgrade pick on top of the relic.
+        // (Goes straight into the next slot via showUpgradeChoicesForSlot.)
+        setTimeout(() => {
+          let n = hasMeta('wider-choice') ? 4 : 3;
+          if (isClass('wanderer') && classAwakened()) n += 1;
+          showUpgradeChoicesForSlot(n, true);
+        }, 350);
       });
     }, 1500);
   } else {
