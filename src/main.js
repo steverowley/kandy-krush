@@ -1422,6 +1422,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12m',
+    items: [
+      '🍨 NEW RELIC — Sundae Saturday: every 8 matches in a slot grants +1 "+3 Moves" power-up. Steady drip for marathon slots.',
+      '💥 NEW RELIC — Sugar Crash: every 14 matches in a slot, a TNT crazy tile spawns. Mid-late slot bursts on cascade-heavy builds.',
+    ],
+  },
+  {
     id: '2026-05-25-12l',
     items: [
       '✨ NEW EVENT — The Crossroads. At slots 27 and 77 a brief no-cost detour appears: pick from 🛍 The Vault (FREE relic), 🎁 The Cache (+2 of every power-up), or 💎 The Reserve (+20 💎).',
@@ -4162,6 +4169,21 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (hasRelic('spice-box') && state.slotMatchCount % 12 === 0) {
       spawnCrazyTile();
       flashMessage('🌶 Spice Box!', 900);
+    }
+    // 💥 Sugar Crash relic — every 14 matches spawn a TNT tile.
+    if (hasRelic('sugar-crash') && state.slotMatchCount % 14 === 0) {
+      spawnCrazyTile('tnt');
+      flashMessage('💥 Sugar Crash!', 900);
+    }
+    // 🍨 Sundae Saturday relic — every 8 matches grant +1 plusMoves powerup.
+    if (hasRelic('sundae-saturday') && state.slotMatchCount % 8 === 0) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      if ((bank.plusMoves || 0) < cap) {
+        bank.plusMoves = (bank.plusMoves || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
+      }
     }
     // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
     if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
