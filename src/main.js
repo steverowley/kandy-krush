@@ -1021,6 +1021,12 @@ function applyRunUpgradesOnSlotStart() {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // 💝 Surprise Life mutator — +1 Life at slot start.
+  if (hasMutator('surprise-life')) {
+    state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
+    flashMessage('💝 Surprise Life! +1 ❤️', 1300);
+    refreshLevelUI();
+  }
   // 🗝 Lockpick mutator — weaken every lock by 1 level.
   if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1241,6 +1247,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10e',
+    items: [
+      '💝 NEW MUTATOR — Surprise Life. +1 Life at slot start. Pure defensive buff for when the run feels tight.',
+      'Mutator pool now 14.',
+    ],
+  },
   {
     id: '2026-05-25-10d',
     items: [

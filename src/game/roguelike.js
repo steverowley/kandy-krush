@@ -414,6 +414,8 @@ export const MUTATORS = [
     desc: 'Slot starts with EVERY lock weakened by 1 level — easier crack.' },
   { id: 'treasure',    icon: '💰', name: 'Treasure Slot',
     desc: 'Finishing this slot grants +5 💎 on top of the usual reward.' },
+  { id: 'surprise-life',icon: '💝', name: 'Surprise Life',
+    desc: '+1 Life at the start of this slot. Pure defensive buff.' },
 ];
 
 export function isMutatorSlot(slot) {
