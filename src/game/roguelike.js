@@ -359,6 +359,8 @@ export const RELICS = [
     desc: 'If you start a slot with only 1 life, you\'re restored to 2 instead.' },
   { id: 'whirlpool',   icon: '🌀', name: 'Whirlpool',
     desc: 'Every 10 matches the board re-shuffles in place — preserves specials, opens new opportunities.' },
+  { id: 'stardust',    icon: '✨', name: 'Stardust',
+    desc: 'Every cascade chain of 4 or more earns you a free 💎 mid-run.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
