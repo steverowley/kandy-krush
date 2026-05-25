@@ -1644,6 +1644,55 @@ export const LEVELS = [
       ],
     },
   },
+  // ===== Chapter: Postlude (131-135) — for the truly relentless =====
+  {
+    id: 131,
+    name: 'Edge Case',
+    moves: 28,
+    objective: { kind: 'score', target: 11000 },
+    hint: '11,000 score in just 28 moves. No fluff.',
+  },
+  {
+    id: 132,
+    name: 'Slowburn',
+    moves: 36,
+    objective: { kind: 'matches', target: 55 },
+    hint: '55 matches, 36 moves. Cascade-rich or bust.',
+  },
+  {
+    id: 133,
+    name: 'Iron Cage',
+    moves: 50,
+    objective: { kind: 'score', target: 18000 },
+    hint: '18,000 score through level-3 locks ringing the outside.',
+    obstacles: {
+      locks: [
+        [0, 0, 3], [1, 0, 3], [4, 0, 3], [5, 0, 3],
+        [0, 5, 3], [1, 5, 3], [4, 5, 3], [5, 5, 3],
+      ],
+    },
+  },
+  {
+    id: 134,
+    name: 'Cherry Storm',
+    moves: 38,
+    objective: { kind: 'dropIngredients', target: 9 },
+    hint: 'Nine cherries spread across the top two rows.',
+    obstacles: {
+      ingredients: [
+        [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0],
+        [1, 1], [3, 1], [4, 1],
+      ],
+    },
+  },
+  {
+    id: 135,
+    name: 'Endless',
+    moves: 100,
+    objective: { kind: 'score', target: 40000 },
+    hint: 'A hundred moves. Forty thousand. The Endless level.',
+    tip: 'If you beat this without using any power-ups, please email me about your therapy bills.',
+  },
 ];
 
 export function getLevel(id) {
