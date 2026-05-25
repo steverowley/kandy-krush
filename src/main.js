@@ -1317,6 +1317,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
+  // 🪞 Twin Mirror relic — 5+ matches score ×3.
+  if (hasRelic('twin-mirror') && matchSize >= 5) m *= 3;
   // 🧠 Big Brain relic — +25% per cascade level past 1.
   if (hasRelic('big-brain') && cascadeLevel >= 2) {
     m *= 1 + 0.25 * (cascadeLevel - 1);
@@ -1374,6 +1376,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11o',
+    items: [
+      '🪞 NEW RELIC — Twin Mirror. Matches of 5+ tiles score ×3. Stacks with Big Match upgrade (×2 per stack) for explosive big-match scoring.',
+      'Relic pool now 26.',
+    ],
+  },
   {
     id: '2026-05-25-11n',
     items: [
