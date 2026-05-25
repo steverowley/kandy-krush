@@ -464,6 +464,8 @@ export const MUTATORS = [
     desc: '+10 moves at slot start. Take your time.' },
   { id: 'time-bonus',  icon: '⏰', name: 'Time Bonus',
     desc: 'On slot win, each leftover move converts to +30 score. Stacks with Crown of Sweetness (50/move).' },
+  { id: 'eraser',      icon: '✏️', name: 'Eraser',
+    desc: 'Clears 3 random tiles at slot start (could create a cascade — or just open the board).' },
 ];
 
 export function isMutatorSlot(slot) {
