@@ -1578,6 +1578,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13w',
+    items: [
+      '🔥 NEW UPGRADE — Furnace (Wild): cascade chain ≥3 spawns a TNT crazy tile per stack. New cascade-bomber bridge for chain-heavy builds.',
+    ],
+  },
+  {
     id: '2026-05-25-13v',
     items: [
       '📜 NEW CHAPTER — "Postlude" (levels 131-135). Edge Case, Slowburn, Iron Cage, Cherry Storm, and Endless (40k score, 100 moves).',
@@ -4509,7 +4515,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       state.runHighlights.biggestMatch = allCleared.size;
     }
   }
-  if (cascadeLevel >= 3) spawnConfetti(20);
+  if (cascadeLevel >= 3) {
+    spawnConfetti(20);
+    // 🔥 Furnace upgrade — cascade chain ≥3 spawns a TNT crazy tile per stack.
+    if (state.inRoguelikeRun && upgradeCount('furnace') > 0) {
+      for (let i = 0; i < upgradeCount('furnace'); i++) spawnCrazyTile('tnt');
+    }
+  }
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
     spawnConfetti(36);
