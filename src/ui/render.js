@@ -1618,6 +1618,7 @@ export function showChangelog(items, onDismiss) {
 const MODAL_OVERLAY_IDS = [
   'run-summary-overlay', 'run-summary-panel',
   'level-overlay',
+  'level-intro',
   'level-select-overlay', 'level-select-panel',
   'settings-overlay', 'settings-panel',
   'changelog-overlay', 'changelog-panel',
@@ -1630,6 +1631,8 @@ const MODAL_OVERLAY_IDS = [
   'crossroads-overlay', 'crossroads-panel',
   'class-picker-overlay', 'class-picker-panel',
   'roguelike-intro-overlay', 'roguelike-intro-panel',
+  'boss-banner',
+  'goodbye-screen',
 ];
 
 export function hideAllOverlays({ except = [] } = {}) {
@@ -1645,6 +1648,13 @@ export function hideAllOverlays({ except = [] } = {}) {
     const f = document.getElementById('level-fail');
     if (c) c.classList.add('hidden');
     if (f) f.classList.add('hidden');
+  }
+  // Resolve any pending level-intro promise so a 🏠 mid-intro doesn't
+  // leak the awaiter forever.
+  if (!skip.has('level-intro') && introResolve) {
+    const r = introResolve;
+    introResolve = null;
+    try { r(); } catch { /* ignore */ }
   }
 }
 

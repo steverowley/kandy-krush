@@ -105,7 +105,7 @@ body.start-screen-active > #run-hud,
 body.start-screen-active > #powerups,
 body.start-screen-active > #boss-banner,
 body.start-screen-active > #pu-hint,
-body.start-screen-active > section:not(#start-screen) {
+body.start-screen-active > section:not(#start-screen):not(#goodbye-screen) {
   display: none !important;
 }
 #start-screen {
@@ -149,7 +149,8 @@ body.reduce-motion.shake {
   body .tile.special-line-v,
   body .tile.special-rainbow,
   body .tile.hint,
-  body #moves.moves-critical {
+  body #moves.moves-critical,
+  body #start-screen-icon {
     animation: none !important;
   }
   body .tap-ripple, body .particle-screen-flash { display: none !important; }
