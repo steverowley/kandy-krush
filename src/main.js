@@ -1485,6 +1485,9 @@ function applyRunUpgradesOnSlotStart() {
   const slot = state.roguelike.currentSlot;
   if (isMutatorSlot(slot)) {
     state.slotMutator = pickRandomMutator(runRng()).id;
+    if (state.runHighlights && Array.isArray(state.runHighlights.mutatorsSeen) && state.runHighlights.mutatorsSeen.length < 32) {
+      state.runHighlights.mutatorsSeen.push(state.slotMutator);
+    }
   } else {
     state.slotMutator = null;
   }
@@ -1943,6 +1946,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17u',
+    items: [
+      '📊 RUN STATS — the run-summary modal now shows 5 stat cards instead of 2: 🔁 Max cascade, 💥 Biggest match, 🎯 Total matches, 🏔 Best slot score, ♾ Infinites. Tracks them through `state.runHighlights`, persisted across reloads. PC-roguelike players love stat-stalking; this is the screen they\'ll screenshot and share.',
+    ],
+  },
   {
     id: '2026-05-25-17t',
     items: [
@@ -3707,6 +3716,9 @@ function maybeTriggerInfiniteScore() {
   if (state.cascadeAbort) return true; // already firing
   state.cascadeAbort = true;
   state.infiniteCount = (state.infiniteCount || 0) + 1;
+  if (state.runHighlights) {
+    state.runHighlights.infiniteCount = (state.runHighlights.infiniteCount || 0) + 1;
+  }
   telemetry.track('infinite_combo', {
     nth_this_session: state.infiniteCount,
     score: state.score,
@@ -4050,7 +4062,14 @@ function startRoguelikeRun() {
     state.roguelike.currentClass = null; state.runFreeRerolls = 0;
     // Per-run highlights — surfaced on the run-summary panel when the
     // player finishes (or dies).
-    state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
+    state.runHighlights = {
+      maxCascade: 0,
+      biggestMatch: 0,
+      totalMatches: 0,
+      bestSlotScore: 0,
+      infiniteCount: 0,
+      mutatorsSeen: [],
+    };
     // 🔄 Reroll Bank meta — start each run with 3 free upgrade rerolls.
     // Carries between slots; consumed by the upgrade picker.
     state.runFreeRerolls = hasMeta('reroll-bank') ? 3 : 0;
@@ -4065,7 +4084,12 @@ function startRoguelikeRun() {
       }
     }
   }
-  if (!state.runHighlights) state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
+  if (!state.runHighlights) state.runHighlights = { maxCascade: 0, biggestMatch: 0, totalMatches: 0, bestSlotScore: 0, infiniteCount: 0, mutatorsSeen: [] };
+  // Backfill missing fields on resumed runs (forward-compat with old saves).
+  if (state.runHighlights.totalMatches == null) state.runHighlights.totalMatches = 0;
+  if (state.runHighlights.bestSlotScore == null) state.runHighlights.bestSlotScore = 0;
+  if (state.runHighlights.infiniteCount == null) state.runHighlights.infiniteCount = 0;
+  if (!Array.isArray(state.runHighlights.mutatorsSeen)) state.runHighlights.mutatorsSeen = [];
   persist();
   // First-ever roguelike run: pop a one-time intro explaining the
   // class / archetype / relic / mutator / enemy systems. Then class.
@@ -4164,6 +4188,11 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  // 🏅 Record this slot's score as the run's best-single-slot if it tops
+  // the previous one. Surfaces in the run-stats screen at run end.
+  if (state.runHighlights && state.score > (state.runHighlights.bestSlotScore || 0)) {
+    state.runHighlights.bestSlotScore = state.score;
+  }
   telemetry.track('slot_complete', {
     slot,
     is_boss: !!state.level?.isBoss,
@@ -5757,6 +5786,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     }
     if (allCleared.size > (state.runHighlights.biggestMatch || 0)) {
       state.runHighlights.biggestMatch = allCleared.size;
+    }
+    // Total matches across the run (counted at cascade level 1 so a chain
+    // of N counts as 1 match event, not N).
+    if (cascadeLevel === 1) {
+      state.runHighlights.totalMatches = (state.runHighlights.totalMatches || 0) + 1;
     }
   }
   if (cascadeLevel >= 3) {
