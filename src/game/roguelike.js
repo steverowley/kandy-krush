@@ -256,6 +256,7 @@ export const UPGRADES = [
   { id: 'crazy-magnet',category: 'synergy',    archetype: 'bomber',  name: 'Crazy Magnet',       desc: 'Every 3rd match (per slot) automatically spawns a random crazy tile.' },
   { id: 'snowball',    category: 'synergy',    archetype: 'scorer',  name: 'Snowball',           desc: 'Each match in a slot boosts the next match\'s score by 3% per stack (compounds — late slot matches are huge).' },
   { id: 'mover+3',     category: 'buff',       archetype: 'sustain', name: '+3 Moves',           desc: 'Every slot starts with 3 extra moves (stronger than +2 Moves).' },
+  { id: 'frost',       category: 'synergy',    archetype: 'sustain', name: 'Frost',              desc: 'Every 7 swaps, every lock on the board loses 1 level per stack — auto-cracks locks over time.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
