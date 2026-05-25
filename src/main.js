@@ -1464,6 +1464,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13b',
+    items: [
+      '🌟 NEW RELIC — Glow Stick: cascade chains ≥6 instantly trigger Lucky-MODE, regardless of bar. Cascade builds skip the charge phase.',
+      '🐝 NEW RELIC — Bee Wing: every Lucky-MODE match also spawns a random crazy tile. Lucky-MODE becomes chaos-mode.',
+    ],
+  },
+  {
     id: '2026-05-25-13a',
     items: [
       '🧚 NEW RELIC — Fairy Light: hint sparkles appear after just 0.8 sec idle (fastest hint relic, beats Goldfish 1.5s).',
@@ -3295,6 +3302,8 @@ function consumeLuckyIfReady(baseScore) {
       speech.speak('Lucky window over');
     }
     refreshLucky();
+    // 🐝 Bee Wing relic — every Lucky-MODE match also spawns a crazy tile.
+    if (hasRelic('bee-wing')) spawnCrazyTile();
     // 🥃 Strong Drink relic — Lucky-MODE multiplier doubles.
     const mult = hasRelic('strong-drink') ? LUCKY_MODE_MULTIPLIER * 2 : LUCKY_MODE_MULTIPLIER;
     return Math.round(baseScore * mult);
@@ -4157,6 +4166,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         if (Math.random() < 0.6) spawnCrazyTile();
       }
     }
+  }
+  // 🌟 Glow Stick relic — cascade chains ≥6 instantly trigger Lucky-MODE.
+  if (cascadeLevel >= 6 && hasRelic('glow-stick') && !state.luckyMode && !state.luckyReady) {
+    state.luckyCharge = 100;
+    state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage('🌟 GLOW STICK! Lucky ready!', 1300);
   }
   // 🏅 Per-run highlight tracking — surfaced on the run summary.
   if (state.inRoguelikeRun && state.runHighlights) {
