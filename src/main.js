@@ -1366,6 +1366,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11h',
+    items: [
+      '⏰ NEW MUTATOR — Time Bonus. On slot win, each leftover move converts to +30 score. Stacks with Crown of Sweetness (50/move) for huge end-of-slot bonuses.',
+      'Mutator pool now 19.',
+    ],
+  },
+  {
     id: '2026-05-25-11g',
     items: [
       '👯 NEW RELIC — Lucky Twin. Lucky Strike grants 2 hammers per fire instead of 1.',
@@ -2983,6 +2990,13 @@ function checkLevelOutcome() {
         state.score += bonus;
         setScore(state.score, { animate: true });
         flashMessage(`👑 +${bonus} from leftover moves`, 1500);
+      }
+      // ⏰ Time Bonus mutator — leftover moves convert to 30pt each.
+      if (hasMutator('time-bonus') && state.movesRemaining > 0) {
+        const bonus = state.movesRemaining * 30;
+        state.score += bonus;
+        setScore(state.score, { animate: true });
+        flashMessage(`⏰ +${bonus} time bonus`, 1500);
       }
       const isLastSlot = state.roguelike.currentSlot >= RUN_LENGTH;
       showLevelComplete({
