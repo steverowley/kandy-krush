@@ -355,7 +355,7 @@ function playCrackle() {
 }
 
 function scheduleNextCrackle() {
-  if (!musicNodes || musicNodes.stopped || muted) {
+  if (!musicNodes || musicNodes.stopped || muted || musicMode === 'chip') {
     crackleTimer = null;
     return;
   }
@@ -366,38 +366,218 @@ function scheduleNextCrackle() {
   crackleTimer = setTimeout(scheduleNextCrackle, next);
 }
 
-// Dungeon set — darker minor 7th chords, lower octaves. Used when
-// the active mode is 'roguelike'.
-const DUNGEON_SONGS = [
-  // Am7 -> Dm7 -> Bbmaj7 -> Em7 — modal jazz-noir feel
+// ---------- 16-bit chiptune — "Sweet Soldier" theme ----------
+// Guile's-Theme-style driving D-minor march. Plays in roguelike mode.
+// Square-wave melody over a syncopated bass groove and snare backbeat.
+// Independent BPM (130) and bar scheduling from the lo-fi engine.
+const CHIP_BPM = 132;
+const CHIP_BEAT_S = 60 / CHIP_BPM;
+const CHIP_BAR_S = CHIP_BEAT_S * 4;
+
+const N = {
+  D2: 73.42,  F2: 87.31,  A2: 110.00, Bb2: 116.54, C3: 130.81, D3: 146.83,
+  F3: 174.61, G3: 196.00, A3: 220.00, Bb3: 233.08, C4: 261.63, D4: 293.66,
+  E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, Bb4: 466.16, C5: 523.25,
+  D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.00, Bb5: 932.33,
+  C6: 1046.50, D6: 1174.66,
+};
+
+// Each bar holds: chord voicing (stabbed on offbeats), 4 bass notes
+// (one per beat, syncopated walking pattern), and 8 sixteenth-note
+// melody slots (null = rest). Each "song" is 4 bars.
+const CHIP_SONGS = [
+  // Song A — main D-minor march. Two-bar A phrase, two-bar response.
   [
-    { notes: [220.00, 261.63, 329.63, 392.00], bass: 55.00 },   // A m7  (A3/C4/E4/G4, bass A1)
-    { notes: [293.66, 349.23, 440.00, 523.25], bass: 73.42 },   // D m7
-    { notes: [233.08, 293.66, 349.23, 440.00], bass: 58.27 },   // Bb maj7
-    { notes: [246.94, 293.66, 369.99, 440.00], bass: 61.74 },   // B dim-ish
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, N.D3, N.A2, N.D3],
+      melody:[N.D5, N.F5, N.A5, N.G5,  N.F5, N.D5, N.E5, N.F5],
+    },
+    {
+      chord: [N.Bb3, N.D4, N.F4],
+      bass:  [N.Bb2, N.F3, N.Bb2, N.D3],
+      melody:[N.G5, N.F5, N.D5, N.Bb4, N.D5, N.F5, N.A5, N.G5],
+    },
+    {
+      chord: [N.A3, N.C4, N.E4],   // Am
+      bass:  [N.A2, N.E4/2, N.A2, N.C4/2],
+      melody:[N.A5, N.G5, N.E5, N.A5, N.G5, N.E5, N.D5, N.C5],
+    },
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, N.A2, N.D3, N.F3],
+      melody:[N.D5, N.A4, N.D5, N.F5, N.A5, N.F5, N.D5, N.A4],
+    },
   ],
-  // Em7 -> Cmaj7 -> G m7 -> D 7 — slow descending dread
+  // Song B — climbing variant, hooks into the bridge feel.
+  // Dm - Gm - Bb - A7 - Dm cadence
   [
-    { notes: [164.81, 196.00, 246.94, 293.66], bass: 41.20 },   // E m7
-    { notes: [196.00, 246.94, 293.66, 369.99], bass: 49.00 },   // G m7
-    { notes: [146.83, 174.61, 220.00, 261.63], bass: 36.71 },   // D m7
-    { notes: [130.81, 164.81, 196.00, 246.94], bass: 32.70 },   // C m7
+    {
+      chord: [N.D4, N.F4, N.A4],
+      bass:  [N.D2, N.D3, N.A2, N.F3],
+      melody:[N.A4, N.D5, N.F5, N.A5,  N.G5, N.F5, N.A5, N.D6],
+    },
+    {
+      chord: [N.G3, N.Bb3, N.D4],
+      bass:  [N.G3/2, N.D3, N.G3/2, N.Bb3/2],
+      melody:[N.D5, N.G5, N.Bb5, N.G5, N.F5, N.D5, N.Bb4, N.G4],
+    },
+    {
+      chord: [N.Bb3, N.D4, N.F4],
+      bass:  [N.Bb2, N.F3, N.Bb2, N.D3],
+      melody:[N.F5, N.A5, N.Bb5, N.A5, N.G5, N.F5, N.E5, N.D5],
+    },
+    {
+      chord: [N.A3, N.C4, N.E4],  // A7-ish (C# implied by melody)
+      bass:  [N.A2, N.E4/2, N.A2, N.E4/2],
+      melody:[N.E5, N.G5, N.A5, N.C6, N.A5, N.G5, N.E5, N.D5],
+    },
   ],
 ];
 
-let musicMode = 'normal'; // 'normal' | 'dungeon'
+let musicMode = 'normal'; // 'normal' | 'chip'
 export function setMusicMode(mode) {
-  const next = mode === 'roguelike' ? 'dungeon' : 'normal';
+  const next = mode === 'roguelike' ? 'chip' : 'normal';
   if (next === musicMode) return;
   musicMode = next;
   songIndex = 0;
-  // If music's playing, fade old out by clearing the queue — the next
-  // scheduled chord will pick up from the new song bank.
+  beatBarCount = 0;
+  musicChordIndex = 0;
+  // If music's playing, kill the lo-fi chord queue and let the next
+  // scheduled bar pick up the new style. Restart fresh so the styles
+  // don't bleed.
+  if (musicNodes && !musicNodes.stopped && musicEnabled && !muted) {
+    stopMusic();
+    startMusic();
+  }
 }
 
 function currentSong() {
-  const bank = musicMode === 'dungeon' ? DUNGEON_SONGS : SONGS;
+  const bank = musicMode === 'chip' ? CHIP_SONGS : SONGS;
   return bank[songIndex % bank.length];
+}
+
+// ---------- Chiptune drum/bass/melody ----------
+function chipBlip(at, freq, durSec, type = 'square', peak = 0.06) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, at);
+  g.gain.setValueAtTime(0, at);
+  g.gain.linearRampToValueAtTime(peak, at + 0.006);
+  g.gain.setValueAtTime(peak, at + Math.max(0.01, durSec - 0.03));
+  g.gain.exponentialRampToValueAtTime(0.0001, at + durSec);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + durSec + 0.02);
+}
+
+function chipBass(at, freq) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(540, at);
+  filter.Q.setValueAtTime(0.4, at);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, at);
+  g.gain.linearRampToValueAtTime(0.065, at + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + CHIP_BEAT_S * 0.85);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(freq, at);
+  osc.connect(filter).connect(g).connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + CHIP_BEAT_S + 0.05);
+}
+
+function chipChordStab(at, freqs) {
+  if (muted || !ctx) return;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(2200, at);
+  filter.Q.setValueAtTime(0.5, at);
+  const g = ctx.createGain();
+  const dur = CHIP_BEAT_S * 0.35;
+  g.gain.setValueAtTime(0, at);
+  g.gain.linearRampToValueAtTime(0.025, at + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  filter.connect(g).connect(ctx.destination);
+  for (const f of freqs) {
+    const o = ctx.createOscillator();
+    o.type = 'square';
+    o.frequency.setValueAtTime(f, at);
+    o.detune.setValueAtTime((Math.random() - 0.5) * 4, at);
+    o.connect(filter);
+    o.start(at);
+    o.stop(at + dur + 0.04);
+  }
+}
+
+function chipSnare(at, accent = false) {
+  if (muted || !ctx) return;
+  const len = accent ? 0.11 : 0.08;
+  const sr = ctx.sampleRate;
+  const buf = ctx.createBuffer(1, Math.floor(len * sr), sr);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(2400, at);
+  filter.Q.setValueAtTime(0.9, at);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(accent ? 0.05 : 0.038, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  src.connect(filter).connect(g).connect(ctx.destination);
+  src.start(at);
+  src.stop(at + len + 0.02);
+}
+
+function chipKick(at) {
+  if (muted || !ctx) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(160, at);
+  osc.frequency.exponentialRampToValueAtTime(44, at + 0.12);
+  g.gain.setValueAtTime(0.001, at);
+  g.gain.exponentialRampToValueAtTime(0.09, at + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(at);
+  osc.stop(at + 0.25);
+}
+
+function scheduleChipBar(startAt, bar) {
+  // Bass: one note per beat (4 beats). Octave-jumping pattern gives
+  // the marching feel.
+  for (let i = 0; i < 4; i++) {
+    chipBass(startAt + i * CHIP_BEAT_S, bar.bass[i]);
+  }
+  // Kick on 1 and 3 (military downbeat); snare on 2 and 4 (backbeat).
+  chipKick(startAt);
+  chipKick(startAt + CHIP_BEAT_S * 2);
+  chipSnare(startAt + CHIP_BEAT_S * 1, false);
+  chipSnare(startAt + CHIP_BEAT_S * 3, true);
+  // Occasional snare flam right before downbeat — that Guile groove.
+  if (Math.random() < 0.35) {
+    chipSnare(startAt + CHIP_BEAT_S * 3 + CHIP_BEAT_S * 0.5, false);
+    chipSnare(startAt + CHIP_BEAT_S * 3 + CHIP_BEAT_S * 0.75, false);
+  }
+  // Chord stabs on the AND of beats 2 and 4 — Reggae-skank-ish push.
+  chipChordStab(startAt + CHIP_BEAT_S * 1.5, bar.chord);
+  chipChordStab(startAt + CHIP_BEAT_S * 3.5, bar.chord);
+  // Melody: 8 eighth notes per bar.
+  for (let i = 0; i < 8; i++) {
+    const f = bar.melody[i];
+    if (!f) continue;
+    const at = startAt + i * CHIP_BEAT_S / 2;
+    chipBlip(at, f, CHIP_BEAT_S * 0.42, 'square', 0.05);
+  }
 }
 
 function scheduleNextBeatBar() {
@@ -407,6 +587,18 @@ function scheduleNextBeatBar() {
   }
   const c = ensureCtx();
   if (!c) return;
+  if (musicMode === 'chip') {
+    const song = currentSong();
+    const bar = song[beatBarCount % song.length];
+    scheduleChipBar(c.currentTime + 0.04, bar);
+    beatBarCount++;
+    // Loop the song twice then advance to next song.
+    if (beatBarCount > 0 && beatBarCount % (song.length * 2) === 0) {
+      songIndex = (songIndex + 1) % CHIP_SONGS.length;
+    }
+    beatTimer = setTimeout(scheduleNextBeatBar, CHIP_BAR_S * 1000);
+    return;
+  }
   const song = currentSong();
   const chord = song[Math.floor(beatBarCount / BARS_PER_CHORD) % song.length];
   scheduleBar(c.currentTime + 0.04, chord);
@@ -440,6 +632,9 @@ function startMusic() {
 
 function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
+  // Chip mode is a separate engine — bar scheduler handles everything.
+  // Don't layer lo-fi pads underneath the chiptune.
+  if (musicMode === 'chip') return;
   const c = ensureCtx();
   if (!c) return;
   const song = currentSong();
@@ -448,8 +643,7 @@ function scheduleNextChord() {
   // After completing one full pass through the current song's chords,
   // advance to the next song in the active bank.
   if (musicChordIndex === 0) {
-    const bank = musicMode === 'dungeon' ? DUNGEON_SONGS : SONGS;
-    songIndex = (songIndex + 1) % bank.length;
+    songIndex = (songIndex + 1) % SONGS.length;
   }
   const oscs = playLoFiChord(chord, c.currentTime, CHORD_HOLD_MS, CHORD_FADE_MS);
   musicNodes.oscs.push(...oscs);

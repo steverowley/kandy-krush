@@ -548,6 +548,14 @@ function runLuckyRate() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8a',
+    items: [
+      '🎺 Roguelike music REPLACED with a Guile\'s-Theme-style 16-bit chiptune march — driving D-minor groove, square-wave melody, marching snare backbeat, octave-jumping bass.',
+      'Drops the lo-fi pads + vinyl crackle in roguelike mode — the chiptune carries the whole vibe.',
+      'Two looping songs alternate so the run doesn\'t get monotonous. 132 BPM keeps the tempo up.',
+    ],
+  },
+  {
     id: '2026-05-25-7p',
     items: [
       '🦷 You can actually SEE The Eater now — repositioned + bigger entrance. It descends from above and the jaws land squarely over the top 3 cells of the target column.',
