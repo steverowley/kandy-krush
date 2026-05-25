@@ -1139,6 +1139,19 @@ function maybeFireRelicsOnSwap() {
     refreshLevelUI();
     flashMessage(`⚡ Thunder Foot! +${bonus} moves`, 1000);
   }
+  // ❄️ Frost upgrade — every 7 swaps, weaken every lock by N levels.
+  if (upgradeCount('frost') > 0 && state.relicSwapCount % 7 === 0 && state.lockMap && state.lockMap.size > 0) {
+    const drop = upgradeCount('frost');
+    const toDelete = [];
+    for (const [k, v] of state.lockMap) {
+      const next = v - drop;
+      if (next <= 0) toDelete.push(k);
+      else state.lockMap.set(k, next);
+    }
+    for (const k of toDelete) state.lockMap.delete(k);
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('❄️ Frost cracks locks', 1000);
+  }
   // 🎩 Top Hat relic — every 5 swaps, grant +1 of a random power-up.
   if (hasRelic('top-hat') && state.relicSwapCount % 5 === 0) {
     const bank = powerupBank();
@@ -1248,6 +1261,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10h',
+    items: [
+      '❄️ NEW UPGRADE — Frost (Sustain). Every 7 swaps, every lock on the board loses 1 level per stack. Auto-cracks locks over time.',
+      'Combines with Iron Tongue relic + Lockpick mutator for a complete anti-lock build.',
+      'Upgrade pool now 27.',
+    ],
+  },
   {
     id: '2026-05-25-10g',
     items: [
