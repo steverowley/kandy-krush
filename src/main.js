@@ -1455,6 +1455,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (matchSize === 3 && upgradeCount('sweet-treat') > 0) {
     m *= 1 + 0.25 * upgradeCount('sweet-treat');
   }
+  // ⚡ Power Surge upgrade — 6+ tile matches score ×2 per stack.
+  if (matchSize >= 6 && upgradeCount('power-surge') > 0) {
+    m *= Math.pow(2, upgradeCount('power-surge'));
+  }
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   // 🪞 Twin Mirror relic — 5+ matches score ×3.
@@ -1525,6 +1529,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13j',
+    items: [
+      '⚡ NEW UPGRADE — Power Surge (Scorer): 6+ tile matches score ×2 per stack. Big-match scoring explosion.',
+      '🌅 NEW UPGRADE — Sweet Glow (Lucky): Lucky-MODE lasts +1 extra match per stack. Stretch the burst window.',
+    ],
+  },
   {
     id: '2026-05-25-13i',
     items: [
@@ -3430,7 +3441,9 @@ function consumeLuckyIfReady(baseScore) {
   state.luckyMode = true;
   // 🍀 Charmer AWAKENING — Lucky-MODE lasts +3 extra matches.
   const charmerBonus = (isClass('charmer') && classAwakened()) ? 3 : 0;
-  state.luckyModeRemaining = LUCKY_MODE_MATCHES + charmerBonus;
+  // 🌅 Sweet Glow upgrade — Lucky-MODE lasts +1 extra match per stack.
+  const glowBonus = upgradeCount('sweet-glow');
+  state.luckyModeRemaining = LUCKY_MODE_MATCHES + charmerBonus + glowBonus;
   refreshLucky();
   flashMessage(
     `LUCKY! ×${LUCKY_INSTANT_MULTIPLIER} now, then ×${LUCKY_MODE_MULTIPLIER} for ${LUCKY_MODE_MATCHES} matches`,
