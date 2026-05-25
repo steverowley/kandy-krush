@@ -790,10 +790,14 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         const arch = u.archetype && archetypes ? archetypes[u.archetype] : null;
         const color = arch ? arch.color : '#444';
         const row = document.createElement('span');
-        row.className = 'px-2 py-1 rounded-lg border-2 border-black text-xs';
-        row.style.background = `${color}11`;
-        row.style.color = color;
-        row.textContent = `${arch ? arch.icon : '•'} ${u.name}${n > 1 ? ` ×${n}` : ''}`;
+        // Tier names: 1=base, 2=II, 3=III, 4=IV, 5+=MAX
+        const tier = n >= 5 ? 'MAX' : (n === 4 ? 'IV' : (n === 3 ? 'III' : (n === 2 ? 'II' : '')));
+        const isMax = n >= 5;
+        row.className = `px-2 py-1 rounded-lg border-2 border-black text-xs ${isMax ? 'font-bold' : ''}`;
+        row.style.background = isMax ? color : `${color}11`;
+        row.style.color = isMax ? '#fff' : color;
+        const tierBadge = tier ? ` <span style="opacity:0.85">[${tier}]</span>` : '';
+        row.innerHTML = `${arch ? arch.icon : '•'} ${u.name}${n > 1 ? ` ×${n}` : ''}${tierBadge}`;
         row.title = u.desc || '';
         builds.appendChild(row);
       }
@@ -939,7 +943,7 @@ export function showBossDefeatedBanner(boss, { isFinal = false, holdMs = 2200 } 
   });
 }
 
-export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
+export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 : 3000 } = {}) {
   const root = document.getElementById('boss-banner');
   if (!root) return Promise.resolve();
   const tier = document.getElementById('boss-banner-tier');
@@ -1016,6 +1020,9 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
   if (!root) return;
   if (!visible) { root.classList.add('hidden'); return; }
   root.classList.remove('hidden');
+  // Make the whole HUD obviously clickable.
+  root.style.cursor = 'pointer';
+  root.title = 'Tap to see your full build (upgrades + relics + class)';
   const klassEl = document.getElementById('run-hud-class');
   const buildsEl = document.getElementById('run-hud-builds');
   const relicsEl = document.getElementById('run-hud-relics');
@@ -1048,14 +1055,15 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
     buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="opacity-60">No upgrades yet</span>';
   }
   if (relicsEl) {
+    const buildChip = '<span class="px-2 py-0.5 rounded-full bg-black text-white text-xs font-bold border-2 border-yellow-400 ml-1" title="Tap the HUD for full build details">📋 BUILD</span>';
     if (relics && relics.length > 0) {
       const icons = relics.map((id) => {
         const r = getRelic ? getRelic(id) : null;
         return r ? `<span title="${r.name}: ${r.desc.replace(/"/g, '')}">${r.icon}</span>` : '';
       }).join('');
-      relicsEl.innerHTML = `<span class="text-xs opacity-70 mr-1">Relics:</span>${icons}`;
+      relicsEl.innerHTML = `<span class="text-xs opacity-70 mr-1">Relics:</span>${icons}${buildChip}`;
     } else {
-      relicsEl.innerHTML = '<span class="text-xs opacity-60">No relics yet — beat a boss</span>';
+      relicsEl.innerHTML = `<span class="text-xs opacity-60">No relics yet — beat a boss</span>${buildChip}`;
     }
   }
 }
