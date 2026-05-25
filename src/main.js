@@ -466,6 +466,8 @@ function maybeFireEater() {
   const slot = state.level.runSlot;
   if (slot >= 90) eaterInterval = 3;
   else if (slot >= 75) eaterInterval = 4;
+  // 👅 Tongue Tie upgrade — slow the Eater by +1 move per stack.
+  if (state.inRoguelikeRun) eaterInterval += upgradeCount('tongue-tie');
   const movesUntilFire = eaterInterval - eaterCounter;
   // Telegraph window: pick the column 2 moves early and show a warning
   // arrow above it each remaining turn (Slay-the-Spire intent reads).
@@ -1404,6 +1406,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12f',
+    items: [
+      '👅 NEW UPGRADE — Tongue Tie (Sustain): The Eater attacks +1 move slower per stack. Stacks with Slow Down mutator and Time Freeze.',
+      '💰 NEW UPGRADE — Gold Pile (Scorer): each boss kill grants +5 gems per stack. Build a boss-rush gem economy.',
+    ],
+  },
   {
     id: '2026-05-25-12e',
     items: [
@@ -2757,6 +2766,13 @@ function advanceRoguelikeAfterWin() {
     if (hasRelic('penny-pincher')) {
       state.roguelike.gems = (state.roguelike.gems || 0) + 2;
       flashMessage('🪙 Penny Pincher! +2💎', 1100);
+      persist();
+    }
+    // 💰 Gold Pile upgrade — +5 gems per stack on each boss kill.
+    if (upgradeCount('gold-pile') > 0) {
+      const bonus = 5 * upgradeCount('gold-pile');
+      state.roguelike.gems = (state.roguelike.gems || 0) + bonus;
+      flashMessage(`💰 Gold Pile! +${bonus} 💎`, 1100);
       persist();
     }
     // 🎁 Boss Bounty meta-skill — +1 random power-up per boss kill.
