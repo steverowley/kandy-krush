@@ -294,6 +294,7 @@ export const UPGRADES = [
   { id: 'bigger-bomb', category: 'synergy',    archetype: 'bomber',  name: 'Bigger Bomb',        desc: '💥 TNT explosion radius +1 per stack (on top of Bomber synergy). Stack 2 → 5×5 → 7×7 → 9×9.' },
   { id: 'heart-steal', category: 'buff',       archetype: 'sustain', name: 'Heart Steal',        desc: '❤️ Boss kills restore +1 life per stack. Keep your hearts full through the marathon.' },
   { id: 'spark-strike',category: 'synergy',    archetype: 'wild',    name: 'Spark Strike',       desc: '✨ Every 12 matches in a slot, fire a free Lightning bolt (no Lightning upgrade required).' },
+  { id: 'sweet-roar',  category: 'synergy',    archetype: 'wild',    name: 'Sweet Roar',         desc: '🐝 Slot start: fire a free Bee Storm per stack. Open big.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
@@ -592,6 +593,8 @@ export const MUTATORS = [
     desc: '5+ tile matches score ×5 this slot. Stacks multiplicatively with everything.' },
   { id: 'lucky-stream',icon: '🍀', name: 'Lucky Stream',
     desc: 'Lucky bar fills 3× faster this slot. Burst-mode every few swaps.' },
+  { id: 'coin-toss',   icon: '🪙', name: 'Coin Toss',
+    desc: 'Every match has a 25% chance to drop a random power-up. Big variance.' },
 ];
 
 export function isMutatorSlot(slot) {
