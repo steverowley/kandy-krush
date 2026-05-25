@@ -431,6 +431,8 @@ let scoreRollFrame = null;
 export function setScore(n, { animate = false } = {}) {
   const el = document.getElementById('score');
   if (!el) return;
+  // Honor the infinity-combo override; clearScoreOverride() releases it.
+  if (el.dataset.override === '1') return;
   const old = Number(el.textContent.replace(/,/g, '')) || 0;
   if (animate && n > old) {
     if (scoreRollFrame) cancelAnimationFrame(scoreRollFrame);
@@ -467,6 +469,24 @@ export function setScore(n, { animate = false } = {}) {
 export function setBest(n) {
   const el = document.getElementById('best');
   if (el) el.textContent = n.toLocaleString();
+}
+
+// Paint an arbitrary string as the score and lock further setScore calls
+// from overwriting it until clearScoreOverride() is called. Used for the
+// infinity-combo auto-win label (∞, ∞+1, ∞+2, …).
+export function setScoreOverride(label) {
+  const el = document.getElementById('score');
+  if (!el) return;
+  el.dataset.override = '1';
+  el.textContent = label;
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+}
+
+export function clearScoreOverride() {
+  const el = document.getElementById('score');
+  if (el) delete el.dataset.override;
 }
 
 export function setStreak(days) {
@@ -1712,7 +1732,9 @@ export function showLevelComplete({ level, stars, score, onNext, onReplay, isLas
   title.textContent = isLast
     ? `Level ${level.id} complete — you've cleared every level so far!`
     : `Level ${level.id} complete!`;
-  scoreEl.textContent = `Score: ${score.toLocaleString()}`;
+  // score can be a number (normal completion) or a string label like "∞+1"
+  // (infinite-combo auto-win). Format gracefully.
+  scoreEl.textContent = `Score: ${typeof score === 'number' ? score.toLocaleString() : String(score)}`;
   nextBtn.textContent = isLast ? 'Play again' : 'Next level';
 
   // Build three star spans with stagger delays so earned stars
