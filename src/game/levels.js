@@ -1447,6 +1447,73 @@ export const LEVELS = [
       ],
     },
   },
+  // ===== Chapter: Beyond (116-120) — for the player who beat the game =====
+  {
+    id: 116,
+    name: 'Echoes',
+    moves: 50,
+    objective: { kind: 'score', target: 18000 },
+    hint: '18,000 score, open board. Pure cascade craft.',
+  },
+  {
+    id: 117,
+    name: 'Mirror Pond',
+    moves: 38,
+    objective: { kind: 'clearJelly' },
+    hint: 'Symmetric double-jelly. Match the shape.',
+    obstacles: {
+      jelly: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [1, 2, 2],                       [4, 2, 2],
+        [1, 3, 2],                       [4, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 118,
+    name: 'Last Cherry Grove',
+    moves: 48,
+    objective: { kind: 'dropIngredients', target: 10 },
+    hint: 'Ten cherries in 48 moves. Plan your gravity.',
+    obstacles: {
+      ingredients: [
+        [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0],
+        [1, 1], [4, 1],
+        [2, 2], [3, 2],
+      ],
+    },
+  },
+  {
+    id: 119,
+    name: 'Forever Loop',
+    moves: 40,
+    objective: { kind: 'matches', target: 70 },
+    hint: '70 matches in 40 moves. Cascades are not optional.',
+  },
+  {
+    id: 120,
+    name: 'True End',
+    moves: 75,
+    objective: { kind: 'score', target: 25000 },
+    hint: 'The final challenge: 25,000 score against every obstacle the game can throw.',
+    tip: 'Beat this and you have truly mastered Sweet Match.',
+    obstacles: {
+      ingredients: [[0, 0], [5, 0]],
+      jelly: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [1, 2, 2],                       [4, 2, 2],
+        [1, 3, 2],                       [4, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 1, 3], [5, 1, 3],
+        [0, 4, 3], [5, 4, 3],
+        [2, 0, 2], [3, 0, 2],
+        [2, 5, 2], [3, 5, 2],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
