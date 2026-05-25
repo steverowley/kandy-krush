@@ -289,6 +289,8 @@ export const UPGRADES = [
   { id: 'wild-card',   category: 'synergy',    archetype: 'wild',    name: 'Wild Card',          desc: '🎴 Slot start: spawn 1 random crazy tile per stack. Always start with chaos.' },
   { id: 'bee-tonic',   category: 'buff',       archetype: 'lucky',   name: 'Bee Tonic',          desc: '🐝 Slot start: Lucky bar +20% per stack. Stacks with Lucky Soul and Lucky Day.' },
   { id: 'sweet-steady',category: 'buff',       archetype: 'sustain', name: 'Sweet Steady',       desc: '🍬 Slot start: gain +1 random power-up per stack. Drip restock.' },
+  { id: 'power-surge', category: 'synergy',    archetype: 'scorer',  name: 'Power Surge',        desc: '⚡ 6+ tile matches score ×2 per stack. Big-match scoring explosion.' },
+  { id: 'sweet-glow',  category: 'synergy',    archetype: 'lucky',   name: 'Sweet Glow',         desc: '🌅 Lucky-MODE lasts +1 extra match per stack. Stretch the burst window.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
