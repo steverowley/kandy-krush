@@ -873,6 +873,34 @@ export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
   });
 }
 
+// Map dominant archetype counts to a fun "playstyle" label shown
+// on the run HUD as a colored chip prefix.
+function dominantBuildVibe(archCounts, archetypes) {
+  if (!archCounts || !archetypes) return null;
+  const entries = Object.entries(archCounts).filter(([, n]) => n > 0);
+  if (entries.length === 0) return null;
+  const total = entries.reduce((sum, [, n]) => sum + n, 0);
+  if (total < 3) return null; // wait till there's a real build
+  entries.sort((a, b) => b[1] - a[1]);
+  const top = entries[0];
+  const second = entries[1] || [null, 0];
+  // Polymath if no single archetype dominates AND 3+ archetypes are represented.
+  if (entries.length >= 3 && top[1] === second[1]) {
+    return { label: '🌈 Polymath', color: '#a855f7', title: `Mixed build — ${entries.length} archetypes` };
+  }
+  const labels = {
+    bomber:  { label: '🔥 Demolisher',  title: 'Bomber-dominant — boom & bust.' },
+    lucky:   { label: '🍀 Charmlord',   title: 'Lucky-dominant — Lucky-MODE machine.' },
+    scorer:  { label: '🎯 Glass Cannon',title: 'Scorer-dominant — every match weighs gold.' },
+    sustain: { label: '🛡 Bastion',     title: 'Sustain-dominant — never run out.' },
+    wild:    { label: '🌪 Chaos Mage',  title: 'Wild-dominant — auto-fire abilities everywhere.' },
+  };
+  const meta = labels[top[0]];
+  if (!meta) return null;
+  const arch = archetypes[top[0]];
+  return { label: meta.label, color: arch ? arch.color : '#444', title: meta.title };
+}
+
 export function setRunHud({ visible, klass, archCounts, archetypes, relics, getRelic, slot, totalSlots, mutator, awakened, nextMilestone }) {
   const root = document.getElementById('run-hud');
   if (!root) return;
@@ -903,7 +931,11 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
         if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color}22;color:${meta.color}">${meta.icon}${n}</span>`);
       }
     }
-    buildsEl.innerHTML = tags.length ? tags.join('') : '<span class="opacity-60">No upgrades yet</span>';
+    const vibe = dominantBuildVibe(archCounts, archetypes);
+    const vibeChip = vibe
+      ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:white" title="${vibe.title}">${vibe.label}</span>`
+      : '';
+    buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="opacity-60">No upgrades yet</span>';
   }
   if (relicsEl) {
     if (relics && relics.length > 0) {
