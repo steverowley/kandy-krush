@@ -115,6 +115,7 @@ import {
   getLoadStatus,
   getSaveStatus,
 } from './storage/save.js';
+import * as telemetry from './telemetry.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -147,6 +148,18 @@ if (!_bootLoadStatus.ok) {
     flashMessage(`⚠ Save was corrupted, started fresh.${backupNote}`, 4000);
   }, 800);
 }
+
+// 📊 Telemetry boot. Provider stays at 'console' until a real
+// analytics provider is picked (see PROJECT_PLAN.md decisions). App
+// version is wired up later (it depends on CHANGELOG_ENTRIES which is
+// defined further down) — for now the version goes in via setUserProps.
+telemetry.init({ provider: 'console' });
+telemetry.setUserProps({
+  has_run_in_progress: !!persisted.inRoguelikeRun,
+  runs_completed: persisted.roguelike?.runsCompleted || 0,
+  save_ok: _bootLoadStatus.ok,
+  save_version_from: _bootLoadStatus.versionFrom,
+});
 // Daily login gem bonus — fires once per calendar day on first
 // boot. Scales gently with streak (5 + streak, capped at 25).
 // 🌳 Generous Daily meta doubles the awarded gems.
@@ -314,6 +327,7 @@ function openStartMenu(subtitle = null) {
     },
     onRoguelike: () => {
       sfx.unlockAudio();
+      telemetry.track('mode_picked', { mode: 'roguelike' });
       state.settings.mode = 'roguelike';
       sfx.setMusicMode('roguelike');
       persist();
@@ -322,6 +336,7 @@ function openStartMenu(subtitle = null) {
     },
     onLevels: () => {
       sfx.unlockAudio();
+      telemetry.track('mode_picked', { mode: 'levels' });
       state.settings.mode = 'levels';
       sfx.setMusicMode('levels');
       persist();
@@ -330,6 +345,7 @@ function openStartMenu(subtitle = null) {
     },
     onFreePlay: () => {
       sfx.unlockAudio();
+      telemetry.track('mode_picked', { mode: 'free' });
       state.settings.mode = 'free';
       sfx.setMusicMode('free');
       persist();
@@ -1761,6 +1777,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17d',
+    items: [
+      '📊 TELEMETRY SCAFFOLDING — new `src/telemetry.js` provider-agnostic event sink. Emits `boot / mode_picked / run_start / slot_complete / run_end / infinite_combo` to console.debug today; flipping the provider to `beacon` with a URL ships them to a real analytics endpoint with zero code changes elsewhere. Anonymous device id (uuid in localStorage) + per-tab session id, no PII.',
+      '🚑 WINDOW-LEVEL ERROR REPORTING — `window.error` and `unhandledrejection` are captured along with the last 10 telemetry events as breadcrumbs, so when the analytics provider is hooked up we get crash reports with the context that led to them.',
+    ],
+  },
   {
     id: '2026-05-25-17c',
     items: [
@@ -3217,6 +3240,14 @@ const CHANGELOG_ENTRIES = [
 ];
 const APP_VERSION = CHANGELOG_ENTRIES[0].id;
 const CHANGELOG = CHANGELOG_ENTRIES[0].items;
+// Now that APP_VERSION is known, retro-fit it onto telemetry as a
+// user prop (lives alongside the existing telemetry.init from boot).
+telemetry.setUserProps({ app_version: APP_VERSION });
+telemetry.track('boot', {
+  daily_login_gems: dailyLoginGems,
+  streak: persisted.streak || 0,
+  has_run_in_progress: !!persisted.inRoguelikeRun,
+});
 const LUCKY_PER_MOVE = 12;            // % per successful swap
 const LUCKY_INSTANT_MULTIPLIER = 3;   // burst on first match after fill
 const LUCKY_MODE_MATCHES = 4;         // additional matches at lower mult
@@ -3400,6 +3431,12 @@ function maybeTriggerInfiniteScore() {
   if (state.cascadeAbort) return true; // already firing
   state.cascadeAbort = true;
   state.infiniteCount = (state.infiniteCount || 0) + 1;
+  telemetry.track('infinite_combo', {
+    nth_this_session: state.infiniteCount,
+    score: state.score,
+    mode: state.settings?.mode,
+    slot: state.roguelike?.currentSlot,
+  });
   const n = state.infiniteCount;
   // First infinite of the session is "∞"; second is "∞+1"; third "∞+2"; …
   const label = n === 1 ? '∞' : `∞+${n - 1}`;
@@ -3694,6 +3731,12 @@ function startRoguelikeRun() {
     showClassPicker(CLASSES, ARCHETYPES, (cls) => {
       state.roguelike.currentClass = cls.id;
       for (const id of (cls.start || [])) state.runUpgrades.push(id);
+      telemetry.track('run_start', {
+        class: cls.id,
+        archetype: cls.archetype,
+        starting_upgrades: (cls.start || []).slice(),
+        runs_completed_before: state.roguelike?.runsCompleted || 0,
+      });
       flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
       speech.speak(`${cls.name} chosen.`);
       spawnConfetti(30);
@@ -3769,6 +3812,15 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  telemetry.track('slot_complete', {
+    slot,
+    is_boss: !!state.level?.isBoss,
+    class: state.roguelike.currentClass,
+    upgrades: (state.runUpgrades || []).length,
+    relics: (state.runRelics || []).length,
+    score: state.score,
+    moves_used: (state.level?.moves || 0) - (state.movesRemaining || 0),
+  });
   // 💰 Treasure Slot mutator — finishing this slot grants +5 💎.
   if (hasMutator('treasure')) {
     const bonus = hasMeta('treasure-sense') ? 10 : 5;
@@ -3780,6 +3832,15 @@ function advanceRoguelikeAfterWin() {
     const gems = gemsEarned(slot + 1, true, metaSkills());
     state.roguelike.gems = (state.roguelike.gems || 0) + gems;
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
+    telemetry.track('run_end', {
+      outcome: 'complete',
+      slot_reached: RUN_LENGTH,
+      gems_earned: gems,
+      class: state.roguelike.currentClass,
+      upgrades: (state.runUpgrades || []).length,
+      relics: (state.runRelics || []).length,
+      runs_completed_total: state.roguelike.runsCompleted,
+    });
     // Show the run summary BEFORE clearing run state so the snapshot
     // can read class, archetypes, and relics.
     showEndOfRunSummary('complete', RUN_LENGTH, gems);
@@ -4064,6 +4125,14 @@ function runMidRunShop(onDone) {
 function endRoguelikeRun() {
   const reached = state.roguelike.currentSlot;
   const gems = gemsEarned(reached, false, metaSkills());
+  telemetry.track('run_end', {
+    outcome: 'fail',
+    slot_reached: reached,
+    gems_earned: gems,
+    class: state.roguelike.currentClass,
+    upgrades: (state.runUpgrades || []).length,
+    relics: (state.runRelics || []).length,
+  });
   state.roguelike.gems = (state.roguelike.gems || 0) + gems;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
   showEndOfRunSummary('fail', reached, gems);
