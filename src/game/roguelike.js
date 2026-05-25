@@ -446,6 +446,10 @@ export const RELICS = [
     desc: 'Every 8 matches in a slot, gain +1 "+3 Moves" power-up. Slow drip of move income.' },
   { id: 'sugar-crash',  icon: '💥', name: 'Sugar Crash',
     desc: 'Every 14 matches in a slot, spawn a TNT crazy tile somewhere. Mid-late slot bursts.' },
+  { id: 'sunrise-hour', icon: '🌅', name: 'Sunrise Hour',
+    desc: 'On slots 1-10, all scores ×1.5. Early-game ramp.' },
+  { id: 'sunset-hour',  icon: '🌇', name: 'Sunset Hour',
+    desc: 'On slots 96-100, all scores ×2. End-game payoff for the long haul.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
