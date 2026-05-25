@@ -1407,6 +1407,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12h',
+    items: [
+      '🌊 NEW CLASS — Cascadesmith: hybrid start with Cascade King + Cascade Splash. Build a chain reactor that snowballs every swap.',
+      '🌀 NEW CLASS — Sorcerer: hybrid start with Echo Match + Meteor Shower. Ride cascades into Lucky-MODE bursts.',
+      'Class roster is now 17.',
+    ],
+  },
+  {
     id: '2026-05-25-12g',
     items: [
       '🧁 NEW RELIC — Confectionery: each special candy you create also drops a random power-up. Pairs huge with Prism Maker / Bomb Maker chains.',
