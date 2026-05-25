@@ -597,10 +597,7 @@ async function triggerCrazyEffect(pos, kind) {
     await delay(220);
   } else if (kind === 'prism') {
     // 🌈 Prism — clear ALL tiles of one random color across the board.
-    const colorAtPos = state.board.typeAt(pos.c, pos.r);
-    // Pick a target color: try neighbors first, fall back to a random
-    // existing color on the board.
-    let targetColor = colorAtPos;
+    // 🔭 Prism Lens relic doubles it: 2 random colors instead of 1.
     const colors = new Set();
     for (let r = 0; r < state.board.rows; r++) {
       for (let c = 0; c < state.board.cols; c++) {
@@ -610,17 +607,21 @@ async function triggerCrazyEffect(pos, kind) {
       }
     }
     const colorList = [...colors];
-    if (colorList.length > 0) {
-      targetColor = colorList[Math.floor(Math.random() * colorList.length)];
+    const wantedColors = hasRelic('prism-lens') ? 2 : 1;
+    const targetColors = new Set();
+    while (targetColors.size < wantedColors && colorList.length > 0) {
+      const idx = Math.floor(Math.random() * colorList.length);
+      targetColors.add(colorList.splice(idx, 1)[0]);
     }
     for (let r = 0; r < state.board.rows; r++) {
       for (let c = 0; c < state.board.cols; c++) {
         if (state.board.isIngredient(c, r)) continue;
         if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
-        if (state.board.typeAt(c, r) === targetColor) positions.push({ c, r });
+        if (targetColors.has(state.board.typeAt(c, r))) positions.push({ c, r });
       }
     }
-    flashMessage(`🌈 PRISM! All of one color cleared (${positions.length} tiles)`, 1800);
+    const colorWord = wantedColors === 2 ? 'TWO colors' : 'one color';
+    flashMessage(`🌈 PRISM! ${colorWord} cleared (${positions.length} tiles)`, 1800);
     speech.speak('Prism!');
     sfx.playMatch(positions.length, 3);
     haptics.epic();
@@ -944,6 +945,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8t',
+    items: [
+      '🌈 PRISM synergy! New upgrade Prism Maker (Bomber archetype) gives every special a 15% chance to spawn a Prism crazy tile.',
+      '🔭 New relic Prism Lens — Prism tiles clear TWO random colors instead of one. Combined with Prism Maker this can wipe most of the board in a single move.',
+      'Upgrade pool now 21, relic pool now 13.',
+    ],
+  },
   {
     id: '2026-05-25-8s',
     items: [
@@ -2560,6 +2569,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       for (let i = 0; i < upgradeCount('bomb-maker'); i++) {
         if (Math.random() < 0.5 * specialsCreated.length) spawnCrazyTile('tnt');
       }
+    }
+    // 🌈 Prism Maker — 15% chance per stack to spawn a Prism on a special
+    if (upgradeCount('prism-maker') > 0) {
+      const chance = Math.min(0.6, 0.15 * upgradeCount('prism-maker') * specialsCreated.length);
+      if (Math.random() < chance) spawnCrazyTile('prism');
     }
   }
   // Trigger crazy-tile pops (after clear, before scoring so the
