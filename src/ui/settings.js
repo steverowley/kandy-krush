@@ -8,6 +8,7 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   const musicBtn = document.getElementById('setting-music');
   const contrastBtn = document.getElementById('setting-contrast');
   const motionBtn = document.getElementById('setting-reduce-motion');
+  const enemiesBtn = document.getElementById('setting-enemies');
   const modeBtn = document.getElementById('setting-mode');
   const resetBtn = document.getElementById('setting-reset');
   const resetOverlay = document.getElementById('reset-overlay');
@@ -42,6 +43,15 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
       motionBtn.textContent = current.reduceMotion
         ? 'Reduce motion: On'
         : 'Reduce motion: Off';
+    }
+
+    if (enemiesBtn) {
+      // Default true if not set yet
+      const enemiesOn = current.enemies !== false;
+      enemiesBtn.setAttribute('aria-pressed', String(enemiesOn));
+      enemiesBtn.textContent = enemiesOn
+        ? 'Enemies: On'
+        : 'Enemies: Off';
     }
 
     if (modeBtn) {
@@ -98,6 +108,11 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   if (motionBtn) {
     motionBtn.addEventListener('click', () =>
       apply({ reduceMotion: !current.reduceMotion })
+    );
+  }
+  if (enemiesBtn) {
+    enemiesBtn.addEventListener('click', () =>
+      apply({ enemies: !(current.enemies !== false) })
     );
   }
   if (modeBtn) {
