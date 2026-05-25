@@ -70,6 +70,7 @@ import {
   showRelicPicker,
   setRunHud,
   showBossBanner,
+  showBossDefeatedBanner,
   showRunSummary,
   showRoguelikeIntro,
   flashMutatorActivation,
@@ -1150,6 +1151,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9k',
+    items: [
+      '🏆 BOSS DEFEATED BANNER — replaces the tiny "BOSS DEFEATED!" toast with a full-screen gold-and-pink victory banner: trophy icon, boss name, and "Pick your relic" tip.',
+      'The final boss (Candy Kraken) gets the special "YOU WIN!" tier label with the crown icon and run-complete tip.',
+    ],
+  },
+  {
     id: '2026-05-25-9j',
     items: [
       '🎁 DAILY LOGIN BONUS — your first visit each calendar day grants gems for the Skill Tree.',
@@ -1911,12 +1919,14 @@ function advanceRoguelikeAfterWin() {
   const justFinished = slot;
   const isBossWin = BOSS_SLOTS.has(justFinished);
   if (isBossWin) {
-    flashMessage('BOSS DEFEATED!', 2000);
     spawnConfetti(80);
     spawnStarRain(40);
     screenShake(7, 400);
     haptics.levelComplete();
     speech.speak('Boss defeated!');
+    // Dramatic gold/pink banner. The level just played is the boss
+    // we just beat — pull the name from state.level.
+    showBossDefeatedBanner(state.level || {}, { isFinal: justFinished >= RUN_LENGTH });
     // 🪙 Penny Pincher relic — +2 gems per boss defeated.
     if (hasRelic('penny-pincher')) {
       state.roguelike.gems = (state.roguelike.gems || 0) + 2;

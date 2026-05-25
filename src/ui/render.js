@@ -689,6 +689,45 @@ export function flashMutatorActivation() {
   setTimeout(() => flash.remove(), 1000);
 }
 
+export function showBossDefeatedBanner(boss, { isFinal = false, holdMs = 2200 } = {}) {
+  const root = document.getElementById('boss-banner');
+  if (!root) return Promise.resolve();
+  const tier = document.getElementById('boss-banner-tier');
+  const icon = document.getElementById('boss-banner-icon');
+  const name = document.getElementById('boss-banner-name');
+  const tip = document.getElementById('boss-banner-tip');
+  if (tier) tier.textContent = isFinal ? 'YOU WIN!' : 'BOSS DEFEATED';
+  if (name) name.textContent = `🏆 ${(boss && boss.name) || 'Boss'} falls!`;
+  if (icon) icon.textContent = isFinal ? '👑' : '🏆';
+  if (tip) tip.textContent = isFinal
+    ? 'You crowned the Candy Kraken. Run complete.'
+    : 'Pick your relic. The run continues.';
+  // Tint the card gold/green for victory rather than the red boss tones.
+  const card = root.querySelector('.boss-banner-card');
+  if (card) {
+    card.classList.remove('from-pink-700', 'via-red-700', 'to-purple-800');
+    card.classList.add('from-yellow-500', 'via-amber-600', 'to-pink-600');
+  }
+  root.classList.remove('hidden', 'fading');
+  root.classList.add('show');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      root.classList.remove('show');
+      root.classList.add('fading');
+      setTimeout(() => {
+        root.classList.add('hidden');
+        root.classList.remove('fading');
+        // Restore the boss-banner styling for next intro.
+        if (card) {
+          card.classList.remove('from-yellow-500', 'via-amber-600', 'to-pink-600');
+          card.classList.add('from-pink-700', 'via-red-700', 'to-purple-800');
+        }
+        resolve();
+      }, 350);
+    }, holdMs);
+  });
+}
+
 export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
   const root = document.getElementById('boss-banner');
   if (!root) return Promise.resolve();
