@@ -1525,7 +1525,8 @@ function runLuckyRate() {
 // stack beyond the first (1 -> 3x3, 2 -> 5x5, 3 -> 7x7).
 function tntRadius() {
   if (!state.inRoguelikeRun) return 1;
-  return 1 + synergyStacks(runArchetypeCounts().bomber);
+  // 💥 Bigger Bomb upgrade — +1 radius per stack on top of bomber synergy.
+  return 1 + synergyStacks(runArchetypeCounts().bomber) + upgradeCount('bigger-bomb');
 }
 
 // Wild synergy: ability counters trigger 25% faster per Wild stack
@@ -1544,6 +1545,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13m',
+    items: [
+      '💥 NEW UPGRADE — Bigger Bomb (Bomber): TNT explosion radius +1 per stack on top of Bomber synergy. Stack 2 → 5×5 → 7×7 → 9×9 board-clearers.',
+    ],
+  },
   {
     id: '2026-05-25-13l',
     items: [
