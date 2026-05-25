@@ -1557,6 +1557,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13p',
+    items: [
+      '✨ TWO NEW CROSSROADS OPTIONS — 💪 The Forge (+1 stack of a random upgrade you already have) and 🍀 The Well (Lucky bar fills to FULL right now).',
+      'Crossroads pool is now 7 deep; you always see 3 random options per event.',
+    ],
+  },
+  {
     id: '2026-05-25-13o',
     items: [
       '❤️ NEW UPGRADE — Heart Steal (Sustain): boss kills restore +1 life per stack. Keep your hearts full through the marathon.',
@@ -3268,6 +3275,8 @@ function runCrossroadsEvent(onDone) {
     { icon: '💎', name: 'The Reserve', desc: '+20 💎 instantly. Save them for the shop.',        value: 'gems' },
     { icon: '❤️', name: 'The Spring',  desc: '+1 max life — recover for the back half.',         value: 'life' },
     { icon: '🎲', name: 'The Gamble',  desc: '50/50 — gain +30 💎 or just walk away.',           value: 'gamble' },
+    { icon: '💪', name: 'The Forge',   desc: '+1 stack of a random upgrade you already have.',  value: 'forge' },
+    { icon: '🍀', name: 'The Well',    desc: 'Your Lucky bar fills to FULL right now.',          value: 'well' },
   ];
   // Shuffle and take 3.
   const shuffled = POOL.slice();
@@ -3319,6 +3328,26 @@ function runCrossroadsEvent(onDone) {
           } else {
             flashMessage('🎲 The coin landed wrong. No gems.', 1500);
           }
+        } else if (choice.value === 'forge') {
+          const list = state.runUpgrades || [];
+          if (list.length > 0) {
+            const pick = list[Math.floor(Math.random() * list.length)];
+            state.runUpgrades = [...list, pick];
+            const u = UPGRADES.find((x) => x.id === pick);
+            flashMessage(`💪 The Forge — +1 ${u ? u.name : pick}`, 1500);
+            spawnConfetti(40);
+            haptics.specialBirth();
+          } else {
+            flashMessage('💪 The Forge — no upgrades yet, +10 💎 instead', 1500);
+            state.roguelike.gems = (state.roguelike.gems || 0) + 10;
+          }
+        } else if (choice.value === 'well') {
+          state.luckyCharge = 100;
+          state.luckyReady = true;
+          setLuckyCharge(state.luckyCharge, state.luckyReady);
+          flashMessage('🍀 The Well — Lucky bar FULL!', 1400);
+          spawnConfetti(30);
+          haptics.epic();
         } else {
           state.roguelike.gems = (state.roguelike.gems || 0) + 20;
           flashMessage('💎 +20 💎', 1300);
