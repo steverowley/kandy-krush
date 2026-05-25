@@ -1812,6 +1812,15 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17g',
+    items: [
+      '📲 PWA MANIFEST FILLED OUT — added `id`, `categories: [games, entertainment, puzzle]`, `lang`, `display_override`, separate `any` and `maskable` icon entries (Android launcher was misreading the combined `purpose: "any maskable"`), and three home-screen shortcuts: Roguelike / Levels / Free Play. Long-pressing the installed icon now jumps straight into a mode.',
+      '🚀 SHORTCUT URL ACTIONS — appending `?action=roguelike` / `?action=levels` / `?action=free` to the URL skips the start menu and launches that mode directly. Same query the new manifest shortcuts use.',
+      '🍎 iOS PWA — `apple-mobile-web-app-status-bar-style` is now `black-translucent` so the game owns the full screen height when installed (was leaving a white status-bar gap on iPhone).',
+      '♿ HIGH-CONTRAST PASS — Crossroads, Shop, Relic picker, Class picker, and the Roguelike intro panel now have explicit `body.theme-hc` overrides (was inheriting the global text-white rule on top of their light gradients, leaving titles invisible). Inline archetype `style="color:..."` text inside cards forced to accent yellow on the HC dark background. Disabled-row gray fades flip to `#374151` / `#d4d4d4` so they still read.',
+    ],
+  },
+  {
     id: '2026-05-25-17f',
     items: [
       '🕳 WORMHOLE REDESIGN — old behavior swapped two distant random tiles, which looked like "the wormhole did nothing" to the player. New behavior: sucks in the 8 surrounding cells AND spawns a new random crazy tile somewhere else on the board. Now the pop both clears and plants chaos — distinctly "wormhole".',
@@ -6003,7 +6012,32 @@ if (!state.seenWelcome) {
   state.seenVersion = APP_VERSION;
   persist();
 }
-openStartMenu(null);
+// 🚀 PWA shortcut launchers — when the installed app is launched via
+// one of the manifest.json `shortcuts` entries, the URL carries an
+// `?action=` query that picks a mode directly instead of landing on
+// the start menu. Only honored once per boot.
+const _bootAction = (() => {
+  try { return new URLSearchParams(window.location.search).get('action'); }
+  catch { return null; }
+})();
+if (_bootAction === 'roguelike') {
+  state.settings.mode = 'roguelike';
+  sfx.setMusicMode('roguelike');
+  persist();
+  startRoguelikeRun();
+} else if (_bootAction === 'levels') {
+  state.settings.mode = 'levels';
+  sfx.setMusicMode('levels');
+  persist();
+  startLevel(state.levelProgress.currentLevel || 1);
+} else if (_bootAction === 'free') {
+  state.settings.mode = 'free';
+  sfx.setMusicMode('free');
+  persist();
+  startFreePlay();
+} else {
+  openStartMenu(null);
+}
 persist();
 
 if ('serviceWorker' in navigator) {
