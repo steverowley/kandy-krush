@@ -344,6 +344,19 @@ function ensureTileLongPress(boardRoot) {
   }, { passive: true });
 }
 
+// Briefly block clicks inside a panel after it opens so the player can't
+// accidentally pick the wrong relic / upgrade / option by tapping
+// through from a previous animation. After `ms` the panel re-enables.
+function blockClicksFor(panelEl, ms = 600) {
+  if (!panelEl) return;
+  panelEl.style.pointerEvents = 'none';
+  panelEl.classList.add('picker-locked');
+  setTimeout(() => {
+    panelEl.style.pointerEvents = '';
+    panelEl.classList.remove('picker-locked');
+  }, ms);
+}
+
 export function tileEl(c, r) {
   return document.querySelector(`#board .tile[data-c="${c}"][data-r="${r}"]`);
 }
@@ -909,6 +922,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
   close.focus();
 }
 
@@ -1129,6 +1143,7 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
   const firstBtn = list.querySelector('button');
   if (firstBtn) firstBtn.focus();
 }
@@ -1176,6 +1191,7 @@ export function showCrossroadsEvent({ options, onPick }) {
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
 }
 
 export function showShop({ items, getGems, onBuy, onContinue }) {
@@ -1428,6 +1444,7 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
   const firstBtn = list.querySelector('button:not(#upgrade-reroll)');
   if (firstBtn) firstBtn.focus();
 }
@@ -1615,10 +1632,18 @@ export function showLevelIntro(level, totalLevels = 8, opts = {}) {
       r();
     };
     introOverlayListener = dismiss;
-    overlay.addEventListener('click', dismiss);
-    const dismissAfter = level.tip ? 4400 : 2800;
+    // Block clicks for 400ms so the intro can't be tapped through by
+    // accident before the player has had a chance to read it. After that,
+    // it stays open until they actually tap.
+    overlay.style.pointerEvents = 'none';
+    setTimeout(() => {
+      overlay.style.pointerEvents = '';
+      overlay.addEventListener('click', dismiss);
+    }, 400);
     clearTimeout(introTimer);
-    introTimer = setTimeout(dismiss, dismissAfter);
+    // Safety net: if the player walks away mid-intro, dismiss after a
+    // long timeout so the game doesn't get stuck.
+    introTimer = setTimeout(dismiss, 60000);
   });
 }
 
@@ -1660,6 +1685,7 @@ export function showLevelComplete({ level, stars, score, onNext, onReplay, isLas
 
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
 
   // Reveal animation re-trigger
   starsEl.classList.remove('reveal');
@@ -1693,6 +1719,7 @@ export function showLevelFail({ level, score, onReplay, onSkip, canSkip }) {
 
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
+  blockClicksFor(panel, 600);
 
   replayBtn.onclick = () => {
     hideLevelOverlay();

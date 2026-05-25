@@ -1598,6 +1598,15 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14g',
+    items: [
+      '🍒 CHERRY BUG (round 2) — special-special combos (double-rainbow, rainbow-stripes, stripes-pair) were destroying cherries because applyCombo paints whole rows/board without an ingredient filter. Now filters them out before the clear.',
+      '⏸ NO MORE TAP-THROUGHS — level intros no longer auto-dismiss. You have to tap to start. (Tap is blocked for the first 400ms after open so you can\'t accidentally close it on opening swipe.)',
+      '🛡 PICKER GUARDS — relic picker, upgrade picker, crossroads, merchant, level-complete, level-fail, and run-summary panels all block clicks for 600ms after opening. No more accidental rapid-tap relic choices.',
+      '🌑 HIGH-CONTRAST INVENTORY — added dark theme rules for the run inventory panel so it\'s readable when High Contrast is on (previously inherited white text on white background).',
+    ],
+  },
+  {
     id: '2026-05-25-14f',
     items: [
       '👁 ACCESSIBILITY PASS — archetype + build-vibe chips no longer render yellow-on-yellow. Text color now picks black or white based on the background\'s luminance for WCAG-friendly contrast.',
@@ -4450,7 +4459,11 @@ function comboFanfare(kind) {
 }
 
 async function runComboTurn(combo) {
-  const candidate = applyCombo(state.board, combo);
+  const candidateRaw = applyCombo(state.board, combo);
+  // Combos like double-rainbow / rainbow-stripes paint full rows or the
+  // entire board — must NOT consume ingredients (cherries), or the
+  // dropIngredients objective becomes uncompletable.
+  const candidate = candidateRaw.filter((p) => !state.board.isIngredient(p.c, p.r));
   const { clearable: cleared, blocked: lockedBlocked } = splitByLock(candidate);
   const clearedTypes = cleared.map((p) => state.board.typeAt(p.c, p.r));
   sfx.playCascade();
