@@ -1593,6 +1593,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14b',
+    items: [
+      '🟧 SHAPE FIX — the orange candy is now a hexagon instead of a diamond. The diamond looked too much like the pink triangle at a glance; the hexagon reads instantly different.',
+    ],
+  },
+  {
     id: '2026-05-25-14a',
     items: [
       '💬 TILE TOOLTIPS — hover any tile on desktop (or long-press 0.5s on mobile) and you\'ll see a description: what crazy tiles do, what specials do, jelly/lock hit-counts, and so on. Finally clear what everything on the board means.',
