@@ -281,6 +281,8 @@ export const UPGRADES = [
   { id: 'heart-beat',  category: 'buff',       archetype: 'sustain', name: 'Heart Beat',         desc: 'Adds +1 to your run\'s max lives per stack. Bigger life pool for the marathon.' },
   { id: 'cascade-splash',category: 'synergy',  archetype: 'wild',    name: 'Cascade Splash',     desc: '🌊 Every cascade chain ≥2 has a 60% chance per stack to spawn a random crazy tile.' },
   { id: 'echo-match',  category: 'synergy',    archetype: 'lucky',   name: 'Echo Match',         desc: '🪞 Cascade chains ≥4 also fill your Lucky bar by +50% per stack.' },
+  { id: 'tongue-tie',  category: 'synergy',    archetype: 'sustain', name: 'Tongue Tie',         desc: '👅 The Eater attacks +1 move slower per stack. Stacks with Slow Down mutator and Time Freeze.' },
+  { id: 'gold-pile',   category: 'buff',       archetype: 'scorer',  name: 'Gold Pile',          desc: '💰 Each boss kill grants +5 gems per stack. Boss-rush economy.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
