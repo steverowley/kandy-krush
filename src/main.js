@@ -652,11 +652,11 @@ async function fireMeteor() {
 }
 
 // ---------- Crazy tiles ----------
-const CRAZY_KINDS = ['tnt', 'void', 'bolt', 'prism'];
+const CRAZY_KINDS = ['tnt', 'void', 'bolt', 'prism', 'wormhole'];
 
 function pickCrazyKind() {
-  // Prism is rare (weight 0.4) compared to the common 3 (weight 1).
-  const weights = { tnt: 1, void: 1 + upgradeCount('void-touched'), bolt: 1, prism: 0.4 };
+  // Prism + Wormhole are rare (weight 0.4) compared to the common 3 (weight 1).
+  const weights = { tnt: 1, void: 1 + upgradeCount('void-touched'), bolt: 1, prism: 0.4, wormhole: 0.4 };
   let total = 0;
   for (const k of CRAZY_KINDS) total += weights[k] || 1;
   let pick = Math.random() * total;
@@ -688,7 +688,7 @@ function spawnCrazyTile(kind) {
   cell.crazy = kind;
   renderBoard(state.board, state);
   spawnTileSparkles(target.c, target.r, 14, { color: '#FF006E' });
-  const labels = { tnt: 'TNT', void: 'Void', bolt: 'Bolt', prism: '🌈 Prism' };
+  const labels = { tnt: 'TNT', void: 'Void', bolt: 'Bolt', prism: '🌈 Prism', wormhole: '🕳 Wormhole' };
   flashMessage(`${labels[kind]} appeared! Pop it!`, 1500);
   haptics.specialBirth();
 }
@@ -782,6 +782,36 @@ async function triggerCrazyEffect(pos, kind) {
     haptics.epic();
     spawnLightningRow(pos.r);
     screenShake(6, 320);
+    await delay(220);
+  } else if (kind === 'wormhole') {
+    // 🕳 Wormhole — swap a random pair of distant tiles, creating new
+    // match opportunities. Does NOT clear anything; pure rearrangement.
+    const candidates = [];
+    for (let r = 0; r < state.board.rows; r++) {
+      for (let c = 0; c < state.board.cols; c++) {
+        if (state.board.isIngredient(c, r)) continue;
+        if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+        const cell = state.board.cell(c, r);
+        if (!cell || cell.crazy) continue;
+        candidates.push({ c, r });
+      }
+    }
+    if (candidates.length >= 2) {
+      const a = candidates[Math.floor(Math.random() * candidates.length)];
+      let b = candidates[Math.floor(Math.random() * candidates.length)];
+      let attempts = 0;
+      while (b.c === a.c && b.r === a.r && attempts++ < 10) {
+        b = candidates[Math.floor(Math.random() * candidates.length)];
+      }
+      state.board.swap(a, b);
+    }
+    flashMessage('🕳 WORMHOLE!', 1300);
+    speech.speak('Wormhole');
+    haptics.combo();
+    spawnConfetti(20);
+    screenShake(4, 240);
+    // Clear the wormhole tile itself.
+    positions.push({ c: pos.c, r: pos.r });
     await delay(220);
   } else if (kind === 'prism') {
     // 🌈 Prism — clear ALL tiles of one random color across the board.
@@ -1211,6 +1241,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10c',
+    items: [
+      '🕳 NEW CRAZY TILE — Wormhole! Pop a Wormhole to swap a random pair of distant tiles on the board, creating brand new match opportunities.',
+      'Rare (weight 0.4, same as Prism). Spins ominously in dark blue + green. Crazy tile pool now 5.',
+    ],
+  },
   {
     id: '2026-05-25-10b',
     items: [
