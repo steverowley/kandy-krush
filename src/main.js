@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17af',
+    items: [
+      '♾ ENDLESS MODE STATE NO LONGER CLAMPED TO SLOT 100 — `sanitizeRoguelike` clamped `currentSlot` to 100 and `classStats[].bestSlot` to 100; same for `dailySeedBestSlot` and `runHistory[].slot`. With Endless Mode (#272) the player can legitimately reach slot 150+ — those clamps were silently losing the achievement on next reload. Bumped all four to 9999 as the defensive upper bound. 3 new tests; 68 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-25-17ae',
     items: [
       '🚌 INFINITE-COMBO TRACKER MIGRATED TO THE BUS — new `infinite` event on the event bus emitted from `maybeTriggerInfiniteScore`; the run-highlights `infiniteCount` bump moves to a subscriber in `run-effects.js`. Mirrors the slot:start / slot:complete migrations from #284. 65 tests pass.',

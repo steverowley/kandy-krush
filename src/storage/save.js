@@ -171,7 +171,7 @@ export function load() {
       dailySeedDate: typeof parsed.dailySeedDate === 'string' && parsed.dailySeedDate.length <= 16
         ? parsed.dailySeedDate
         : null,
-      dailySeedBestSlot: Math.min(100, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
+      dailySeedBestSlot: Math.min(9999, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
       runHistory: sanitizeRunHistory(parsed.runHistory),
       runFreeRerolls: Math.max(0, Math.min(20, Math.floor(Number(parsed.runFreeRerolls) || 0))),
       ascensionUnlocked: Math.max(0, Math.min(3, Math.floor(Number(parsed.ascensionUnlocked) || 0))),
@@ -217,7 +217,7 @@ function sanitizeRunHistory(raw, max = 20) {
     const entry = {
       ts: Number(v.ts) || 0,
       outcome: v.outcome === 'complete' ? 'complete' : 'fail',
-      slot: Math.max(0, Math.min(100, Math.floor(Number(v.slot) || 0))),
+      slot: Math.max(0, Math.min(9999, Math.floor(Number(v.slot) || 0))),
       class: typeof v.class === 'string' && v.class.length <= 32 ? v.class : null,
       gems: Math.max(0, Math.floor(Number(v.gems) || 0)),
       score: Math.max(0, Math.floor(Number(v.score) || 0)),
@@ -258,7 +258,9 @@ function sanitizeRoguelike(raw) {
     if (Number.isFinite(n) && n >= 0) out[key] = Math.floor(n);
   }
   if (out.currentSlot < 1) out.currentSlot = 1;
-  if (out.currentSlot > 100) out.currentSlot = 100;
+  // Endless Mode (#272) allows slot > 100; keep a defensive upper bound
+  // so a poisoned save can't push currentSlot into hostile-large territory.
+  if (out.currentSlot > 9999) out.currentSlot = 9999;
   // classStats: { classId: { runs, completes, bestSlot } }
   if (raw.classStats && typeof raw.classStats === 'object') {
     for (const [k, v] of Object.entries(raw.classStats)) {
@@ -266,7 +268,7 @@ function sanitizeRoguelike(raw) {
       out.classStats[k] = {
         runs: Math.max(0, Math.floor(Number(v.runs) || 0)),
         completes: Math.max(0, Math.floor(Number(v.completes) || 0)),
-        bestSlot: Math.max(0, Math.min(100, Math.floor(Number(v.bestSlot) || 0))),
+        bestSlot: Math.max(0, Math.min(9999, Math.floor(Number(v.bestSlot) || 0))),
       };
     }
   }

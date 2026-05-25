@@ -96,12 +96,47 @@ test('mode field rejects unknown values, falls back to levels', () => {
   assert.equal(data.settings.mode, 'levels');
 });
 
-test('roguelike currentSlot clamped to [1, 100]', () => {
+test('roguelike currentSlot clamped to [1, 9999] (endless mode preserves slot > 100)', () => {
   globalThis.localStorage.clear();
-  save.save({ settings: {}, levelProgress: {}, roguelike: { currentSlot: 999 }, runUpgrades: [], runRelics: [] });
+  // Endless mode: a player at slot 150 must NOT have their currentSlot
+  // silently clamped to 100 on next reload.
+  save.save({ settings: {}, levelProgress: {}, roguelike: { currentSlot: 150 }, runUpgrades: [], runRelics: [] });
   const data = save.load();
-  assert.ok(data.roguelike.currentSlot <= 100);
-  assert.ok(data.roguelike.currentSlot >= 1);
+  assert.equal(data.roguelike.currentSlot, 150);
+});
+
+test('roguelike currentSlot defensive max at 9999', () => {
+  globalThis.localStorage.clear();
+  save.save({ settings: {}, levelProgress: {}, roguelike: { currentSlot: 1_000_000 }, runUpgrades: [], runRelics: [] });
+  const data = save.load();
+  assert.equal(data.roguelike.currentSlot, 9999);
+});
+
+test('classStats bestSlot preserves endless-mode highs', () => {
+  globalThis.localStorage.clear();
+  save.save({
+    settings: {},
+    levelProgress: {},
+    roguelike: { classStats: { champion: { runs: 5, completes: 1, bestSlot: 220 } } },
+    runUpgrades: [],
+    runRelics: [],
+  });
+  const data = save.load();
+  assert.equal(data.roguelike.classStats.champion.bestSlot, 220);
+});
+
+test('runHistory slot preserves endless-mode highs', () => {
+  globalThis.localStorage.clear();
+  save.save({
+    settings: {},
+    levelProgress: {},
+    roguelike: {},
+    runUpgrades: [],
+    runRelics: [],
+    runHistory: [{ ts: 1, outcome: 'fail', slot: 175, class: 'champion', gems: 50, score: 99999, daily: false, dailyStamp: null }],
+  });
+  const data = save.load();
+  assert.equal(data.runHistory[0].slot, 175);
 });
 
 test('runUpgrades array rejects non-strings + caps length', () => {
