@@ -1432,6 +1432,16 @@ function maybeFireRelicsOnSwap() {
     setLuckyCharge(state.luckyCharge, state.luckyReady);
     flashMessage('📖 Sweet Spell +25% 🍀', 900);
   }
+  // 🔋 Power Up relic — every 10 swaps, +1 of every power-up.
+  if (hasRelic('power-up') && state.relicSwapCount % 10 === 0) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+    }
+    setPowerupCounts(bank);
+    flashMessage('🔋 Power Up! +1 of each', 1100);
+  }
   // 🍋 Sour Drop relic — every 13 swaps, Lucky bar +50%.
   if (hasRelic('sour-drop') && state.relicSwapCount % 13 === 0) {
     state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 50);
@@ -1577,6 +1587,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13x',
+    items: [
+      '😊 NEW RELIC — Sweet Smile: 25% chance to keep a life when you would lose one. Anti-frustration cushion.',
+      '🔋 NEW RELIC — Power Up: every 10 swaps in a slot, gain +1 of EVERY power-up.',
+    ],
+  },
   {
     id: '2026-05-25-13w',
     items: [
@@ -3984,9 +4001,17 @@ function checkLevelOutcome() {
         });
         return;
       }
+      // 😊 Sweet Smile relic — 25% chance to keep the life on a loss.
+      const smileSaved = hasRelic('sweet-smile') && Math.random() < 0.25;
+      if (smileSaved) {
+        flashMessage('😊 Sweet Smile saved you!', 1600);
+        speech.speak('Sweet smile.');
+        spawnConfetti(30);
+        haptics.epic();
+      }
       // Decrement a life. If lives remain, offer a retry.
       // If lives hit zero, the run is over.
-      state.roguelike.livesRemaining = Math.max(0, (state.roguelike.livesRemaining || 0) - 1);
+      if (!smileSaved) state.roguelike.livesRemaining = Math.max(0, (state.roguelike.livesRemaining || 0) - 1);
       persist();
       refreshLevelUI();
       if (state.roguelike.livesRemaining <= 0) {
