@@ -494,6 +494,10 @@ export const RELICS = [
     desc: 'Slot start: Lucky bar +30%. Gentle opening sip.' },
   { id: 'sweet-wreath', icon: '🎄', name: 'Sweet Wreath',
     desc: 'Slot start: every jelly tile loses 1 level. Mass jelly-decrement (mirrors Frosty Crown for locks).' },
+  { id: 'storm-heart',  icon: '⛈', name: 'Storm Heart',
+    desc: 'At 1 life remaining, ALL matches score ×2. High-stakes comeback.' },
+  { id: 'sweet-cushion',icon: '🛏', name: 'Sweet Cushion',
+    desc: 'Slot starts at 1 life: +5 moves AND +50% Lucky bar. Last-stand cushion.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
