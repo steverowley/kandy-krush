@@ -1325,6 +1325,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   }
   // 🍰 Sugar Rush relic — first 3 matches of every slot are 3×.
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
+  // 🌹 Crimson Rose relic — first match of every slot is ×5.
+  if (hasRelic('crimson-rose') && (state.slotMatchCount || 0) === 0) m *= 5;
   // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
@@ -1388,6 +1390,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11t',
+    items: [
+      '🌹 NEW RELIC — Crimson Rose. The very first match of every slot scores ×5.',
+      'Stack with Champion awakening (which also makes first match ×5) for ×25 first match. Set up specials before your first swap.',
+      'Relic pool now 27.',
+    ],
+  },
   {
     id: '2026-05-25-11s',
     items: [
