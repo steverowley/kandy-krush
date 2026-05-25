@@ -1125,6 +1125,8 @@ function applyRunUpgradesOnSlotStart() {
   state.quickDrawUsed = false;
   // Reset Free Bomb upgrade's per-slot free color bombs.
   state.freeBombsUsed = 0;
+  // Reset Buttered Bread upgrade's per-slot emergency revive.
+  state.butteredUsed = false;
   // 🌬 Second Wind relic — start of slot with only 1 life → 2 lives.
   if (hasRelic('second-wind') && (state.roguelike.livesRemaining || 0) === 1) {
     state.roguelike.livesRemaining = 2;
@@ -1361,6 +1363,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10y',
+    items: [
+      '🍞 NEW UPGRADE — Buttered Bread (Sustain). When you would run out of moves, gain +3 moves per stack — once per slot.',
+      'Emergency safety net that turns a near-loss into a possible win. Combine with Thunder Foot + Mover for a Sustain-heavy "endless slot" build.',
+      'Upgrade pool now 35.',
+    ],
+  },
   {
     id: '2026-05-25-10x',
     items: [
@@ -2828,6 +2838,20 @@ function consumeMove() {
     state.movesRemaining--;
     refreshLevelUI();
     bumpMoveCounter();
+  }
+  // 🍞 Buttered Bread upgrade — emergency revive when you've just
+  // hit 0 moves, once per slot.
+  if (
+    state.movesRemaining === 0
+    && upgradeCount('buttered') > 0
+    && !state.butteredUsed
+    && state.inRoguelikeRun
+  ) {
+    state.butteredUsed = true;
+    const bonus = 3 * upgradeCount('buttered');
+    state.movesRemaining += bonus;
+    flashMessage(`🍞 Buttered Bread! +${bonus} moves`, 1300);
+    refreshLevelUI();
   }
 }
 

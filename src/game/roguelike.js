@@ -264,6 +264,7 @@ export const UPGRADES = [
   { id: 'lucky-magnet',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Magnet',       desc: 'Each match has a 5% chance per stack to instantly fill the Lucky bar (+100).' },
   { id: 'lucky-fast-2',category: 'buff',       archetype: 'lucky',   name: 'Lucky Fast II',      desc: 'Lucky bar fills 100% faster per stack (stronger than Lucky Fast).' },
   { id: 'caretaker',   category: 'buff',       archetype: 'sustain', name: 'Caretaker',          desc: 'Power-up bank cap +1 per stack. Stacks with Bigger Bank meta and Sustain synergy.' },
+  { id: 'buttered',    category: 'consumable', archetype: 'sustain', name: 'Buttered Bread',     desc: 'When you would run out of moves, gain +3 moves per stack — once per slot.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
