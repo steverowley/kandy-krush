@@ -1,4 +1,4 @@
-export function createSettingsUI({ initial, onChange, onResetProgress }) {
+export function createSettingsUI({ initial, onChange, onResetProgress, onHome }) {
   const overlay = document.getElementById('settings-overlay');
   const panel = document.getElementById('settings-panel');
   const closeBtn = document.getElementById('settings-close');
@@ -9,7 +9,7 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
   const contrastBtn = document.getElementById('setting-contrast');
   const motionBtn = document.getElementById('setting-reduce-motion');
   const enemiesBtn = document.getElementById('setting-enemies');
-  const modeBtn = document.getElementById('setting-mode');
+  const homeBtn = document.getElementById('setting-home');
   const resetBtn = document.getElementById('setting-reset');
   const resetOverlay = document.getElementById('reset-overlay');
   const resetPanel = document.getElementById('reset-panel');
@@ -52,16 +52,6 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
       enemiesBtn.textContent = enemiesOn
         ? 'Enemies: On'
         : 'Enemies: Off';
-    }
-
-    if (modeBtn) {
-      const modeLabels = {
-        levels: 'Mode: Levels',
-        free: 'Mode: Free Play',
-        roguelike: 'Mode: Roguelike',
-      };
-      modeBtn.setAttribute('aria-pressed', String(current.mode === 'levels'));
-      modeBtn.textContent = modeLabels[current.mode] || modeLabels.levels;
     }
 
     for (const b of sizeButtons) {
@@ -115,11 +105,11 @@ export function createSettingsUI({ initial, onChange, onResetProgress }) {
       apply({ enemies: !(current.enemies !== false) })
     );
   }
-  if (modeBtn) {
-    const modeCycle = { levels: 'free', free: 'roguelike', roguelike: 'levels' };
-    modeBtn.addEventListener('click', () =>
-      apply({ mode: modeCycle[current.mode] || 'levels' })
-    );
+  if (homeBtn) {
+    homeBtn.addEventListener('click', () => {
+      hide();
+      if (onHome) onHome();
+    });
   }
   for (const b of sizeButtons) {
     b.addEventListener('click', () => apply({ size: b.dataset.size }));

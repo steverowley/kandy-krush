@@ -285,21 +285,27 @@ function openStartMenu(subtitle = null) {
   showStartMenu({
     subtitle,
     onRoguelike: () => {
+      sfx.unlockAudio();
       state.settings.mode = 'roguelike';
       sfx.setMusicMode('roguelike');
       persist();
+      playModeTransition('roguelike');
       startRoguelikeRun();
     },
     onLevels: () => {
+      sfx.unlockAudio();
       state.settings.mode = 'levels';
       sfx.setMusicMode('levels');
       persist();
+      playModeTransition('levels');
       startLevel(state.levelProgress.currentLevel || 1);
     },
     onFreePlay: () => {
+      sfx.unlockAudio();
       state.settings.mode = 'free';
       sfx.setMusicMode('free');
       persist();
+      playModeTransition('free');
       startFreePlay();
     },
     onSettings: () => {
@@ -1682,6 +1688,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-15l',
+    items: [
+      '🎬 LAUNCH NOW BOOTS TO THE START SCREEN — opening the app drops you on the proper mode-picker (⚔ Roguelike / 🎯 Levels / 🎨 Free Play) instead of jumping straight into whatever mode you were last in. Mid-run roguelikes still auto-resume so you don\'t lose progress.',
+      '🏠 BACK TO START MENU LIVES IN SETTINGS — the in-settings "Mode" cycle button is gone; in its place is a clear "Back to Start Menu" entry. Mode switching now happens only at the start screen, like a proper game.',
+      '🔊 MODE-PICK NOW PLAYS THE MODE-TRANSITION JINGLE — short audio cue when you pick a mode so the start menu feels alive.',
+    ],
+  },
   {
     id: '2026-05-25-15k',
     items: [
@@ -5500,7 +5514,6 @@ if (state.inRoguelikeRun && state.roguelike) {
 createSettingsUI({
   initial: state.settings,
   onChange: (next) => {
-    const modeChanged = next.mode !== state.settings.mode;
     state.settings = { ...state.settings, ...next };
     sfx.setMuted(!state.settings.sound);
     sfx.setMusicEnabled(state.settings.music);
@@ -5508,26 +5521,22 @@ createSettingsUI({
     speech.setSpeechEnabled(state.settings.speech);
     applyTheme(state.settings);
     persist();
-    if (modeChanged) {
-      // Stepping out of an active run mid-game ends it and tallies gems.
-      if (state.inRoguelikeRun && state.settings.mode !== 'roguelike') {
-        endRoguelikeRun();
-      }
-      refreshRunHud();
-      playModeTransition(state.settings.mode);
-      if (state.settings.mode === 'roguelike') {
-        startRoguelikeRun();
-      } else if (state.settings.mode === 'levels') {
-        startLevel(state.levelProgress.currentLevel || 1);
-      } else {
-        startFreePlay();
-      }
-    }
   },
   onResetProgress: () => {
     resetProgressSave({ settings: state.settings });
     speech.speak('Progress reset. Starting over.');
     location.reload();
+  },
+  // 🏠 Back to Start Menu — leaves the current session and re-opens the
+  // mode picker. A roguelike run in progress is ended so gems are awarded;
+  // its run-summary then chains to the start menu via the existing onClose
+  // path, so we don't need to call openStartMenu directly in that case.
+  onHome: () => {
+    if (state.inRoguelikeRun) {
+      endRoguelikeRun();
+    } else {
+      openStartMenu(null);
+    }
   },
 });
 
@@ -5638,22 +5647,29 @@ function maybeShowChangelog(after) {
   });
 }
 
+// Boot flow: always land on the start menu so the player chooses their
+// mode explicitly. The one exception is a mid-run roguelike — we
+// auto-resume that so in-flight progress isn't lost.
+function bootIntoStartMenu() {
+  if (state.inRoguelikeRun && state.roguelike?.currentClass) {
+    // Resume the run already in progress.
+    state.settings.mode = 'roguelike';
+    sfx.setMusicMode('roguelike');
+    init({ chime: false });
+    return;
+  }
+  openStartMenu(null);
+}
+
 if (state.seenWelcome) {
-  init({ chime: false });
-  maybeShowChangelog();
+  maybeShowChangelog(() => { bootIntoStartMenu(); });
 } else {
-  init({ chime: false, announceLevel: false });
   showWelcome(() => {
     state.seenWelcome = true;
     state.seenVersion = APP_VERSION; // first-time players have effectively "seen" it
     persist();
     sfx.unlockAudio();
-    if (state.settings.mode === 'levels' && state.level) {
-      showLevelIntro(state.level, LEVELS.length);
-      speech.speak(
-        `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.`
-      );
-    }
+    bootIntoStartMenu();
   });
 }
 persist();
