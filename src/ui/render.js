@@ -544,7 +544,8 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
 
   const render = () => {
     if (stats) {
-      gemsEl.innerHTML = `${gems()} 💎 <span class="text-sm font-normal opacity-70 ml-2">— ${stats.runs || 0} runs · ${stats.completes || 0} completes · best slot ${stats.bestSlot || 0}</span>`;
+      const bossLine = stats.bossesDefeated ? ` · ${stats.bossesDefeated} bosses slain` : '';
+      gemsEl.innerHTML = `${gems()} 💎 <span class="text-sm font-normal opacity-70 ml-2">— ${stats.runs || 0} runs · ${stats.completes || 0} completes · best slot ${stats.bestSlot || 0}${bossLine}</span>`;
     } else {
       gemsEl.textContent = `${gems()} 💎`;
     }

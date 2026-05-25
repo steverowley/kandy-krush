@@ -1265,6 +1265,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10l',
+    items: [
+      '👑 BOSSES SLAIN counter — tracks total bosses defeated across all runs. Surfaces in the Skill Tree gem chip: "💎 47 — 12 runs · 3 completes · best slot 89 · 27 bosses slain".',
+      'Persisted across reloads. Sanitised on load.',
+    ],
+  },
+  {
     id: '2026-05-25-10k',
     items: [
       '🧠 NEW UPGRADE — Greedy Brain (Scorer). All scores +5% per stack. Mild but always-on multiplier — great filler upgrade for Scorer builds.',
@@ -2233,6 +2240,7 @@ function advanceRoguelikeAfterWin() {
   const justFinished = slot;
   const isBossWin = BOSS_SLOTS.has(justFinished);
   if (isBossWin) {
+    state.roguelike.bossesDefeated = (state.roguelike.bossesDefeated || 0) + 1;
     spawnConfetti(80);
     spawnStarRain(40);
     screenShake(7, 400);
@@ -3719,6 +3727,7 @@ if (skillTreeBtn) {
         runs: state.roguelike?.runsStarted || 0,
         completes: state.roguelike?.runsCompleted || 0,
         bestSlot: state.roguelike?.bestSlot || 0,
+        bossesDefeated: state.roguelike?.bossesDefeated || 0,
       },
     });
   });
