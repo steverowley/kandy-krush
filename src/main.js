@@ -847,6 +847,13 @@ async function triggerCrazyEffect(pos, kind) {
         flashMessage(`🎁 +1 ${pickP}!`, 900);
       }
     }
+    // 💧 Bomb Splash upgrade — TNT pop also fills Lucky bar +15% per stack.
+    if (upgradeCount('bomb-splash') > 0) {
+      const fill = 15 * upgradeCount('bomb-splash');
+      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + fill);
+      if (state.luckyCharge >= 100) state.luckyReady = true;
+      setLuckyCharge(state.luckyCharge, state.luckyReady);
+    }
     // 💣 Bomb Squad relic — TNT pop also grants a random power-up.
     if (hasRelic('bomb-squad')) {
       const bank = powerupBank();
@@ -1562,6 +1569,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13r',
+    items: [
+      '💧 NEW UPGRADE — Bomb Splash (Bomber): TNT pop fills Lucky bar +15% per stack. Bomber→Lucky bridge.',
+      '🚀 NEW UPGRADE — Lucky Reload (Lucky): when Lucky-MODE fires, +1 "+3 Moves" power-up per stack. Stacks with Cherry Reload.',
+    ],
+  },
   {
     id: '2026-05-25-13q',
     items: [
@@ -3589,6 +3603,12 @@ function consumeLuckyIfReady(baseScore) {
   if (state.inRoguelikeRun && upgradeCount('cherry-reload') > 0) {
     const bank = powerupBank();
     bank.shuffle = Math.min(effectivePowerupCap(), (bank.shuffle || 0) + upgradeCount('cherry-reload'));
+    setPowerupCounts(bank);
+  }
+  // 🚀 Lucky Reload upgrade — Lucky fire also adds +1 +3 Moves per stack.
+  if (state.inRoguelikeRun && upgradeCount('lucky-reload') > 0) {
+    const bank = powerupBank();
+    bank.plusMoves = Math.min(effectivePowerupCap(), (bank.plusMoves || 0) + upgradeCount('lucky-reload'));
     setPowerupCounts(bank);
   }
   // 🧠 Mind Reader upgrade — +1 to burst multiplier per stack.
