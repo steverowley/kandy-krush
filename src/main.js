@@ -1921,6 +1921,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17q',
+    items: [
+      '👋 ONBOARDING TOUR — the first-run roguelike intro used to dump 5 dense cards on the player at once (Class / Upgrades+Synergy / Relics / Mutators / Enemies). Gameplay-review agent flagged this as a D1 churn risk. Now it\'s a stepper: one concept at a time, ← Back / Next → / "Skip — I know how to play" controls + step dots so you can see where you are. Same 5 concepts, far less cognitive load on first contact.',
+    ],
+  },
+  {
     id: '2026-05-25-17p',
     items: [
       '🔓 ENDLESS MODE — new 100💎 skill-tree node. After clearing slot 100 the run KEEPS GOING — slot 101, 102, … with continued scaling. Boss-defeated banner still fires on the Kraken kill; the run only ends when you die. Beat the boss, eat the boss, keep eating bosses.',
