@@ -1,5 +1,22 @@
 import { CANDY_DEFS } from './render.js';
 
+// 🎚 Particle cap (Phase 17o / D7).
+//
+// The perf review measured that a chain-≥5 cascade can stack ~150
+// absolutely-positioned `<div>` particles in the `#particles` container
+// over 1-2s, fighting the main thread on mid-tier Android. We don't
+// need every confetti — for a "lots happening" feel, a cap of 80 live
+// particles at any time is plenty. New spawns past the cap recycle
+// the oldest particles to keep the layer bounded.
+const MAX_LIVE_PARTICLES = 80;
+function evictOldestIfFull(root) {
+  while (root.childElementCount >= MAX_LIVE_PARTICLES) {
+    const first = root.firstElementChild;
+    if (!first) break;
+    first.remove();
+  }
+}
+
 function layer() {
   return document.getElementById('particles');
 }
@@ -40,7 +57,7 @@ export function spawnFloatingNumber(text, positions, opts = {}) {
   el.style.left = `${sx / count}px`;
   el.style.top = `${sy / count}px`;
   if (opts.color) el.style.color = opts.color;
-  root.appendChild(el);
+  evictOldestIfFull(root); root.appendChild(el);
   setTimeout(() => el.remove(), 1300);
 }
 
@@ -62,7 +79,7 @@ export function spawnTileSparkles(c, r, count = 8, opts = {}) {
     el.style.setProperty('--dx', `${dx}px`);
     el.style.setProperty('--dy', `${dy}px`);
     if (opts.color) el.style.background = opts.color;
-    root.appendChild(el);
+    evictOldestIfFull(root); root.appendChild(el);
     setTimeout(() => el.remove(), 720);
   }
 }
@@ -80,7 +97,7 @@ export function spawnPopSpecks(positions) {
       el.style.top = `${pt.y}px`;
       el.style.setProperty('--dx', `${(Math.random() - 0.5) * pt.w * 0.9}px`);
       el.style.setProperty('--dy', `${(Math.random() - 0.5) * pt.h * 0.9}px`);
-      root.appendChild(el);
+      evictOldestIfFull(root); root.appendChild(el);
       setTimeout(() => el.remove(), 540);
     }
   }
@@ -137,7 +154,7 @@ export function spawnShockwave(c, r, opts = {}) {
   el.style.top = `${pt.y}px`;
   el.style.setProperty('--ring-color', color);
   el.style.setProperty('--ring-size', `${(opts.size || pt.w * 0.7)}px`);
-  root.appendChild(el);
+  evictOldestIfFull(root); root.appendChild(el);
   setTimeout(() => el.remove(), 720);
 }
 
@@ -152,7 +169,7 @@ export function spawnScreenFlash(color = '#FFD60A') {
   const el = document.createElement('div');
   el.className = 'particle particle-screen-flash';
   el.style.background = color;
-  root.appendChild(el);
+  evictOldestIfFull(root); root.appendChild(el);
   setTimeout(() => el.remove(), 500);
 }
 
@@ -363,7 +380,7 @@ export function spawnEater(colIndex, biteCount) {
       <circle cx="85" cy="32" r="4" fill="#000"/>
     </svg>
   `;
-  root.appendChild(el);
+  evictOldestIfFull(root); root.appendChild(el);
   setTimeout(() => el.remove(), 1400);
 }
 
@@ -390,7 +407,7 @@ export function showEaterTelegraph(colIndex, movesUntil) {
       <text x="32" y="36" text-anchor="middle" font-size="22" font-weight="900" fill="#fff" stroke="#000" stroke-width="1">${movesUntil}</text>
     </svg>
   `;
-  root.appendChild(el);
+  evictOldestIfFull(root); root.appendChild(el);
   eaterTelegraphEl = el;
 }
 export function clearEaterTelegraph() {
@@ -415,7 +432,7 @@ export function spawnStarRain(count = 28) {
     el.style.fontSize = `${20 + Math.random() * 26}px`;
     el.style.animationDelay = `${Math.random() * 400}ms`;
     el.style.animationDuration = `${1600 + Math.random() * 700}ms`;
-    root.appendChild(el);
+    evictOldestIfFull(root); root.appendChild(el);
     setTimeout(() => el.remove(), 2600);
   }
 }
@@ -438,7 +455,7 @@ export function spawnConfetti(count = 28) {
     el.style.setProperty('--drift', `${(Math.random() - 0.5) * 240}px`);
     el.style.setProperty('--rot', `${(Math.random() - 0.5) * 720}deg`);
     el.style.animationDelay = `${Math.random() * 220}ms`;
-    root.appendChild(el);
+    evictOldestIfFull(root); root.appendChild(el);
     setTimeout(() => el.remove(), 2000);
   }
 }
