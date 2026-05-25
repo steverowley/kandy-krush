@@ -1366,6 +1366,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11d',
+    items: [
+      '🧠 NEW UPGRADE — Mind Reader (Lucky). Lucky burst multiplier +1 per stack (×3 → ×4 → ×5 → ...).',
+      'Stack with Strong Drink relic for the ultimate Lucky build — burst at ×5+ then ×3 sustain.',
+      'Upgrade pool now 37.',
+    ],
+  },
+  {
     id: '2026-05-25-11c',
     items: [
       '🔮 NEW CLASS — Witch! Lucky/Wild hybrid starting with Lucky Strike + Hungry Snake. Channels chaos magic.',
@@ -2726,7 +2734,9 @@ function consumeLuckyIfReady(baseScore) {
     bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike'));
     setPowerupCounts(bank);
   }
-  return Math.round(baseScore * LUCKY_INSTANT_MULTIPLIER);
+  // 🧠 Mind Reader upgrade — +1 to burst multiplier per stack.
+  const burst = LUCKY_INSTANT_MULTIPLIER + upgradeCount('mind-reader');
+  return Math.round(baseScore * burst);
 }
 
 const SURPRISE_KINDS = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
