@@ -1398,6 +1398,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11x',
+    items: [
+      '🌌 NEW CHAPTER — "Beyond" (levels 116-120). For the player who beat the game: Echoes, Mirror Pond, Last Cherry Grove, Forever Loop, and the final True End at 25,000 score.',
+      'Levels mode is now 120 levels deep — over 6× the original grandma-mode set.',
+    ],
+  },
+  {
     id: '2026-05-25-11w',
     items: [
       '🐞 NEW RELIC — Lucky Ladybug: every 11 matches in a slot, a random power-up appears in your bank. Stacks beautifully with Piñata for a power-up rain build.',
