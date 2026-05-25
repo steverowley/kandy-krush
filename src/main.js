@@ -994,6 +994,11 @@ async function triggerCrazyEffect(pos, kind) {
   }
   const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
+  // Small settle delay so the outer cascade loop's findMatches() sees
+  // the post-gravity board before continuing. Prevents the occasional
+  // "after a crazy tile, matches just sit there" glitch where gravity
+  // hadn't fully painted before the next check ran.
+  await delay(180);
 }
 
 async function fireBlackHole() {
@@ -1587,6 +1592,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-14a',
+    items: [
+      '💬 TILE TOOLTIPS — hover any tile on desktop (or long-press 0.5s on mobile) and you\'ll see a description: what crazy tiles do, what specials do, jelly/lock hit-counts, and so on. Finally clear what everything on the board means.',
+      '🩹 BUG FIX — added a settle delay after crazy-tile pops so the cascade always sees the post-gravity board. Should stop the occasional "matches just sit there after a TNT" hiccup.',
+    ],
+  },
   {
     id: '2026-05-25-13y',
     items: [

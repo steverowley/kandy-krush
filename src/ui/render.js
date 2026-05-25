@@ -85,6 +85,45 @@ function ariaForCell(cell, c, r) {
   return `${prefix}${def.name} ${def.shape}, row ${r + 1}, column ${c + 1}`;
 }
 
+// Short human-readable description shown on tile hover (desktop) and
+// long-press (mobile). Returns null for plain candies so we don't
+// spam tooltips on tiles that don't do anything special.
+function tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock) {
+  const parts = [];
+  if (cell && cell.ingredient) {
+    parts.push('🍒 Cherry — drop it off the bottom row to score it. Some levels need a count of these.');
+  } else if (cell && cell.crazy === 'tnt') {
+    parts.push('💣 TNT — pop with a match to blast a 3×3 area. Bomber synergy and Bigger Bomb make it 5×5 → 7×7 → 9×9.');
+  } else if (cell && cell.crazy === 'void') {
+    parts.push('🌀 Void — pop with a match to swallow 8 random tiles across the board.');
+  } else if (cell && cell.crazy === 'bolt') {
+    parts.push('⚡ Bolt — pop with a match to clear the row AND column it sits on.');
+  } else if (cell && cell.crazy === 'wormhole') {
+    parts.push('🕳 Wormhole — pop to swap two random tiles, then clear itself. Sets up fresh matches.');
+  } else if (cell && cell.crazy === 'prism') {
+    parts.push('🌈 Prism — pop with a match to clear ALL tiles of one random color. Boardwipe potential.');
+  } else if (cell && cell.special === 'rainbow') {
+    parts.push('🌟 Rainbow special — swap with any candy to clear EVERY tile of that color.');
+  } else if (cell && cell.special === 'line-h') {
+    parts.push('🍫 Striped (horizontal) — clears its entire row when matched.');
+  } else if (cell && cell.special === 'line-v') {
+    parts.push('🍫 Striped (vertical) — clears its entire column when matched.');
+  }
+  if (isGrumblock) {
+    parts.push('🪨 Grumblock — wandering enemy. Locks one tile. Match around it to break it.');
+  } else if (lockLvl === 2) {
+    parts.push('🔒 Locked (×2) — needs TWO matches adjacent to break free.');
+  } else if (lockLvl === 1) {
+    parts.push('🔒 Locked — match an adjacent tile to break it.');
+  }
+  if (jellyLvl === 2) {
+    parts.push('🟦 Double jelly — needs TWO matches over this cell to clear.');
+  } else if (jellyLvl === 1) {
+    parts.push('🟦 Jelly — match over this cell to clear it.');
+  }
+  return parts.length > 0 ? parts.join('\n') : null;
+}
+
 export function renderBoard(board, state, opts = {}) {
   const root = document.getElementById('board');
   const fallenSet = opts.fallen
@@ -184,15 +223,19 @@ export function renderBoard(board, state, opts = {}) {
       if (fallenSet && fallenSet.has(cellKey(c, r))) {
         tile.classList.add('falling');
       }
+      let jellyLvl = 0;
       if (state.jellyMap) {
         const j = state.jellyMap.get(cellKey(c, r));
-        if (j === 2) tile.classList.add('jelly', 'jelly-2');
-        else if (j === 1) tile.classList.add('jelly', 'jelly-1');
+        if (j === 2) { jellyLvl = 2; tile.classList.add('jelly', 'jelly-2'); }
+        else if (j === 1) { jellyLvl = 1; tile.classList.add('jelly', 'jelly-1'); }
       }
+      let lockLvl = 0;
+      let isGrumblock = false;
       if (state.lockMap) {
         const lk = state.lockMap.get(cellKey(c, r));
         if (lk && lk > 0) {
-          const isGrumblock = state.grumblockSet && state.grumblockSet.has(cellKey(c, r));
+          lockLvl = lk;
+          isGrumblock = state.grumblockSet && state.grumblockSet.has(cellKey(c, r));
           tile.classList.add('locked');
           if (lk === 2) tile.classList.add('locked-2');
           if (isGrumblock) tile.classList.add('grumblock');
@@ -218,10 +261,75 @@ export function renderBoard(board, state, opts = {}) {
           tile.appendChild(badge);
         }
       }
+      const tipText = tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock);
+      if (tipText) tile.title = tipText;
       frag.appendChild(tile);
     }
   }
   root.replaceChildren(frag);
+  ensureTileLongPress(root);
+}
+
+// One-time delegated long-press listener on the board root for mobile
+// tooltips. Reuses the title attribute set in renderBoard so there's
+// only one source of truth.
+let longPressInstalled = false;
+let longPressTimer = null;
+let longPressTooltip = null;
+function ensureTileLongPress(boardRoot) {
+  if (longPressInstalled) return;
+  longPressInstalled = true;
+  function makeTooltipEl() {
+    if (longPressTooltip) return longPressTooltip;
+    longPressTooltip = document.createElement('div');
+    longPressTooltip.id = 'tile-tooltip';
+    longPressTooltip.className = 'tile-tooltip hidden';
+    longPressTooltip.setAttribute('role', 'tooltip');
+    longPressTooltip.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(longPressTooltip);
+    return longPressTooltip;
+  }
+  function hide() {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    if (longPressTooltip) {
+      longPressTooltip.classList.add('hidden');
+      longPressTooltip.setAttribute('aria-hidden', 'true');
+    }
+  }
+  function showFor(tile) {
+    const text = tile.getAttribute('title');
+    if (!text) return;
+    const el = makeTooltipEl();
+    el.textContent = text;
+    el.classList.remove('hidden');
+    el.setAttribute('aria-hidden', 'false');
+    const rect = tile.getBoundingClientRect();
+    // Default: above the tile. Flip below if too close to top.
+    const tipRect = el.getBoundingClientRect();
+    let top = rect.top - tipRect.height - 8;
+    if (top < 8) top = rect.bottom + 8;
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
+    el.style.top = `${top}px`;
+    el.style.left = `${left}px`;
+  }
+  boardRoot.addEventListener('touchstart', (e) => {
+    const tile = e.target && e.target.closest && e.target.closest('.tile');
+    if (!tile) return;
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      showFor(tile);
+    }, 500);
+  }, { passive: true });
+  boardRoot.addEventListener('touchmove', hide, { passive: true });
+  boardRoot.addEventListener('touchend', hide);
+  boardRoot.addEventListener('touchcancel', hide);
+  // Dismiss the popup on any tap outside the board too.
+  document.addEventListener('touchstart', (e) => {
+    if (!longPressTooltip || longPressTooltip.classList.contains('hidden')) return;
+    if (e.target && !e.target.closest('.tile')) hide();
+  }, { passive: true });
 }
 
 export function tileEl(c, r) {
