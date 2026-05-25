@@ -1508,7 +1508,10 @@ function tntRadius() {
 // faster, 2.0 = 50% faster).
 function wildSpeedup() {
   if (!state.inRoguelikeRun) return 1;
-  return 1 + 0.25 * synergyStacks(runArchetypeCounts().wild);
+  let s = 1 + 0.25 * synergyStacks(runArchetypeCounts().wild);
+  // 🔮 Spell Power mutator — Wild auto-fire abilities trigger 2× faster this slot.
+  if (hasMutator('spell-power')) s *= 2;
+  return s;
 }
 
 // Changelog — newest entry first. APP_VERSION auto-derives from the
@@ -1516,6 +1519,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13h',
+    items: [
+      '🔮 NEW MUTATOR — Spell Power: Wild auto-fire abilities (Lightning / Meteor / Bee Storm) trigger 2× faster this slot. Massive payoff for Wild-stacked builds.',
+    ],
+  },
   {
     id: '2026-05-25-13g',
     items: [
