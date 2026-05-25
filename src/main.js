@@ -1578,6 +1578,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13t',
+    items: [
+      '👑 NEW RELIC — Sweet Throne: boss kill grants +1 of EVERY power-up. Bigger restock than Boss Bounty.',
+      '🃏 NEW RELIC — Joker: Crossroads events show 4 options instead of 3. More choice, more strategy.',
+    ],
+  },
+  {
     id: '2026-05-25-13s',
     items: [
       '🎉 NEW MUTATOR — Power Friday: power-up bank cap is doubled this slot. Hoard everything.',
@@ -3228,6 +3235,16 @@ function advanceRoguelikeAfterWin() {
       flashMessage(`❤️ Heart Steal! +${heal} life`, 1100);
       persist();
     }
+    // 👑 Sweet Throne relic — boss kill grants +1 of EVERY power-up.
+    if (hasRelic('sweet-throne')) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+        bank[key] = Math.min(cap, (bank[key] || 0) + 1);
+      }
+      setPowerupCounts(bank);
+      flashMessage('👑 Sweet Throne! +1 of each', 1300);
+    }
     // 💰 Gold Pile upgrade — +5 gems per stack on each boss kill.
     if (upgradeCount('gold-pile') > 0) {
       const bonus = 5 * upgradeCount('gold-pile');
@@ -3326,7 +3343,9 @@ function runCrossroadsEvent(onDone) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const options = shuffled.slice(0, 3);
+  // 🃏 Joker relic — show 4 options instead of 3.
+  const numOptions = hasRelic('joker') ? 4 : 3;
+  const options = shuffled.slice(0, numOptions);
   setTimeout(() => {
     showCrossroadsEvent({
       options,

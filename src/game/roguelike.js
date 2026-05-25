@@ -503,6 +503,10 @@ export const RELICS = [
     desc: 'At 1 life remaining, ALL matches score ×2. High-stakes comeback.' },
   { id: 'sweet-cushion',icon: '🛏', name: 'Sweet Cushion',
     desc: 'Slot starts at 1 life: +5 moves AND +50% Lucky bar. Last-stand cushion.' },
+  { id: 'sweet-throne', icon: '👑', name: 'Sweet Throne',
+    desc: 'On boss kill, gain +1 of EVERY power-up. Bigger restock than Boss Bounty.' },
+  { id: 'joker',        icon: '🃏', name: 'Joker',
+    desc: 'Crossroads events show 4 options instead of 3. More choice, more strategy.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
