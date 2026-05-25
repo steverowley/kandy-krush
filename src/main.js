@@ -1741,6 +1741,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17b',
+    items: [
+      '🚑 INPUT NEVER FREEZES AGAIN — one thrown error inside the swap / hammer / color bomb / +moves / slot intro pipelines used to leave `state.busy = true` forever, bricking input for the rest of the session. Every entry point is now wrapped in try / finally so the busy flag always clears, and a window-level error / unhandledrejection listener resets it as a last-resort backstop.',
+    ],
+  },
+  {
     id: '2026-05-25-17a',
     items: [
       '📱 HEADER FITS THE iPHONE — Settings + Restart shrink to icon-only buttons on phones so the 🏠 home button is no longer clipped off the right edge of a 390px viewport. The big "Sweet Match" title shrinks to text-2xl on mobile too.',
@@ -3679,11 +3685,14 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
     state.busy = true;
     const done = async () => {
       state.busy = true;
-      // Fire any visual slot-start FX (Black Hole, Storm Caller, etc.)
-      // now that the intro is gone so they don't run under the overlay.
-      runDeferredSlotEffects();
-      await cascadePendingMatches();
-      state.busy = false;
+      try {
+        // Fire any visual slot-start FX (Black Hole, Storm Caller, etc.)
+        // now that the intro is gone so they don't run under the overlay.
+        runDeferredSlotEffects();
+        await cascadePendingMatches();
+      } finally {
+        state.busy = false;
+      }
       scheduleHint();
     };
     const p = showLevelIntro(state.level, RUN_LENGTH);
@@ -4602,34 +4611,37 @@ async function useHammer(pos) {
   if (!spendPowerup('hammer')) return;
   state.busy = true;
   state.cascadeAbort = false;
-  cancelHint();
-  sfx.unlockAudio();
-  sfx.playMatch(1, 1);
-  haptics.powerup();
-  speech.speak('Smash!');
-  spawnPopSpecks([pos]);
-  await animatePop([pos]);
-  state.board.clear([pos]);
-  renderBoard(state.board, state);
-  await delay(120);
-  const fallen = gravityWithIngredients();
-  renderBoard(state.board, state, { fallen });
-  await delay(220);
+  try {
+    cancelHint();
+    sfx.unlockAudio();
+    sfx.playMatch(1, 1);
+    haptics.powerup();
+    speech.speak('Smash!');
+    spawnPopSpecks([pos]);
+    await animatePop([pos]);
+    state.board.clear([pos]);
+    renderBoard(state.board, state);
+    await delay(120);
+    const fallen = gravityWithIngredients();
+    renderBoard(state.board, state, { fallen });
+    await delay(220);
 
-  let cascadeResult = findMatches(state.board);
-  let cascadeLevel = 1;
-  while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
-    await processMatchRound(cascadeResult, cascadeLevel, null);
-    cascadeResult = findMatches(state.board);
-    cascadeLevel++;
+    let cascadeResult = findMatches(state.board);
+    let cascadeLevel = 1;
+    while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
+      await processMatchRound(cascadeResult, cascadeLevel, null);
+      cascadeResult = findMatches(state.board);
+      cascadeLevel++;
+    }
+
+    maybeUpdateBest();
+    syncGrumblocks();
+    refreshLevelUI();
+    await ensureMovesAvailable();
+    checkLevelOutcome();
+  } finally {
+    state.busy = false;
   }
-
-  maybeUpdateBest();
-  syncGrumblocks();
-  refreshLevelUI();
-  await ensureMovesAvailable();
-  checkLevelOutcome();
-  state.busy = false;
   if (!state.resolved) scheduleHint();
 }
 
@@ -4650,68 +4662,71 @@ async function useColorBomb(pos) {
   if (!spendPowerup('colorBomb')) return;
   state.busy = true;
   state.cascadeAbort = false;
-  cancelHint();
-  sfx.unlockAudio();
+  try {
+    cancelHint();
+    sfx.unlockAudio();
 
-  // Bomb skips any tile that has jelly OR a lock — power-ups don't
-  // affect special blocks per the design rule.
-  const positions = [];
-  for (let r = 0; r < state.board.rows; r++) {
-    for (let c = 0; c < state.board.cols; c++) {
-      if (state.board.typeAt(c, r) !== targetType) continue;
-      // Belt + suspenders: cherries shouldn't have typeAt === targetType
-      // anyway, but make the filter explicit so future ingredient kinds
-      // can't get swept by Color Bomb.
-      if (state.board.isIngredient(c, r)) continue;
-      const k = `${c},${r}`;
-      if (state.lockMap.get(k) > 0) continue;
-      if (state.jellyMap.get(k) > 0) continue;
-      positions.push({ c, r });
+    // Bomb skips any tile that has jelly OR a lock — power-ups don't
+    // affect special blocks per the design rule.
+    const positions = [];
+    for (let r = 0; r < state.board.rows; r++) {
+      for (let c = 0; c < state.board.cols; c++) {
+        if (state.board.typeAt(c, r) !== targetType) continue;
+        // Belt + suspenders: cherries shouldn't have typeAt === targetType
+        // anyway, but make the filter explicit so future ingredient kinds
+        // can't get swept by Color Bomb.
+        if (state.board.isIngredient(c, r)) continue;
+        const k = `${c},${r}`;
+        if (state.lockMap.get(k) > 0) continue;
+        if (state.jellyMap.get(k) > 0) continue;
+        positions.push({ c, r });
+      }
     }
-  }
-  flashMessage('Color bomb!', 1100);
-  speech.speak('Color bomb!');
-  spawnConfetti(28);
-  sfx.playCascade();
-  sfx.playMatch(positions.length, 2);
-  haptics.powerup();
-  haptics.epic();
-  spawnPopSpecks(positions);
-  await animatePop(positions);
-  state.board.clear(positions);
-  // Intentionally NOT decrementing jelly or locks — bombs skip those.
-  const clearedTypeList = positions.map(() => targetType);
-  recordClearedTypes(clearedTypeList);
-  state.progress.matches += bottomlessMulti();
-  flashObjectiveProgress(0);
-  const earned = consumeLuckyIfReady(
-    applyRunScoreMultiplier(calcScore(positions, 2), 2, positions.length)
-  );
-  state.score += earned;
-  setScore(state.score, { animate: true });
-  maybeTriggerInfiniteScore();
-  spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
-  maybeDropSurprise(positions, 2);
-  achievements.onScore(state.score);
-  await delay(180);
-  const fallen = gravityWithIngredients();
-  renderBoard(state.board, state, { fallen });
-  await delay(260);
+    flashMessage('Color bomb!', 1100);
+    speech.speak('Color bomb!');
+    spawnConfetti(28);
+    sfx.playCascade();
+    sfx.playMatch(positions.length, 2);
+    haptics.powerup();
+    haptics.epic();
+    spawnPopSpecks(positions);
+    await animatePop(positions);
+    state.board.clear(positions);
+    // Intentionally NOT decrementing jelly or locks — bombs skip those.
+    const clearedTypeList = positions.map(() => targetType);
+    recordClearedTypes(clearedTypeList);
+    state.progress.matches += bottomlessMulti();
+    flashObjectiveProgress(0);
+    const earned = consumeLuckyIfReady(
+      applyRunScoreMultiplier(calcScore(positions, 2), 2, positions.length)
+    );
+    state.score += earned;
+    setScore(state.score, { animate: true });
+    maybeTriggerInfiniteScore();
+    spawnFloatingNumber(`+${earned.toLocaleString()}`, positions, { color: '#FF006E' });
+    maybeDropSurprise(positions, 2);
+    achievements.onScore(state.score);
+    await delay(180);
+    const fallen = gravityWithIngredients();
+    renderBoard(state.board, state, { fallen });
+    await delay(260);
 
-  let cascadeResult = findMatches(state.board);
-  let cascadeLevel = 2;
-  while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
-    await processMatchRound(cascadeResult, cascadeLevel, null);
-    cascadeResult = findMatches(state.board);
-    cascadeLevel++;
-  }
+    let cascadeResult = findMatches(state.board);
+    let cascadeLevel = 2;
+    while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
+      await processMatchRound(cascadeResult, cascadeLevel, null);
+      cascadeResult = findMatches(state.board);
+      cascadeLevel++;
+    }
 
-  maybeUpdateBest();
-  syncGrumblocks();
-  refreshLevelUI();
-  await ensureMovesAvailable();
-  checkLevelOutcome();
-  state.busy = false;
+    maybeUpdateBest();
+    syncGrumblocks();
+    refreshLevelUI();
+    await ensureMovesAvailable();
+    checkLevelOutcome();
+  } finally {
+    state.busy = false;
+  }
   if (!state.resolved) scheduleHint();
 }
 
@@ -4755,21 +4770,24 @@ async function useShuffle() {
   sfx.unlockAudio();
   state.busy = true;
   state.cascadeAbort = false;
-  flashMessage('Shuffled!', 1100);
-  speech.speak('Shuffled!');
-  // Same spin-out animation as the auto-shuffle so the manual action
-  // also reads as "the board is being rearranged" rather than a snap.
-  const tiles = document.querySelectorAll('#board .tile');
-  tiles.forEach((t, i) => {
-    t.style.animationDelay = `${i * 6}ms`;
-    t.classList.add('shuffling');
-  });
-  await delay(440);
-  // Preserves specials AND ingredients (cherries). The old destructive
-  // reshuffle was wiping cherries on cherry-objective levels.
-  preservingReshuffle();
-  renderBoard(state.board, state, { intro: true });
-  state.busy = false;
+  try {
+    flashMessage('Shuffled!', 1100);
+    speech.speak('Shuffled!');
+    // Same spin-out animation as the auto-shuffle so the manual action
+    // also reads as "the board is being rearranged" rather than a snap.
+    const tiles = document.querySelectorAll('#board .tile');
+    tiles.forEach((t, i) => {
+      t.style.animationDelay = `${i * 6}ms`;
+      t.classList.add('shuffling');
+    });
+    await delay(440);
+    // Preserves specials AND ingredients (cherries). The old destructive
+    // reshuffle was wiping cherries on cherry-objective levels.
+    preservingReshuffle();
+    renderBoard(state.board, state, { intro: true });
+  } finally {
+    state.busy = false;
+  }
   scheduleHint();
 }
 
@@ -4921,89 +4939,84 @@ async function runComboTurn(combo) {
 async function trySwap(a, b) {
   state.busy = true;
   state.cascadeAbort = false;
-  if (state.board.isIngredient(a.c, a.r) || state.board.isIngredient(b.c, b.r)) {
-    sfx.playInvalid();
-    haptics.invalid();
-    flashMessage('Cherries cannot be swapped', 1000);
-    state.busy = false;
-    scheduleHint();
-    return;
-  }
-  if (isLocked(a.c, a.r) || isLocked(b.c, b.r)) {
-    sfx.playInvalid();
-    haptics.invalid();
-    flashMessage('Locked!', 900);
-    speech.speak('Locked');
-    const lockedPos = isLocked(a.c, a.r) ? a : b;
-    const tile = document.querySelector(
-      `#board .tile[data-c="${lockedPos.c}"][data-r="${lockedPos.r}"]`
-    );
-    if (tile) {
-      tile.classList.add('lock-shake');
-      setTimeout(() => tile.classList.remove('lock-shake'), 420);
+  try {
+    if (state.board.isIngredient(a.c, a.r) || state.board.isIngredient(b.c, b.r)) {
+      sfx.playInvalid();
+      haptics.invalid();
+      flashMessage('Cherries cannot be swapped', 1000);
+      return;
     }
-    state.busy = false;
-    scheduleHint();
-    return;
-  }
-  sfx.playSwap();
-  haptics.swap();
-  await animateSwap(a, b);
-  state.board.swap(a, b);
-  renderBoard(state.board, state);
-
-  const cellAtA = state.board.cell(a.c, a.r);
-  const cellAtB = state.board.cell(b.c, b.r);
-  const combo = detectCombo(cellAtA, cellAtB, a, b);
-
-  if (combo) {
-    consumeMove();
-    await runComboTurn(combo);
-    let cascadeResult = findMatches(state.board);
-    let cascadeLevel = 2;
-    while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
-      await processMatchRound(cascadeResult, cascadeLevel, null);
-      cascadeResult = findMatches(state.board);
-      cascadeLevel++;
+    if (isLocked(a.c, a.r) || isLocked(b.c, b.r)) {
+      sfx.playInvalid();
+      haptics.invalid();
+      flashMessage('Locked!', 900);
+      speech.speak('Locked');
+      const lockedPos = isLocked(a.c, a.r) ? a : b;
+      const tile = document.querySelector(
+        `#board .tile[data-c="${lockedPos.c}"][data-r="${lockedPos.r}"]`
+      );
+      if (tile) {
+        tile.classList.add('lock-shake');
+        setTimeout(() => tile.classList.remove('lock-shake'), 420);
+      }
+      return;
     }
-    maybeUpdateBest();
-    refreshLevelUI();
-    await ensureMovesAvailable();
-    checkLevelOutcome();
-    state.busy = false;
-    if (!state.resolved) scheduleHint();
-    return;
-  }
-
-  let result = findMatches(state.board);
-  if (result.positions.length === 0) {
-    sfx.playInvalid();
-    haptics.invalid();
+    sfx.playSwap();
+    haptics.swap();
     await animateSwap(a, b);
     state.board.swap(a, b);
     renderBoard(state.board, state);
-    flashMessage('Try another', 900);
+
+    const cellAtA = state.board.cell(a.c, a.r);
+    const cellAtB = state.board.cell(b.c, b.r);
+    const combo = detectCombo(cellAtA, cellAtB, a, b);
+
+    if (combo) {
+      consumeMove();
+      await runComboTurn(combo);
+      let cascadeResult = findMatches(state.board);
+      let cascadeLevel = 2;
+      while (cascadeResult.positions.length > 0 && !state.cascadeAbort) {
+        await processMatchRound(cascadeResult, cascadeLevel, null);
+        cascadeResult = findMatches(state.board);
+        cascadeLevel++;
+      }
+      maybeUpdateBest();
+      refreshLevelUI();
+      await ensureMovesAvailable();
+      checkLevelOutcome();
+      return;
+    }
+
+    let result = findMatches(state.board);
+    if (result.positions.length === 0) {
+      sfx.playInvalid();
+      haptics.invalid();
+      await animateSwap(a, b);
+      state.board.swap(a, b);
+      renderBoard(state.board, state);
+      flashMessage('Try another', 900);
+      return;
+    }
+
+    consumeMove();
+    let cascadeLevel = 1;
+    let swapTarget = b;
+    while (result.positions.length > 0 && !state.cascadeAbort) {
+      await processMatchRound(result, cascadeLevel, swapTarget);
+      result = findMatches(state.board);
+      cascadeLevel++;
+      swapTarget = null;
+    }
+
+    maybeUpdateBest();
+    syncGrumblocks();
+    refreshLevelUI();
+    await ensureMovesAvailable();
+    checkLevelOutcome();
+  } finally {
     state.busy = false;
-    scheduleHint();
-    return;
   }
-
-  consumeMove();
-  let cascadeLevel = 1;
-  let swapTarget = b;
-  while (result.positions.length > 0 && !state.cascadeAbort) {
-    await processMatchRound(result, cascadeLevel, swapTarget);
-    result = findMatches(state.board);
-    cascadeLevel++;
-    swapTarget = null;
-  }
-
-  maybeUpdateBest();
-  syncGrumblocks();
-  refreshLevelUI();
-  await ensureMovesAvailable();
-  checkLevelOutcome();
-  state.busy = false;
   if (!state.resolved) scheduleHint();
 }
 
@@ -5555,8 +5568,11 @@ function startLevel(levelId, { announce = true } = {}) {
     const done = async () => {
       // Safety net: eat any stale matches on the freshly-loaded board.
       state.busy = true;
-      await cascadePendingMatches();
-      state.busy = false;
+      try {
+        await cascadePendingMatches();
+      } finally {
+        state.busy = false;
+      }
       scheduleHint();
     };
     const p = showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
@@ -5775,6 +5791,22 @@ async function onSwipe(origin, target) {
 }
 
 attachInput({ onTap, onSwap: onSwipe });
+
+// 🚑 Recovery: if an unhandled error escapes any async board pipeline
+// (swap, cascade, hammer, color bomb, plus moves, slot intro), the
+// `state.busy = false` cleanup at the bottom of that function never
+// runs and the board is frozen for the rest of the session. These
+// window-level handlers reset `state.busy` so input recovers — paired
+// with the per-function try/finally below for belt-and-suspenders.
+function recoverFromStuckBusy(label, detail) {
+  if (state.busy) {
+    state.busy = false;
+    // eslint-disable-next-line no-console
+    console.error(`[recover] state.busy reset after ${label}`, detail);
+  }
+}
+window.addEventListener('error', (e) => recoverFromStuckBusy('window error', e.error || e.message));
+window.addEventListener('unhandledrejection', (e) => recoverFromStuckBusy('unhandled rejection', e.reason));
 
 document.addEventListener(
   'pointerdown',
