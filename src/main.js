@@ -1366,6 +1366,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11b',
+    items: [
+      '🥷👑 TWO MORE HYBRID CLASSES — class pool grows from 12 to 14.',
+      '🥷 Ninja (Sustain) — First Swap Free + Bomb Maker. Silent and explosive.',
+      '👑 Royal (Scorer) — Score Boost + Lucky Strike. Born of wealth and luck.',
+    ],
+  },
+  {
     id: '2026-05-25-11a',
     items: [
       '🧙 NEW STARTING CLASS — Wizard! First HYBRID class: starts with TWO upgrades from different archetypes — Combo Streak (Scorer) + Lightning (Wild).',

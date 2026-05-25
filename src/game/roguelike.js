@@ -329,6 +329,13 @@ export const CLASSES = [
   { id: 'wizard',       icon: '🧙', name: 'Wizard',       archetype: 'wild',
     desc: 'Hybrid start: Combo Streak (Scorer) + Lightning (Wild). The mage life.',
     awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['combo-streak', 'lightning'] },
+  // Phase 11b — more hybrids
+  { id: 'ninja',        icon: '🥷', name: 'Ninja',        archetype: 'sustain',
+    desc: 'Hybrid start: First Swap Free (Sustain) + Bomb Maker (Bomber). Silent and explosive.',
+    awaken: 'Awakens at 2+ 🛡 Sustain upgrades: hammers cost no power-up on the first use per slot.', start: ['first-free', 'bomb-maker'] },
+  { id: 'royal',        icon: '👑', name: 'Royal',        archetype: 'scorer',
+    desc: 'Hybrid start: Score Boost (Scorer) + Lucky Strike (Lucky). Born of wealth and luck.',
+    awaken: 'Awakens at 2+ 🎯 Scorer upgrades: the FIRST match of every slot scores 5×.', start: ['score+25', 'lucky-strike'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
