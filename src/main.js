@@ -832,6 +832,18 @@ async function triggerCrazyEffect(pos, kind) {
         flashMessage(`🎁 +1 ${pickP}!`, 900);
       }
     }
+    // 💣 Bomb Squad relic — TNT pop also grants a random power-up.
+    if (hasRelic('bomb-squad')) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pickP = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pickP] || 0) < cap) {
+        bank[pickP] = (bank[pickP] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`💣 Bomb Squad! +1 ${pickP}`, 900);
+      }
+    }
     speech.speak('Boom!');
     sfx.playMatch(positions.length, 2);
     haptics.epic();
@@ -1263,6 +1275,17 @@ function applyRunUpgradesOnSlotStart() {
   }
   // 🦴 Iron Tongue relic — at slot start, one random lock loses one level.
   if (hasRelic('iron-tongue')) setTimeout(() => ironTongueBreak(), 1400);
+  // ❄️ Frosty Crown relic — slot start: every lock loses 1 level.
+  if (hasRelic('frosty-crown') && state.lockMap && state.lockMap.size > 0) {
+    const toDelete = [];
+    for (const [k, v] of state.lockMap) {
+      if (v <= 1) toDelete.push(k);
+      else state.lockMap.set(k, v - 1);
+    }
+    for (const k of toDelete) state.lockMap.delete(k);
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('❄️ Frosty Crown: locks weakened!', 1200);
+  }
 }
 
 function maybeFireRelicsOnSwap() {
@@ -1463,6 +1486,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13c',
+    items: [
+      '💣 NEW RELIC — Bomb Squad: when TNT pops, drop a random power-up. Stacks with Bombardier awakening.',
+      '❄️ NEW RELIC — Frosty Crown: slot start, every lock loses 1 level. Lock-heavy boards open up faster.',
+    ],
+  },
   {
     id: '2026-05-25-13b',
     items: [
