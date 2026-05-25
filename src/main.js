@@ -1244,6 +1244,18 @@ function applyRunUpgradesOnSlotStart() {
       for (let i = 0; i < upgradeCount('storm-caller'); i++) spawnCrazyTile('bolt');
     }, 1300);
   }
+  // 🎴 Wild Card upgrade — slot start: spawn 1 random crazy tile per stack.
+  if (upgradeCount('wild-card') > 0) {
+    setTimeout(() => {
+      for (let i = 0; i < upgradeCount('wild-card'); i++) spawnCrazyTile();
+    }, 1350);
+  }
+  // 🐝 Bee Tonic upgrade — slot start: Lucky bar +20% per stack.
+  if (upgradeCount('bee-tonic') > 0) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20 * upgradeCount('bee-tonic'));
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
   // 🦴 Iron Tongue relic — at slot start, one random lock loses one level.
   if (hasRelic('iron-tongue')) setTimeout(() => ironTongueBreak(), 1400);
 }
@@ -1435,6 +1447,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12w',
+    items: [
+      '🎴 NEW UPGRADE — Wild Card (Wild): slot start spawns 1 random crazy tile per stack. Always begin with board chaos.',
+      '🐝 NEW UPGRADE — Bee Tonic (Lucky): slot start adds +20% Lucky bar per stack. Stacks with Lucky Soul and Lucky Day mutator.',
+    ],
+  },
   {
     id: '2026-05-25-12v',
     items: [
