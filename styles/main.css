@@ -738,10 +738,60 @@ body.theme-hc #upgrade-panel {
   color: #fff;
   border-color: #fff;
 }
-body.theme-hc .upgrade-card {
-  background: #1f2937;
-  color: #fff;
-  border-color: #fff;
+body.theme-hc .upgrade-card,
+body.theme-hc .class-card,
+body.theme-hc .relic-card {
+  background: #1f2937 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+/* Inline `style="color:..."` archetype tags inside cards were getting
+   painted in pastels that fail AA on the HC #1f2937 panel. Force them
+   to the same accent yellow the rest of HC uses. */
+body.theme-hc .upgrade-card [style*="color"],
+body.theme-hc .class-card [style*="color"],
+body.theme-hc .relic-card [style*="color"] {
+  color: #FFD60A !important;
+}
+body.theme-hc .upgrade-card .text-gray-700,
+body.theme-hc .upgrade-card .text-gray-800,
+body.theme-hc .upgrade-card .text-gray-900,
+body.theme-hc .class-card .text-gray-700,
+body.theme-hc .class-card .text-gray-800,
+body.theme-hc .class-card .text-gray-900,
+body.theme-hc .relic-card .text-gray-700,
+body.theme-hc .relic-card .text-gray-800,
+body.theme-hc .relic-card .text-gray-900 {
+  color: #fff !important;
+}
+/* Disabled-row gray fades inside the HC panel still need to read. */
+body.theme-hc .upgrade-card.bg-gray-200,
+body.theme-hc .upgrade-card.bg-gray-300 {
+  background: #374151 !important;
+  color: #d4d4d4 !important;
+}
+
+/* Crossroads + shop overlays: same dark-on-light flip. */
+body.theme-hc #crossroads-panel,
+body.theme-hc #shop-panel,
+body.theme-hc #relic-panel,
+body.theme-hc #class-picker-panel,
+body.theme-hc #roguelike-intro-panel {
+  background: #111 !important;
+  color: #fff !important;
+  border-color: #FFD60A !important;
+}
+body.theme-hc #crossroads-panel h2,
+body.theme-hc #shop-panel h2,
+body.theme-hc #relic-panel h2,
+body.theme-hc #class-picker-panel h2,
+body.theme-hc #roguelike-intro-panel h2,
+body.theme-hc #crossroads-panel p,
+body.theme-hc #shop-panel p,
+body.theme-hc #relic-panel p,
+body.theme-hc #class-picker-panel p,
+body.theme-hc #roguelike-intro-panel p {
+  color: #fff !important;
 }
 
 /* Combo meter — sits over the score, pops on each chain step */

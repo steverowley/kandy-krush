@@ -1,31 +1,70 @@
 {
-  "name": "Sweet Match",
+  "id": "sweet-match.app",
+  "name": "Sweet Match — Roguelike Match-3",
   "short_name": "Sweet Match",
-  "description": "A big, friendly match-3 game.",
+  "description": "A roguelike match-3. Pick a class, draft upgrades and relics, fight 10 bosses, chase the infinite combo.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "portrait",
   "background_color": "#fffbeb",
   "theme_color": "#fffbeb",
+  "categories": ["games", "entertainment", "puzzle"],
+  "lang": "en",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "assets/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Roguelike Run",
+      "short_name": "Roguelike",
+      "description": "Jump straight into a roguelike run",
+      "url": "./?action=roguelike",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Levels Mode",
+      "short_name": "Levels",
+      "description": "Play the structured level campaign",
+      "url": "./?action=levels",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Free Play",
+      "short_name": "Free Play",
+      "description": "Endless puzzle mode, no objective",
+      "url": "./?action=free",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
