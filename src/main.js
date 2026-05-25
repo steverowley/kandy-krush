@@ -73,6 +73,7 @@ import {
   showBossDefeatedBanner,
   showRunSummary,
   showRoguelikeIntro,
+  showShop,
   flashMutatorActivation,
   showSkillTree,
 } from './ui/render.js';
@@ -1172,6 +1173,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9q',
+    items: [
+      '🛒 MID-RUN MERCHANT! After slots 13 and 53, a shop blocks the path. Spend your 💎 on per-run boosters before continuing.',
+      'Three items: ❤️ +1 Life (15💎) · 🎁 +1 of every power-up (8💎) · 👑 Random Relic (20💎). Buy any/all you can afford then Continue.',
+      'Real Slay-the-Spire-style economy — save gems for the shop, or spend them on permanent skill-tree upgrades. Your choice.',
+    ],
+  },
+  {
     id: '2026-05-25-9p',
     items: [
       '📋 Run inventory now LISTS each upgrade by name (Score Boost ×2, Bomb Maker, Lightning, etc.) below the archetype tallies. Hover for description.',
@@ -2008,11 +2017,67 @@ function advanceRoguelikeAfterWin() {
       });
     }, 1500);
   } else {
+    // Mid-run merchant on slots 13 and 53 (between bosses, not on
+    // mutator slots, not adjacent to a boss). Player can spend gems
+    // on per-run boosters before the upgrade picker appears.
+    const SHOP_AFTER_SLOTS = new Set([13, 53]);
+    if (SHOP_AFTER_SLOTS.has(justFinished)) {
+      runMidRunShop(() => {
+        let n = hasMeta('wider-choice') ? 4 : 3;
+        if (isClass('wanderer') && classAwakened()) n += 1;
+        showUpgradeChoicesForSlot(n, true);
+      });
+      return;
+    }
     let n = hasMeta('wider-choice') ? 4 : 3;
     // 🎲 Wanderer AWAKENING — +1 upgrade card to choose from.
     if (isClass('wanderer') && classAwakened()) n += 1;
     showUpgradeChoicesForSlot(n, true);
   }
+}
+
+function runMidRunShop(onDone) {
+  const items = [
+    { id: 'shop-life', icon: '❤️', name: '+1 Life', desc: 'Gain one extra life for this run.', cost: 15 },
+    { id: 'shop-pups', icon: '🎁', name: '+1 of every power-up', desc: 'Restock your bank.', cost: 8 },
+    { id: 'shop-relic', icon: '👑', name: 'Random Relic', desc: 'Add a random relic to your run.', cost: 20 },
+  ];
+  flashMessage('🛒 A merchant blocks the path!', 1400);
+  speech.speak('A merchant blocks the path.');
+  setTimeout(() => {
+    showShop({
+      items,
+      getGems: () => state.roguelike.gems || 0,
+      onBuy: (it) => {
+        if ((state.roguelike.gems || 0) < it.cost) return false;
+        state.roguelike.gems -= it.cost;
+        if (it.id === 'shop-life') {
+          state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
+          flashMessage('❤️ +1 Life', 1000);
+        } else if (it.id === 'shop-pups') {
+          const bank = powerupBank();
+          const cap = effectivePowerupCap();
+          for (const k of ['hammer','shuffle','colorBomb','plusMoves']) {
+            bank[k] = Math.min(cap, (bank[k] || 0) + 1);
+          }
+          setPowerupCounts(bank);
+          flashMessage('🎁 Bank topped up', 1000);
+        } else if (it.id === 'shop-relic') {
+          const choices = pickRelicChoices(state.runRelics || [], 1);
+          if (choices.length > 0) {
+            const r = choices[0];
+            state.runRelics = state.runRelics || [];
+            state.runRelics.push(r.id);
+            flashMessage(`👑 ${r.icon} ${r.name}!`, 1400);
+            refreshRunHud();
+          }
+        }
+        persist();
+        return true;
+      },
+      onContinue: () => { if (onDone) onDone(); },
+    });
+  }, 800);
 }
 
 function endRoguelikeRun() {
