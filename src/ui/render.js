@@ -396,7 +396,7 @@ export function setLevelUI({ level, movesRemaining, current, target, mode }) {
     if (mode === 'roguelike') {
       const slot = level.runSlot || level.id;
       const bossTag = level.isBoss ? ' · BOSS' : '';
-      nameEl.textContent = `Slot ${slot} of 30${bossTag} — ${level.name}`;
+      nameEl.textContent = `Slot ${slot} of 100${bossTag} — ${level.name}`;
     } else {
       nameEl.textContent = `Level ${level.id} — ${level.name}`;
     }

@@ -1196,6 +1196,7 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (!state.inRoguelikeRun) return amount;
   let m = 1;
   m *= Math.pow(1.25, upgradeCount('score+25'));
+  m *= Math.pow(1.05, upgradeCount('greedy-brain'));
   if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
   if (cascadeLevel >= 3) m *= Math.pow(2, upgradeCount('combo-streak'));
   if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
@@ -1263,6 +1264,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10k',
+    items: [
+      '🧠 NEW UPGRADE — Greedy Brain (Scorer). All scores +5% per stack. Mild but always-on multiplier — great filler upgrade for Scorer builds.',
+      '🐛 Fix: roguelike slot header read "Slot X of 30" left over from the old run length. Now correctly shows "Slot X of 100".',
+      'Upgrade pool now 29.',
+    ],
+  },
   {
     id: '2026-05-25-10j',
     items: [
