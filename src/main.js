@@ -1301,6 +1301,12 @@ function applyRunUpgradesOnSlotStart() {
   }
   // 🦴 Iron Tongue relic — at slot start, one random lock loses one level.
   if (hasRelic('iron-tongue')) setTimeout(() => ironTongueBreak(), 1400);
+  // 🫖 Tea Time relic — slot start: Lucky bar +30%.
+  if (hasRelic('tea-time')) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 30);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
   // ❄️ Frosty Crown relic — slot start: every lock loses 1 level.
   if (hasRelic('frosty-crown') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1519,6 +1525,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13i',
+    items: [
+      '🌸 NEW RELIC — Cherry Wand: each special candy created fills Lucky bar by +25%. Special-rich builds now feed Lucky-MODE bursts.',
+      '🫖 NEW RELIC — Tea Time: slot start Lucky bar +30%. Gentle opening sip.',
+    ],
+  },
   {
     id: '2026-05-25-13h',
     items: [
@@ -4372,6 +4385,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (upgradeCount('prism-maker') > 0) {
       const chance = Math.min(0.6, 0.15 * upgradeCount('prism-maker') * specialsCreated.length);
       if (Math.random() < chance) spawnCrazyTile('prism');
+    }
+    // 🌸 Cherry Wand relic — each special spawned also fills Lucky bar +25%.
+    if (hasRelic('cherry-wand')) {
+      const fill = 25 * specialsCreated.length;
+      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + fill);
+      if (state.luckyCharge >= 100) state.luckyReady = true;
+      setLuckyCharge(state.luckyCharge, state.luckyReady);
     }
     // 🧁 Confectionery relic — each special spawned also drops a random power-up.
     if (hasRelic('confectionery')) {
