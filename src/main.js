@@ -1249,6 +1249,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10g',
+    items: [
+      '🛒 MORE MERCHANTS — the mid-run merchant now also appears after slots 33 and 73 (in addition to 13 and 53). Four shop events per 100-slot run.',
+      'More chances to convert your gem hoard into in-run boosters between bosses.',
+    ],
+  },
+  {
     id: '2026-05-25-10f',
     items: [
       '🐢 NEW MUTATOR — Slow Down. The Eater skips this slot entirely. Pure breathing room in the late-game.',
@@ -2222,7 +2229,7 @@ function advanceRoguelikeAfterWin() {
     // Mid-run merchant on slots 13 and 53 (between bosses, not on
     // mutator slots, not adjacent to a boss). Player can spend gems
     // on per-run boosters before the upgrade picker appears.
-    const SHOP_AFTER_SLOTS = new Set([13, 53]);
+    const SHOP_AFTER_SLOTS = new Set([13, 33, 53, 73]);
     if (SHOP_AFTER_SLOTS.has(justFinished)) {
       runMidRunShop(() => {
         let n = hasMeta('wider-choice') ? 4 : 3;
