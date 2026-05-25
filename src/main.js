@@ -1903,6 +1903,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17k',
+    items: [
+      '👑 BOSSES HAVE KITS NOW — each of the 10 bosses ticks an actual mechanic instead of being a reskinned regular slot. Per-boss tooltips telegraph what to expect.',
+      '🟦 BOSS 1 Jelly Guardian regenerates 1 jelly every 4 moves. 🔒 BOSS 2 Lock Tyrant adds a fresh lock every 5 moves. 👑 BOSS 3 Sweet King alternates jelly + lock spawns every 4 moves. 🐌 BOSS 4 Chocolate Snail regenerates jelly every 5 moves. 🪦 BOSS 5 Padlock Pharaoh HARDENS a random lvl-1 lock to lvl-2 every 4 moves. 🐍 BOSS 6 Cherry Hydra has a 50% chance to spawn a fresh cherry at row 0 every time you drop one. 👻 BOSS 7 Echo Wraith HEALS — every non-purple tile cleared reduces your purple progress by 1. 🕸 BOSS 8 Lattice Queen locks a random jelly tile every 6 moves. 🧁 BOSS 9 Confectioner spawns a distraction cherry every 4 moves. 🐙 BOSS 10 Candy Kraken picks a random mechanic every 3 moves.',
+    ],
+  },
+  {
     id: '2026-05-25-17j',
     items: [
       '🌪 WILD ARCHETYPE NOW SCORES — Lightning, Bee Storm, Meteor, Hungry Snake, and Black Hole abilities used to clear tiles for free (no score, only cascade matches below them scored). Wild builds were mathematically punished: a pure Stormbringer / Comet / Crazy Cat run produced more chaos than points. Now every direct ability-clear awards score through the same calcScore + applyRunScoreMultiplier pipeline that regular matches use — Wild becomes a frequency-based scoring archetype distinct from Scorer\'s multiplier-stacking strategy.',
@@ -4649,12 +4656,29 @@ function recordClearedTypes(toClearWithTypes) {
   const trackedType = obj && obj.kind === 'clearType' ? obj.type : null;
   // 🍴 Bottomless Stomach relic — types count double toward clearType.
   const multi = bottomlessMulti();
+  // 👻 Echo Wraith (boss-7): non-matching colors HEAL the wraith —
+  // each non-purple tile cleared reduces the purple progress count
+  // by 1 (min 0). Punishes off-color matches, makes it about discipline.
+  const mech = state.level?.mechanic;
+  const wraith = state.level?.isBoss && mech && mech.kind === 'wraith-heal' ? mech.healColor : null;
+  let healCount = 0;
   for (const t of toClearWithTypes) {
     if (t == null) continue;
     state.progress.type[t] = (state.progress.type[t] || 0) + multi;
     if (t === trackedType) objectiveDelta += multi;
+    if (wraith != null && t !== wraith) healCount++;
+  }
+  if (wraith != null && healCount > 0 && state.progress.type[wraith]) {
+    const before = state.progress.type[wraith];
+    state.progress.type[wraith] = Math.max(0, before - healCount);
+    const actual = before - state.progress.type[wraith];
+    if (actual > 0) {
+      objectiveDelta -= actual;
+      flashMessage(`👻 Wraith heals! −${actual} purple`, 1100);
+    }
   }
   if (objectiveDelta > 0) flashObjectiveDelta(`+${objectiveDelta}`);
+  else if (objectiveDelta < 0) flashObjectiveDelta(`${objectiveDelta}`);
 }
 
 function flashObjectiveProgress(specialsCreatedCount) {
@@ -4666,11 +4690,141 @@ function flashObjectiveProgress(specialsCreatedCount) {
   }
 }
 
+// 👑 Boss-mechanic dispatcher. Each boss in roguelike.js carries a
+// `mechanic` config; this function runs once per consumeMove and
+// dispatches by kind. Bosses without `mechanic` are no-ops (pre-B4
+// behavior).
+let _bossMechanicTick = 0;
+function tickBossMechanic() {
+  const m = state.level?.mechanic;
+  if (!m || !state.level?.isBoss) {
+    _bossMechanicTick = 0;
+    return;
+  }
+  _bossMechanicTick++;
+  switch (m.kind) {
+    case 'jelly-regen':
+      if (_bossMechanicTick % m.everyN === 0) bossAddJelly();
+      break;
+    case 'lock-spawn':
+      if (_bossMechanicTick % m.everyN === 0) bossAddLock();
+      break;
+    case 'alternate-jelly-lock':
+      if (_bossMechanicTick % m.everyN === 0) {
+        if (_bossMechanicTick / m.everyN % 2 === 0) bossAddLock();
+        else bossAddJelly();
+      }
+      break;
+    case 'harden-lock':
+      if (_bossMechanicTick % m.everyN === 0) bossHardenLock();
+      break;
+    case 'lock-jelly':
+      if (_bossMechanicTick % m.everyN === 0) bossLockJelly();
+      break;
+    case 'spawn-cherry':
+      if (_bossMechanicTick % m.everyN === 0) bossSpawnCherry();
+      break;
+    case 'kraken-chaos':
+      if (_bossMechanicTick % m.everyN === 0) {
+        const choices = [bossAddJelly, bossAddLock, bossHardenLock, bossLockJelly, bossSpawnCherry];
+        choices[Math.floor(Math.random() * choices.length)]();
+      }
+      break;
+    // cherry-regrow + wraith-heal are event-driven, not tick-based.
+  }
+}
+
+function _bossRandomCell(filter) {
+  const cands = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      if (filter && !filter(c, r)) continue;
+      cands.push({ c, r });
+    }
+  }
+  if (cands.length === 0) return null;
+  return cands[Math.floor(Math.random() * cands.length)];
+}
+
+function bossAddJelly() {
+  const pick = _bossRandomCell((c, r) => {
+    if (state.board.isIngredient(c, r)) return false;
+    if ((state.jellyMap.get(`${c},${r}`) || 0) >= 2) return false; // already maxed
+    return true;
+  });
+  if (!pick) return;
+  const k = `${pick.c},${pick.r}`;
+  state.jellyMap.set(k, (state.jellyMap.get(k) || 0) + 1);
+  flashMessage('🟦 Jelly regenerates!', 1000);
+  haptics.invalid();
+  renderBoard(state.board, state);
+  refreshLevelUI();
+}
+
+function bossAddLock() {
+  const pick = _bossRandomCell((c, r) => {
+    if (state.board.isIngredient(c, r)) return false;
+    if ((state.lockMap.get(`${c},${r}`) || 0) >= 2) return false;
+    return true;
+  });
+  if (!pick) return;
+  const k = `${pick.c},${pick.r}`;
+  state.lockMap.set(k, (state.lockMap.get(k) || 0) + 1);
+  flashMessage('🔒 New lock!', 1000);
+  haptics.invalid();
+  renderBoard(state.board, state);
+}
+
+function bossHardenLock() {
+  // Find a lvl-1 lock and bump to lvl 2. If none, spawn a fresh lvl-1.
+  const lvl1Keys = [];
+  for (const [k, v] of state.lockMap.entries()) {
+    if (v === 1) lvl1Keys.push(k);
+  }
+  if (lvl1Keys.length > 0) {
+    const k = lvl1Keys[Math.floor(Math.random() * lvl1Keys.length)];
+    state.lockMap.set(k, 2);
+    flashMessage('🔒🔒 Lock hardens!', 1100);
+    haptics.invalid();
+    renderBoard(state.board, state);
+  } else {
+    bossAddLock();
+  }
+}
+
+function bossLockJelly() {
+  // Add a lock to a random jelly tile so the jelly can't be matched.
+  const jellyKeys = [...state.jellyMap.keys()].filter((k) => (state.lockMap.get(k) || 0) === 0);
+  if (jellyKeys.length === 0) { bossAddLock(); return; }
+  const k = jellyKeys[Math.floor(Math.random() * jellyKeys.length)];
+  state.lockMap.set(k, 1);
+  flashMessage('🟦🔒 Jelly locked!', 1100);
+  haptics.invalid();
+  renderBoard(state.board, state);
+}
+
+function bossSpawnCherry() {
+  // Drop a fresh cherry at a random column in row 0 (push existing
+  // tile down). Only works if there's room (row 0 has at least one
+  // non-ingredient cell).
+  const cols = [];
+  for (let c = 0; c < state.board.cols; c++) {
+    if (!state.board.isIngredient(c, 0)) cols.push(c);
+  }
+  if (cols.length === 0) return;
+  const c = cols[Math.floor(Math.random() * cols.length)];
+  state.board.set(c, 0, { type: 0, ingredient: true });
+  flashMessage('🍒 Fresh cherry spawned!', 1100);
+  haptics.invalid();
+  renderBoard(state.board, state);
+}
+
 function consumeMove() {
   bumpLuckyCharge();
   maybeFireEater();
   maybeFireRelicsOnSwap();
   maybeMoveGrumblocks();
+  tickBossMechanic();
   // Free Play has unlimited moves. Levels and Roguelike both count down.
   if (state.settings.mode === 'free' || !state.level) return;
   // 🌑 Eclipse mutator — only every OTHER swap consumes a move.
@@ -5811,6 +5965,16 @@ function exitIngredients() {
   const obj = state.level && state.level.objective;
   if (obj && obj.kind === 'dropIngredients') {
     flashObjectiveDelta(`+${exited.length}`);
+  }
+  // 🐍 Cherry Hydra (boss-6): each dropped cherry has a chance to
+  // regrow a fresh cherry at row 0. The boss config carries the chance.
+  const mech = state.level?.mechanic;
+  if (mech && mech.kind === 'cherry-regrow' && state.level?.isBoss) {
+    for (let i = 0; i < exited.length; i++) {
+      if (Math.random() < (mech.chance || 0.5)) {
+        bossSpawnCherry();
+      }
+    }
   }
   speech.speak(exited.length === 1 ? 'Dropped!' : `Dropped ${exited.length}!`);
   haptics.drop();
