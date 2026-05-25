@@ -260,6 +260,7 @@ export const UPGRADES = [
   { id: 'frost',       category: 'synergy',    archetype: 'sustain', name: 'Frost',              desc: 'Every 7 swaps, every lock on the board loses 1 level per stack — auto-cracks locks over time.' },
   { id: 'hammer-rain', category: 'consumable', archetype: 'sustain', name: 'Hammer Shower',      desc: 'Start of each slot, gain +2 Hammers per stack to your bank.' },
   { id: 'lucky-magnet',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Magnet',       desc: 'Each match has a 5% chance per stack to instantly fill the Lucky bar (+100).' },
+  { id: 'caretaker',   category: 'buff',       archetype: 'sustain', name: 'Caretaker',          desc: 'Power-up bank cap +1 per stack. Stacks with Bigger Bank meta and Sustain synergy.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
