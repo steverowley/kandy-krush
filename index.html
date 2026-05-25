@@ -17,7 +17,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
 </head>
-<body class="size-medium min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
+<body class="size-medium start-screen-active min-h-screen bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
   <header class="w-full max-w-3xl flex items-center justify-between gap-3 flex-wrap">
     <div class="flex items-center gap-3 flex-wrap">
       <h1 class="text-4xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
@@ -310,10 +310,10 @@
     <div id="upgrade-active-list" class="text-sm sm:text-base text-gray-700 text-center"></div>
   </div>
 
-  <div id="changelog-overlay" class="hidden fixed inset-0 bg-black/55 z-[60]" aria-hidden="true"></div>
+  <div id="changelog-overlay" class="hidden fixed inset-0 bg-black/55 z-[110]" aria-hidden="true"></div>
   <div
     id="changelog-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[70] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-3 max-h-[88vh] overflow-y-auto"
+    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[115] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-3 max-h-[88vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="changelog-title"
@@ -328,29 +328,36 @@
     >Got it!</button>
   </div>
 
-  <div id="start-menu-overlay" class="hidden fixed inset-0 bg-black/90 z-[90]" aria-hidden="true"></div>
-  <div
-    id="start-menu-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[95] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center gap-3 text-center"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="start-menu-title"
+  <!-- Full-page start screen. Not a modal — it replaces the entire game
+       UI (header / board / HUD / etc.) via the body.start-screen-active
+       CSS class, so the player only sees this until they pick a mode. -->
+  <section
+    id="start-screen"
+    class="fixed inset-0 z-[100] overflow-y-auto flex flex-col items-center justify-center px-4 py-8"
+    role="region"
+    aria-labelledby="start-screen-title"
   >
-    <h2 id="start-menu-title" class="text-4xl font-bold">Sweet Match</h2>
-    <p id="start-menu-subtitle" class="text-base text-gray-700 italic"></p>
-    <button id="start-menu-roguelike" type="button" class="w-full text-2xl font-bold bg-pink-400 hover:bg-pink-300 active:bg-pink-500 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-600 mt-2">⚔ Roguelike Run</button>
-    <button id="start-menu-levels" type="button" class="w-full text-2xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-600">🎯 Levels Mode</button>
-    <button id="start-menu-free" type="button" class="w-full text-2xl font-bold bg-blue-300 hover:bg-blue-200 active:bg-blue-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-600">🎨 Free Play</button>
-    <div class="flex w-full gap-2 mt-1">
-      <button id="start-menu-settings" type="button" class="flex-1 text-base font-bold bg-gray-100 hover:bg-gray-200 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">⚙ Settings</button>
-      <button id="start-menu-help" type="button" class="flex-1 text-base font-bold bg-gray-100 hover:bg-gray-200 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">📖 What's New</button>
+    <div class="w-full max-w-md flex flex-col items-center gap-4 text-center">
+      <div class="text-7xl sm:text-8xl select-none" aria-hidden="true">🍬</div>
+      <h1 id="start-screen-title" class="text-5xl sm:text-6xl font-bold tracking-tight">Sweet Match</h1>
+      <p class="text-lg sm:text-xl text-gray-700">Match candies. Pick your adventure.</p>
+      <p id="start-screen-subtitle" class="text-base sm:text-lg text-pink-700 italic min-h-[1.5em]"></p>
+      <div class="w-full flex flex-col gap-3 mt-2">
+        <button id="start-menu-roguelike" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-pink-400 hover:bg-pink-300 active:bg-pink-500 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-600">⚔ Roguelike Run</button>
+        <button id="start-menu-levels" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-600">🎯 Levels Mode</button>
+        <button id="start-menu-free" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-blue-300 hover:bg-blue-200 active:bg-blue-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-600">🎨 Free Play</button>
+      </div>
+      <div class="flex w-full gap-2 mt-3">
+        <button id="start-menu-settings" type="button" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">⚙ Settings</button>
+        <button id="start-menu-help" type="button" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">📖 What's New</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div id="welcome-overlay" class="hidden fixed inset-0 bg-black/60 z-[60]" aria-hidden="true"></div>
+  <div id="welcome-overlay" class="hidden fixed inset-0 bg-black/60 z-[110]" aria-hidden="true"></div>
   <div
     id="welcome-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[70] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center gap-4 text-center"
+    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[115] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center gap-4 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="welcome-title"
@@ -417,10 +424,10 @@
       <button id="lf-replay" type="button" class="flex-1 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 border-[3px] border-black rounded-2xl px-4 py-3">Try again</button>
     </div>
   </div>
-  <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
+  <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-[110]" aria-hidden="true"></div>
   <div
     id="settings-panel"
-    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col gap-5"
+    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[115] bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col gap-5"
     role="dialog"
     aria-modal="true"
     aria-labelledby="settings-title"

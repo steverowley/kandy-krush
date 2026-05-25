@@ -1652,41 +1652,42 @@ export function hideAllOverlays({ except = [] } = {}) {
 // player taps that mode button; `subtitle` is optional flavor text
 // (e.g. "Run over — pick where to go next" on game-over).
 export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, subtitle }) {
-  const overlay = document.getElementById('start-menu-overlay');
-  const panel = document.getElementById('start-menu-panel');
+  const screen = document.getElementById('start-screen');
   const btnRogue = document.getElementById('start-menu-roguelike');
   const btnLevels = document.getElementById('start-menu-levels');
   const btnFree = document.getElementById('start-menu-free');
   const btnSettings = document.getElementById('start-menu-settings');
   const btnHelp = document.getElementById('start-menu-help');
-  const subEl = document.getElementById('start-menu-subtitle');
-  if (!overlay || !panel || !btnRogue || !btnLevels || !btnFree) return;
-  // Close any other modals first so we never stack on top of a leftover panel.
-  hideAllOverlays({ except: ['start-menu-overlay', 'start-menu-panel'] });
+  const subEl = document.getElementById('start-screen-subtitle');
+  if (!screen || !btnRogue || !btnLevels || !btnFree) return;
+  // Close any in-flight modals (run summary, settings, etc.) — the
+  // start screen is a top-level page, not a stack-on-top dialog.
+  hideAllOverlays({ except: ['start-screen'] });
   if (subEl) subEl.textContent = subtitle || '';
   const hide = () => {
-    overlay.classList.add('hidden');
-    panel.classList.add('hidden');
+    screen.classList.add('hidden');
+    document.body.classList.remove('start-screen-active');
   };
   const wrap = (fn) => () => { hide(); if (fn) fn(); };
   replaceListener(btnRogue, 'click', wrap(onRoguelike), 'start-menu-rogue');
   replaceListener(btnLevels, 'click', wrap(onLevels), 'start-menu-levels');
   replaceListener(btnFree, 'click', wrap(onFreePlay), 'start-menu-free');
-  // Settings / Help open their own modals; dismiss the start menu first so
-  // those modals are not occluded by ours.
-  if (btnSettings) replaceListener(btnSettings, 'click', wrap(onSettings), 'start-menu-settings');
-  if (btnHelp) replaceListener(btnHelp, 'click', wrap(onHelp), 'start-menu-help');
-  overlay.classList.remove('hidden');
-  panel.classList.remove('hidden');
-  blockClicksFor(panel, 400);
+  // Settings / Help open their own modals on top of the start screen.
+  // We DON'T dismiss the start screen here — closing those modals returns
+  // the player to the start screen, which is the expected flow on a
+  // proper game title screen.
+  if (btnSettings) replaceListener(btnSettings, 'click', () => { if (onSettings) onSettings(); }, 'start-menu-settings');
+  if (btnHelp) replaceListener(btnHelp, 'click', () => { if (onHelp) onHelp(); }, 'start-menu-help');
+  screen.classList.remove('hidden');
+  document.body.classList.add('start-screen-active');
+  blockClicksFor(screen, 400);
   btnRogue.focus();
 }
 
 export function hideStartMenu() {
-  const overlay = document.getElementById('start-menu-overlay');
-  const panel = document.getElementById('start-menu-panel');
-  if (overlay) overlay.classList.add('hidden');
-  if (panel) panel.classList.add('hidden');
+  const screen = document.getElementById('start-screen');
+  if (screen) screen.classList.add('hidden');
+  document.body.classList.remove('start-screen-active');
 }
 
 export function showWelcome(onStart) {

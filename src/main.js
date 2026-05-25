@@ -1703,6 +1703,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15n',
+    items: [
+      '🏁 PROPER FULL-PAGE START SCREEN — the start menu is no longer a modal sitting on top of the game board. It\'s a true title screen now: big logo, mode buttons, settings & "What\'s New" shortcuts, and the game UI underneath is completely hidden until you pick a mode. Launching the app and tapping 🏠 mid-game both land here.',
+    ],
+  },
+  {
     id: '2026-05-25-15m',
     items: [
       '🚫 CRAZY TILES ARE ROGUELIKE-ONLY — TNT, Void, Bolt, Prism, and Wormhole tiles no longer spawn in Levels or Free Play. They\'re a deliberate roguelike chaos mechanic, so confining them there keeps Levels honest and Free Play relaxed.',
@@ -5699,7 +5705,10 @@ function maybeShowChangelog(after) {
 // auto-resume that so in-flight progress isn't lost.
 function bootIntoStartMenu() {
   if (state.inRoguelikeRun && state.roguelike?.currentClass) {
-    // Resume the run already in progress.
+    // Resume the run already in progress. The body class is set by the
+    // HTML default (so the start screen doesn't flash before JS boots);
+    // hide it here so the resumed game UI is visible.
+    hideStartMenu();
     state.settings.mode = 'roguelike';
     sfx.setMusicMode('roguelike');
     init({ chime: false });
