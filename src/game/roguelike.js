@@ -571,6 +571,8 @@ export const MUTATORS = [
     desc: '+10 💎 at slot start AND every match scores ×1.5 this slot.' },
   { id: 'snowstorm',   icon: '🌨', name: 'Snowstorm',
     desc: 'Every match earns a flat +10 per cleared tile (so a 5-tile match is +50 bonus score).' },
+  { id: 'spell-power', icon: '🔮', name: 'Spell Power',
+    desc: 'Wild auto-fire abilities (Lightning / Meteor / Bee Storm) trigger 2× faster this slot.' },
 ];
 
 export function isMutatorSlot(slot) {
