@@ -541,6 +541,10 @@ export const MUTATORS = [
     desc: 'Every 6 matches in this slot earns you +1 💎. Pure gem mining.' },
   { id: 'big-crit',    icon: '⚔️', name: 'Big Crit',
     desc: 'All cascades (chain ≥2) score ×4 this slot. Build them up.' },
+  { id: 'mega-mode',   icon: '💪', name: 'Mega Mode',
+    desc: 'Every match scores ×3 this slot. Stronger than Golden Hour.' },
+  { id: 'bonus-round', icon: '🎰', name: 'Bonus Round',
+    desc: '+10 💎 at slot start AND every match scores ×1.5 this slot.' },
 ];
 
 export function isMutatorSlot(slot) {
