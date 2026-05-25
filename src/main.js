@@ -975,6 +975,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8z',
+    items: [
+      '🎵 AUDIO POLISH — cascade chains now climb in pitch much more aggressively (+80Hz per chain level, was +40Hz). Chain ×5+ feels twice as triumphant.',
+      'New EPIC CASCADE sweep when you hit a chain of 5 or more: a soaring 6-note rising arpeggio with a sub-bass rumble.',
+      'New BOSS STINGER on boss intro — sharp orchestral hit + descending minor 6th + cymbal burst. Replaces the generic "sparkly chord".',
+    ],
+  },
+  {
     id: '2026-05-25-8y',
     items: [
       '✨ MUTATOR juice — mutator activation now shows a brief radial yellow flash across the screen + the HUD chip pulses softly while the mutator is active.',
@@ -1599,7 +1607,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
       showBossBanner(lvl, { isFinal: slot === RUN_LENGTH });
       spawnScreenFlash('rgba(255, 0, 110, 0.45)');
       screenShake(8, 420);
-      sfx.playObjectiveComplete('specials'); // sparkly chord
+      sfx.playBossStinger();
       haptics.epic();
       // Boss music — faster, more aggressive variant of the chiptune.
       sfx.setMusicMode('boss');
@@ -2590,6 +2598,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   if (cascadeLevel >= 5) {
     spawnScreenFlash('rgba(255, 0, 110, 0.35)');
     spawnConfetti(48);
+    sfx.playEpicCascade();
   }
   if (allCleared.size >= 6 && allCleared.size < 8) {
     flashMessage('HUGE MATCH!', 1200);
