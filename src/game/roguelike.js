@@ -397,6 +397,8 @@ export const RELICS = [
     desc: 'Every match counts as 2 toward the slot\'s objective (huge for matches / clearType targets).' },
   { id: 'sweet-smith', icon: '🛠', name: 'Sweet Smith',
     desc: 'Every 5 swaps, your most-depleted power-up gets +1. Keeps every slot topped up.' },
+  { id: 'coin-purse',  icon: '👛', name: 'Coin Purse',
+    desc: 'Every 10 matches in a slot earns you +1 💎 right away.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
