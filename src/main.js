@@ -1198,6 +1198,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9x',
+    items: [
+      '🏅 Level Select now shows your BEST SCORE per level — see "Best: 4,250" right under the star rating on each tile.',
+      'Chase higher scores on levels you\'ve already cleared. Combine with the new leftover-moves bonus for bigger numbers.',
+    ],
+  },
+  {
     id: '2026-05-25-9w',
     items: [
       '➕ LEFTOVER-MOVES BONUS in Levels mode! When you beat a level with moves to spare, each unspent move converts to +25 points (classic Candy-Crush style).',
