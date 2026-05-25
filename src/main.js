@@ -31,6 +31,10 @@ import {
   RELICS,
   pickRelicChoices,
   getRelic,
+  MUTATORS,
+  isMutatorSlot,
+  pickRandomMutator,
+  getMutator,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -162,6 +166,14 @@ function hasRelic(id) {
   return state.runRelics && state.runRelics.includes(id);
 }
 
+function activeMutator() {
+  if (!state.inRoguelikeRun) return null;
+  return state.slotMutator ? getMutator(state.slotMutator) : null;
+}
+function hasMutator(id) {
+  return state.inRoguelikeRun && state.slotMutator === id;
+}
+
 function refreshRunHud() {
   setRunHud({
     visible: !!state.inRoguelikeRun,
@@ -172,6 +184,7 @@ function refreshRunHud() {
     getRelic,
     slot: state.roguelike?.currentSlot,
     totalSlots: RUN_LENGTH,
+    mutator: activeMutator(),
   });
 }
 
@@ -545,10 +558,34 @@ function applyRunUpgradesOnSlotStart() {
   // Reset per-slot relic counters.
   state.slotMatchCount = 0;
   state.relicSwapCount = 0;
+  // Roll a fresh mutator only on mutator slots.
+  const slot = state.roguelike.currentSlot;
+  if (isMutatorSlot(slot)) {
+    state.slotMutator = pickRandomMutator().id;
+  } else {
+    state.slotMutator = null;
+  }
   state.movesRemaining += upgradeCount('moves+2') * 2;
   // 🐢 Slow Turtle relic — +5 moves at slot start.
   if (hasRelic('slow-turtle')) state.movesRemaining += 5;
+  // 🌪 Quick Slot mutator — +5 moves
+  if (hasMutator('quick-slot')) state.movesRemaining += 5;
+  // 🍀 Lucky Day mutator — fill the lucky bar immediately
+  if (hasMutator('lucky-day')) {
+    state.luckyCharge = 100;
+    state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
   refreshRunHud();
+  if (state.slotMutator) {
+    const m = activeMutator();
+    if (m) {
+      setTimeout(() => {
+        flashMessage(`${m.icon} ${m.name} — ${m.desc}`, 2400);
+        speech.speak(`${m.name} mutator active.`);
+      }, 900);
+    }
+  }
   const cap = effectivePowerupCap();
   const bank = powerupBank();
   // Meta: Sweet Start — at slot 1 only
@@ -601,6 +638,11 @@ function maybeFireRelicsOnSwap() {
     spawnCrazyTile();
     flashMessage('🎰 Jackpot!', 900);
   }
+  // Mutator: 💫 Crazy Rain — a crazy tile every 4 swaps.
+  if (hasMutator('crazy-rain') && state.relicSwapCount % 4 === 0) {
+    spawnCrazyTile();
+    flashMessage('💫 Crazy Rain', 800);
+  }
 }
 
 function ironTongueBreak() {
@@ -631,7 +673,14 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
-  return Math.round(amount * m);
+  // Mutator: ☀️ Golden Hour — ×2 across the slot.
+  if (hasMutator('golden-hour')) m *= 2;
+  // Mutator: 🏆 Big Spender — 5+ matches score ×3.
+  if (hasMutator('big-spender') && matchSize >= 5) m *= 3;
+  let scored = Math.round(amount * m);
+  // Mutator: 💎 Diamond Day — flat +100 per match (after multipliers).
+  if (hasMutator('diamond-day')) scored += 100;
+  return scored;
 }
 
 function runLuckyRate() {
@@ -663,6 +712,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8h',
+    items: [
+      '🌪 SLOT MUTATORS — every 5th roguelike slot (5, 15, 25, … excluding bosses) rolls a random one-slot buff that changes how the slot plays.',
+      'Six mutators: ☀️ Golden Hour (×2 scores) · 💎 Diamond Day (+100 per match) · 🍀 Lucky Day (Lucky bar starts FULL) · 🌪 Quick Slot (+5 moves) · 💫 Crazy Rain (crazy tile every 4 swaps) · 🏆 Big Spender (5+ matches ×3).',
+      'Active mutator appears in the run HUD with a tooltip and a full-screen toast on slot start.',
+    ],
+  },
   {
     id: '2026-05-25-8g',
     items: [
