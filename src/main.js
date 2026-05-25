@@ -1948,6 +1948,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17x',
+    items: [
+      '🗺 PROJECT_PLAN.md UPDATED — refreshed the roadmap with every PR landed this session. Phase A: 9 / 10 done (A2 Tailwind build step pending). Phase B: 12 / 14. Phase C: 3 / 5. Phase D: 8 / 12. Open product-owner decisions surfaced (bundler, telemetry vendor, native packaging, cloud save backend, privacy policy). Recommended next moves listed in order of leverage.',
+    ],
+  },
+  {
     id: '2026-05-25-17w',
     items: [
       '⚡ FASTER COLD-BOOT — service worker flipped from network-first to cache-first + stale-while-revalidate. Cached responses now return immediately while the network fetch updates the cache in the background. On a slow signal that\'s the difference between "waiting for the round-trip" and "the start screen is already there." Deploys take one extra reload to be seen (normal SW behaviour); offline boot from cold cache still works.',
