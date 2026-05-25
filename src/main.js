@@ -1403,6 +1403,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12d',
+    items: [
+      '🎼 NEW CHIPTUNE — Song C: a heroic, brassy "stage-clear" march with walking bass and rising hook. Inspired by 16-bit fighting game themes. The chiptune player now rotates through 3 songs in roguelike runs.',
+    ],
+  },
+  {
     id: '2026-05-25-12c',
     items: [
       '🌊 NEW UPGRADE — Cascade Splash (Wild): every cascade chain ≥2 has a 60% chance per stack to spawn a random crazy tile. Snowball boards into chaos.',
