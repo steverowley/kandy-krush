@@ -435,6 +435,11 @@ export const SKILL_TREE = [
   { id: 'boss-bonus',   cost: 50, name: 'Boss Slayer',  desc: 'Each boss cleared grants +5 extra gems.' },
   { id: 'extra-life-1', cost: 35, name: 'Extra Life',   desc: 'Start each run with one extra life (total 4).' },
   { id: 'extra-life-2', cost: 70, name: 'Two Extra Lives', desc: 'Start each run with two extra lives (total 5).' },
+  // Phase-8u expansion
+  { id: 'free-reroll-1',cost: 45, name: 'Free First Reroll',  desc: 'First upgrade reroll of every slot is free (no Shuffle cost).' },
+  { id: 'crazy-sense',  cost: 50, name: 'Crazy Sense',        desc: 'Crazy tiles spawn 50% more often from big matches.' },
+  { id: 'early-awaken', cost: 60, name: 'Early Awakening',    desc: 'Your class awakens with one fewer archetype upgrade than usual.' },
+  { id: 'daily-bonus',  cost: 40, name: 'Daily Bonus',        desc: 'Earn +1 extra 💎 for every slot you clear (on top of the base 1 per slot).' },
 ];
 
 export const RUN_LIVES_BASE = 3;
@@ -451,7 +456,8 @@ export function ownedSkills(skillMap) {
 export function gemsEarned(reachedLevel, runComplete, skillSet = null) {
   const cleared = Math.max(0, Math.min(RUN_LENGTH, reachedLevel - 1));
   const bossBonus = (skillSet && skillSet.has && skillSet.has('boss-bonus')) ? 10 : 5;
-  let gems = cleared;
+  const perSlotBonus = (skillSet && skillSet.has && skillSet.has('daily-bonus')) ? 1 : 0;
+  let gems = cleared + perSlotBonus * cleared;
   for (const boss of BOSS_SLOTS) {
     if (cleared >= boss) gems += bossBonus;
   }

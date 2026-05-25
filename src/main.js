@@ -182,8 +182,10 @@ function classAwakened() {
   const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
   if (!cls) return false;
   const counts = archetypeCounts(state.runUpgrades || []);
-  if (cls.archetype) return counts[cls.archetype] >= 2;
-  return (state.runUpgrades || []).length >= 3;
+  // ✨ Early Awakening meta — threshold-1
+  const earlier = hasMeta('early-awaken') ? 1 : 0;
+  if (cls.archetype) return counts[cls.archetype] >= Math.max(1, 2 - earlier);
+  return (state.runUpgrades || []).length >= Math.max(2, 3 - earlier);
 }
 function isClass(id) {
   return state.inRoguelikeRun && state.roguelike?.currentClass === id;
@@ -216,8 +218,11 @@ function showUpgradeChoicesForSlot(n, canReroll) {
   const choices = pickUpgradeChoices(state.runUpgrades, n);
   const counts = archetypeCounts(state.runUpgrades);
   const bank = powerupBank();
-  // 🐘 Elephant Memory relic — rerolls are free, no Shuffle needed.
-  const free = hasRelic('free-reroll');
+  // 🐘 Elephant Memory relic — all rerolls free + repeatable.
+  // 🔄 Free First Reroll meta — first reroll per slot is free (one shot).
+  const eleMemory = hasRelic('free-reroll');
+  const firstFreeMeta = hasMeta('free-reroll-1') && canReroll && !state.firstRerollUsed;
+  const free = eleMemory || firstFreeMeta;
   const rerollAllowed = canReroll && (free || (bank.shuffle || 0) > 0);
   const onReroll = rerollAllowed ? () => {
     if (!free) {
@@ -227,20 +232,23 @@ function showUpgradeChoicesForSlot(n, canReroll) {
         setPowerupCounts(b);
         persist();
       }
+    } else if (firstFreeMeta) {
+      state.firstRerollUsed = true;
     }
-    flashMessage(free ? '🐘 Free reroll!' : '🔄 Rerolled!', 900);
-    showUpgradeChoicesForSlot(n, free); // free relic keeps the reroll button alive!
+    flashMessage(free ? (eleMemory ? '🐘 Free reroll!' : '🔄 Free reroll!') : '🔄 Rerolled!', 900);
+    showUpgradeChoicesForSlot(n, eleMemory); // Elephant keeps button alive
   } : null;
   // Build awakening info so the picker can flag any card whose pick
   // would awaken the current class.
   const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  const earlier = hasMeta('early-awaken') ? 1 : 0;
   const awakenInfo = cls
     ? {
         alreadyAwakened: classAwakened(),
         archetype: cls.archetype || null,
         anyUpgrade: !cls.archetype, // Wanderer awakens on TOTAL upgrades
         totalCount: (state.runUpgrades || []).length,
-        threshold: cls.archetype ? 2 : 3,
+        threshold: cls.archetype ? Math.max(1, 2 - earlier) : Math.max(2, 3 - earlier),
       }
     : null;
   showUpgradePicker(choices, state.runUpgrades, (chosen) => {
@@ -513,6 +521,8 @@ function maybeSpawnCrazyOnMatch(matchSize, cascadeLevel) {
   if (matchSize >= 6) chance += 0.14;
   if (cascadeLevel >= 3) chance += 0.10;
   if (cascadeLevel >= 5) chance += 0.10;
+  // 💫 Crazy Sense meta — boost spawn chance by 50%.
+  if (hasMeta('crazy-sense')) chance *= 1.5;
   if (chance <= 0) return;
   if (Math.random() > chance) return;
   spawnCrazyTile(pickCrazyKind());
@@ -800,6 +810,8 @@ function applyRunUpgradesOnSlotStart() {
   state.ironcladHammerUsed = false;
   // first-free upgrade — fresh first-swap flag.
   state.firstSwapUsed = false;
+  // first-free-reroll meta — fresh per slot.
+  state.firstRerollUsed = false;
   // meteor counter resets per slot.
   state.meteorCounter = 0;
   refreshRunHud();
@@ -945,6 +957,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8u',
+    items: [
+      '🌳 SKILL TREE expands — 4 new permanent meta upgrades to spend gems on!',
+      '🔄 Free First Reroll (45💎) — first upgrade reroll of every slot is free · 💫 Crazy Sense (50💎) — crazy tiles spawn 50% more often · ✨ Early Awakening (60💎) — your class awakens with one fewer archetype upgrade · 🪙 Daily Bonus (40💎) — +1 extra gem per slot cleared.',
+      'Skill tree total now 12 unlocks across all five archetypes.',
+    ],
+  },
   {
     id: '2026-05-25-8t',
     items: [
