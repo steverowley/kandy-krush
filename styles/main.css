@@ -1703,3 +1703,30 @@ body.reduce-motion #boss-banner.show .boss-banner-card,
 body.reduce-motion #boss-banner.fading .boss-banner-card {
   animation: none;
 }
+
+/* ===== Mutator HUD chip — soft continuous pulse while active ===== */
+@keyframes mutator-chip-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 214, 10, 0.6); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(255, 214, 10, 0); }
+}
+.mutator-chip-active {
+  animation: mutator-chip-pulse 1.6s ease-in-out infinite;
+  display: inline-block;
+}
+body.reduce-motion .mutator-chip-active { animation: none !important; }
+
+/* ===== Mutator slot-start activation flash ===== */
+@keyframes mutator-flash-in {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.mutator-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 214, 10, 0.45) 0%, rgba(255, 214, 10, 0) 70%);
+  animation: mutator-flash-in 0.9s ease-out forwards;
+}
+body.reduce-motion .mutator-flash { display: none; }
