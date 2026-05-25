@@ -70,6 +70,7 @@ import {
   showRelicPicker,
   setRunHud,
   showBossBanner,
+  showRunSummary,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -187,6 +188,26 @@ function classAwakened() {
 }
 function isClass(id) {
   return state.inRoguelikeRun && state.roguelike?.currentClass === id;
+}
+
+function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
+  // Snapshot the run state BEFORE the run gets cleared.
+  const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  showRunSummary({
+    outcome,
+    klass: cls,
+    slotReached,
+    totalSlots: RUN_LENGTH,
+    gemsEarned: gemsEarnedThisRun,
+    totalGems: state.roguelike?.gems || 0,
+    bestSlot: state.roguelike?.bestSlot || slotReached,
+    archetypes: ARCHETYPES,
+    archCounts: archetypeCounts(state.runUpgrades || []),
+    relics: (state.runRelics || []).slice(),
+    getRelic,
+    awakened: classAwakened(),
+    runsCompleted: state.roguelike?.runsCompleted || 0,
+  });
 }
 
 function refreshRunHud() {
@@ -841,6 +862,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8m',
+    items: [
+      '📜 RUN SUMMARY — at the end of every run (complete or fail), a recap card appears with: class, slot reached, gems earned, total gems, best slot, archetype tallies, and all relics collected.',
+      'Satisfying closure to the 100-slot marathon. See your full build at a glance.',
+    ],
+  },
+  {
     id: '2026-05-25-8l',
     items: [
       '🐙 BOSS INTRO BANNER — every boss slot now opens with a dramatic full-screen reveal: tier label, boss icon, name, and tip. Pink-purple gradient with a yellow border that bursts in and gracefully fades.',
@@ -1380,6 +1408,9 @@ function advanceRoguelikeAfterWin() {
     const gems = gemsEarned(slot + 1, true, metaSkills());
     state.roguelike.gems = (state.roguelike.gems || 0) + gems;
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
+    // Show the run summary BEFORE clearing run state so the snapshot
+    // can read class, archetypes, and relics.
+    showEndOfRunSummary('complete', RUN_LENGTH, gems);
     state.roguelike.currentSlot = 1;
     state.inRoguelikeRun = false;
     state.runUpgrades = [];
@@ -1447,9 +1478,11 @@ function endRoguelikeRun() {
   const gems = gemsEarned(reached, false, metaSkills());
   state.roguelike.gems = (state.roguelike.gems || 0) + gems;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
+  showEndOfRunSummary('fail', reached, gems);
   state.roguelike.currentSlot = 1;
   state.inRoguelikeRun = false;
   state.runUpgrades = [];
+  state.runRelics = [];
   state.roguelike.currentClass = null;
   persist();
   refreshRunHud();
@@ -1825,6 +1858,7 @@ function checkLevelOutcome() {
         const gems = gemsEarned(reached, false, metaSkills());
         state.roguelike.gems = (state.roguelike.gems || 0) + gems;
         state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
+        showEndOfRunSummary('fail', reached, gems);
         state.roguelike.currentSlot = 1;
         state.inRoguelikeRun = false;
         state.runUpgrades = [];

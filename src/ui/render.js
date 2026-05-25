@@ -547,6 +547,94 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted }) {
+  const overlay = document.getElementById('run-summary-overlay');
+  const panel = document.getElementById('run-summary-panel');
+  if (!overlay || !panel) return;
+  const tier = document.getElementById('run-summary-tier');
+  const title = document.getElementById('run-summary-title');
+  const stats = document.getElementById('run-summary-stats');
+  const klassEl = document.getElementById('run-summary-class');
+  const builds = document.getElementById('run-summary-builds');
+  const relicsEl = document.getElementById('run-summary-relics');
+  const close = document.getElementById('run-summary-close');
+  const isComplete = outcome === 'complete';
+  if (tier) tier.textContent = isComplete ? '🏆 Run complete' : 'Run over';
+  if (title) title.textContent = isComplete
+    ? 'You crowned the Candy Kraken!'
+    : `You reached slot ${slotReached}`;
+  if (stats) {
+    stats.innerHTML = `
+      <div class="text-center bg-yellow-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">Slot reached</div>
+        <div class="text-2xl font-bold tabular-nums">${slotReached}/${totalSlots}</div>
+      </div>
+      <div class="text-center bg-pink-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">💎 Earned</div>
+        <div class="text-2xl font-bold tabular-nums">+${gemsEarned}</div>
+      </div>
+      <div class="text-center bg-blue-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">💎 Total</div>
+        <div class="text-2xl font-bold tabular-nums">${totalGems}</div>
+      </div>
+      <div class="text-center bg-green-100 border-2 border-black rounded-xl p-2">
+        <div class="text-xs uppercase opacity-70">Best slot</div>
+        <div class="text-2xl font-bold tabular-nums">${bestSlot}</div>
+      </div>
+    `;
+  }
+  if (klassEl) {
+    const awakenStr = awakened ? ' <span class="px-2 rounded-full bg-pink-500 text-white text-xs">✨ AWAKENED</span>' : '';
+    klassEl.innerHTML = klass ? `Class: ${klass.icon} ${klass.name}${awakenStr}` : '';
+  }
+  if (builds) {
+    builds.innerHTML = '';
+    if (archCounts && archetypes) {
+      for (const key of Object.keys(archCounts)) {
+        const n = archCounts[key];
+        if (n > 0) {
+          const meta = archetypes[key];
+          if (meta) {
+            const chip = document.createElement('span');
+            chip.className = 'px-2 py-1 rounded-full border-2 border-black font-bold text-sm';
+            chip.style.background = `${meta.color}22`;
+            chip.style.color = meta.color;
+            chip.textContent = `${meta.icon} ${meta.name} ×${n}`;
+            builds.appendChild(chip);
+          }
+        }
+      }
+    }
+  }
+  if (relicsEl) {
+    relicsEl.innerHTML = '';
+    if (relics && relics.length > 0) {
+      const label = document.createElement('span');
+      label.className = 'text-xs opacity-70 mr-1 self-center';
+      label.textContent = 'Relics:';
+      relicsEl.appendChild(label);
+      for (const id of relics) {
+        const r = getRelic ? getRelic(id) : null;
+        const s = document.createElement('span');
+        s.title = r ? `${r.name}: ${r.desc}` : id;
+        s.textContent = r ? r.icon : '?';
+        relicsEl.appendChild(s);
+      }
+    }
+  }
+  const handleClose = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+    close.removeEventListener('click', handleClose);
+    overlay.removeEventListener('click', handleClose);
+  };
+  close.addEventListener('click', handleClose);
+  overlay.addEventListener('click', handleClose);
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  close.focus();
+}
+
 export function showBossBanner(boss, { isFinal = false, holdMs = 1900 } = {}) {
   const root = document.getElementById('boss-banner');
   if (!root) return Promise.resolve();
