@@ -1358,6 +1358,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('crimson-rose') && (state.slotMatchCount || 0) === 0) m *= 5;
   // 🍯 Honey Trap relic — boss slots only: first 3 matches score ×3.
   if (hasRelic('honey-trap') && state.level?.isBoss && (state.slotMatchCount || 0) < 3) m *= 3;
+  // 🌅 Sunrise Hour relic — slots 1-10 score ×1.5.
+  if (hasRelic('sunrise-hour') && state.level?.runSlot && state.level.runSlot <= 10) m *= 1.5;
+  // 🌇 Sunset Hour relic — slots 96-100 score ×2.
+  if (hasRelic('sunset-hour') && state.level?.runSlot && state.level.runSlot >= 96) m *= 2;
   // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
   if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // ⚔️ Big Crit mutator — all cascades (chain ≥2) score ×4.
@@ -1427,6 +1431,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12r',
+    items: [
+      '🌅 NEW RELIC — Sunrise Hour: on slots 1-10, all scores ×1.5. Early-game ramp.',
+      '🌇 NEW RELIC — Sunset Hour: on slots 96-100, all scores ×2. End-game payoff for the marathon.',
+    ],
+  },
   {
     id: '2026-05-25-12q',
     items: [
