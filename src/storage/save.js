@@ -59,6 +59,9 @@ const defaults = () => ({
   runHistory: [],
   // 🔄 Banked free rerolls left in the current run (from Reroll Bank meta).
   runFreeRerolls: 0,
+  // 🆙 Ascension state — highest unlocked + currently-selected level.
+  ascensionUnlocked: 0,
+  ascensionLevel: 0,
 });
 
 function todayStamp(d = new Date()) {
@@ -171,6 +174,8 @@ export function load() {
       dailySeedBestSlot: Math.min(100, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
       runHistory: sanitizeRunHistory(parsed.runHistory),
       runFreeRerolls: Math.max(0, Math.min(20, Math.floor(Number(parsed.runFreeRerolls) || 0))),
+      ascensionUnlocked: Math.max(0, Math.min(3, Math.floor(Number(parsed.ascensionUnlocked) || 0))),
+      ascensionLevel: Math.max(0, Math.min(3, Math.floor(Number(parsed.ascensionLevel) || 0))),
     };
   } catch (err) {
     // A sanitizer threw — partial corruption. Back up and return defaults.

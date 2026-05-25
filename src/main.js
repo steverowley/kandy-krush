@@ -274,6 +274,11 @@ const state = {
   // 🔄 Banked free rerolls for the current run (from Reroll Bank meta).
   // Survives reloads mid-run.
   runFreeRerolls: Number(persisted.runFreeRerolls) || 0,
+  // 🆙 Ascension state (Phase 17r / D12).
+  // ascensionUnlocked = highest ascension reached. ascensionLevel =
+  // what the player has selected for the next/current run.
+  ascensionUnlocked: Math.max(0, Math.min(3, Number(persisted.ascensionUnlocked) || 0)),
+  ascensionLevel: Math.max(0, Math.min(3, Number(persisted.ascensionLevel) || 0)),
   runRng: null,
   runIsDaily: false,
   runDailyStamp: null,
@@ -382,11 +387,28 @@ function openStartMenu(subtitle = null) {
     playedToday: state.dailySeedDate === todayStamp,
     bestSlot: state.dailySeedDate === todayStamp ? (state.dailySeedBestSlot || 0) : 0,
   };
+  const ascLvl = state.ascensionLevel || 0;
+  const ascUnlocked = state.ascensionUnlocked || 0;
+  const ascensionInfo = ASCENSION_LEVELS[ascLvl] || ASCENSION_LEVELS[0];
   showStartMenu({
     subtitle,
     version: APP_VERSION,
     runInProgress: inProgress,
     dailyStatus,
+    ascension: {
+      level: ascLvl,
+      unlocked: ascUnlocked,
+      label: ascensionInfo.name,
+    },
+    onAscensionCycle: () => {
+      // Cycle through unlocked levels: 0 → 1 → 2 → … → unlocked → 0.
+      const next = (ascLvl + 1) > ascUnlocked ? 0 : ascLvl + 1;
+      state.ascensionLevel = next;
+      persist();
+      telemetry.track('ascension_picked', { level: next });
+      flashMessage(`${ASCENSION_LEVELS[next].name} — ${ASCENSION_LEVELS[next].desc}`, 2400);
+      openStartMenu(subtitle); // re-render with new label
+    },
     stats: {
       best: state.highScore || 0,
       runsCompleted: state.roguelike?.runsCompleted || 0,
@@ -1920,6 +1942,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17r',
+    items: [
+      '🆙 ASCENSIONS — clear a roguelike run, unlock Ascension 1. A new "🆙 Ascension: A0 ↕" chip appears under the Roguelike Run button; tap to cycle through unlocked levels before starting your next run. A1 = -1 max life. A2 = A1 + -10% move budget on non-boss slots. A3 = A2 + 25% harder score targets. Beat each ascension to unlock the next. The replay loop the gameplay review flagged as missing.',
+    ],
+  },
   {
     id: '2026-05-25-17q',
     items: [
@@ -3807,6 +3835,8 @@ function persist() {
     dailySeedBestSlot: state.dailySeedBestSlot || 0,
     runHistory: state.runHistory || [],
     runFreeRerolls: state.runFreeRerolls || 0,
+    ascensionUnlocked: state.ascensionUnlocked || 0,
+    ascensionLevel: state.ascensionLevel || 0,
   });
   // Warn the player ONCE if persist() fails (private mode / quota
   // exceeded / SecurityError). Without this, progress silently doesn't
@@ -3919,7 +3949,47 @@ function maxLivesForRun() {
   if (hasMeta('extra-life-2')) lives += 1;
   // 💗 Heart Beat upgrade — +1 per stack.
   if (state.inRoguelikeRun) lives += upgradeCount('heart-beat');
-  return lives;
+  // 🆙 Ascension modifier — A1+ removes one max life.
+  lives += ascensionMods().livesAdjust;
+  return Math.max(1, lives);
+}
+
+// 🆙 Ascensions: post-clear difficulty modifiers (Phase 17r / D12).
+// Unlocked after the first run-complete (`state.ascensionUnlocked`),
+// the player picks an ascension level (0-3) before starting a run.
+// Each level layers a permanent run-difficulty modifier on top of the
+// previous one. Modeled after Slay-the-Spire Ascensions / Hades' Heat.
+//
+// A0: base game.
+// A1: -1 max lives (you start with 1 fewer).
+// A2: A1 + every non-boss slot has -10% move budget.
+// A3: A2 + score-target objectives are +25% harder.
+const ASCENSION_LEVELS = [
+  { level: 0, name: 'A0 — Base run', desc: 'The standard 100-slot run.' },
+  { level: 1, name: 'A1 — Lean Run', desc: '-1 max life. One less mistake to make.' },
+  { level: 2, name: 'A2 — Time Pressure', desc: 'A1 + non-boss slots have -10% move budget.' },
+  { level: 3, name: 'A3 — High Stakes', desc: 'A2 + score-target objectives are 25% harder.' },
+];
+function ascensionMods() {
+  const lvl = Math.max(0, Math.min(3, state.ascensionLevel || 0));
+  return {
+    livesAdjust: lvl >= 1 ? -1 : 0,
+    moveBudgetMul: lvl >= 2 ? 0.9 : 1,
+    scoreTargetMul: lvl >= 3 ? 1.25 : 1,
+  };
+}
+function applyAscensionMods(lvl) {
+  if (!lvl) return lvl;
+  const mods = ascensionMods();
+  let moves = lvl.moves;
+  if (!lvl.isBoss && mods.moveBudgetMul !== 1) {
+    moves = Math.max(8, Math.round(lvl.moves * mods.moveBudgetMul));
+  }
+  let obj = lvl.objective;
+  if (obj && obj.kind === 'score' && mods.scoreTargetMul !== 1) {
+    obj = { ...obj, target: Math.round(obj.target * mods.scoreTargetMul) };
+  }
+  return { ...lvl, moves, objective: obj };
 }
 
 // Helper: returns the rng function the current run's pickers should
@@ -4018,7 +4088,7 @@ function startRoguelikeRun() {
 }
 
 function playRoguelikeSlot(slot, { announce = true } = {}) {
-  const lvl = getRoguelikeLevel(slot);
+  const lvl = applyAscensionMods(getRoguelikeLevel(slot));
   cancelHint();
   hideLevelOverlay();
   state.level = lvl;
@@ -4107,6 +4177,13 @@ function advanceRoguelikeAfterWin() {
     const gems = gemsEarned(slot + 1, true, metaSkills());
     state.roguelike.gems = (state.roguelike.gems || 0) + gems;
     state.roguelike.runsCompleted = (state.roguelike.runsCompleted || 0) + 1;
+    // 🆙 Ascension unlock: clearing at level N unlocks N+1 (cap at 3).
+    const justBeat = state.ascensionLevel || 0;
+    if (justBeat >= (state.ascensionUnlocked || 0)) {
+      state.ascensionUnlocked = Math.min(3, justBeat + 1);
+      flashMessage(`🆙 Ascension ${state.ascensionUnlocked} unlocked!`, 2400);
+      telemetry.track('ascension_unlocked', { level: state.ascensionUnlocked });
+    }
     telemetry.track('run_end', {
       outcome: 'complete',
       slot_reached: RUN_LENGTH,

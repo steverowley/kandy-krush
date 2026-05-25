@@ -1885,8 +1885,9 @@ export function hideAllOverlays({ except = [] } = {}) {
 // Show the start menu (mode-picker). Each `on*` is invoked when the
 // player taps that mode button; `subtitle` is optional flavor text
 // (e.g. "Run over — pick where to go next" on game-over).
-export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSettings, onHelp, onQuit, onResume, onAbandon, subtitle, stats, version, runInProgress, dailyStatus }) {
+export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSettings, onHelp, onQuit, onResume, onAbandon, onAscensionCycle, subtitle, stats, version, runInProgress, dailyStatus, ascension }) {
   const screen = document.getElementById('start-screen');
+  const btnAsc = document.getElementById('start-menu-ascension');
   const btnRogue = document.getElementById('start-menu-roguelike');
   const btnDaily = document.getElementById('start-menu-daily');
   const btnLevels = document.getElementById('start-menu-levels');
@@ -1958,6 +1959,18 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
     replaceListener(btnAbandon, 'click', () => { if (onAbandon) onAbandon(); }, 'start-menu-abandon');
   }
   replaceListener(btnRogue, 'click', wrap(onRoguelike), 'start-menu-rogue');
+  // 🆙 Ascension chip — only visible after the player has unlocked
+  // ascension 1+ (i.e. cleared their first run). Tap to cycle through
+  // the unlocked levels (0 → 1 → 2 → 3 → 0).
+  if (btnAsc) {
+    if (ascension && ascension.unlocked > 0 && !runInProgress) {
+      btnAsc.innerHTML = `🆙 ${ascension.label} ↕`;
+      btnAsc.classList.remove('hidden');
+      replaceListener(btnAsc, 'click', () => { if (onAscensionCycle) onAscensionCycle(); }, 'start-menu-ascension');
+    } else {
+      btnAsc.classList.add('hidden');
+    }
+  }
   if (btnDaily) {
     // Daily-seed button: shows today's date label + a small badge if
     // the player already played today (so they know it'll show "best
