@@ -1321,6 +1321,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   }
   // 🍰 Sugar Rush relic — first 3 matches of every slot are 3×.
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
+  // 🧁 Sweet Boost mutator — first 5 matches each score ×2.
+  if (hasMutator('sweet-boost') && (state.slotMatchCount || 0) < 5) m *= 2;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   // 🪞 Twin Mirror relic — 5+ matches score ×3.
@@ -1382,6 +1384,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11q',
+    items: [
+      '🧁 NEW MUTATOR — Sweet Boost. First 5 matches of every slot score ×2. Like Sugar Rush relic but bigger spread.',
+      'Mutator pool now 22.',
+    ],
+  },
   {
     id: '2026-05-25-11p',
     items: [
