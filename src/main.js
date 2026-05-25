@@ -1557,6 +1557,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13o',
+    items: [
+      '❤️ NEW UPGRADE — Heart Steal (Sustain): boss kills restore +1 life per stack. Keep your hearts full through the marathon.',
+      '✨ NEW UPGRADE — Spark Strike (Wild): every 12 matches in a slot, fire a free Lightning bolt (no Lightning upgrade required).',
+    ],
+  },
+  {
     id: '2026-05-25-13n',
     items: [
       '⛈ NEW RELIC — Storm Heart: at 1 life remaining, ALL matches score ×2. High-stakes comeback push.',
@@ -3165,6 +3172,13 @@ function advanceRoguelikeAfterWin() {
       flashMessage('🪙 Penny Pincher! +2💎', 1100);
       persist();
     }
+    // ❤️ Heart Steal upgrade — boss kills restore +1 life per stack.
+    if (upgradeCount('heart-steal') > 0) {
+      const heal = upgradeCount('heart-steal');
+      state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + heal;
+      flashMessage(`❤️ Heart Steal! +${heal} life`, 1100);
+      persist();
+    }
     // 💰 Gold Pile upgrade — +5 gems per stack on each boss kill.
     if (upgradeCount('gold-pile') > 0) {
       const bonus = 5 * upgradeCount('gold-pile');
@@ -4603,6 +4617,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         setPowerupCounts(bank);
         flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
       }
+    }
+    // ✨ Spark Strike upgrade — every 12 matches fire a free Lightning.
+    if (upgradeCount('spark-strike') > 0 && state.slotMatchCount % 12 === 0) {
+      flashMessage('✨ Spark Strike!', 900);
+      fireLightning();
     }
     // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
     if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
