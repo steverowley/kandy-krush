@@ -344,6 +344,56 @@ function maybeTriggerLightning() {
   }
 }
 
+function maybeTriggerMeteor() {
+  const stacks = upgradeCount('meteor');
+  if (stacks <= 0) return;
+  state.meteorCounter = (state.meteorCounter || 0) + 1;
+  let threshold = Math.max(3, 8 - (stacks - 1) * 2);
+  threshold = Math.max(2, Math.round(threshold / wildSpeedup()));
+  if (state.meteorCounter >= threshold) {
+    state.meteorCounter = 0;
+    fireMeteor();
+  }
+}
+
+async function fireMeteor() {
+  if (!state.board) return;
+  const candidates = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      if (state.board.isIngredient(c, r)) continue;
+      if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+      candidates.push({ c, r });
+    }
+  }
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  const positions = candidates.slice(0, 3);
+  if (positions.length === 0) return;
+  flashMessage('☄️ METEOR!', 1100);
+  speech.speak('Meteor');
+  haptics.epic();
+  sfx.playMatch(positions.length, 2);
+  screenShake(5, 280);
+  spawnPopSpecks(positions);
+  await animatePop(positions);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  renderBoard(state.board, state);
+  await delay(120);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+  let result = findMatches(state.board);
+  let lvl = 1;
+  while (result.positions.length > 0) {
+    await processMatchRound(result, lvl, null);
+    result = findMatches(state.board);
+    lvl++;
+  }
+}
+
 // ---------- Crazy tiles ----------
 const CRAZY_KINDS = ['tnt', 'void', 'bolt'];
 
@@ -410,6 +460,21 @@ async function triggerCrazyEffect(pos, kind) {
       }
     }
     flashMessage(rad >= 2 ? `💣 MEGA BOOM! ×${rad}` : '💣 BOOM!', 1300);
+    // Chain Bomb upgrade — chance to spawn another TNT in the blast zone.
+    if (upgradeCount('chain-bomb') > 0) {
+      const chance = Math.min(0.9, 0.3 * upgradeCount('chain-bomb'));
+      if (Math.random() < chance && positions.length > 0) {
+        const seed = positions[Math.floor(Math.random() * positions.length)];
+        setTimeout(() => {
+          const cell = state.board && state.board.cell(seed.c, seed.r);
+          if (cell) {
+            cell.crazy = 'tnt';
+            renderBoard(state.board, state);
+            flashMessage('💣 CHAIN BOMB!', 800);
+          }
+        }, 350);
+      }
+    }
     // 💣 Bombardier AWAKENING — TNT pop also grants a random power-up.
     if (isClass('bombardier') && classAwakened()) {
       const bank = powerupBank();
@@ -627,6 +692,10 @@ function applyRunUpgradesOnSlotStart() {
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
   state.ironcladHammerUsed = false;
+  // first-free upgrade — fresh first-swap flag.
+  state.firstSwapUsed = false;
+  // meteor counter resets per slot.
+  state.meteorCounter = 0;
   refreshRunHud();
   if (state.slotMutator) {
     const m = activeMutator();
@@ -715,6 +784,7 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   let m = 1;
   m *= Math.pow(1.25, upgradeCount('score+25'));
   if (cascadeLevel >= 2) m *= Math.pow(1.5, upgradeCount('cascade-king'));
+  if (cascadeLevel >= 3) m *= Math.pow(2, upgradeCount('combo-streak'));
   if (matchSize >= 5) m *= Math.pow(2, upgradeCount('big-match'));
   if (hasMeta('score-sage')) m *= 1.1;
   // Scorer synergy: +15% per Scorer stack beyond the first.
@@ -769,6 +839,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8k',
+    items: [
+      '🃏 FOUR NEW UPGRADE CARDS — Combo Streak (cascade chain ≥3 ×2 score) · Chain Bomb (TNT pops spawn more TNT) · First Swap Free (first swap of every slot is free) · ☄️ Meteor Shower (every 8 matches, 3 random tiles explode).',
+      'Upgrade pool grows from 16 to 20 cards — deeper archetype variety for the long marathon.',
+      'Meteor stacks accelerate the threshold: 2 meteors fire every 6 matches, 3 every 4 matches. Goes wild with Stormbringer awakening + Wild synergy.',
+    ],
+  },
   {
     id: '2026-05-25-8j',
     items: [
@@ -1624,6 +1702,13 @@ function consumeMove() {
       return;
     }
   }
+  // First Swap Free upgrade — once per slot the first swap is free.
+  if (state.inRoguelikeRun && !state.firstSwapUsed && upgradeCount('first-free') > 0) {
+    state.firstSwapUsed = true;
+    flashMessage('🛡 First swap free', 800);
+    refreshLevelUI();
+    return;
+  }
   if (state.movesRemaining > 0) {
     state.movesRemaining--;
     refreshLevelUI();
@@ -2267,6 +2352,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   state.progress.specials += specialsCreated.length;
   flashObjectiveProgress(specialsCreated.length);
   maybeTriggerLightning();
+  maybeTriggerMeteor();
   if (specialsCreated.length > 0) {
     maybeFireSnake();
     // Bomb Maker upgrade — every special also spawns a TNT tile
