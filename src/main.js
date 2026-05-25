@@ -1598,6 +1598,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14d',
+    items: [
+      '📋 BUILD VIEW — the run HUD now sports a "📋 BUILD" chip and a proper cursor + tooltip ("Tap to see your full build"). Tap to open the full inventory with class, upgrades, relics, AWAKENED status, and run highlights.',
+      '🏆 UPGRADE TIERS — the inventory panel labels stacked upgrades by tier (II, III, IV, MAX at ×5). Max-tier upgrades render filled, so you can see at a glance which builds are pushed to the limit.',
+      '👹 BOSS INTROS LINGER — boss banners hold 3.0s (4.2s for the Candy Kraken final) so you can actually read the taunt and tactical tip before the fight kicks off.',
+    ],
+  },
+  {
     id: '2026-05-25-14c',
     items: [
       '🍒 BUG FIX — Bolt crazy tiles no longer destroy cherries. They were silently being deleted off the board, making cherry-objective levels uncompletable.',
