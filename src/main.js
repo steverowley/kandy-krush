@@ -83,6 +83,7 @@ import {
   flashMutatorActivation,
   showSkillTree,
   showRunHistory,
+  showClassMastery,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
 import { createSettingsUI } from './ui/settings.js';
@@ -1942,6 +1943,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17s',
+    items: [
+      '🏅 CLASS MASTERY — new Settings entry "🏅 Class Mastery" opens a per-class progress grid. Each of the 11 classes shows three tier badges: 🥉 Bronze (cleared slot 10), 🥈 Silver (cleared slot 30), 🥇 Gold (full run completed). Derived from the existing classStats record; no new state required. Encourages cycling through every class instead of one-shotting Champion forever.',
+      '📤 NATIVE SHARE ON RUN END — the "📋 Copy summary" button on the run-summary modal now uses the Web Share API first (system share sheet on iOS / Android PWA) and falls back to clipboard copy on desktop. Same payload (class / build / relics / slot / gems) — better target for the share-with-a-friend retention loop.',
+    ],
+  },
   {
     id: '2026-05-25-17r',
     items: [
@@ -6406,6 +6414,17 @@ if (runHistoryBtn) {
     showRunHistory({
       entries: state.runHistory || [],
       getClass,
+    });
+  });
+}
+
+// 🏅 Class-mastery modal (Phase 17s / D2).
+const classMasteryBtn = document.getElementById('setting-class-mastery');
+if (classMasteryBtn) {
+  classMasteryBtn.addEventListener('click', () => {
+    showClassMastery({
+      classes: CLASSES,
+      classStats: state.roguelike?.classStats || {},
     });
   });
 }
