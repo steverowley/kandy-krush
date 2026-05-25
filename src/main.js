@@ -174,6 +174,20 @@ function hasMutator(id) {
   return state.inRoguelikeRun && state.slotMutator === id;
 }
 
+// Class awakening — fires when a class's archetype count crosses
+// its threshold. Wanderer awakens at 3+ TOTAL upgrades.
+function classAwakened() {
+  if (!state.inRoguelikeRun) return false;
+  const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  if (!cls) return false;
+  const counts = archetypeCounts(state.runUpgrades || []);
+  if (cls.archetype) return counts[cls.archetype] >= 2;
+  return (state.runUpgrades || []).length >= 3;
+}
+function isClass(id) {
+  return state.inRoguelikeRun && state.roguelike?.currentClass === id;
+}
+
 function refreshRunHud() {
   setRunHud({
     visible: !!state.inRoguelikeRun,
@@ -185,6 +199,7 @@ function refreshRunHud() {
     slot: state.roguelike?.currentSlot,
     totalSlots: RUN_LENGTH,
     mutator: activeMutator(),
+    awakened: classAwakened(),
   });
 }
 
@@ -272,15 +287,26 @@ function maybeFireEater() {
 async function fireLightning() {
   if (!state.board) return;
   const r = Math.floor(Math.random() * state.board.rows);
+  // 🌪 Stormbringer AWAKENING — cross-shaped lightning blast: row + column.
+  const crossBlast = isClass('stormbringer') && classAwakened();
+  const colHit = crossBlast ? Math.floor(Math.random() * state.board.cols) : -1;
   const positions = [];
   for (let c = 0; c < state.board.cols; c++) {
     if (state.board.isIngredient(c, r)) continue;
     if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
     positions.push({ c, r });
   }
+  if (crossBlast) {
+    for (let rr = 0; rr < state.board.rows; rr++) {
+      if (rr === r) continue;
+      if (state.board.isIngredient(colHit, rr)) continue;
+      if ((state.lockMap.get(`${colHit},${rr}`) || 0) > 0) continue;
+      positions.push({ c: colHit, r: rr });
+    }
+  }
   if (positions.length === 0) return;
   spawnLightningRow(r);
-  flashMessage('⚡ LIGHTNING STRIKE!', 1200);
+  flashMessage(crossBlast ? '⚡ CROSS BLAST!' : '⚡ LIGHTNING STRIKE!', 1200);
   speech.speak('Lightning strike');
   sfx.playMatch(positions.length, 2);
   haptics.epic();
@@ -384,6 +410,18 @@ async function triggerCrazyEffect(pos, kind) {
       }
     }
     flashMessage(rad >= 2 ? `💣 MEGA BOOM! ×${rad}` : '💣 BOOM!', 1300);
+    // 💣 Bombardier AWAKENING — TNT pop also grants a random power-up.
+    if (isClass('bombardier') && classAwakened()) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pickP = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pickP] || 0) < cap) {
+        bank[pickP] = (bank[pickP] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`🎁 +1 ${pickP}!`, 900);
+      }
+    }
     speech.speak('Boom!');
     sfx.playMatch(positions.length, 2);
     haptics.epic();
@@ -587,6 +625,8 @@ function applyRunUpgradesOnSlotStart() {
   }
   // Reset eclipse parity each slot.
   state.eclipseTick = 0;
+  // Reset Ironclad awakening's per-slot free hammer.
+  state.ironcladHammerUsed = false;
   refreshRunHud();
   if (state.slotMutator) {
     const m = activeMutator();
@@ -690,6 +730,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasMutator('big-spender') && matchSize >= 5) m *= 3;
   // Mutator: 🦄 Unicorn Day — wild random ×0.5 to ×3 per match.
   if (hasMutator('unicorn')) m *= 0.5 + Math.random() * 2.5;
+  // ⚔ Champion AWAKENING — first match per slot scores 5×.
+  if (isClass('champion') && classAwakened() && (state.slotMatchCount || 0) === 0) {
+    m *= 5;
+  }
   let scored = Math.round(amount * m);
   // Mutator: 💎 Diamond Day — flat +100 per match (after multipliers).
   if (hasMutator('diamond-day')) scored += 100;
@@ -725,6 +769,15 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8j',
+    items: [
+      '✨ CLASS AWAKENINGS — each class unlocks a unique passive once you have 2+ upgrades of its archetype (Wanderer: 3+ total).',
+      '⚔ Champion: first match per slot scores 5× · 🌪 Stormbringer: Lightning becomes a row+column CROSS BLAST · 🛡 Ironclad: first hammer per slot is free · 💣 Bombardier: TNT pops also spawn a 🎁 power-up · 🍀 Charmer: Lucky-MODE lasts +3 extra matches · 🎲 Wanderer: +1 extra upgrade card every slot.',
+      'AWAKENED chip flashes in the run HUD once your build is committed.',
+      'Real build payoff — stack your class\'s archetype to unlock the passive that makes that class shine.',
+    ],
+  },
   {
     id: '2026-05-25-8i',
     items: [
@@ -901,6 +954,12 @@ function spendPowerup(kind) {
   if ((bank[kind] || 0) <= 0) return false;
   // 🔨 Hammer Time mutator — hammers are free for the slot.
   if (kind === 'hammer' && hasMutator('hammer-time')) {
+    return true;
+  }
+  // 🛡 Ironclad AWAKENING — first hammer per slot is free.
+  if (kind === 'hammer' && isClass('ironclad') && classAwakened() && !state.ironcladHammerUsed) {
+    state.ironcladHammerUsed = true;
+    flashMessage('🛡 Ironclad: free hammer!', 1000);
     return true;
   }
   bank[kind]--;
@@ -1277,7 +1336,9 @@ function advanceRoguelikeAfterWin() {
       });
     }, 1500);
   } else {
-    const n = hasMeta('wider-choice') ? 4 : 3;
+    let n = hasMeta('wider-choice') ? 4 : 3;
+    // 🎲 Wanderer AWAKENING — +1 upgrade card to choose from.
+    if (isClass('wanderer') && classAwakened()) n += 1;
     const choices = pickUpgradeChoices(state.runUpgrades, n);
     const counts = archetypeCounts(state.runUpgrades);
     showUpgradePicker(choices, state.runUpgrades, (chosen) => {
@@ -1400,7 +1461,9 @@ function consumeLuckyIfReady(baseScore) {
   state.luckyReady = false;
   state.luckyCharge = 0;
   state.luckyMode = true;
-  state.luckyModeRemaining = LUCKY_MODE_MATCHES;
+  // 🍀 Charmer AWAKENING — Lucky-MODE lasts +3 extra matches.
+  const charmerBonus = (isClass('charmer') && classAwakened()) ? 3 : 0;
+  state.luckyModeRemaining = LUCKY_MODE_MATCHES + charmerBonus;
   refreshLucky();
   flashMessage(
     `LUCKY! ×${LUCKY_INSTANT_MULTIPLIER} now, then ×${LUCKY_MODE_MULTIPLIER} for ${LUCKY_MODE_MATCHES} matches`,

@@ -272,17 +272,23 @@ export const ARCHETYPES = {
 // player out of any pivot. Wanderer is the neutral pick.
 export const CLASSES = [
   { id: 'wanderer',     icon: '🎲', name: 'Wanderer',     archetype: null,
-    desc: 'No starting bonus. Total freedom to pick any path.',          start: [] },
+    desc: 'No starting bonus. Total freedom to pick any path.',
+    awaken: 'Awakens at 3+ upgrades of any archetype: +1 upgrade pick per slot.', start: [] },
   { id: 'bombardier',   icon: '💣', name: 'Bombardier',   archetype: 'bomber',
-    desc: 'Start with Bomb Maker — every special drops a TNT crazy tile.', start: ['bomb-maker'] },
+    desc: 'Start with Bomb Maker — every special drops a TNT crazy tile.',
+    awaken: 'Awakens at 2+ 💣 Bomber upgrades: every TNT crazy tile also spawns a 🎁 power-up nearby.', start: ['bomb-maker'] },
   { id: 'charmer',      icon: '🍀', name: 'Charmer',      archetype: 'lucky',
-    desc: 'Start with Lucky Fast — Lucky bar fills 50% faster.',          start: ['lucky-fast'] },
+    desc: 'Start with Lucky Fast — Lucky bar fills 50% faster.',
+    awaken: 'Awakens at 2+ 🍀 Lucky upgrades: Lucky-MODE (×1.5 sustain) lasts +3 extra matches.', start: ['lucky-fast'] },
   { id: 'ironclad',     icon: '🛡', name: 'Ironclad',     archetype: 'sustain',
-    desc: 'Start with +2 Moves — every slot is roomier.',                  start: ['moves+2'] },
+    desc: 'Start with +2 Moves — every slot is roomier.',
+    awaken: 'Awakens at 2+ 🛡 Sustain upgrades: hammers cost no power-up on the first use per slot.', start: ['moves+2'] },
   { id: 'stormbringer', icon: '🌪', name: 'Stormbringer', archetype: 'wild',
-    desc: 'Start with Lightning — bolts auto-clear rows every 4 matches.', start: ['lightning'] },
+    desc: 'Start with Lightning — bolts auto-clear rows every 4 matches.',
+    awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['lightning'] },
   { id: 'champion',     icon: '⚔', name: 'Champion',     archetype: 'scorer',
-    desc: 'Start with Score Boost — all scoring +25%.',                    start: ['score+25'] },
+    desc: 'Start with Score Boost — all scoring +25%.',
+    awaken: 'Awakens at 2+ 🎯 Scorer upgrades: the FIRST match of every slot scores 5×.', start: ['score+25'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
