@@ -64,6 +64,7 @@ import {
   showUpgradePicker,
   showClassPicker,
   showRelicPicker,
+  setRunHud,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -159,6 +160,19 @@ function upgradeCount(id) {
 
 function hasRelic(id) {
   return state.runRelics && state.runRelics.includes(id);
+}
+
+function refreshRunHud() {
+  setRunHud({
+    visible: !!state.inRoguelikeRun,
+    klass: state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null,
+    archCounts: archetypeCounts(state.runUpgrades || []),
+    archetypes: ARCHETYPES,
+    relics: state.runRelics || [],
+    getRelic,
+    slot: state.roguelike?.currentSlot,
+    totalSlots: RUN_LENGTH,
+  });
 }
 
 // Counters for upgrades that trigger on a schedule. Reset per slot.
@@ -534,6 +548,7 @@ function applyRunUpgradesOnSlotStart() {
   state.movesRemaining += upgradeCount('moves+2') * 2;
   // 🐢 Slow Turtle relic — +5 moves at slot start.
   if (hasRelic('slow-turtle')) state.movesRemaining += 5;
+  refreshRunHud();
   const cap = effectivePowerupCap();
   const bank = powerupBank();
   // Meta: Sweet Start — at slot 1 only
@@ -648,6 +663,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8g',
+    items: [
+      '🧭 RUN HUD — a new strip above the board shows your roguelike build at a glance: current class, archetype tallies (🎯×3 💣×2 …), and held relics 🎩🐢🍰.',
+      'Updates live on every slot start, upgrade pick, and relic pick. Hidden outside roguelike mode.',
+      'Hover/tap a relic icon to see its description without opening any menu.',
+    ],
+  },
   {
     id: '2026-05-25-8f',
     items: [
@@ -1080,6 +1103,7 @@ function startRoguelikeRun() {
       flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
       speech.speak(`${cls.name} chosen.`);
       persist();
+      refreshRunHud();
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot, { announce: true }), 400);
     });
     return;
@@ -1134,6 +1158,7 @@ function advanceRoguelikeAfterWin() {
     state.runRelics = [];
     state.roguelike.currentClass = null;
     persist();
+    refreshRunHud();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
     speech.speak(`Run complete. You earned ${gems} gems.`);
     return;
@@ -1165,6 +1190,7 @@ function advanceRoguelikeAfterWin() {
         flashMessage(`${relic.icon} ${relic.name} acquired!`, 1600);
         speech.speak(`${relic.name} acquired.`);
         persist();
+        refreshRunHud();
         setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 350);
       });
     }, 1500);
@@ -1180,6 +1206,7 @@ function advanceRoguelikeAfterWin() {
         ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
       flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
       speech.speak(`Picked ${chosen.name}`);
+      refreshRunHud();
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
     }, categoryColor, ARCHETYPES, counts);
   }
@@ -1195,6 +1222,7 @@ function endRoguelikeRun() {
   state.runUpgrades = [];
   state.roguelike.currentClass = null;
   persist();
+  refreshRunHud();
   flashMessage(`Run over. +${gems} 💎`, 2200);
   speech.speak(`Run over. You reached slot ${reached}. You earned ${gems} gems.`);
 }
@@ -1552,7 +1580,10 @@ function checkLevelOutcome() {
         state.roguelike.currentSlot = 1;
         state.inRoguelikeRun = false;
         state.runUpgrades = [];
+        state.runRelics = [];
+        state.roguelike.currentClass = null;
         persist();
+        refreshRunHud();
         flashMessage(`Run over — out of lives. +${gems} 💎`, 2400);
         speech.speak(`Out of lives. Run over. You earned ${gems} gems.`);
         showLevelFail({
@@ -2371,6 +2402,7 @@ function init({ chime = false, announceLevel = true } = {}) {
 }
 
 applyTheme(state.settings);
+refreshRunHud();
 
 createSettingsUI({
   initial: state.settings,
@@ -2388,6 +2420,7 @@ createSettingsUI({
       if (state.inRoguelikeRun && state.settings.mode !== 'roguelike') {
         endRoguelikeRun();
       }
+      refreshRunHud();
       playModeTransition(state.settings.mode);
       if (state.settings.mode === 'roguelike') {
         startRoguelikeRun();
