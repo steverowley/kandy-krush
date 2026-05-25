@@ -615,6 +615,59 @@ function maybeTriggerMeteor() {
   }
 }
 
+function maybeTriggerBeeStorm() {
+  const stacks = upgradeCount('bee-storm');
+  if (stacks <= 0) return;
+  state.beeStormCounter = (state.beeStormCounter || 0) + 1;
+  let threshold = Math.max(4, 10 - (stacks - 1) * 2);
+  threshold = Math.max(3, Math.round(threshold / wildSpeedup()));
+  if (state.beeStormCounter >= threshold) {
+    state.beeStormCounter = 0;
+    fireBeeStorm();
+  }
+}
+
+async function fireBeeStorm() {
+  if (!state.board) return;
+  const candidates = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      if (state.board.isIngredient(c, r)) continue;
+      if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+      candidates.push({ c, r });
+    }
+  }
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  const positions = candidates.slice(0, 6);
+  if (positions.length === 0) return;
+  flashMessage('🐝 BEE STORM!', 1200);
+  speech.speak('Bee storm');
+  sfx.playMatch(positions.length, 2);
+  haptics.combo();
+  // Reuse the existing snake visual for movement flair.
+  spawnSnake(positions);
+  screenShake(4, 240);
+  await delay(420);
+  spawnPopSpecks(positions);
+  await animatePop(positions);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  renderBoard(state.board, state);
+  await delay(140);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+  let result = findMatches(state.board);
+  let lvl = 1;
+  while (result.positions.length > 0) {
+    await processMatchRound(result, lvl, null);
+    result = findMatches(state.board);
+    lvl++;
+  }
+}
+
 async function fireMeteor() {
   if (!state.board) return;
   const candidates = [];
@@ -1077,6 +1130,8 @@ function applyRunUpgradesOnSlotStart() {
   state.firstRerollUsed = false;
   // meteor counter resets per slot.
   state.meteorCounter = 0;
+  // bee storm counter resets per slot.
+  state.beeStormCounter = 0;
   // 🪨 Grumblock — wandering enemy, slot 50+ non-boss.
   state.grumblockSet = new Set();
   grumblockCounter = 0;
@@ -1265,6 +1320,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10q',
+    items: [
+      '🐝 NEW UPGRADE — Bee Storm (Wild). Every 10 matches a buzzing swarm clears 6 random tiles. Threshold drops per stack and scales further with Wild synergy and Stormbringer awakening.',
+      'Pairs beautifully with Meteor Shower + Lightning for an auto-fire chaos build.',
+      'Upgrade pool now 32.',
+    ],
+  },
   {
     id: '2026-05-25-10p',
     items: [
@@ -3351,6 +3414,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   flashObjectiveProgress(specialsCreated.length);
   maybeTriggerLightning();
   maybeTriggerMeteor();
+  maybeTriggerBeeStorm();
   if (specialsCreated.length > 0) {
     maybeFireSnake();
     // Bomb Maker upgrade — every special also spawns a TNT tile
