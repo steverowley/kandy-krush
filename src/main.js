@@ -1407,6 +1407,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12i',
+    items: [
+      '✨ BUILD VIBE — the run HUD now shows a colored playstyle label next to your archetype chips. Bomber-heavy? "🔥 Demolisher." Mixed? "🌈 Polymath." Lucky-heavy? "🍀 Charmlord." Identifies your build at a glance.',
+      'Appears once you have 3+ upgrades total — early game stays clean.',
+    ],
+  },
+  {
     id: '2026-05-25-12h',
     items: [
       '🌊 NEW CLASS — Cascadesmith: hybrid start with Cascade King + Cascade Splash. Build a chain reactor that snowballs every swap.',
