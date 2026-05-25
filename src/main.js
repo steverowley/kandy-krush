@@ -891,9 +891,14 @@ async function triggerCrazyEffect(pos, kind) {
     spawnBlackHole(positions);
     await delay(700);
   } else if (kind === 'bolt') {
-    for (let c = 0; c < state.board.cols; c++) positions.push({ c, r: pos.r });
+    for (let c = 0; c < state.board.cols; c++) {
+      if (state.board.isIngredient(c, pos.r)) continue;
+      positions.push({ c, r: pos.r });
+    }
     for (let r = 0; r < state.board.rows; r++) {
-      if (r !== pos.r) positions.push({ c: pos.c, r });
+      if (r === pos.r) continue;
+      if (state.board.isIngredient(pos.c, r)) continue;
+      positions.push({ c: pos.c, r });
     }
     flashMessage('⚡ ZAP!', 1300);
     speech.speak('Zap!');
@@ -1592,6 +1597,15 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-14c',
+    items: [
+      '🍒 BUG FIX — Bolt crazy tiles no longer destroy cherries. They were silently being deleted off the board, making cherry-objective levels uncompletable.',
+      '🪤 SAFETY NET — board now auto-cascades any stale matches on load (level start, slot start, after a shuffle). If matches ever exist, they pop and award points.',
+      '🟧 HEXAGON — orange tile is taller and more obviously a hexagon (point-top, 6×88px vertical).',
+      '🐌 BIGGER COMBOS, LONGER BEATS — cascade chains of 3+ now linger longer between rounds so you can see what just happened. Small matches stay snappy.',
+    ],
+  },
   {
     id: '2026-05-25-14b',
     items: [
@@ -2951,6 +2965,23 @@ async function ensureMovesAvailable() {
   // Render with the intro-drop animation so new tiles cascade back in
   renderBoard(state.board, state, { intro: true });
   await delay(80);
+  // After a shuffle the new layout might contain matches — eat them.
+  await cascadePendingMatches();
+}
+
+// Safety net: if the board has any matches right now, cascade them
+// (with normal scoring + cascade visuals) until none remain. Used after
+// board load / shuffle / crazy-tile reshapes so stale matches don't
+// just sit there.
+async function cascadePendingMatches() {
+  if (!state.board) return;
+  let result = findMatches(state.board);
+  let cascadeLevel = 1;
+  while (result.positions.length > 0) {
+    await processMatchRound(result, cascadeLevel, null);
+    result = findMatches(state.board);
+    cascadeLevel++;
+  }
 }
 
 // Shuffle the candies in place while keeping powered-up sweets,
@@ -3214,7 +3245,12 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
   renderBoard(state.board, state, { intro: true });
   if (announce) {
     state.busy = true;
-    const done = () => { state.busy = false; scheduleHint(); };
+    const done = async () => {
+      state.busy = true;
+      await cascadePendingMatches();
+      state.busy = false;
+      scheduleHint();
+    };
     const p = showLevelIntro(state.level, RUN_LENGTH);
     if (p && typeof p.then === 'function') p.then(done);
     else done();
@@ -3235,7 +3271,7 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
       `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
     );
   } else {
-    scheduleHint();
+    cascadePendingMatches().then(() => scheduleHint());
   }
 }
 
@@ -4846,10 +4882,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   speech.speak(msg);
   achievements.onMatch(ctx);
 
-  await delay(160);
+  // Slow down the rhythm on big combos so players can actually see
+  // each cascade resolve. Small matches stay snappy.
+  const preGrav = 160 + (cascadeLevel >= 3 ? 80 : 0) + (cascadeLevel >= 5 ? 80 : 0);
+  const postGrav = 260 + (cascadeLevel >= 3 ? 120 : 0) + (cascadeLevel >= 5 ? 160 : 0);
+  await delay(preGrav);
   const fallen = gravityWithIngredients();
   renderBoard(state.board, state, { fallen });
-  await delay(260);
+  await delay(postGrav);
 }
 
 function resetBoard() {
@@ -5031,7 +5071,10 @@ function startLevel(levelId, { announce = true } = {}) {
     );
     // Block input while intro is up; the intro resolves on tap or timeout.
     state.busy = true;
-    const done = () => {
+    const done = async () => {
+      // Safety net: eat any stale matches on the freshly-loaded board.
+      state.busy = true;
+      await cascadePendingMatches();
       state.busy = false;
       scheduleHint();
     };
@@ -5039,7 +5082,7 @@ function startLevel(levelId, { announce = true } = {}) {
     if (p && typeof p.then === 'function') p.then(done);
     else done();
   } else {
-    scheduleHint();
+    cascadePendingMatches().then(() => scheduleHint());
   }
 }
 
