@@ -403,6 +403,8 @@ export const RELICS = [
     desc: 'Every 10 matches in a slot earns you +1 💎 right away.' },
   { id: 'lucky-twin',  icon: '👯', name: 'Lucky Twin',
     desc: 'Lucky Strike now grants TWO hammers per Lucky fire instead of one.' },
+  { id: 'twin-mirror', icon: '🪞', name: 'Twin Mirror',
+    desc: 'Matches of 5+ tiles score ×3. Stacks with Big Match upgrade (×2 per stack).' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
