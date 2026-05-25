@@ -1398,6 +1398,15 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11y',
+    items: [
+      '💎 NEW META-SKILLS — three new entries in the Skill Tree push the run economy further:',
+      '🧲 Gem Magnet (65💎): all end-of-run gems +10%, compounds with every other source.',
+      '🎁 Boss Bounty (55💎): each boss kill also drops +1 random power-up into your bank.',
+      '💰 Treasure Sense (50💎): Treasure mutator slots grant +5 extra gems (10 total).',
+    ],
+  },
+  {
     id: '2026-05-25-11x',
     items: [
       '🌌 NEW CHAPTER — "Beyond" (levels 116-120). For the player who beat the game: Echoes, Mirror Pond, Last Cherry Grove, Forever Loop, and the final True End at 25,000 score.',
@@ -2640,8 +2649,9 @@ function advanceRoguelikeAfterWin() {
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
   // 💰 Treasure Slot mutator — finishing this slot grants +5 💎.
   if (hasMutator('treasure')) {
-    state.roguelike.gems = (state.roguelike.gems || 0) + 5;
-    flashMessage('💰 Treasure Slot! +5 💎', 1400);
+    const bonus = hasMeta('treasure-sense') ? 10 : 5;
+    state.roguelike.gems = (state.roguelike.gems || 0) + bonus;
+    flashMessage(`💰 Treasure Slot! +${bonus} 💎`, 1400);
   }
   if (slot >= RUN_LENGTH) {
     // Full run cleared
@@ -2692,6 +2702,18 @@ function advanceRoguelikeAfterWin() {
       state.roguelike.gems = (state.roguelike.gems || 0) + 2;
       flashMessage('🪙 Penny Pincher! +2💎', 1100);
       persist();
+    }
+    // 🎁 Boss Bounty meta-skill — +1 random power-up per boss kill.
+    if (hasMeta('boss-bounty')) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pick] || 0) < cap) {
+        bank[pick] = (bank[pick] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`🎁 Boss Bounty! +1 ${pick}`, 1200);
+      }
     }
     // Boss reward: relic picker. The final boss skips it (no next slot).
     const isFinalBoss = justFinished >= RUN_LENGTH;

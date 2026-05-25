@@ -544,6 +544,9 @@ export const SKILL_TREE = [
   { id: 'daily-bonus',  cost: 40, name: 'Daily Bonus',        desc: 'Earn +1 extra 💎 for every slot you clear (on top of the base 1 per slot).' },
   { id: 'generous-daily', cost: 50, name: 'Generous Daily',    desc: 'Your daily login gem bonus is doubled.' },
   { id: 'powerful-start', cost: 55, name: 'Powerful Start',    desc: 'Slot 1 of every run grants +2 of every power-up (instead of +1).' },
+  { id: 'gem-magnet',     cost: 65, name: 'Gem Magnet',         desc: 'All gems earned at the end of a run +10%. Compounds with every other gem source.' },
+  { id: 'boss-bounty',    cost: 55, name: 'Boss Bounty',        desc: 'Each boss defeated also grants +1 of a random power-up.' },
+  { id: 'treasure-sense', cost: 50, name: 'Treasure Sense',     desc: 'Treasure mutator slots grant +5 extra gems (10 total).' },
 ];
 
 export const RUN_LIVES_BASE = 3;
@@ -566,5 +569,8 @@ export function gemsEarned(reachedLevel, runComplete, skillSet = null) {
     if (cleared >= boss) gems += bossBonus;
   }
   if (runComplete) gems += 50;
+  if (skillSet && skillSet.has && skillSet.has('gem-magnet')) {
+    gems = Math.floor(gems * 1.1);
+  }
   return gems;
 }
