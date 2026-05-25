@@ -579,6 +579,10 @@ export const MUTATORS = [
     desc: 'Every match earns a flat +10 per cleared tile (so a 5-tile match is +50 bonus score).' },
   { id: 'spell-power', icon: '🔮', name: 'Spell Power',
     desc: 'Wild auto-fire abilities (Lightning / Meteor / Bee Storm) trigger 2× faster this slot.' },
+  { id: 'sweet-crit-day',icon: '💥', name: 'Sweet Crit Day',
+    desc: '5+ tile matches score ×5 this slot. Stacks multiplicatively with everything.' },
+  { id: 'lucky-stream',icon: '🍀', name: 'Lucky Stream',
+    desc: 'Lucky bar fills 3× faster this slot. Burst-mode every few swaps.' },
 ];
 
 export function isMutatorSlot(slot) {

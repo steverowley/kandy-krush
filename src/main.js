@@ -1459,6 +1459,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (matchSize >= 6 && upgradeCount('power-surge') > 0) {
     m *= Math.pow(2, upgradeCount('power-surge'));
   }
+  // 💥 Sweet Crit Day mutator — 5+ tile matches score ×5.
+  if (matchSize >= 5 && hasMutator('sweet-crit-day')) m *= 5;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   // 🪞 Twin Mirror relic — 5+ matches score ×3.
@@ -1503,6 +1505,8 @@ function runLuckyRate() {
   if (luckySyn > 0) m *= 1 + 0.2 * luckySyn;
   // 🍀 Lucky Aura meta-skill — +25% Lucky bar fill globally.
   if (hasMeta('lucky-aura')) m *= 1.25;
+  // 🍀 Lucky Stream mutator — Lucky bar fills 3× faster this slot.
+  if (hasMutator('lucky-stream')) m *= 3;
   return LUCKY_PER_MOVE * m;
 }
 
@@ -1529,6 +1533,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13k',
+    items: [
+      '💥 NEW MUTATOR — Sweet Crit Day: 5+ tile matches score ×5 this slot.',
+      '🍀 NEW MUTATOR — Lucky Stream: Lucky bar fills 3× faster this slot. Burst-mode every few swaps.',
+    ],
+  },
   {
     id: '2026-05-25-13j',
     items: [
