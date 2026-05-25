@@ -1152,14 +1152,16 @@ function applyRunUpgradesOnSlotStart() {
     flashMessage('🌬 Second Wind! +1 life', 1300);
   }
   // 🎁 Generous starter — slot 1 of every run grants +1 of every power-up.
+  // 💪 Powerful Start meta doubles it to +2.
   if (state.roguelike.currentSlot === 1) {
     const startBank = powerupBank();
     const startCap = effectivePowerupCap();
+    const bonus = hasMeta('powerful-start') ? 2 : 1;
     for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      startBank[key] = Math.min(startCap, (startBank[key] || 0) + 1);
+      startBank[key] = Math.min(startCap, (startBank[key] || 0) + bonus);
     }
     setPowerupCounts(startBank);
-    flashMessage('🎁 Welcome gift: +1 of each power-up', 1600);
+    flashMessage(`🎁 Welcome gift: +${bonus} of each power-up`, 1600);
   }
   // first-free upgrade — fresh first-swap flag.
   state.firstSwapUsed = false;
@@ -1386,6 +1388,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11s',
+    items: [
+      '💪 NEW META SKILL — Powerful Start (55💎). Slot 1 of every run grants +2 of every power-up (instead of +1).',
+      'Pair with Sweet Start meta for a hammer-rich opening. Skill tree now 14 unlocks.',
+    ],
+  },
   {
     id: '2026-05-25-11r',
     items: [
