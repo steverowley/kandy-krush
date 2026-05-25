@@ -21,9 +21,9 @@ function shapeMarkup(shape, fill) {
     case 'triangle':
       return `<polygon points="50,14 88,84 12,84" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'hexagon':
-      // Flat-top hexagon — very distinct from the pink triangle so the
-      // orange tile reads at a glance.
-      return `<polygon points="22,22 78,22 92,50 78,78 22,78 8,50" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+      // Point-top hexagon, taller than wide. Reads as instantly different
+      // from the pink triangle even at small sizes.
+      return `<polygon points="50,6 88,28 88,72 50,94 12,72 12,28" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'star':
       return `<polygon points="50,10 61,38 92,40 67,58 76,88 50,71 24,88 33,58 8,40 39,38" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'heart':
