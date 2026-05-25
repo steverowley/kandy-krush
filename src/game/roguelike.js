@@ -472,6 +472,10 @@ export const RELICS = [
     desc: 'Hint sparkles appear after just 0.8 sec idle. The fastest hint relic.' },
   { id: 'sweet-memory', icon: '🧠', name: 'Sweet Memory',
     desc: 'Every power-up use grants +5% Lucky bar. Build Lucky-MODE off your power-up bank.' },
+  { id: 'glow-stick',   icon: '🌟', name: 'Glow Stick',
+    desc: 'Cascade chains ≥6 instantly trigger Lucky-MODE, regardless of the Lucky bar.' },
+  { id: 'bee-wing',     icon: '🐝', name: 'Bee Wing',
+    desc: 'Every Lucky-MODE match also spawns a random crazy tile. Lucky-MODE turns into chaos-mode.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
