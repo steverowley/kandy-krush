@@ -1436,6 +1436,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12u',
+    items: [
+      '🦴 NEW RELIC — Bone Charm: locks decrement by 2 per hit instead of 1. Lock-heavy boards melt fast.',
+      '🔄 NEW RELIC — Sweet Reset: shuffles are FREE during boss slots. Reorganize for big-match boss openings without spending bank.',
+    ],
+  },
+  {
     id: '2026-05-25-12t',
     items: [
       '🍀 NEW META-SKILL — Lucky Aura (80💎): Lucky bar fills 25% faster on every run. Compounds with Lucky Fast and Lucky synergy.',
@@ -2461,6 +2468,10 @@ function spendPowerup(kind) {
   }
   // 🔨 Hammer Time mutator — hammers are free for the slot.
   if (kind === 'hammer' && hasMutator('hammer-time')) {
+    return true;
+  }
+  // 🔄 Sweet Reset relic — shuffles are free during boss slots.
+  if (kind === 'shuffle' && hasRelic('sweet-reset') && state.level?.isBoss) {
     return true;
   }
   // 🛡 Ironclad AWAKENING — first hammer per slot is free.
@@ -4439,12 +4450,14 @@ function splitByLock(positions) {
 
 function decrementLockAt(positions) {
   if (state.lockMap.size === 0) return 0;
+  // 🦴 Bone Charm relic — locks decrement by 2 per hit instead of 1.
+  const step = hasRelic('bone-charm') ? 2 : 1;
   let dec = 0;
   for (const p of positions) {
     const k = `${p.c},${p.r}`;
     const n = state.lockMap.get(k);
     if (n && n > 0) {
-      const next = n - 1;
+      const next = Math.max(0, n - step);
       if (next === 0) state.lockMap.delete(k);
       else state.lockMap.set(k, next);
       dec++;
