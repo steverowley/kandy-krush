@@ -34,7 +34,13 @@ const defaults = () => ({
     bestSlot: 0,
     livesRemaining: 0,
     skills: {},             // permanent meta upgrades { id: true }
+    currentClass: null,
   },
+  // Whether the player has a roguelike run in progress + their upgrade
+  // and relic pickups. Persisted so a reload doesn't reset the build.
+  inRoguelikeRun: false,
+  runUpgrades: [],
+  runRelics: [],
 });
 
 function todayStamp(d = new Date()) {
@@ -86,10 +92,28 @@ export function load() {
         powerupBank: sanitizePowerupBank(lp.powerupBank),
       },
       roguelike: sanitizeRoguelike(parsed.roguelike),
+      inRoguelikeRun: !!parsed.inRoguelikeRun,
+      runUpgrades: sanitizeRunArray(parsed.runUpgrades),
+      runRelics: sanitizeRunArray(parsed.runRelics),
     };
   } catch {
     return defaults();
   }
+}
+
+// Sanitize an array of identifier strings (upgrade ids or relic ids).
+// Trim length to a reasonable cap so storage can't be poisoned with
+// huge arrays. Each entry must be a short ASCII-ish slug.
+function sanitizeRunArray(raw, max = 200) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const v of raw) {
+    if (typeof v !== 'string') continue;
+    if (v.length > 64) continue;
+    out.push(v);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 function sanitizeBestScores(raw) {

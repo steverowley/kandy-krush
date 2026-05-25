@@ -150,11 +150,10 @@ const state = {
   roguelike: persisted.roguelike || {
     currentSlot: 1, gems: 0, runsCompleted: 0, runsStarted: 0, bestSlot: 0,
   },
-  inRoguelikeRun: false,
-  // Upgrades collected during the current run. Reset when a run begins.
-  runUpgrades: [],
-  // Relics held during the current run. Awarded after boss wins.
-  runRelics: [],
+  inRoguelikeRun: !!persisted.inRoguelikeRun,
+  // Upgrades + relics survive page reloads, restored from save.
+  runUpgrades: Array.isArray(persisted.runUpgrades) ? persisted.runUpgrades.slice() : [],
+  runRelics: Array.isArray(persisted.runRelics) ? persisted.runRelics.slice() : [],
   // Per-slot counters for relic triggers. Reset on slot start.
   slotMatchCount: 0,
   relicSwapCount: 0,
@@ -862,6 +861,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8n',
+    items: [
+      '💾 RUN STATE PERSISTS across reloads — close the tab mid-run and your class, upgrades, and relics are all there when you come back.',
+      'On a 100-slot marathon this is huge: never lose a 9-relic build to a stray browser refresh.',
+      'Save layer now stores runUpgrades + runRelics + inRoguelikeRun, with array length capped at 200 entries to keep storage tidy.',
+    ],
+  },
+  {
     id: '2026-05-25-8m',
     items: [
       '📜 RUN SUMMARY — at the end of every run (complete or fail), a recap card appears with: class, slot reached, gems earned, total gems, best slot, archetype tallies, and all relics collected.',
@@ -1239,6 +1246,9 @@ function persist() {
     settings: state.settings,
     levelProgress: state.levelProgress,
     roguelike: state.roguelike,
+    inRoguelikeRun: !!state.inRoguelikeRun,
+    runUpgrades: state.runUpgrades || [],
+    runRelics: state.runRelics || [],
   });
 }
 
@@ -1467,6 +1477,7 @@ function advanceRoguelikeAfterWin() {
         ? ` (${ARCHETYPES[arch].icon} ${ARCHETYPES[arch].name} ×${willStack})` : '';
       flashMessage(`Picked: ${chosen.name}${synergyTag}`, 1400);
       speech.speak(`Picked ${chosen.name}`);
+      persist();
       refreshRunHud();
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 250);
     }, categoryColor, ARCHETYPES, counts);
