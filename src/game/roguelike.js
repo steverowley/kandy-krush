@@ -253,6 +253,7 @@ export const UPGRADES = [
   { id: 'prism-maker', category: 'synergy',    archetype: 'bomber',  name: 'Prism Maker',      desc: '🌈 Every special candy you make has a 15% chance per stack to also spawn a Prism crazy tile.' },
   { id: 'gold-rush',   category: 'buff',       archetype: 'scorer',  name: 'Gold Rush',         desc: 'Every match earns a flat +20 score per stack on top of the multiplier.' },
   { id: 'thunder-foot',category: 'consumable', archetype: 'sustain', name: 'Thunder Foot',      desc: 'Every 8 swaps in a slot, gain +2 moves automatically.' },
+  { id: 'crazy-magnet',category: 'synergy',    archetype: 'bomber',  name: 'Crazy Magnet',       desc: 'Every 3rd match (per slot) automatically spawns a random crazy tile.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
