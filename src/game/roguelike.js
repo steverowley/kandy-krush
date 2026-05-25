@@ -209,17 +209,46 @@ const BOSS_LEVELS = {
   },
 };
 
-// Map a roguelike slot (1..30) to a base level config. For now this
-// just walks the first 30 hand-tuned levels; later we'll tag boss
-// slots and tune difficulty per slot.
+// Scale objective targets for roguelike runs so late-slot objectives
+// keep up with the player's compounding multipliers, cascades, and
+// power-ups. Players have been hitting 200k score on slots where the
+// base target is ~5k — way too easy.
+//
+// Score targets scale linearly with slot: target * (1 + slot * 0.5).
+//   Slot 1:   1.5×   (5k → 7.5k)
+//   Slot 25: 13.5×   (5k → 67k)
+//   Slot 50:   26×   (5k → 130k)
+//   Slot 100:  51×   (5k → 255k)
+// Matches / clearType scale more gently. clearJelly and dropIngredients
+// are absolute board counts (tiles/cherries placed) and stay as-is.
+function scaleObjective(obj, slot, isBoss) {
+  if (!obj) return obj;
+  // Bosses are hand-tuned but still bump them so they don't fall behind.
+  // Boss scaling is half the non-boss curve.
+  const scoreFactor = isBoss ? 1 + slot * 0.15 : 1 + slot * 0.50;
+  const matchFactor = isBoss ? 1 + slot * 0.08 : 1 + slot * 0.20;
+  if (obj.kind === 'score') {
+    return { ...obj, target: Math.round(obj.target * scoreFactor) };
+  }
+  if (obj.kind === 'matches' || obj.kind === 'clearType') {
+    return { ...obj, target: Math.max(obj.target, Math.round(obj.target * matchFactor)) };
+  }
+  return obj;
+}
+
+// Map a roguelike slot (1..100) to a base level config. Score-style
+// objectives get scaled up per-slot so the late game stays challenging.
 export function getRoguelikeLevel(slot) {
   const idx = Math.max(1, Math.min(RUN_LENGTH, slot));
   if (BOSS_LEVELS[idx]) {
-    return { ...BOSS_LEVELS[idx], runSlot: idx, isBoss: true };
+    const boss = { ...BOSS_LEVELS[idx], runSlot: idx, isBoss: true };
+    boss.objective = scaleObjective(boss.objective, idx, true);
+    return boss;
   }
   const base = LEVELS[(idx - 1) % LEVELS.length] || getLevel(1);
   return {
     ...base,
+    objective: scaleObjective(base.objective, idx, false),
     runSlot: idx,
     isBoss: false,
   };

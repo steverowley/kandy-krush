@@ -1619,6 +1619,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14i',
+    items: [
+      '📈 ROGUELIKE SCORE TARGETS SCALE WITH SLOT — score-style objectives in roguelike runs now multiply by (1 + slot × 0.5). Slot 50 score targets jump 26×; slot 100 jumps 51×. Matches / clear-type targets scale more gently (×0.2 per slot). Bosses scale half-rate since they\'re already hand-tuned. No more breezing past targets with 200k while the goal said 5k.',
+      'Hand-placed obstacle counts (clearJelly, dropIngredients) are NOT scaled — those are tied to board geometry.',
+    ],
+  },
+  {
     id: '2026-05-25-14h',
     items: [
       '🌑 NO MORE INTRO-OVERLAP — Black Hole, Storm Caller, Eraser, Grumblock spawn, Wild Card, Sweet Roar, Iron Tongue, and the mutator banner all wait for you to tap the intro before they fire. They used to play under the intro card.',
