@@ -466,10 +466,11 @@ async function fireMeteor() {
 }
 
 // ---------- Crazy tiles ----------
-const CRAZY_KINDS = ['tnt', 'void', 'bolt'];
+const CRAZY_KINDS = ['tnt', 'void', 'bolt', 'prism'];
 
 function pickCrazyKind() {
-  const weights = { tnt: 1, void: 1 + upgradeCount('void-touched'), bolt: 1 };
+  // Prism is rare (weight 0.4) compared to the common 3 (weight 1).
+  const weights = { tnt: 1, void: 1 + upgradeCount('void-touched'), bolt: 1, prism: 0.4 };
   let total = 0;
   for (const k of CRAZY_KINDS) total += weights[k] || 1;
   let pick = Math.random() * total;
@@ -501,7 +502,7 @@ function spawnCrazyTile(kind) {
   cell.crazy = kind;
   renderBoard(state.board, state);
   spawnTileSparkles(target.c, target.r, 14, { color: '#FF006E' });
-  const labels = { tnt: 'TNT', void: 'Void', bolt: 'Bolt' };
+  const labels = { tnt: 'TNT', void: 'Void', bolt: 'Bolt', prism: '🌈 Prism' };
   flashMessage(`${labels[kind]} appeared! Pop it!`, 1500);
   haptics.specialBirth();
 }
@@ -593,6 +594,39 @@ async function triggerCrazyEffect(pos, kind) {
     haptics.epic();
     spawnLightningRow(pos.r);
     screenShake(6, 320);
+    await delay(220);
+  } else if (kind === 'prism') {
+    // 🌈 Prism — clear ALL tiles of one random color across the board.
+    const colorAtPos = state.board.typeAt(pos.c, pos.r);
+    // Pick a target color: try neighbors first, fall back to a random
+    // existing color on the board.
+    let targetColor = colorAtPos;
+    const colors = new Set();
+    for (let r = 0; r < state.board.rows; r++) {
+      for (let c = 0; c < state.board.cols; c++) {
+        if (state.board.isIngredient(c, r)) continue;
+        const t = state.board.typeAt(c, r);
+        if (t != null) colors.add(t);
+      }
+    }
+    const colorList = [...colors];
+    if (colorList.length > 0) {
+      targetColor = colorList[Math.floor(Math.random() * colorList.length)];
+    }
+    for (let r = 0; r < state.board.rows; r++) {
+      for (let c = 0; c < state.board.cols; c++) {
+        if (state.board.isIngredient(c, r)) continue;
+        if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+        if (state.board.typeAt(c, r) === targetColor) positions.push({ c, r });
+      }
+    }
+    flashMessage(`🌈 PRISM! All of one color cleared (${positions.length} tiles)`, 1800);
+    speech.speak('Prism!');
+    sfx.playMatch(positions.length, 3);
+    haptics.epic();
+    spawnConfetti(40);
+    spawnScreenFlash('rgba(255, 214, 10, 0.4)');
+    screenShake(6, 380);
     await delay(220);
   }
   if (positions.length > 0) {
@@ -910,6 +944,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8s',
+    items: [
+      '🌈 NEW CRAZY TILE — Prism! Pop a Prism crazy tile to instantly clear ALL tiles of one random color across the board. Massive cascade potential.',
+      'Prism is rare (weight 0.4 vs 1.0 for the common 3) — when it appears, take advantage. Spins through rainbow colors so you can\'t miss it.',
+      'Crazy tile pool grows from 3 (TNT 💣, Void 🌀, Bolt ⚡) to 4 with Prism 🌈.',
+    ],
+  },
   {
     id: '2026-05-25-8r',
     items: [
