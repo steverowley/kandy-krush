@@ -355,7 +355,7 @@ function playCrackle() {
 }
 
 function scheduleNextCrackle() {
-  if (!musicNodes || musicNodes.stopped || muted || musicMode === 'chip') {
+  if (!musicNodes || musicNodes.stopped || muted || musicMode === 'chip' || musicMode === 'boss') {
     crackleTimer = null;
     return;
   }
@@ -435,9 +435,21 @@ const CHIP_SONGS = [
   ],
 ];
 
-let musicMode = 'normal'; // 'normal' | 'chip'
+let musicMode = 'normal'; // 'normal' | 'chip' | 'boss'
+// In boss mode the chiptune speeds up and the snare doubles. Same
+// song bank — just a tempo and groove change.
+const BOSS_BPM_MULT = 1.35;
+function chipBpmActive() {
+  return musicMode === 'boss' ? CHIP_BPM * BOSS_BPM_MULT : CHIP_BPM;
+}
+function chipBeatActive() { return 60 / chipBpmActive(); }
+function chipBarActive() { return chipBeatActive() * 4; }
+
 export function setMusicMode(mode) {
-  const next = mode === 'roguelike' ? 'chip' : 'normal';
+  let next;
+  if (mode === 'boss') next = 'boss';
+  else if (mode === 'roguelike') next = 'chip';
+  else next = 'normal';
   if (next === musicMode) return;
   musicMode = next;
   songIndex = 0;
@@ -453,7 +465,7 @@ export function setMusicMode(mode) {
 }
 
 function currentSong() {
-  const bank = musicMode === 'chip' ? CHIP_SONGS : SONGS;
+  const bank = (musicMode === 'chip' || musicMode === 'boss') ? CHIP_SONGS : SONGS;
   return bank[songIndex % bank.length];
 }
 
@@ -553,30 +565,39 @@ function chipKick(at) {
 }
 
 function scheduleChipBar(startAt, bar) {
-  // Bass: one note per beat (4 beats). Octave-jumping pattern gives
-  // the marching feel.
-  for (let i = 0; i < 4; i++) {
-    chipBass(startAt + i * CHIP_BEAT_S, bar.bass[i]);
+  const beat = chipBeatActive();
+  const isBoss = musicMode === 'boss';
+  // Bass: one note per beat. Boss mode kicks every half-beat instead
+  // for a relentless driving feel.
+  for (let i = 0; i < 4; i++) chipBass(startAt + i * beat, bar.bass[i]);
+  if (isBoss) {
+    // Extra off-beat bass stabs at the and-of-each beat.
+    for (let i = 0; i < 4; i++) chipBass(startAt + (i + 0.5) * beat, bar.bass[i] * 1.5);
   }
   // Kick on 1 and 3 (military downbeat); snare on 2 and 4 (backbeat).
   chipKick(startAt);
-  chipKick(startAt + CHIP_BEAT_S * 2);
-  chipSnare(startAt + CHIP_BEAT_S * 1, false);
-  chipSnare(startAt + CHIP_BEAT_S * 3, true);
-  // Occasional snare flam right before downbeat — that Guile groove.
-  if (Math.random() < 0.35) {
-    chipSnare(startAt + CHIP_BEAT_S * 3 + CHIP_BEAT_S * 0.5, false);
-    chipSnare(startAt + CHIP_BEAT_S * 3 + CHIP_BEAT_S * 0.75, false);
+  chipKick(startAt + beat * 2);
+  chipSnare(startAt + beat * 1, false);
+  chipSnare(startAt + beat * 3, true);
+  // Snare flam right before downbeat — that Guile groove. Always in
+  // boss mode; occasional in regular chip mode.
+  if (isBoss || Math.random() < 0.35) {
+    chipSnare(startAt + beat * 3 + beat * 0.5, false);
+    chipSnare(startAt + beat * 3 + beat * 0.75, false);
+  }
+  if (isBoss) {
+    // Snare rolls on 1.5 too for chaos.
+    chipSnare(startAt + beat * 1 + beat * 0.5, false);
   }
   // Chord stabs on the AND of beats 2 and 4 — Reggae-skank-ish push.
-  chipChordStab(startAt + CHIP_BEAT_S * 1.5, bar.chord);
-  chipChordStab(startAt + CHIP_BEAT_S * 3.5, bar.chord);
+  chipChordStab(startAt + beat * 1.5, bar.chord);
+  chipChordStab(startAt + beat * 3.5, bar.chord);
   // Melody: 8 eighth notes per bar.
   for (let i = 0; i < 8; i++) {
     const f = bar.melody[i];
     if (!f) continue;
-    const at = startAt + i * CHIP_BEAT_S / 2;
-    chipBlip(at, f, CHIP_BEAT_S * 0.42, 'square', 0.05);
+    const at = startAt + i * beat / 2;
+    chipBlip(at, f, beat * 0.42, 'square', 0.05);
   }
 }
 
@@ -587,7 +608,7 @@ function scheduleNextBeatBar() {
   }
   const c = ensureCtx();
   if (!c) return;
-  if (musicMode === 'chip') {
+  if (musicMode === 'chip' || musicMode === 'boss') {
     const song = currentSong();
     const bar = song[beatBarCount % song.length];
     scheduleChipBar(c.currentTime + 0.04, bar);
@@ -596,7 +617,7 @@ function scheduleNextBeatBar() {
     if (beatBarCount > 0 && beatBarCount % (song.length * 2) === 0) {
       songIndex = (songIndex + 1) % CHIP_SONGS.length;
     }
-    beatTimer = setTimeout(scheduleNextBeatBar, CHIP_BAR_S * 1000);
+    beatTimer = setTimeout(scheduleNextBeatBar, chipBarActive() * 1000);
     return;
   }
   const song = currentSong();
@@ -634,7 +655,7 @@ function scheduleNextChord() {
   if (!musicNodes || musicNodes.stopped || muted) return;
   // Chip mode is a separate engine — bar scheduler handles everything.
   // Don't layer lo-fi pads underneath the chiptune.
-  if (musicMode === 'chip') return;
+  if (musicMode === 'chip' || musicMode === 'boss') return;
   const c = ensureCtx();
   if (!c) return;
   const song = currentSong();
