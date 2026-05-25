@@ -1576,6 +1576,74 @@ export const LEVELS = [
     hint: '60 matches in 50 moves. Cascades or it doesn\'t happen.',
     tip: 'If you got here, you really love this game. Thanks for playing.',
   },
+  // ===== Chapter: Aftermath (126-130) — pure puzzle distillation =====
+  {
+    id: 126,
+    name: 'Glass Maze',
+    moves: 40,
+    objective: { kind: 'clearJelly' },
+    hint: 'Single jelly everywhere — clear the maze.',
+    obstacles: {
+      jelly: [
+        [0, 0, 1], [2, 0, 1], [4, 0, 1],
+        [1, 1, 1], [3, 1, 1], [5, 1, 1],
+        [0, 2, 1], [2, 2, 1], [4, 2, 1],
+        [1, 3, 1], [3, 3, 1], [5, 3, 1],
+        [0, 4, 1], [2, 4, 1], [4, 4, 1],
+        [1, 5, 1], [3, 5, 1], [5, 5, 1],
+      ],
+    },
+  },
+  {
+    id: 127,
+    name: 'Tower Defense',
+    moves: 36,
+    objective: { kind: 'score', target: 14000 },
+    hint: '14,000 score through a tower of locks down the middle.',
+    obstacles: {
+      locks: [
+        [2, 1, 2], [3, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [2, 4, 2], [3, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 128,
+    name: 'Picky Eater',
+    moves: 32,
+    objective: { kind: 'clearType', type: 3, target: 25 },
+    hint: 'Clear 25 of the green tiles. Tunnel-vision.',
+  },
+  {
+    id: 129,
+    name: 'Marathon',
+    moves: 80,
+    objective: { kind: 'score', target: 20000 },
+    hint: 'A long quiet 80-move grind to 20k. Pace yourself.',
+  },
+  {
+    id: 130,
+    name: 'Aftermath',
+    moves: 55,
+    objective: { kind: 'score', target: 30000 },
+    hint: 'The new top: 30,000 score. Everything in your bag.',
+    tip: 'Past True End, past Encore. This is the final final.',
+    obstacles: {
+      ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
+      jelly: [
+        [1, 1, 2], [4, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [1, 4, 2], [4, 4, 2],
+      ],
+      locks: [
+        [0, 2, 3], [5, 2, 3],
+        [0, 3, 3], [5, 3, 3],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {

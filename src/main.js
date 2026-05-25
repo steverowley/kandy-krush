@@ -1517,6 +1517,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13f',
+    items: [
+      '🏁 NEW CHAPTER — "Aftermath" (levels 126-130). Glass Maze, Tower Defense, Picky Eater, Marathon, and the new final at 30,000 score: Aftermath.',
+      'Level count is now 130.',
+    ],
+  },
+  {
     id: '2026-05-25-13e',
     items: [
       '🍬 NEW UPGRADE — Sweet Steady (Sustain): slot start grants +1 random power-up per stack. Drip restock.',
