@@ -191,9 +191,23 @@ function isClass(id) {
   return state.inRoguelikeRun && state.roguelike?.currentClass === id;
 }
 
+function bumpClassStats(outcome, slotReached) {
+  if (!state.roguelike) return;
+  const id = state.roguelike.currentClass;
+  if (!id) return;
+  if (!state.roguelike.classStats) state.roguelike.classStats = {};
+  const cur = state.roguelike.classStats[id] || { runs: 0, completes: 0, bestSlot: 0 };
+  cur.runs = (cur.runs || 0) + 1;
+  if (outcome === 'complete') cur.completes = (cur.completes || 0) + 1;
+  cur.bestSlot = Math.max(cur.bestSlot || 0, slotReached);
+  state.roguelike.classStats[id] = cur;
+}
+
 function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
   // Snapshot the run state BEFORE the run gets cleared.
   const cls = state.roguelike?.currentClass ? getClass(state.roguelike.currentClass) : null;
+  bumpClassStats(outcome, slotReached);
+  const stats = cls && state.roguelike?.classStats ? state.roguelike.classStats[cls.id] : null;
   showRunSummary({
     outcome,
     klass: cls,
@@ -208,6 +222,7 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
     getRelic,
     awakened: classAwakened(),
     runsCompleted: state.roguelike?.runsCompleted || 0,
+    classStats: stats,
   });
 }
 
@@ -957,6 +972,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8w',
+    items: [
+      '📈 PER-CLASS RUN STATS — every run tracks runs/completes/best-slot per class. Run summary now shows "Champion run #3, 1 win, best slot 67".',
+      'Sanitised + persisted across reloads so your bragging rights survive.',
+    ],
+  },
   {
     id: '2026-05-25-8v',
     items: [

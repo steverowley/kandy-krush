@@ -561,7 +561,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -599,7 +599,10 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   }
   if (klassEl) {
     const awakenStr = awakened ? ' <span class="px-2 rounded-full bg-pink-500 text-white text-xs">✨ AWAKENED</span>' : '';
-    klassEl.innerHTML = klass ? `Class: ${klass.icon} ${klass.name}${awakenStr}` : '';
+    const statsStr = classStats
+      ? ` <span class="text-xs opacity-70">— Run #${classStats.runs}, ${classStats.completes} wins, best slot ${classStats.bestSlot}</span>`
+      : '';
+    klassEl.innerHTML = klass ? `Class: ${klass.icon} ${klass.name}${awakenStr}${statsStr}` : '';
   }
   if (builds) {
     builds.innerHTML = '';
