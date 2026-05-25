@@ -1619,6 +1619,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14l',
+    items: [
+      '➕ +MOVES REVIVE FIXED — the input-lock from 14k accidentally blocked the +Moves revive when you ran out of moves. Now the lock only applies during the post-WIN settle (movesRemaining > 0). +Moves still revives you from a fail.',
+    ],
+  },
+  {
     id: '2026-05-25-14k',
     items: [
       '🔒 INPUT LOCKED AFTER WIN — once the objective is met, swaps / taps / armed tools / +Moves / Shuffle are blocked during the 1.2s settle window so you can\'t accidentally make a phantom move while the success panel is animating in.',
@@ -4370,7 +4376,12 @@ async function useColorBomb(pos) {
 
 function usePlusMoves() {
   if (state.busy) return;
-  if (state.resolved) return;
+  // Allow the fail-revive path: when the player has run out of moves
+  // (state.resolved + movesRemaining<=0), this function restores
+  // state.resolved=false, +N moves, and hides the level-fail overlay.
+  // Block only during the post-WIN settle, where movesRemaining is
+  // still > 0 and the success panel is animating in.
+  if (state.resolved && state.movesRemaining > 0) return;
   const bank = powerupBank();
   if ((bank.plusMoves || 0) <= 0) return;
   if (state.settings.mode === 'free' || !state.level) {
