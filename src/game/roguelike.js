@@ -250,6 +250,7 @@ export const UPGRADES = [
   { id: 'chain-bomb',  category: 'synergy',    archetype: 'bomber',  name: 'Chain Bomb',       desc: 'When TNT pops, 30% chance to spawn another TNT in its blast zone.' },
   { id: 'first-free',  category: 'buff',       archetype: 'sustain', name: 'First Swap Free',  desc: 'First swap of every slot doesn\'t cost a move.' },
   { id: 'meteor',      category: 'synergy',    archetype: 'wild',    name: 'Meteor Shower',    desc: '☄️ Every 8 matches, 3 random tiles explode in a flash.' },
+  { id: 'prism-maker', category: 'synergy',    archetype: 'bomber',  name: 'Prism Maker',      desc: '🌈 Every special candy you make has a 15% chance per stack to also spawn a Prism crazy tile.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
@@ -328,6 +329,8 @@ export const RELICS = [
     desc: 'Hint sparkles appear after 3 idle seconds instead of the usual 8.' },
   { id: 'free-reroll', icon: '🐘', name: 'Elephant Memory',
     desc: 'Upgrade rerolls are FREE — no Shuffle cost.' },
+  { id: 'prism-lens',  icon: '🔭', name: 'Prism Lens',
+    desc: '🌈 Prism crazy tiles clear TWO random colors instead of one — boardwipe potential.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
