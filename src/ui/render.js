@@ -370,6 +370,22 @@ function blockClicksFor(panelEl, ms = 600) {
   }, ms);
 }
 
+// Modal focus restoration. Capture activeElement when the modal opens
+// and restore it on close so keyboard / screen-reader users land back
+// on the trigger element they invoked the modal from. Keeps a stack so
+// nested modals work.
+const focusStack = [];
+function captureFocus() {
+  const el = document.activeElement;
+  focusStack.push(el && el !== document.body ? el : null);
+}
+function restoreFocus() {
+  const el = focusStack.pop();
+  if (el && typeof el.focus === 'function') {
+    try { el.focus(); } catch {}
+  }
+}
+
 export function tileEl(c, r) {
   return document.querySelector(`#board .tile[data-c="${c}"][data-r="${r}"]`);
 }
@@ -688,6 +704,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   const gemsEl = document.getElementById('skill-tree-gems');
   const closeBtn = document.getElementById('skill-tree-close');
   if (!overlay || !panel || !list) return;
+  captureFocus();
 
   const render = () => {
     if (stats) {
@@ -727,6 +744,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
     panel.classList.add('hidden');
     closeBtn.removeEventListener('click', close);
     overlay.removeEventListener('click', close);
+    restoreFocus();
     if (onClose) onClose();
   };
   closeBtn.addEventListener('click', close);
@@ -741,6 +759,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
+  captureFocus();
   const tier = document.getElementById('run-summary-tier');
   const title = document.getElementById('run-summary-title');
   const stats = document.getElementById('run-summary-stats');
@@ -881,6 +900,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     panel.classList.add('hidden');
     close.removeEventListener('click', handleClose);
     overlay.removeEventListener('click', handleClose);
+    restoreFocus();
   };
   close.addEventListener('click', handleClose);
   overlay.addEventListener('click', handleClose);
@@ -1520,6 +1540,7 @@ export function showChangelog(items, onDismiss) {
     if (onDismiss) onDismiss();
     return;
   }
+  captureFocus();
   list.innerHTML = '';
   // Accept either a flat array of strings (legacy) or an array of
   // changelog ENTRIES { id, items }. Entries get a small version label.
@@ -1553,6 +1574,7 @@ export function showChangelog(items, onDismiss) {
     panel.classList.add('hidden');
     btn.removeEventListener('click', dismiss);
     overlay.removeEventListener('click', dismiss);
+    restoreFocus();
     if (onDismiss) onDismiss();
   };
   btn.addEventListener('click', dismiss);
