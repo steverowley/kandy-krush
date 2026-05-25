@@ -991,6 +991,17 @@ function applyRunUpgradesOnSlotStart() {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // 🗝 Lockpick mutator — weaken every lock by 1 level.
+  if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
+    const toDelete = [];
+    for (const [k, v] of state.lockMap) {
+      if (v <= 1) toDelete.push(k);
+      else state.lockMap.set(k, v - 1);
+    }
+    for (const k of toDelete) state.lockMap.delete(k);
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('🗝 Lockpick: locks weakened!', 1300);
+  }
   // 🎁 Gift Slot mutator — +1 of every power-up at slot start
   if (hasMutator('gift-slot')) {
     const giftBank = powerupBank();
@@ -1200,6 +1211,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10b',
+    items: [
+      '🗝 NEW MUTATOR — Lockpick. Slot starts with every lock on the board weakened by 1 level. Saves the slot when paired with a lock-heavy layout.',
+      'Mutator pool now 12.',
+    ],
+  },
   {
     id: '2026-05-25-10a',
     items: [

@@ -410,6 +410,8 @@ export const MUTATORS = [
     desc: 'Every special candy you create becomes a RAINBOW.' },
   { id: 'hammer-time', icon: '🔨', name: 'Hammer Time',
     desc: 'Hammers are FREE this slot — bank doesn\'t decrement.' },
+  { id: 'lockpick',    icon: '🗝', name: 'Lockpick',
+    desc: 'Slot starts with EVERY lock weakened by 1 level — easier crack.' },
 ];
 
 export function isMutatorSlot(slot) {
