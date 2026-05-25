@@ -930,6 +930,11 @@ function applyRunUpgradesOnSlotStart() {
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
   state.ironcladHammerUsed = false;
+  // 🌬 Second Wind relic — start of slot with only 1 life → 2 lives.
+  if (hasRelic('second-wind') && (state.roguelike.livesRemaining || 0) === 1) {
+    state.roguelike.livesRemaining = 2;
+    flashMessage('🌬 Second Wind! +1 life', 1300);
+  }
   // first-free upgrade — fresh first-swap flag.
   state.firstSwapUsed = false;
   // first-free-reroll meta — fresh per slot.
@@ -1046,6 +1051,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
   if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
+  // 🧠 Big Brain relic — +25% per cascade level past 1.
+  if (hasRelic('big-brain') && cascadeLevel >= 2) {
+    m *= 1 + 0.25 * (cascadeLevel - 1);
+  }
   // Mutator: ☀️ Golden Hour — ×2 across the slot.
   if (hasMutator('golden-hour')) m *= 2;
   // Mutator: 🏆 Big Spender — 5+ matches score ×3.
@@ -1091,6 +1100,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9d',
+    items: [
+      '👑 3 MORE RELICS — pool now 16. Try them all.',
+      '🪅 Piñata — every 5 matches drops a random power-up · 🧠 Big Brain — +25% score per cascade level (additive on top of cascade-king) · 🌬 Second Wind — start a slot with only 1 life left and you bounce back to 2.',
+    ],
+  },
   {
     id: '2026-05-25-9c',
     items: [
@@ -2840,6 +2856,18 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     state.slotMatchCount = (state.slotMatchCount || 0) + 1;
     if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
       flashMessage('🍰 Sugar Rush spent', 900);
+    }
+    // 🪅 Piñata relic — every 5 matches drop a random power-up.
+    if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pick] || 0) < cap) {
+        bank[pick] = (bank[pick] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
+      }
     }
   }
   state.score += earned;
