@@ -118,6 +118,7 @@ import {
 import * as telemetry from './telemetry.js';
 import * as purchases from './purchases.js';
 import * as i18n from './i18n.js';
+import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -263,6 +264,13 @@ const state = {
   // Upgrades + relics survive page reloads, restored from save.
   runUpgrades: Array.isArray(persisted.runUpgrades) ? persisted.runUpgrades.slice() : [],
   runRelics: Array.isArray(persisted.runRelics) ? persisted.runRelics.slice() : [],
+  // 🌅 Daily-seed tracking (Phase B1). Per-day best-slot the player
+  // reached in today's daily — surfaces on the start screen.
+  dailySeedDate: persisted.dailySeedDate || null,
+  dailySeedBestSlot: persisted.dailySeedBestSlot || 0,
+  runRng: null,
+  runIsDaily: false,
+  runDailyStamp: null,
   // Per-slot counters for relic triggers. Reset on slot start.
   slotMatchCount: 0,
   relicSwapCount: 0,
@@ -362,10 +370,17 @@ function openStartMenu(subtitle = null) {
         classIcon: cls?.icon || null,
       }
     : null;
+  const todayStamp = dailySeedStamp();
+  const dailyStatus = {
+    stamp: todayStamp,
+    playedToday: state.dailySeedDate === todayStamp,
+    bestSlot: state.dailySeedDate === todayStamp ? (state.dailySeedBestSlot || 0) : 0,
+  };
   showStartMenu({
     subtitle,
     version: APP_VERSION,
     runInProgress: inProgress,
+    dailyStatus,
     stats: {
       best: state.highScore || 0,
       runsCompleted: state.roguelike?.runsCompleted || 0,
@@ -391,9 +406,22 @@ function openStartMenu(subtitle = null) {
       telemetry.track('mode_picked', { mode: 'roguelike' });
       state.settings.mode = 'roguelike';
       sfx.setMusicMode('roguelike');
+      // Clear any prior daily-seed flag so a fresh "Roguelike Run"
+      // doesn't inherit a seeded rng from the previous session.
+      state.runRng = null;
+      state.runIsDaily = false;
       persist();
       playModeTransition('roguelike');
       startRoguelikeRun();
+    },
+    onDaily: () => {
+      sfx.unlockAudio();
+      telemetry.track('mode_picked', { mode: 'daily' });
+      state.settings.mode = 'roguelike';
+      sfx.setMusicMode('roguelike');
+      persist();
+      playModeTransition('roguelike');
+      startDailySeedRun();
     },
     onLevels: () => {
       sfx.unlockAudio();
@@ -488,7 +516,7 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
 // only on the first display per slot AND only if the player has a
 // Shuffle in their power-up bank to spend.
 function showUpgradeChoicesForSlot(n, canReroll) {
-  const choices = pickUpgradeChoices(state.runUpgrades, n);
+  const choices = pickUpgradeChoices(state.runUpgrades, n, runRng());
   const counts = archetypeCounts(state.runUpgrades);
   const bank = powerupBank();
   // 🐘 Elephant Memory relic — all rerolls free + repeatable.
@@ -1385,7 +1413,7 @@ function applyRunUpgradesOnSlotStart() {
   // Roll a fresh mutator only on mutator slots.
   const slot = state.roguelike.currentSlot;
   if (isMutatorSlot(slot)) {
-    state.slotMutator = pickRandomMutator().id;
+    state.slotMutator = pickRandomMutator(runRng()).id;
   } else {
     state.slotMutator = null;
   }
@@ -1844,6 +1872,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17i',
+    items: [
+      '🌅 DAILY SEED RUN — new purple "🌅 Today\'s Daily Seed" button on the start screen launches a roguelike run where the upgrade picks, relic choices, and mutators are all seeded from today\'s UTC date. Everyone on the same calendar day gets the same draft. PRs into a leaderboard the day the backend goes up.',
+      'Run end records your best slot on today\'s daily — the start-screen button shows "✓ Slot X" when you\'ve already played. Only the first attempt per day counts (Spire / Balatro convention).',
+      'Implementation: new `src/game/rng.js` with mulberry32 + `dailySeed()` derived from YYYYMMDD UTC. Pickers (`pickUpgradeChoices`, `pickRelicChoices`, `pickRandomMutator`) accept an optional `rng` param; main.js threads `runRng()` through every call site.',
+    ],
+  },
   {
     id: '2026-05-25-17h',
     items: [
@@ -3667,6 +3703,8 @@ function persist() {
     inRoguelikeRun: !!state.inRoguelikeRun,
     runUpgrades: state.runUpgrades || [],
     runRelics: state.runRelics || [],
+    dailySeedDate: state.dailySeedDate || null,
+    dailySeedBestSlot: state.dailySeedBestSlot || 0,
   });
   // Warn the player ONCE if persist() fails (private mode / quota
   // exceeded / SecurityError). Without this, progress silently doesn't
@@ -3782,6 +3820,33 @@ function maxLivesForRun() {
   return lives;
 }
 
+// Helper: returns the rng function the current run's pickers should
+// use. For daily-seed runs this is a deterministic seeded mulberry32
+// so every player gets the same draft on the same calendar day; for
+// normal runs it falls back to Math.random.
+function runRng() {
+  return state.runRng || Math.random;
+}
+
+// Start a daily-seed run. Seed is derived from today's UTC date, so
+// every player on the same calendar day gets the same class options,
+// upgrade picks, mutators, and relic choices. This is the single
+// highest-leverage retention feature in the genre.
+function startDailySeedRun() {
+  const seed = dailySeed();
+  state.runRng = createRng(seed);
+  state.runIsDaily = true;
+  state.runDailyStamp = dailySeedStamp();
+  telemetry.track('daily_seed_start', { stamp: state.runDailyStamp });
+  // Reset run state so a daily can't inherit upgrades from a previous run.
+  state.inRoguelikeRun = false;
+  state.roguelike.currentSlot = 1;
+  state.runUpgrades = [];
+  state.runRelics = [];
+  state.roguelike.currentClass = null;
+  startRoguelikeRun();
+}
+
 function startRoguelikeRun() {
   state.inRoguelikeRun = true;
   if (!state.roguelike.currentSlot || state.roguelike.currentSlot < 1) {
@@ -3801,7 +3866,7 @@ function startRoguelikeRun() {
     state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
     // 🎒 Pocket Friend meta-skill — start each run with 1 random relic.
     if (hasMeta('pocket-friend')) {
-      const choices = pickRelicChoices([], 1);
+      const choices = pickRelicChoices([], 1, runRng());
       if (choices.length > 0) {
         state.runRelics = [choices[0].id];
         setTimeout(() => {
@@ -3937,7 +4002,17 @@ function advanceRoguelikeAfterWin() {
       upgrades: (state.runUpgrades || []).length,
       relics: (state.runRelics || []).length,
       runs_completed_total: state.roguelike.runsCompleted,
+      daily: !!state.runIsDaily,
+      daily_stamp: state.runDailyStamp || null,
     });
+    // Daily-seed full clear is the ceiling — record it.
+    if (state.runIsDaily) {
+      state.dailySeedDate = state.runDailyStamp;
+      state.dailySeedBestSlot = RUN_LENGTH;
+    }
+    state.runRng = null;
+    state.runIsDaily = false;
+    state.runDailyStamp = null;
     // Show the run summary BEFORE clearing run state so the snapshot
     // can read class, archetypes, and relics.
     showEndOfRunSummary('complete', RUN_LENGTH, gems);
@@ -4025,7 +4100,7 @@ function advanceRoguelikeAfterWin() {
       return;
     }
     setTimeout(() => {
-      const choices = pickRelicChoices(state.runRelics || [], 3);
+      const choices = pickRelicChoices(state.runRelics || [], 3, runRng());
       showRelicPicker(choices, state.runRelics || [], (relic) => {
         state.runRelics = state.runRelics || [];
         state.runRelics.push(relic.id);
@@ -4105,7 +4180,7 @@ function runCrossroadsEvent(onDone) {
       options,
       onPick: (choice) => {
         if (choice.value === 'relic') {
-          const choices = pickRelicChoices(state.runRelics || [], 1);
+          const choices = pickRelicChoices(state.runRelics || [], 1, runRng());
           if (choices.length > 0) {
             const relic = choices[0];
             state.runRelics = state.runRelics || [];
@@ -4202,7 +4277,7 @@ function runMidRunShop(onDone) {
           setPowerupCounts(bank);
           flashMessage('🎁 Bank topped up', 1000);
         } else if (it.id === 'shop-relic') {
-          const choices = pickRelicChoices(state.runRelics || [], 1);
+          const choices = pickRelicChoices(state.runRelics || [], 1, runRng());
           if (choices.length > 0) {
             const r = choices[0];
             state.runRelics = state.runRelics || [];
@@ -4222,6 +4297,7 @@ function runMidRunShop(onDone) {
 function endRoguelikeRun() {
   const reached = state.roguelike.currentSlot;
   const gems = gemsEarned(reached, false, metaSkills());
+  const wasDaily = !!state.runIsDaily;
   telemetry.track('run_end', {
     outcome: 'fail',
     slot_reached: reached,
@@ -4229,7 +4305,25 @@ function endRoguelikeRun() {
     class: state.roguelike.currentClass,
     upgrades: (state.runUpgrades || []).length,
     relics: (state.runRelics || []).length,
+    daily: wasDaily,
+    daily_stamp: state.runDailyStamp || null,
   });
+  // Record the best slot for today's daily so the start-screen badge
+  // shows it. Only the FIRST daily attempt per calendar day counts
+  // toward the score (Spire / Balatro convention).
+  if (wasDaily) {
+    const today = state.runDailyStamp;
+    if (state.dailySeedDate !== today) {
+      state.dailySeedDate = today;
+      state.dailySeedBestSlot = reached;
+    } else {
+      state.dailySeedBestSlot = Math.max(state.dailySeedBestSlot || 0, reached);
+    }
+  }
+  // Clear daily flags so the next roguelike run isn't seeded by stale state.
+  state.runRng = null;
+  state.runIsDaily = false;
+  state.runDailyStamp = null;
   state.roguelike.gems = (state.roguelike.gems || 0) + gems;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, reached);
   showEndOfRunSummary('fail', reached, gems);
