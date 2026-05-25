@@ -716,6 +716,41 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   };
   close.addEventListener('click', handleClose);
   overlay.addEventListener('click', handleClose);
+  // 📋 Copy summary button — builds a clipboard-friendly text recap.
+  const shareBtn = document.getElementById('run-summary-share');
+  if (shareBtn) {
+    shareBtn.onclick = () => {
+      const klassStr = klass ? `${klass.icon} ${klass.name}` : 'Wanderer';
+      const archStr = archCounts && archetypes
+        ? Object.keys(archCounts)
+            .filter((k) => archCounts[k] > 0)
+            .map((k) => `${archetypes[k].icon}${archCounts[k]}`)
+            .join(' ')
+        : '';
+      const relicStr = relics && relics.length > 0
+        ? relics.map((id) => (getRelic && getRelic(id) ? getRelic(id).icon : '?')).join('')
+        : 'none';
+      const lines = [
+        `Sweet Match — ${outcome === 'complete' ? '🏆 RUN COMPLETE' : 'Slot ' + slotReached + '/' + totalSlots}`,
+        `Class: ${klassStr}${awakened ? ' ✨ AWAKENED' : ''}`,
+        `Build: ${archStr || '—'}`,
+        `Relics: ${relicStr}`,
+        `💎 +${gemsEarned} (total ${totalGems})`,
+      ];
+      const text = lines.join('\n');
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+          shareBtn.textContent = '✅ Copied!';
+        } else {
+          shareBtn.textContent = '⚠ Copy failed';
+        }
+      } catch {
+        shareBtn.textContent = '⚠ Copy failed';
+      }
+      setTimeout(() => { shareBtn.textContent = '📋 Copy summary'; }, 1500);
+    };
+  }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
   close.focus();

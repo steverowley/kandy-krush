@@ -1265,6 +1265,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10n',
+    items: [
+      '📋 SHARE YOUR RUN — the run-summary modal now has a "Copy summary" button that puts a clipboard-friendly recap of your class, build, relics, and gems earned.',
+      'Brag to your friends. Sample: "Sweet Match — 🏆 RUN COMPLETE. Class: ⚔ Champion ✨ AWAKENED. Build: 🎯5 💣2 ⚡1. Relics: 🎩🐢🍰. 💎 +147."',
+    ],
+  },
+  {
     id: '2026-05-25-10m',
     items: [
       '🍀 NEW UPGRADE — Lucky Magnet (Lucky). 5% chance per stack per match to instantly fill the Lucky bar.',
