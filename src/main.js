@@ -1619,6 +1619,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15f',
+    items: [
+      '🧹 LISTENER DEDUP — replaced raw addEventListener on persistent close buttons (Skill Tree, Run Inventory, Changelog) with a registry-backed replaceListener. Re-opening a panel without closing it first no longer stacks duplicate click handlers.',
+    ],
+  },
+  {
     id: '2026-05-25-15e',
     items: [
       '⌨ MODAL FOCUS RETURNS — opening the Run Inventory, Skill Tree, or What\'s New from a keyboard / screen-reader now returns focus to the trigger button on close (used to drop focus to body, breaking Tab order).',
