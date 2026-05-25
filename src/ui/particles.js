@@ -308,6 +308,59 @@ export function spawnSnake(path) {
   setTimeout(() => svg.remove(), 1500);
 }
 
+// The Eater — a giant mouth descends from above the board, holds
+// open, chomps shut, retracts. The caller clears the column's top
+// tiles in sync with the chomp.
+export function spawnEater(colIndex, biteCount) {
+  const board = document.getElementById('board');
+  const root = layer();
+  if (!board || !root) return;
+  const sample = document.querySelector(`#board .tile[data-c="${colIndex}"][data-r="0"]`);
+  if (!sample) return;
+  const sr = sample.getBoundingClientRect();
+  const br = board.getBoundingClientRect();
+  const cx = sr.left + sr.width / 2;
+  const w = sr.width * 1.6;
+  const h = sr.height * (biteCount + 0.5);
+  const el = document.createElement('div');
+  el.className = 'particle eater';
+  el.style.left = `${cx - w / 2}px`;
+  el.style.top = `${br.top - h - 40}px`;
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+  el.innerHTML = `
+    <svg viewBox="0 0 120 200" preserveAspectRatio="none" aria-hidden="true">
+      <!-- jaw silhouette -->
+      <path class="eater-body" d="M10 0 L110 0 L110 200 Q60 220 10 200 Z"
+        fill="#0a0613" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+      <!-- inner mouth (red) -->
+      <path class="eater-throat" d="M22 60 Q60 90 98 60 L98 165 Q60 195 22 165 Z"
+        fill="#5b0010"/>
+      <!-- top teeth -->
+      <g class="eater-teeth-top" fill="#fff" stroke="#000" stroke-width="3">
+        <polygon points="25,55 38,55 32,80"/>
+        <polygon points="42,55 55,55 49,82"/>
+        <polygon points="60,55 73,55 67,82"/>
+        <polygon points="78,55 91,55 84,80"/>
+      </g>
+      <!-- bottom teeth -->
+      <g class="eater-teeth-bot" fill="#fff" stroke="#000" stroke-width="3">
+        <polygon points="25,175 38,175 32,150"/>
+        <polygon points="42,175 55,175 49,148"/>
+        <polygon points="60,175 73,175 67,148"/>
+        <polygon points="78,175 91,175 84,150"/>
+      </g>
+      <!-- eyes -->
+      <circle cx="35" cy="30" r="7" fill="#FFD60A" stroke="#000" stroke-width="2"/>
+      <circle cx="85" cy="30" r="7" fill="#FFD60A" stroke="#000" stroke-width="2"/>
+      <circle cx="35" cy="32" r="3" fill="#000"/>
+      <circle cx="85" cy="32" r="3" fill="#000"/>
+    </svg>
+  `;
+  root.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
 export function spawnStarRain(count = 28) {
   const root = layer();
   if (!root) return;

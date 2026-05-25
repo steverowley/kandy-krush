@@ -75,6 +75,7 @@ import {
   spawnLightningRow,
   spawnBlackHole,
   spawnSnake,
+  spawnEater,
 } from './ui/particles.js';
 import {
   load as loadSave,
@@ -140,8 +141,60 @@ function upgradeCount(id) {
 
 // Counters for upgrades that trigger on a schedule. Reset per slot.
 let lightningCounter = 0;
+let eaterCounter = 0;
+const EATER_FROM_SLOT = 9;
+const EATER_EVERY_MOVES = 5;
+const EATER_BITE = 3;
 function resetAbilityCounters() {
   lightningCounter = 0;
+  eaterCounter = 0;
+}
+
+async function fireEater() {
+  if (!state.board) return;
+  // Pick a column with bite-able cells (skip ingredients/locks)
+  const cols = [];
+  for (let c = 0; c < state.board.cols; c++) {
+    for (let r = 0; r < EATER_BITE; r++) {
+      if (!state.board.isIngredient(c, r) && (state.lockMap.get(`${c},${r}`) || 0) === 0) {
+        cols.push(c);
+        break;
+      }
+    }
+  }
+  if (cols.length === 0) return;
+  const col = cols[Math.floor(Math.random() * cols.length)];
+  const positions = [];
+  for (let r = 0; r < EATER_BITE && r < state.board.rows; r++) {
+    if (state.board.isIngredient(col, r)) continue;
+    if ((state.lockMap.get(`${col},${r}`) || 0) > 0) continue;
+    positions.push({ c: col, r });
+  }
+  spawnEater(col, EATER_BITE);
+  flashMessage('🦷 THE EATER!', 1600);
+  speech.speak('The eater');
+  haptics.epic();
+  screenShake(7, 420);
+  await delay(620);
+  state.board.clear(positions);
+  decrementJellyAt(positions);
+  renderBoard(state.board, state);
+  await delay(180);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+}
+
+function maybeFireEater() {
+  if (state.settings.mode !== 'roguelike') return;
+  if (!state.level || !state.level.runSlot) return;
+  if (state.level.runSlot < EATER_FROM_SLOT) return;
+  if (state.level.isBoss) return; // bosses are punishing enough
+  eaterCounter++;
+  if (eaterCounter < EATER_EVERY_MOVES) return;
+  eaterCounter = 0;
+  // Fire after a short beat so the player's match animation has time
+  // to finish before the mouth descends.
+  setTimeout(() => fireEater(), 600);
 }
 
 async function fireLightning() {
@@ -350,6 +403,15 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-7n',
+    items: [
+      '🦷 HARD MODE bite! From Roguelike slot 9+, every 5 moves THE EATER drops down from above with a big jaw, eyes glowing, and chomps the top 3 candies of a random column.',
+      'Eater respects locks, jelly, and cherries (it won\'t eat through them).',
+      'Skips boss slots — those are already mean enough.',
+      'More hard-mode mechanics coming: a moving Grumblock enemy and wandering-eye tiles are next.',
+    ],
+  },
   {
     id: '2025-05-24-7m',
     items: [
@@ -1025,6 +1087,7 @@ function flashObjectiveProgress(specialsCreatedCount) {
 
 function consumeMove() {
   bumpLuckyCharge();
+  maybeFireEater();
   // Free Play has unlimited moves. Levels and Roguelike both count down.
   if (state.settings.mode === 'free' || !state.level) return;
   if (state.movesRemaining > 0) {

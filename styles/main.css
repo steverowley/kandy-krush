@@ -1353,6 +1353,54 @@ body.reduce-motion .snake-body {
   opacity: 0 !important;
 }
 
+/* The Eater — a giant chomping mouth that descends, opens wide,
+   chomps shut, then retracts. The keyframes target the SVG groups
+   inside so we can animate teeth independently of the descent. */
+.eater {
+  position: absolute;
+  pointer-events: none;
+  z-index: 92;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.7))
+          drop-shadow(0 0 30px rgba(220, 38, 38, 0.6));
+  animation: eater-descend 1200ms cubic-bezier(.3,.7,.2,1) forwards;
+}
+.eater svg { width: 100%; height: 100%; display: block; }
+.eater-teeth-top { transform-origin: 50% 60px; animation: eater-jaw-top 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
+.eater-teeth-bot { transform-origin: 50% 175px; animation: eater-jaw-bot 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
+.eater-throat { animation: eater-throat-anim 1200ms cubic-bezier(.3,.7,.2,1) forwards; }
+
+@keyframes eater-descend {
+  0%   { transform: translateY(-60%) scale(0.85); }
+  18%  { transform: translateY(0)    scale(1); }
+  35%  { transform: translateY(0)    scale(1.08); }
+  55%  { transform: translateY(0)    scale(1); }
+  78%  { transform: translateY(-30%) scale(0.95); }
+  100% { transform: translateY(-110%) scale(0.7); opacity: 0; }
+}
+@keyframes eater-jaw-top {
+  0%, 18% { transform: translateY(0); }
+  35%     { transform: translateY(-22px); }
+  55%     { transform: translateY(0); }
+  100%    { transform: translateY(0); }
+}
+@keyframes eater-jaw-bot {
+  0%, 18% { transform: translateY(0); }
+  35%     { transform: translateY(22px); }
+  55%     { transform: translateY(0); }
+  100%    { transform: translateY(0); }
+}
+@keyframes eater-throat-anim {
+  0%, 18% { transform: scaleY(0.4); transform-origin: 50% 100%; }
+  35%     { transform: scaleY(1.15); transform-origin: 50% 100%; }
+  55%     { transform: scaleY(0.5); transform-origin: 50% 100%; }
+  100%    { transform: scaleY(0.4); transform-origin: 50% 100%; }
+}
+
+body.reduce-motion .eater {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
 .particle-starfall {
   color: #F59E0B;
   text-shadow: 0 0 8px rgba(255, 214, 10, 0.9), 0 0 16px rgba(255, 214, 10, 0.5);
