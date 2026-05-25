@@ -1619,6 +1619,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14k',
+    items: [
+      '🔒 INPUT LOCKED AFTER WIN — once the objective is met, swaps / taps / armed tools / +Moves / Shuffle are blocked during the 1.2s settle window so you can\'t accidentally make a phantom move while the success panel is animating in.',
+      '🍒 COLOR BOMB CHERRY GUARD — Color Bomb now explicitly skips ingredient cells (cherries). Was previously safe by virtue of cherries having no candy type, but the explicit guard prevents future ingredient kinds from being eaten.',
+    ],
+  },
+  {
     id: '2026-05-25-14j',
     items: [
       '⏱ SUCCESS PANEL SETTLES — when an objective is met, you now see a "🎉 LEVEL CLEAR / SLOT CLEAR" flash for ~1.2s and the score counter finishes rolling before the success panel pops up. Final cascades, leftover-move bonuses, and Lucky-MODE payouts all land on screen first.',
@@ -4306,6 +4313,10 @@ async function useColorBomb(pos) {
   for (let r = 0; r < state.board.rows; r++) {
     for (let c = 0; c < state.board.cols; c++) {
       if (state.board.typeAt(c, r) !== targetType) continue;
+      // Belt + suspenders: cherries shouldn't have typeAt === targetType
+      // anyway, but make the filter explicit so future ingredient kinds
+      // can't get swept by Color Bomb.
+      if (state.board.isIngredient(c, r)) continue;
       const k = `${c},${r}`;
       if (state.lockMap.get(k) > 0) continue;
       if (state.jellyMap.get(k) > 0) continue;
@@ -4359,6 +4370,7 @@ async function useColorBomb(pos) {
 
 function usePlusMoves() {
   if (state.busy) return;
+  if (state.resolved) return;
   const bank = powerupBank();
   if ((bank.plusMoves || 0) <= 0) return;
   if (state.settings.mode === 'free' || !state.level) {
@@ -4381,6 +4393,7 @@ function usePlusMoves() {
 
 async function useShuffle() {
   if (state.busy) return;
+  if (state.resolved) return;
   const bank = powerupBank();
   if ((bank.shuffle || 0) <= 0) return;
   if (!spendPowerup('shuffle')) return;
@@ -4409,6 +4422,7 @@ async function useShuffle() {
 
 function armTool(tool) {
   if (state.busy) return;
+  if (state.resolved) return;
   const bank = powerupBank();
   if ((bank[tool] || 0) <= 0) return;
   if (state.armedTool === tool) {
@@ -4448,6 +4462,10 @@ document.getElementById('pu-plusmoves').addEventListener('click', (e) => {
 
 async function onTap(pos) {
   if (state.busy) return;
+  // Don't accept input during the post-win settle delay either —
+  // checkLevelOutcome flips state.resolved as soon as the objective is
+  // met but the success panel waits ~1.2s for the score to land.
+  if (state.resolved) return;
   if (state.armedTool === 'hammer') {
     state.armedTool = null;
     setArmedTool(null);
@@ -5339,6 +5357,7 @@ document.getElementById('restart').addEventListener('click', () => {
 });
 async function onSwipe(origin, target) {
   if (state.busy) return;
+  if (state.resolved) return;
   cancelHint();
   sfx.unlockAudio();
   // Treat the swipe as: select origin, then commit to target.
