@@ -590,7 +590,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade, onReplay }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -716,6 +716,21 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   };
   close.addEventListener('click', handleClose);
   overlay.addEventListener('click', handleClose);
+  // 🔁 New run button — only meaningful for outcome === 'complete' or 'fail'.
+  const replayBtn = document.getElementById('run-summary-replay');
+  if (replayBtn) {
+    if (onReplay && !inProgress) {
+      replayBtn.style.display = '';
+      replayBtn.onclick = () => {
+        overlay.classList.add('hidden');
+        panel.classList.add('hidden');
+        onReplay();
+      };
+    } else {
+      replayBtn.style.display = 'none';
+      replayBtn.onclick = null;
+    }
+  }
   // 📋 Copy summary button — builds a clipboard-friendly text recap.
   const shareBtn = document.getElementById('run-summary-share');
   if (shareBtn) {
