@@ -1704,9 +1704,10 @@ export function hideAllOverlays({ except = [] } = {}) {
 // Show the start menu (mode-picker). Each `on*` is invoked when the
 // player taps that mode button; `subtitle` is optional flavor text
 // (e.g. "Run over — pick where to go next" on game-over).
-export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, onQuit, onResume, onAbandon, subtitle, stats, version, runInProgress }) {
+export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSettings, onHelp, onQuit, onResume, onAbandon, subtitle, stats, version, runInProgress, dailyStatus }) {
   const screen = document.getElementById('start-screen');
   const btnRogue = document.getElementById('start-menu-roguelike');
+  const btnDaily = document.getElementById('start-menu-daily');
   const btnLevels = document.getElementById('start-menu-levels');
   const btnFree = document.getElementById('start-menu-free');
   const btnSettings = document.getElementById('start-menu-settings');
@@ -1776,6 +1777,18 @@ export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, o
     replaceListener(btnAbandon, 'click', () => { if (onAbandon) onAbandon(); }, 'start-menu-abandon');
   }
   replaceListener(btnRogue, 'click', wrap(onRoguelike), 'start-menu-rogue');
+  if (btnDaily) {
+    // Daily-seed button: shows today's date label + a small badge if
+    // the player already played today (so they know it'll show "best
+    // slot X" on completion, no double-rewards).
+    const stampStr = dailyStatus?.stamp ? ` · ${dailyStatus.stamp}` : '';
+    const playedStr = dailyStatus?.playedToday
+      ? ` ✓ Slot ${dailyStatus.bestSlot || 0}`
+      : '';
+    btnDaily.innerHTML = `🌅 Today's Daily Seed${stampStr}${playedStr}`;
+    btnDaily.classList.toggle('hidden', !!runInProgress);
+    replaceListener(btnDaily, 'click', wrap(onDaily), 'start-menu-daily');
+  }
   replaceListener(btnLevels, 'click', wrap(onLevels), 'start-menu-levels');
   replaceListener(btnFree, 'click', wrap(onFreePlay), 'start-menu-free');
   // Settings / Help open their own modals on top of the start screen.

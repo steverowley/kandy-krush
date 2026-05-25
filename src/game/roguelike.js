@@ -606,11 +606,14 @@ export const RELICS = [
     desc: 'Every 10 swaps in a slot, gain +1 of EVERY power-up.' },
 ];
 
-export function pickRelicChoices(owned = [], n = 3) {
+// rng defaults to Math.random for the normal run path; daily-seed runs
+// pass a seeded mulberry32 from src/game/rng.js so every player on the
+// same calendar day sees the same draft.
+export function pickRelicChoices(owned = [], n = 3, rng = Math.random) {
   const ownedSet = new Set(owned);
   const pool = RELICS.filter((r) => !ownedSet.has(r.id));
   for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   // If the player has somehow collected every relic, recycle the pool
@@ -709,8 +712,8 @@ export function isMutatorSlot(slot) {
   return slot > 0 && slot % 5 === 0 && !BOSS_SLOTS.has(slot);
 }
 
-export function pickRandomMutator() {
-  return MUTATORS[Math.floor(Math.random() * MUTATORS.length)];
+export function pickRandomMutator(rng = Math.random) {
+  return MUTATORS[Math.floor(rng() * MUTATORS.length)];
 }
 
 export function getMutator(id) {
@@ -740,11 +743,11 @@ export function synergyStacks(archCount) {
 // Pick 3 distinct upgrades from the pool. Bias slightly toward
 // categories the player has fewer of, so the choice menu doesn't
 // always show the same boring three.
-export function pickUpgradeChoices(picked = [], n = 3) {
+export function pickUpgradeChoices(picked = [], n = 3, rng = Math.random) {
   // Allow repeats with previously-picked stack — stacking is a feature.
   const pool = UPGRADES.slice();
   for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool.slice(0, Math.min(n, pool.length));

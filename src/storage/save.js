@@ -50,6 +50,10 @@ const defaults = () => ({
   inRoguelikeRun: false,
   runUpgrades: [],
   runRelics: [],
+  // 🌅 Daily-seed run tracking: YYYY-MM-DD stamp + the best slot the
+  // player reached on that day's daily. Only the first attempt counts.
+  dailySeedDate: null,
+  dailySeedBestSlot: 0,
 });
 
 function todayStamp(d = new Date()) {
@@ -156,6 +160,10 @@ export function load() {
       inRoguelikeRun: !!parsed.inRoguelikeRun,
       runUpgrades: sanitizeRunArray(parsed.runUpgrades),
       runRelics: sanitizeRunArray(parsed.runRelics),
+      dailySeedDate: typeof parsed.dailySeedDate === 'string' && parsed.dailySeedDate.length <= 16
+        ? parsed.dailySeedDate
+        : null,
+      dailySeedBestSlot: Math.min(100, Math.max(0, Math.floor(Number(parsed.dailySeedBestSlot) || 0))),
     };
   } catch (err) {
     // A sanitizer threw — partial corruption. Back up and return defaults.
