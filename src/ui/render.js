@@ -394,7 +394,8 @@ export function setScore(n, { animate = false } = {}) {
     const start = old;
     const end = n;
     const t0 = performance.now();
-    const duration = Math.min(700, 220 + (end - start) * 1.2);
+    // Roll up to 1100ms for big jumps so cascade payouts feel weighty.
+    const duration = Math.min(1100, 240 + (end - start) * 0.8);
     const step = (t) => {
       const p = Math.min(1, (t - t0) / duration);
       const eased = 1 - Math.pow(1 - p, 3);

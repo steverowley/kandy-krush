@@ -1619,6 +1619,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-14j',
+    items: [
+      '⏱ SUCCESS PANEL SETTLES — when an objective is met, you now see a "🎉 LEVEL CLEAR / SLOT CLEAR" flash for ~1.2s and the score counter finishes rolling before the success panel pops up. Final cascades, leftover-move bonuses, and Lucky-MODE payouts all land on screen first.',
+      '🎚 LONGER SCORE ROLL — score counter animation cap bumped 700ms → 1100ms with a slower per-point curve so big payouts feel weighty instead of snapping instantly.',
+    ],
+  },
+  {
     id: '2026-05-25-14i',
     items: [
       '📈 ROGUELIKE SCORE TARGETS SCALE WITH SLOT — score-style objectives in roguelike runs now multiply by (1 + slot × 0.5). Slot 50 score targets jump 26×; slot 100 jumps 51×. Matches / clear-type targets scale more gently (×0.2 per slot). Bosses scale half-rate since they\'re already hand-tuned. No more breezing past targets with 200k while the goal said 5k.',
@@ -4062,20 +4069,20 @@ function checkLevelOutcome() {
         flashMessage(`⏰ +${bonus} time bonus`, 1500);
       }
       const isLastSlot = state.roguelike.currentSlot >= RUN_LENGTH;
-      showLevelComplete({
-        level: { ...state.level, id: state.roguelike.currentSlot, name: state.level.name },
-        stars,
-        score: state.score,
-        isLast: isLastSlot,
-        onNext: () => {
-          if (isLastSlot) {
-            advanceRoguelikeAfterWin(); // shows banner, ends run
-          } else {
-            advanceRoguelikeAfterWin();
-          }
-        },
-        onReplay: () => playRoguelikeSlot(state.roguelike.currentSlot),
-      });
+      // Let the score counter finish rolling and any floating-number
+      // animations land before the success panel takes over. Players
+      // were getting the panel mid-cascade-celebration.
+      flashMessage('🎉 SLOT CLEAR!', 1100);
+      setTimeout(() => {
+        showLevelComplete({
+          level: { ...state.level, id: state.roguelike.currentSlot, name: state.level.name },
+          stars,
+          score: state.score,
+          isLast: isLastSlot,
+          onNext: () => advanceRoguelikeAfterWin(),
+          onReplay: () => playRoguelikeSlot(state.roguelike.currentSlot),
+        });
+      }, 1200);
       return;
     }
     // Levels mode: leftover moves convert to +25 each — classic
@@ -4093,20 +4100,19 @@ function checkLevelOutcome() {
       flashMessage(`+${bonus} from ${state.movesRemaining} leftover moves!`, 1600);
       persist();
     }
-    showLevelComplete({
-      level: state.level,
-      stars,
-      score: state.score,
-      isLast: isLastLevel(state.level.id),
-      onNext: () => {
-        if (isLastLevel(state.level.id)) {
-          startLevel(state.levelProgress.currentLevel);
-        } else {
-          startLevel(state.levelProgress.currentLevel);
-        }
-      },
-      onReplay: () => startLevel(state.level.id),
-    });
+    // Settle delay before the success panel so the score roll-up and
+    // any in-flight floating-number animations land first.
+    flashMessage('🎉 LEVEL COMPLETE!', 1100);
+    setTimeout(() => {
+      showLevelComplete({
+        level: state.level,
+        stars,
+        score: state.score,
+        isLast: isLastLevel(state.level.id),
+        onNext: () => startLevel(state.levelProgress.currentLevel),
+        onReplay: () => startLevel(state.level.id),
+      });
+    }, 1200);
     return;
   }
   if (state.movesRemaining <= 0) {
