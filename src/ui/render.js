@@ -547,6 +547,55 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
+export function showClassPicker(classes, archetypes, onPick) {
+  const overlay = document.getElementById('upgrade-overlay');
+  const panel = document.getElementById('upgrade-panel');
+  const list = document.getElementById('upgrade-choices');
+  const active = document.getElementById('upgrade-active-list');
+  const subtitle = document.getElementById('upgrade-subtitle');
+  const title = document.getElementById('upgrade-title');
+  if (!overlay || !panel || !list) return;
+  const prevSubtitle = subtitle?.textContent;
+  const prevTitle = title?.textContent;
+  if (subtitle) subtitle.textContent = 'Choose your class';
+  if (title) title.textContent = 'Each class starts you with a free upgrade';
+  list.innerHTML = '';
+  // Class picker uses a 2-column grid so 6 cards fit nicely.
+  const prevGridClass = list.className;
+  list.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
+  for (const cls of classes) {
+    const arch = cls.archetype && archetypes ? archetypes[cls.archetype] : null;
+    const color = arch ? arch.color : '#FFD60A';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'upgrade-card class-card flex flex-col gap-1 p-4 text-left border-[3px] border-black rounded-2xl bg-white hover:bg-amber-50 active:bg-amber-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 shadow-md';
+    btn.style.borderColor = '#000';
+    btn.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">${cls.icon}</span>
+        <span class="text-lg sm:text-xl font-bold">${cls.name}</span>
+        ${arch ? `<span class="text-xs font-bold uppercase tracking-wider ml-auto" style="color:${color}">${arch.icon} ${arch.name}</span>` : ''}
+      </div>
+      <span class="text-sm sm:text-base text-gray-700">${cls.desc}</span>
+    `;
+    btn.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      panel.classList.add('hidden');
+      // Restore the picker UI to its upgrade-picker state.
+      if (subtitle) subtitle.textContent = prevSubtitle || 'Choose an upgrade';
+      if (title) title.textContent = prevTitle || 'Pick one to take into your next slot';
+      list.className = prevGridClass;
+      onPick(cls);
+    });
+    list.appendChild(btn);
+  }
+  if (active) active.textContent = 'Your class shapes the run. You can still pick any upgrade later.';
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  const firstBtn = list.querySelector('button');
+  if (firstBtn) firstBtn.focus();
+}
+
 export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');

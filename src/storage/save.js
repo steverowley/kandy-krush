@@ -112,19 +112,22 @@ const ROGUELIKE_DEFAULTS = {
 };
 
 function sanitizeRoguelike(raw) {
-  const out = { ...ROGUELIKE_DEFAULTS, skills: {} };
+  const out = { ...ROGUELIKE_DEFAULTS, skills: {}, currentClass: null };
   if (!raw || typeof raw !== 'object') return out;
   for (const key of Object.keys(ROGUELIKE_DEFAULTS)) {
     const n = Number(raw[key]);
     if (Number.isFinite(n) && n >= 0) out[key] = Math.floor(n);
   }
   if (out.currentSlot < 1) out.currentSlot = 1;
-  if (out.currentSlot > 30) out.currentSlot = 30;
+  if (out.currentSlot > 100) out.currentSlot = 100;
   if (raw.skills && typeof raw.skills === 'object') {
     out.skills = {};
     for (const [k, v] of Object.entries(raw.skills)) {
       if (v) out.skills[k] = true;
     }
+  }
+  if (typeof raw.currentClass === 'string' && raw.currentClass.length < 32) {
+    out.currentClass = raw.currentClass;
   }
   return out;
 }
