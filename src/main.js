@@ -1403,6 +1403,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12c',
+    items: [
+      '🌊 NEW UPGRADE — Cascade Splash (Wild): every cascade chain ≥2 has a 60% chance per stack to spawn a random crazy tile. Snowball boards into chaos.',
+      '🪞 NEW UPGRADE — Echo Match (Lucky): cascade chains ≥4 also fill your Lucky bar by +50% per stack. Cascade-focused builds now feed Lucky-MODE.',
+    ],
+  },
+  {
     id: '2026-05-25-12b',
     items: [
       '🌶 NEW RELIC — Spice Box: every 12 matches in a slot, a random crazy tile spawns. Constant board chaos.',
@@ -3796,6 +3803,13 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     sfx.playCascade();
     showCascadeBanner(cascadeLevel);
     haptics.cascade(cascadeLevel);
+    // 🌊 Cascade Splash upgrade — every cascade ≥2 has a 60% chance per
+    // stack to also spawn a random crazy tile.
+    if (state.inRoguelikeRun && upgradeCount('cascade-splash') > 0) {
+      for (let i = 0; i < upgradeCount('cascade-splash'); i++) {
+        if (Math.random() < 0.6) spawnCrazyTile();
+      }
+    }
   }
   if (cascadeLevel >= 3) spawnConfetti(20);
   if (cascadeLevel >= 4) {
@@ -3806,6 +3820,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       state.roguelike.gems = (state.roguelike.gems || 0) + 1;
       flashMessage('✨ Stardust +1 💎', 800);
       persist();
+    }
+    // 🪞 Echo Match upgrade — cascade ≥4 also fills Lucky bar by 50% per stack.
+    if (state.inRoguelikeRun && upgradeCount('echo-match') > 0) {
+      const add = 50 * upgradeCount('echo-match');
+      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + add);
+      if (state.luckyCharge >= 100) state.luckyReady = true;
+      setLuckyCharge(state.luckyCharge, state.luckyReady);
+      flashMessage(`🪞 Echo Match +${add}% 🍀`, 800);
     }
   }
   if (cascadeLevel >= 5) {
