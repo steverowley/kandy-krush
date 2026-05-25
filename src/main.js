@@ -1242,6 +1242,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10d',
+    items: [
+      '💰 NEW MUTATOR — Treasure Slot. Finishing this slot grants +5 💎 on top of your usual reward.',
+      'Mutator pool now 13.',
+    ],
+  },
+  {
     id: '2026-05-25-10c',
     items: [
       '🕳 NEW CRAZY TILE — Wormhole! Pop a Wormhole to swap a random pair of distant tiles on the board, creating brand new match opportunities.',
@@ -2121,6 +2128,11 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
   state.roguelike.bestSlot = Math.max(state.roguelike.bestSlot || 0, slot);
+  // 💰 Treasure Slot mutator — finishing this slot grants +5 💎.
+  if (hasMutator('treasure')) {
+    state.roguelike.gems = (state.roguelike.gems || 0) + 5;
+    flashMessage('💰 Treasure Slot! +5 💎', 1400);
+  }
   if (slot >= RUN_LENGTH) {
     // Full run cleared
     const gems = gemsEarned(slot + 1, true, metaSkills());
