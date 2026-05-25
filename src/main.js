@@ -1109,6 +1109,8 @@ function applyRunUpgradesOnSlotStart() {
   state.ironcladHammerUsed = false;
   // Reset Quick Draw relic's per-slot free power-up.
   state.quickDrawUsed = false;
+  // Reset Free Bomb upgrade's per-slot free color bombs.
+  state.freeBombsUsed = 0;
   // 🌬 Second Wind relic — start of slot with only 1 life → 2 lives.
   if (hasRelic('second-wind') && (state.roguelike.livesRemaining || 0) === 1) {
     state.roguelike.livesRemaining = 2;
@@ -1320,6 +1322,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10r',
+    items: [
+      '💣 NEW UPGRADE — Free Bomb (Bomber). The first N Color Bombs per slot are free, where N = stack count.',
+      'Stack 3× and three Color Bombs each slot cost nothing. Pairs with Slot Bomb (which gives +1 bomb per slot) for a "burn down the board" build.',
+      'Upgrade pool now 33.',
+    ],
+  },
   {
     id: '2026-05-25-10q',
     items: [
@@ -1956,6 +1966,15 @@ function spendPowerup(kind) {
     state.quickDrawUsed = true;
     flashMessage(`🤠 Quick Draw! Free ${kind}`, 1000);
     return true;
+  }
+  // 💣 Free Bomb upgrade — first N Color Bombs per slot are free.
+  if (kind === 'colorBomb' && upgradeCount('free-bomb') > 0) {
+    const used = state.freeBombsUsed || 0;
+    if (used < upgradeCount('free-bomb')) {
+      state.freeBombsUsed = used + 1;
+      flashMessage('💣 Free Bomb!', 900);
+      return true;
+    }
   }
   bank[kind]--;
   setPowerupCounts(bank);

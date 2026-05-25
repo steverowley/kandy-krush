@@ -254,6 +254,7 @@ export const UPGRADES = [
   { id: 'gold-rush',   category: 'buff',       archetype: 'scorer',  name: 'Gold Rush',         desc: 'Every match earns a flat +20 score per stack on top of the multiplier.' },
   { id: 'thunder-foot',category: 'consumable', archetype: 'sustain', name: 'Thunder Foot',      desc: 'Every 8 swaps in a slot, gain +2 moves automatically.' },
   { id: 'crazy-magnet',category: 'synergy',    archetype: 'bomber',  name: 'Crazy Magnet',       desc: 'Every 3rd match (per slot) automatically spawns a random crazy tile.' },
+  { id: 'free-bomb',   category: 'consumable', archetype: 'bomber',  name: 'Free Bomb',          desc: 'The first N Color Bombs per slot are free (N = stack count).' },
   { id: 'snowball',    category: 'synergy',    archetype: 'scorer',  name: 'Snowball',           desc: 'Each match in a slot boosts the next match\'s score by 3% per stack (compounds — late slot matches are huge).' },
   { id: 'greedy-brain',category: 'buff',       archetype: 'scorer',  name: 'Greedy Brain',       desc: 'All scores +5% per stack — a mild but always-on multiplier.' },
   { id: 'bee-storm',   category: 'synergy',    archetype: 'wild',    name: 'Bee Storm',          desc: '🐝 Every 10 matches a buzzing swarm clears 6 random tiles. Threshold drops per stack.' },
