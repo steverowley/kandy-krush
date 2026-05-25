@@ -32,12 +32,16 @@ export function spawnFloatingNumber(text, positions, opts = {}) {
   if (count === 0) return;
   const el = document.createElement('div');
   el.className = 'particle particle-float';
+  // Parse the score out of strings like "+1,200" to pick a tier.
+  const numeric = parseInt((text || '').replace(/[^0-9]/g, ''), 10) || 0;
+  if (numeric >= 2000) el.classList.add('particle-float-huge');
+  else if (numeric >= 500) el.classList.add('particle-float-big');
   el.textContent = text;
   el.style.left = `${sx / count}px`;
   el.style.top = `${sy / count}px`;
   if (opts.color) el.style.color = opts.color;
   root.appendChild(el);
-  setTimeout(() => el.remove(), 1100);
+  setTimeout(() => el.remove(), 1300);
 }
 
 export function spawnTileSparkles(c, r, count = 8, opts = {}) {
