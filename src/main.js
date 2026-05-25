@@ -1161,6 +1161,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9n',
+    items: [
+      '📊 SKILL TREE STATS — the gem counter at the top of the Skill Tree now shows a stats line: "X runs · Y completes · best slot Z".',
+      'See your overall progression at a glance whenever you open the tree.',
+    ],
+  },
+  {
     id: '2026-05-25-9m',
     items: [
       '🎁 GENEROUS STARTER — slot 1 of every roguelike run now grants +1 of every power-up to your bank (hammer, shuffle, colour bomb, +3 moves).',
@@ -3336,6 +3343,11 @@ if (skillTreeBtn) {
       gems: () => state.roguelike.gems || 0,
       owned: () => metaSkills(),
       onBuy: (id) => buyMetaSkill(id),
+      stats: {
+        runs: state.roguelike?.runsStarted || 0,
+        completes: state.roguelike?.runsCompleted || 0,
+        bestSlot: state.roguelike?.bestSlot || 0,
+      },
     });
   });
 }
