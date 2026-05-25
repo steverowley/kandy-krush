@@ -375,6 +375,8 @@ export const RELICS = [
     desc: 'Hint sparkles appear after just 1.5 seconds idle (vs 3s with Hawkeye, 7s default).' },
   { id: 'strong-drink',icon: '🥃', name: 'Strong Drink',
     desc: 'Lucky-MODE multiplier doubles — ×3 sustain instead of ×1.5.' },
+  { id: 'bottomless',  icon: '🍴', name: 'Bottomless Stomach',
+    desc: 'Every match counts as 2 toward the slot\'s objective (huge for matches / clearType targets).' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {

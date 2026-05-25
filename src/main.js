@@ -188,6 +188,11 @@ function hasRelic(id) {
   return state.runRelics && state.runRelics.includes(id);
 }
 
+// Bottomless Stomach relic multiplier — used in match + clearType counters.
+function bottomlessMulti() {
+  return hasRelic('bottomless') ? 2 : 1;
+}
+
 function activeMutator() {
   if (!state.inRoguelikeRun) return null;
   return state.slotMutator ? getMutator(state.slotMutator) : null;
@@ -1326,6 +1331,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10t',
+    items: [
+      '🍴 NEW RELIC — Bottomless Stomach. Every match counts as 2 toward both the matches counter AND the clearType counter for the slot\'s objective.',
+      'Cuts match/clearType slots in half. Pair with Snowball + Big Brain for both scoring AND objective velocity.',
+      'Relic pool now 22.',
+    ],
+  },
   {
     id: '2026-05-25-10s',
     items: [
@@ -2710,10 +2723,12 @@ function recordClearedTypes(toClearWithTypes) {
   let objectiveDelta = 0;
   const obj = state.level && state.level.objective;
   const trackedType = obj && obj.kind === 'clearType' ? obj.type : null;
+  // 🍴 Bottomless Stomach relic — types count double toward clearType.
+  const multi = bottomlessMulti();
   for (const t of toClearWithTypes) {
     if (t == null) continue;
-    state.progress.type[t] = (state.progress.type[t] || 0) + 1;
-    if (t === trackedType) objectiveDelta++;
+    state.progress.type[t] = (state.progress.type[t] || 0) + multi;
+    if (t === trackedType) objectiveDelta += multi;
   }
   if (objectiveDelta > 0) flashObjectiveDelta(`+${objectiveDelta}`);
 }
@@ -3056,7 +3071,7 @@ async function useColorBomb(pos) {
   // Intentionally NOT decrementing jelly or locks — bombs skip those.
   const clearedTypeList = positions.map(() => targetType);
   recordClearedTypes(clearedTypeList);
-  state.progress.matches += 1;
+  state.progress.matches += bottomlessMulti();
   flashObjectiveProgress(0);
   const earned = consumeLuckyIfReady(
     applyRunScoreMultiplier(calcScore(positions, 2), 2, positions.length)
@@ -3249,7 +3264,7 @@ async function runComboTurn(combo) {
     for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
   }
   recordClearedTypes(clearedTypes);
-  state.progress.matches += 1;
+  state.progress.matches += bottomlessMulti();
   flashObjectiveProgress(0);
   const earned = consumeLuckyIfReady(
     applyRunScoreMultiplier(calcScore(cleared, 2), 2, cleared.length)
@@ -3439,7 +3454,7 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     for (const p of lockedBlocked) spawnTileSparkles(p.c, p.r, 8, { color: '#facc15' });
   }
   recordClearedTypes(clearedTypes);
-  state.progress.matches += 1;
+  state.progress.matches += bottomlessMulti();
   state.progress.specials += specialsCreated.length;
   flashObjectiveProgress(specialsCreated.length);
   maybeTriggerLightning();
