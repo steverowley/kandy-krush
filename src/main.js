@@ -1903,6 +1903,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17m',
+    items: [
+      '⚡ DIFF-RENDER THE BOARD — `renderBoard()` used to rebuild all 36 tile buttons + 40 SVGs from scratch every call. A chain-10 cascade triggered ~7 full rebuilds, allocating + destroying ~720 DOM nodes in ~5 seconds. Now each call computes a per-cell signature (type, special, crazy, jelly, lock, selected, adjacent, falling, intro) and only repaints cells whose signature changed since the last render. ~95% allocation reduction in the common cascade case. Intro drops + dimension changes still force a full rebuild because the drop animation needs fresh nodes.',
+    ],
+  },
+  {
     id: '2026-05-25-17l',
     items: [
       '🧪 TEST SUITE — new `tests/` directory with 40 tests across 6 files (score, match, rng, i18n, purchases, save). Uses Node\'s built-in `node:test` runner so there are zero new dependencies — run `node --test tests/*.test.js`. Covers the pure-game modules (no DOM required) plus the save round-trip + corruption recovery flow with an in-memory localStorage shim.',
