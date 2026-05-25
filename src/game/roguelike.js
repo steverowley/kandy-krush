@@ -265,6 +265,7 @@ export const UPGRADES = [
   { id: 'lucky-fast-2',category: 'buff',       archetype: 'lucky',   name: 'Lucky Fast II',      desc: 'Lucky bar fills 100% faster per stack (stronger than Lucky Fast).' },
   { id: 'voodoo-doll', category: 'synergy',    archetype: 'lucky',   name: 'Voodoo Doll',        desc: 'When Lucky bar reaches READY, also gain +1 of every power-up.' },
   { id: 'mind-reader', category: 'buff',       archetype: 'lucky',   name: 'Mind Reader',        desc: 'Lucky burst multiplier is +1 per stack (×3 → ×4 → ×5 → ...).' },
+  { id: 'time-freeze', category: 'synergy',    archetype: 'lucky',   name: 'Time Freeze',        desc: 'While Lucky-MODE is active, The Eater is frozen and won\'t attack.' },
   { id: 'caretaker',   category: 'buff',       archetype: 'sustain', name: 'Caretaker',          desc: 'Power-up bank cap +1 per stack. Stacks with Bigger Bank meta and Sustain synergy.' },
   { id: 'buttered',    category: 'consumable', archetype: 'sustain', name: 'Buttered Bread',     desc: 'When you would run out of moves, gain +3 moves per stack — once per slot.' },
   { id: 'heart-beat',  category: 'buff',       archetype: 'sustain', name: 'Heart Beat',         desc: 'Adds +1 to your run\'s max lives per stack. Bigger life pool for the marathon.' },

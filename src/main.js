@@ -443,6 +443,8 @@ function maybeFireEater() {
   if (state.level.runSlot < EATER_FROM_SLOT) return;
   if (state.level.isBoss) return; // bosses are punishing enough
   if (hasMutator('slow-down')) return; // 🐢 Slow Down mutator
+  // ❄️ Time Freeze upgrade — Eater paused while Lucky-MODE active.
+  if (state.luckyMode && upgradeCount('time-freeze') > 0) return;
   eaterCounter++;
   // Eater speeds up in the late game — every 4 moves at slot 75+,
   // every 3 moves at slot 90+. Still telegraphed with the 2-move
@@ -1372,6 +1374,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11n',
+    items: [
+      '❄️ NEW UPGRADE — Time Freeze (Lucky). While Lucky-MODE is active, The Eater is frozen and won\'t attack.',
+      'Pair with Charmer awakening (Lucky-MODE +3 matches) for long stretches of safety against the late-game Eater.',
+      'Upgrade pool now 39.',
+    ],
+  },
   {
     id: '2026-05-25-11m',
     items: [
