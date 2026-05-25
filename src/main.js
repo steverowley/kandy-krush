@@ -1366,6 +1366,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11e',
+    items: [
+      '👛 NEW RELIC — Coin Purse. Every 10 matches in a slot earns you +1 💎.',
+      'Pair with Stardust, Penny Pincher, Big Money mutator, and Daily Bonus meta for a runaway gem economy.',
+      'Relic pool now 24.',
+    ],
+  },
+  {
     id: '2026-05-25-11d',
     items: [
       '🧠 NEW UPGRADE — Mind Reader (Lucky). Lucky burst multiplier +1 per stack (×3 → ×4 → ×5 → ...).',
@@ -3676,6 +3684,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
       flashMessage('🌀 Whirlpool reshuffle!', 1100);
       setTimeout(() => { if (state.board) preservingReshuffle(); }, 280);
+    }
+    // 👛 Coin Purse relic — every 10 matches earns +1 gem.
+    if (hasRelic('coin-purse') && state.slotMatchCount % 10 === 0) {
+      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+      flashMessage('👛 Coin Purse +1 💎', 900);
+      persist();
     }
     // 🪅 Piñata relic — every 5 matches drop a random power-up.
     if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {
