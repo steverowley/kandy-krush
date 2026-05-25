@@ -1198,6 +1198,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-9w',
+    items: [
+      '➕ LEFTOVER-MOVES BONUS in Levels mode! When you beat a level with moves to spare, each unspent move converts to +25 points (classic Candy-Crush style).',
+      'Bumps your best-score record if it pushes you over. Encourages efficient play, not just barely scraping by.',
+      'Roguelike still uses Crown of Sweetness relic (50 pts/move) — the relic is now strictly better.',
+    ],
+  },
+  {
     id: '2026-05-25-9v',
     items: [
       '🎁 BOSS BONUS — defeating a boss now grants BOTH a Relic pick AND a free Upgrade pick (instead of just the relic).',
@@ -2499,6 +2507,21 @@ function checkLevelOutcome() {
         onReplay: () => playRoguelikeSlot(state.roguelike.currentSlot),
       });
       return;
+    }
+    // Levels mode: leftover moves convert to +25 each — classic
+    // Candy-Crush-style end bonus.
+    if (state.settings.mode === 'levels' && state.movesRemaining > 0) {
+      const bonus = state.movesRemaining * 25;
+      state.score += bonus;
+      // Update bestScore record if this bumps it over.
+      if (!state.levelProgress.bestScores) state.levelProgress.bestScores = {};
+      const prevBest = state.levelProgress.bestScores[state.level.id] || 0;
+      if (state.score > prevBest) {
+        state.levelProgress.bestScores[state.level.id] = state.score;
+      }
+      setScore(state.score, { animate: true });
+      flashMessage(`+${bonus} from ${state.movesRemaining} leftover moves!`, 1600);
+      persist();
     }
     showLevelComplete({
       level: state.level,
