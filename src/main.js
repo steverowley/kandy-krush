@@ -1578,6 +1578,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13v',
+    items: [
+      '📜 NEW CHAPTER — "Postlude" (levels 131-135). Edge Case, Slowburn, Iron Cage, Cherry Storm, and Endless (40k score, 100 moves).',
+      'Level count is now 135.',
+    ],
+  },
+  {
     id: '2026-05-25-13u',
     items: [
       '🎒 NEW META-SKILL — Pocket Friend (75💎): every run starts with 1 random relic already in your inventory. Permanent early-game boost.',
