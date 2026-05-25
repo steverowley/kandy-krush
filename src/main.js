@@ -1201,6 +1201,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10a',
+    items: [
+      '✨ TIERED SCORE POPS — big matches now get BIG numbers. Scores 500+ pop in orange at 44px, scores 2,000+ pop in hot pink at 60px.',
+      'Snowball + Big Brain + cascade-king late-slot scores are now genuinely satisfying to watch.',
+    ],
+  },
+  {
     id: '2026-05-25-9z',
     items: [
       '🤠 NEW RELIC — Quick Draw. The first power-up you use each slot is FREE, whatever kind it is.',

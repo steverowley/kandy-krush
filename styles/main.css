@@ -848,6 +848,23 @@ body.theme-hc #cascade-text {
   20%  { transform: translate(-50%, -55%) scale(1.25); opacity: 1; }
   100% { transform: translate(-50%, -190%) scale(1); opacity: 0; }
 }
+/* Tiered score pops — bigger numbers get bigger letters + a colour boost. */
+.particle-float-big {
+  font-size: 44px;
+  color: #FF8800;
+  animation-duration: 1200ms;
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    0 0 14px rgba(255, 136, 0, 0.85);
+}
+.particle-float-huge {
+  font-size: 60px;
+  color: #FF006E;
+  animation-duration: 1400ms;
+  text-shadow:
+    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
+    0 0 18px rgba(255, 0, 110, 0.9);
+}
 
 .particle-sparkle {
   width: 12px;
