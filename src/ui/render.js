@@ -809,7 +809,7 @@ export function showClassPicker(classes, archetypes, onPick) {
   if (firstBtn) firstBtn.focus();
 }
 
-export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts) {
+export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts, onReroll = null) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
   const list = document.getElementById('upgrade-choices');
@@ -866,9 +866,24 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
       active.textContent = 'No upgrades yet — this is your first pick.';
     }
   }
+  // Reroll button — if provided, append after the choices. Clicking
+  // invokes onReroll which is expected to call showUpgradePicker
+  // again with fresh choices.
+  if (onReroll) {
+    const reroll = document.createElement('button');
+    reroll.type = 'button';
+    reroll.id = 'upgrade-reroll';
+    reroll.className = 'upgrade-reroll mt-2 sm:col-span-3 self-stretch px-4 py-3 bg-gray-100 border-[3px] border-black rounded-xl text-base font-bold hover:bg-gray-200 active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500';
+    reroll.innerHTML = '🔄 Reroll choices · costs 1 Shuffle';
+    reroll.addEventListener('click', () => {
+      reroll.disabled = true;
+      onReroll();
+    });
+    list.appendChild(reroll);
+  }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');
-  const firstBtn = list.querySelector('button');
+  const firstBtn = list.querySelector('button:not(#upgrade-reroll)');
   if (firstBtn) firstBtn.focus();
 }
 
