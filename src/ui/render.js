@@ -77,6 +77,19 @@ function svgForCell(cell) {
 
 const cellKey = (c, r) => `${c},${r}`;
 
+// Escape any string before interpolating it into an HTML template.
+// Game catalog data (class names, relic / mutator / upgrade descriptions)
+// is currently safe-by-source but a corrupted save or future user-supplied
+// content shouldn't be able to inject markup. Cheap and consistent.
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Pick black or white text based on the perceived luminance of a hex
 // color so chips render with enough contrast (WCAG AA at typical sizes).
 function contrastTextOn(hex) {
@@ -779,7 +792,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     const statsStr = classStats
       ? ` <span class="text-xs opacity-70">— Run #${classStats.runs}, ${classStats.completes} wins, best slot ${classStats.bestSlot}</span>`
       : '';
-    klassEl.innerHTML = klass ? `Class: ${klass.icon} ${klass.name}${awakenStr}${statsStr}` : '';
+    klassEl.innerHTML = klass ? `Class: ${escapeHtml(klass.icon)} ${escapeHtml(klass.name)}${awakenStr}${statsStr}` : '';
   }
   if (builds) {
     builds.innerHTML = '';
@@ -826,7 +839,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         row.style.borderLeftWidth = '6px';
         row.style.borderLeftColor = color;
         const tierBadge = tier ? ` <span style="opacity:0.85">[${tier}]</span>` : '';
-        row.innerHTML = `${arch ? arch.icon : '•'} ${u.name}${n > 1 ? ` ×${n}` : ''}${tierBadge}`;
+        row.innerHTML = `${arch ? escapeHtml(arch.icon) : '•'} ${escapeHtml(u.name)}${n > 1 ? ` ×${n}` : ''}${tierBadge}`;
         row.title = u.desc || '';
         builds.appendChild(row);
       }
@@ -843,8 +856,8 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
           const row = document.createElement('div');
           row.className = 'flex items-center gap-2 border border-yellow-500 bg-yellow-50 rounded-lg px-2 py-1';
           row.innerHTML = r
-            ? `<span class="text-xl">${r.icon}</span><span class="font-bold">${r.name}</span><span class="opacity-90 text-sm">— ${r.desc}</span>`
-            : `<span>${id}</span>`;
+            ? `<span class="text-xl">${escapeHtml(r.icon)}</span><span class="font-bold">${escapeHtml(r.name)}</span><span class="opacity-90 text-sm">— ${escapeHtml(r.desc)}</span>`
+            : `<span>${escapeHtml(id)}</span>`;
           relicsEl.appendChild(row);
         }
       } else {
@@ -1059,15 +1072,15 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
   if (klassEl) {
     const slotStr = (slot != null && totalSlots) ? `<span class="opacity-70">${slot}/${totalSlots}</span> · ` : '';
     const awakenedStr = awakened && klass
-      ? ` <span class="px-2 rounded-full font-bold bg-pink-500 text-white border-2 border-black animate-pulse" title="${klass.awaken ? klass.awaken.replace(/"/g, '') : ''}">✨ AWAKENED</span>`
+      ? ` <span class="px-2 rounded-full font-bold bg-pink-500 text-white border-2 border-black animate-pulse" title="${escapeHtml(klass.awaken || '')}">✨ AWAKENED</span>`
       : '';
     const mutStr = mutator
-      ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${mutator.desc.replace(/"/g, '')}">${mutator.icon} ${mutator.name}</span>`
+      ? ` · <span class="mutator-chip mutator-chip-active px-2 rounded-full font-bold bg-yellow-300 text-black border-2 border-black" title="${escapeHtml(mutator.desc)}">${escapeHtml(mutator.icon)} ${escapeHtml(mutator.name)}</span>`
       : '';
     const nextStr = nextMilestone
-      ? ` · <span class="text-sm opacity-90 font-semibold">Next: ${nextMilestone.icon} ${nextMilestone.label} in ${nextMilestone.distance}</span>`
+      ? ` · <span class="text-sm opacity-90 font-semibold">Next: ${escapeHtml(nextMilestone.icon)} ${escapeHtml(nextMilestone.label)} in ${escapeHtml(nextMilestone.distance)}</span>`
       : '';
-    klassEl.innerHTML = `${slotStr}${klass ? `${klass.icon} ${klass.name}` : '🎲 No class'}${awakenedStr}${mutStr}${nextStr}`;
+    klassEl.innerHTML = `${slotStr}${klass ? `${escapeHtml(klass.icon)} ${escapeHtml(klass.name)}` : '🎲 No class'}${awakenedStr}${mutStr}${nextStr}`;
   }
   if (buildsEl && archCounts && archetypes) {
     const tags = [];
@@ -1075,12 +1088,12 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
       const n = archCounts[key];
       if (n > 0) {
         const meta = archetypes[key];
-        if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color};color:${contrastTextOn(meta.color)}">${meta.icon}${n}</span>`);
+        if (meta) tags.push(`<span class="px-2 rounded-full border-2 border-black font-bold" style="background:${meta.color};color:${contrastTextOn(meta.color)}">${escapeHtml(meta.icon)}${n}</span>`);
       }
     }
     const vibe = dominantBuildVibe(archCounts, archetypes);
     const vibeChip = vibe
-      ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:${contrastTextOn(vibe.color)}" title="${vibe.title}">${vibe.label}</span>`
+      ? `<span class="px-2 rounded-full border-2 border-black font-bold mr-1" style="background:${vibe.color};color:${contrastTextOn(vibe.color)}" title="${escapeHtml(vibe.title)}">${escapeHtml(vibe.label)}</span>`
       : '';
     buildsEl.innerHTML = tags.length ? `${vibeChip}${tags.join('')}` : '<span class="opacity-60">No upgrades yet</span>';
   }
@@ -1089,7 +1102,7 @@ export function setRunHud({ visible, klass, archCounts, archetypes, relics, getR
     if (relics && relics.length > 0) {
       const icons = relics.map((id) => {
         const r = getRelic ? getRelic(id) : null;
-        return r ? `<span title="${r.name}: ${r.desc.replace(/"/g, '')}">${r.icon}</span>` : '';
+        return r ? `<span title="${escapeHtml(r.name + ': ' + r.desc)}">${escapeHtml(r.icon)}</span>` : '';
       }).join('');
       relicsEl.innerHTML = `<span class="text-sm font-semibold mr-1">Relics:</span>${icons}${buildChip}`;
     } else {
@@ -1119,11 +1132,11 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
     btn.className = 'upgrade-card relic-card flex flex-col gap-1 p-4 text-left border-[3px] border-yellow-600 rounded-2xl bg-gradient-to-br from-yellow-50 to-amber-100 hover:from-yellow-100 hover:to-amber-200 active:from-yellow-200 active:to-amber-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-500 shadow-md';
     btn.innerHTML = `
       <div class="flex items-center gap-2">
-        <span class="text-3xl">${r.icon}</span>
-        <span class="text-lg sm:text-xl font-bold">${r.name}</span>
+        <span class="text-3xl">${escapeHtml(r.icon)}</span>
+        <span class="text-lg sm:text-xl font-bold">${escapeHtml(r.name)}</span>
         <span class="text-xs font-bold uppercase tracking-wider ml-auto text-yellow-700">RELIC</span>
       </div>
-      <span class="text-sm sm:text-base text-gray-700">${r.desc}</span>
+      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(r.desc)}</span>
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
@@ -1175,10 +1188,10 @@ export function showCrossroadsEvent({ options, onPick }) {
     btn.className = 'upgrade-card flex flex-col gap-2 p-4 text-left border-[3px] border-purple-700 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-100 hover:from-purple-100 hover:to-pink-200 active:from-purple-200 active:to-pink-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-500 shadow-md';
     btn.innerHTML = `
       <div class="flex items-center gap-2">
-        <span class="text-3xl">${opt.icon}</span>
-        <span class="text-lg font-bold">${opt.name}</span>
+        <span class="text-3xl">${escapeHtml(opt.icon)}</span>
+        <span class="text-lg font-bold">${escapeHtml(opt.name)}</span>
       </div>
-      <div class="text-sm text-gray-800">${opt.desc}</div>
+      <div class="text-sm text-gray-800">${escapeHtml(opt.desc)}</div>
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
@@ -1219,12 +1232,12 @@ export function showShop({ items, getGems, onBuy, onContinue }) {
       row.disabled = !afford;
       row.className = `text-left flex items-center gap-3 p-3 border-[3px] border-black rounded-2xl ${afford ? 'bg-white hover:bg-amber-50 active:bg-amber-100' : 'bg-gray-100 opacity-60 cursor-not-allowed'}`;
       row.innerHTML = `
-        <span class="text-3xl">${it.icon}</span>
+        <span class="text-3xl">${escapeHtml(it.icon)}</span>
         <span class="flex-1">
-          <span class="block text-lg font-bold">${it.name}</span>
-          <span class="block text-sm text-gray-700">${it.desc}</span>
+          <span class="block text-lg font-bold">${escapeHtml(it.name)}</span>
+          <span class="block text-sm text-gray-700">${escapeHtml(it.desc)}</span>
         </span>
-        <span class="px-3 py-2 bg-yellow-300 border-2 border-black rounded-xl font-bold">${it.cost} 💎</span>
+        <span class="px-3 py-2 bg-yellow-300 border-2 border-black rounded-xl font-bold">${escapeHtml(String(it.cost))} 💎</span>
       `;
       row.addEventListener('click', () => {
         if (!afford) return;
@@ -1333,12 +1346,12 @@ export function showClassPicker(classes, archetypes, onPick, classStats = null) 
       : '<span class="text-xs text-gray-500 italic">Never played — your first run.</span>';
     btn.innerHTML = `
       <div class="flex items-center gap-2">
-        <span class="text-2xl">${cls.icon}</span>
-        <span class="text-lg sm:text-xl font-bold">${cls.name}</span>
-        ${arch ? `<span class="text-xs font-bold uppercase tracking-wider ml-auto" style="color:${color}">${arch.icon} ${arch.name}</span>` : ''}
+        <span class="text-2xl">${escapeHtml(cls.icon)}</span>
+        <span class="text-lg sm:text-xl font-bold">${escapeHtml(cls.name)}</span>
+        ${arch ? `<span class="text-xs font-bold uppercase tracking-wider ml-auto" style="color:${color}">${escapeHtml(arch.icon)} ${escapeHtml(arch.name)}</span>` : ''}
       </div>
-      <span class="text-sm sm:text-base text-gray-700">${cls.desc}</span>
-      ${cls.awaken ? `<span class="text-xs font-bold text-pink-700">✨ ${cls.awaken}</span>` : ''}
+      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(cls.desc)}</span>
+      ${cls.awaken ? `<span class="text-xs font-bold text-pink-700">✨ ${escapeHtml(cls.awaken)}</span>` : ''}
       ${statsLine}
     `;
     btn.addEventListener('click', () => {
@@ -1395,8 +1408,8 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor, arc
         ${archBadge}
         <span class="text-xs font-bold uppercase tracking-wider opacity-60" style="color:${categoryColor(u.category)}">${u.category}</span>
       </div>
-      <span class="text-lg sm:text-xl font-bold">${u.name}</span>
-      <span class="text-sm sm:text-base text-gray-700">${u.desc}</span>
+      <span class="text-lg sm:text-xl font-bold">${escapeHtml(u.name)}</span>
+      <span class="text-sm sm:text-base text-gray-700">${escapeHtml(u.desc)}</span>
       ${synergyHint}
       ${awakenHint}
     `;
