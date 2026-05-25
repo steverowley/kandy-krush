@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17ae',
+    items: [
+      '🚌 INFINITE-COMBO TRACKER MIGRATED TO THE BUS — new `infinite` event on the event bus emitted from `maybeTriggerInfiniteScore`; the run-highlights `infiniteCount` bump moves to a subscriber in `run-effects.js`. Mirrors the slot:start / slot:complete migrations from #284. 65 tests pass.',
+    ],
+  },
+  {
     id: '2026-05-25-17ad',
     items: [
       '🔤 ATKINSON FONT NOW LOADS LOCALLY — dropped the Google Fonts `<link>` + preconnects. styles/main.css now carries a `@font-face` block pointing at `assets/fonts/atkinson-hyperlegible-{regular,bold}.woff2` with `font-display: swap`. New `tools/fetch-fonts.sh` populates the WOFF2 files from the upstream Google Fonts repo (open-source, SIL OFL). If the font binaries aren\'t dropped in yet the font-family chain falls back to system-ui — game stays readable regardless. Removes the last third-party network dependency at boot.',
@@ -3768,9 +3774,15 @@ function maybeTriggerInfiniteScore() {
   if (state.cascadeAbort) return true; // already firing
   state.cascadeAbort = true;
   state.infiniteCount = (state.infiniteCount || 0) + 1;
-  if (state.runHighlights) {
-    state.runHighlights.infiniteCount = (state.runHighlights.infiniteCount || 0) + 1;
-  }
+  // 🚌 Emit the canonical `infinite` event so subscribers (run-effects
+  // highlight tracker, future relics, etc.) can hook in. Migrated the
+  // inline `runHighlights.infiniteCount` bump to a bus.on('infinite')
+  // handler in src/game/run-effects.js (PR #17ae).
+  bus.emit('infinite', {
+    nth_this_session: state.infiniteCount,
+    score: state.score,
+    slot: state.roguelike?.currentSlot,
+  });
   telemetry.track('infinite_combo', {
     nth_this_session: state.infiniteCount,
     score: state.score,

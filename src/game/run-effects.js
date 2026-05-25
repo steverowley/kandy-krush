@@ -77,6 +77,14 @@ export function registerRunEffects(state) {
     }
   }));
 
+  // ♾ Infinite-combo tracker. Was inline in maybeTriggerInfiniteScore;
+  // now an `infinite` event subscriber. The bus emit happens in the
+  // same spot the old inline bump did, so behavior is identical.
+  unsubs.push(bus.on('infinite', () => {
+    if (!state.inRoguelikeRun || !state.runHighlights) return;
+    state.runHighlights.infiniteCount = (state.runHighlights.infiniteCount || 0) + 1;
+  }));
+
   return () => {
     for (const u of unsubs) u();
     unsubs.length = 0;
