@@ -362,6 +362,8 @@ export const RELICS = [
     desc: 'Every 10 matches the board re-shuffles in place — preserves specials, opens new opportunities.' },
   { id: 'stardust',    icon: '✨', name: 'Stardust',
     desc: 'Every cascade chain of 4 or more earns you a free 💎 mid-run.' },
+  { id: 'quick-draw',  icon: '🤠', name: 'Quick Draw',
+    desc: 'The first power-up you use each slot is free — doesn\'t decrement your bank.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
