@@ -811,6 +811,31 @@ function syncGrumblocks() {
   }
 }
 
+// 🌪 Wild-archetype ability scoring helper. Lightning / Bee Storm /
+// Meteor used to clear tiles for FREE (no score, only cascade matches
+// below them scored). The gameplay review flagged this as the reason
+// Wild builds (Stormbringer / Comet / Crazy Cat) are non-viable —
+// abilities don't scale with your score multipliers, so a pure-Wild
+// build has nothing to scale UP.
+//
+// Now: each Wild ability awards score for its direct clears, using the
+// same calcScore + applyRunScoreMultiplier pipeline that matches use.
+// Wild's score competitiveness comes from FREQUENCY of fires (5 + slot
+// % 5 with wildSpeedup) — so they're still distinct from Scorer's
+// stacking-multiplier strategy.
+function awardAbilityScore(positions, { color = '#FF006E', label } = {}) {
+  if (!state.inRoguelikeRun) return;
+  if (!positions || positions.length === 0) return;
+  const base = calcScore(positions, 1);
+  const earned = consumeLuckyIfReady(applyRunScoreMultiplier(base, 1, positions.length));
+  if (earned <= 0) return;
+  state.score += earned;
+  setScore(state.score, { animate: true });
+  spawnFloatingNumber(`${label ? label + ' ' : ''}+${earned.toLocaleString()}`, positions, { color });
+  maybeTriggerInfiniteScore();
+  achievements.onScore(state.score);
+}
+
 async function fireLightning() {
   if (!state.board) return;
   const r = Math.floor(Math.random() * state.board.rows);
@@ -843,6 +868,7 @@ async function fireLightning() {
   await animatePop(positions);
   state.board.clear(positions);
   decrementJellyAt(positions);
+  awardAbilityScore(positions, { color: '#FFD60A', label: '⚡' });
   renderBoard(state.board, state);
   await delay(140);
   const fallen = gravityWithIngredients();
@@ -923,6 +949,7 @@ async function fireBeeStorm() {
   await animatePop(positions);
   state.board.clear(positions);
   decrementJellyAt(positions);
+  awardAbilityScore(positions, { color: '#fbbf24', label: '🐝' });
   renderBoard(state.board, state);
   await delay(140);
   const fallen = gravityWithIngredients();
@@ -961,6 +988,7 @@ async function fireMeteor() {
   await animatePop(positions);
   state.board.clear(positions);
   decrementJellyAt(positions);
+  awardAbilityScore(positions, { color: '#f97316', label: '☄' });
   renderBoard(state.board, state);
   await delay(120);
   const fallen = gravityWithIngredients();
@@ -1269,6 +1297,7 @@ async function fireBlackHole() {
   await delay(750);
   state.board.clear(positions);
   decrementJellyAt(positions);
+  awardAbilityScore(positions, { color: '#a855f7', label: '🌀' });
   renderBoard(state.board, state);
   await delay(160);
   const fallen = gravityWithIngredients();
@@ -1320,6 +1349,7 @@ function maybeFireSnake() {
   setTimeout(() => {
     state.board.clear(path);
     decrementJellyAt(path);
+    awardAbilityScore(path, { color: '#16a34a', label: '🐍' });
     renderBoard(state.board, state);
     setTimeout(() => {
       const fallen = gravityWithIngredients();
@@ -1872,6 +1902,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17j',
+    items: [
+      '🌪 WILD ARCHETYPE NOW SCORES — Lightning, Bee Storm, Meteor, Hungry Snake, and Black Hole abilities used to clear tiles for free (no score, only cascade matches below them scored). Wild builds were mathematically punished: a pure Stormbringer / Comet / Crazy Cat run produced more chaos than points. Now every direct ability-clear awards score through the same calcScore + applyRunScoreMultiplier pipeline that regular matches use — Wild becomes a frequency-based scoring archetype distinct from Scorer\'s multiplier-stacking strategy.',
+      'Floating numbers from ability scores show with a colored prefix (⚡ ⚒ 🐝 ☄ 🐍 🌀) so you can tell which ability earned which chunk.',
+    ],
+  },
   {
     id: '2026-05-25-17i',
     items: [
