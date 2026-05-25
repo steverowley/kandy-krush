@@ -111,6 +111,16 @@ body.start-screen-active > section:not(#start-screen) {
 #start-screen {
   background: linear-gradient(180deg, #fff7ed 0%, #fce7f3 60%, #ddd6fe 100%);
 }
+@keyframes start-icon-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-10px) rotate(3deg); }
+}
+#start-screen-icon {
+  animation: start-icon-float 3.6s ease-in-out infinite;
+}
+body.reduce-motion #start-screen-icon {
+  animation: none;
+}
 
 /* Reduce-motion overrides — driven by Settings toggle (body.reduce-motion)
    or by the OS preference. Kills the continuous pulses and any motion that

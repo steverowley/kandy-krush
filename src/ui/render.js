@@ -1651,15 +1651,40 @@ export function hideAllOverlays({ except = [] } = {}) {
 // Show the start menu (mode-picker). Each `on*` is invoked when the
 // player taps that mode button; `subtitle` is optional flavor text
 // (e.g. "Run over — pick where to go next" on game-over).
-export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, subtitle }) {
+export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, onQuit, subtitle, stats, version }) {
   const screen = document.getElementById('start-screen');
   const btnRogue = document.getElementById('start-menu-roguelike');
   const btnLevels = document.getElementById('start-menu-levels');
   const btnFree = document.getElementById('start-menu-free');
   const btnSettings = document.getElementById('start-menu-settings');
   const btnHelp = document.getElementById('start-menu-help');
+  const btnQuit = document.getElementById('start-menu-quit');
   const subEl = document.getElementById('start-screen-subtitle');
+  const statsEl = document.getElementById('start-screen-stats');
+  const versionEl = document.getElementById('start-screen-version');
   if (!screen || !btnRogue || !btnLevels || !btnFree) return;
+  // Stats badge row — small chips for best score, runs completed, gems.
+  if (statsEl) {
+    statsEl.innerHTML = '';
+    const chips = [];
+    if (stats?.best != null) chips.push({ label: '🏆 Best', value: stats.best.toLocaleString() });
+    if (stats?.runsCompleted != null && stats.runsCompleted > 0) chips.push({ label: '⚔ Runs', value: stats.runsCompleted });
+    if (stats?.gems != null && stats.gems > 0) chips.push({ label: '💎', value: stats.gems });
+    if (chips.length > 0) {
+      statsEl.classList.remove('hidden');
+      statsEl.classList.add('flex');
+      for (const c of chips) {
+        const chip = document.createElement('span');
+        chip.className = 'px-2 py-1 bg-white/70 border border-gray-400 rounded-full font-bold';
+        chip.textContent = `${c.label} ${c.value}`;
+        statsEl.appendChild(chip);
+      }
+    } else {
+      statsEl.classList.add('hidden');
+      statsEl.classList.remove('flex');
+    }
+  }
+  if (versionEl) versionEl.textContent = version ? `v${version}` : '';
   // Close any in-flight modals (run summary, settings, etc.) — the
   // start screen is a top-level page, not a stack-on-top dialog.
   hideAllOverlays({ except: ['start-screen'] });
@@ -1678,10 +1703,29 @@ export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, o
   // proper game title screen.
   if (btnSettings) replaceListener(btnSettings, 'click', () => { if (onSettings) onSettings(); }, 'start-menu-settings');
   if (btnHelp) replaceListener(btnHelp, 'click', () => { if (onHelp) onHelp(); }, 'start-menu-help');
+  if (btnQuit) replaceListener(btnQuit, 'click', () => { if (onQuit) onQuit(); }, 'start-menu-quit');
   screen.classList.remove('hidden');
   document.body.classList.add('start-screen-active');
   blockClicksFor(screen, 400);
   btnRogue.focus();
+}
+
+// "Thanks for playing" screen shown when the player taps Quit Game.
+// Web apps can't truly exit, so we present this as the final state with
+// a button to bounce back to the start screen if they change their mind.
+export function showGoodbye(onReturn) {
+  const screen = document.getElementById('goodbye-screen');
+  const startScreen = document.getElementById('start-screen');
+  const btn = document.getElementById('goodbye-return');
+  if (!screen || !btn) return;
+  if (startScreen) startScreen.classList.add('hidden');
+  document.body.classList.add('start-screen-active'); // keep game UI hidden
+  screen.classList.remove('hidden');
+  replaceListener(btn, 'click', () => {
+    screen.classList.add('hidden');
+    if (onReturn) onReturn();
+  }, 'goodbye-return');
+  btn.focus();
 }
 
 export function hideStartMenu() {
