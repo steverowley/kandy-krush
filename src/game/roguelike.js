@@ -16,8 +16,9 @@ const BOSS_LEVELS = {
     moves: 24,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 1 — clear every jelly tile to defeat the Guardian.',
-    tip: 'The Guardian protects 16 hits of jelly. Stack matches over the centre to break through.',
+    tip: 'Every 4 moves, the Guardian REGENERATES 1 jelly somewhere on the board. Be efficient.',
     taunt: 'You shall not pass my walls of jelly!',
+    mechanic: { kind: 'jelly-regen', everyN: 4 },
     obstacles: {
       jelly: [
         [1, 1, 2], [4, 1, 2],
@@ -32,9 +33,10 @@ const BOSS_LEVELS = {
     name: 'Lock Tyrant',
     moves: 28,
     objective: { kind: 'score', target: 3500 },
-    hint: 'BOSS 2 — reach 3,500 points through the Tyrant’s locks.',
-    tip: 'Locks block swaps. Free them with adjacent matches, then push for the score.',
+    hint: 'BOSS 2 — reach 3,500 points through the Tyrant\'s locks.',
+    tip: 'Every 5 moves, the Tyrant ADDS a new lock to a random tile. Score fast.',
     taunt: 'Click. Click. CLOCKED.',
+    mechanic: { kind: 'lock-spawn', everyN: 5 },
     obstacles: {
       locks: [
         [0, 1, 2], [5, 1, 2],
@@ -53,8 +55,9 @@ const BOSS_LEVELS = {
     moves: 34,
     objective: { kind: 'score', target: 6000 },
     hint: 'BOSS 3 — reach 6,000 to dethrone the Sweet King.',
-    tip: 'Jelly, locks, and cherries all at once. Use everything in your bank.',
+    tip: 'Every 4 moves the King ALTERNATES adding a jelly or a lock. Decisive moves win.',
     taunt: 'Bow before sucrose royalty.',
+    mechanic: { kind: 'alternate-jelly-lock', everyN: 4 },
     obstacles: {
       jelly: [
         [0, 0, 2], [5, 0, 2],
@@ -74,8 +77,9 @@ const BOSS_LEVELS = {
     moves: 30,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 4 — peel the Snail\'s shell off. Clear every jelly tile.',
-    tip: 'The Snail wears a 20-jelly shell. Cascades crack it fastest.',
+    tip: 'Every 5 moves the Snail REGROWS its shell — 1 fresh jelly anywhere. Cascades crack it fastest.',
     taunt: 'Slow… and unstoppable.',
+    mechanic: { kind: 'jelly-regen', everyN: 5 },
     obstacles: {
       jelly: [
         [0, 0, 2], [1, 0, 2], [4, 0, 2], [5, 0, 2],
@@ -93,8 +97,9 @@ const BOSS_LEVELS = {
     moves: 32,
     objective: { kind: 'score', target: 7500 },
     hint: 'BOSS 5 — break the Pharaoh\'s sarcophagus. Reach 7,500.',
-    tip: 'Halfway through the run. The Pharaoh hides behind a wall of locks. Wrapped + striped combos blast through.',
+    tip: 'Every 4 moves the Pharaoh HARDENS a random lock (lvl 1 → lvl 2). Don\'t let lvl-1 locks sit.',
     taunt: 'Forty centuries entombed in candy.',
+    mechanic: { kind: 'harden-lock', everyN: 4 },
     obstacles: {
       locks: [
         [0, 1, 2], [1, 1, 2], [4, 1, 2], [5, 1, 2],
@@ -114,8 +119,9 @@ const BOSS_LEVELS = {
     moves: 36,
     objective: { kind: 'dropIngredients', target: 6 },
     hint: 'BOSS 6 — drop all six of the Hydra\'s cherry-heads.',
-    tip: 'Six cherries, jelly clogging the lower rows. Drop the corners first to open lanes.',
+    tip: 'When you drop a cherry, 50% chance the Hydra grows a NEW head — a fresh cherry at row 0.',
     taunt: 'Cut one — six grow back.',
+    mechanic: { kind: 'cherry-regrow', chance: 0.5 },
     obstacles: {
       ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
       jelly: [
@@ -131,8 +137,9 @@ const BOSS_LEVELS = {
     moves: 26,
     objective: { kind: 'clearType', type: 5, target: 36 },
     hint: 'BOSS 7 — clear 36 purple hearts to silence the Wraith.',
-    tip: 'The Wraith feeds on purple. Drain its colour and it fades.',
+    tip: 'Every non-purple match HEALS the Wraith — your purple count goes DOWN by 1 per non-purple tile. Match purple only.',
     taunt: 'I am every flavor you ever forgot.',
+    mechanic: { kind: 'wraith-heal', healColor: 5 },
     obstacles: {
       locks: [
         [2, 2, 1], [3, 2, 1],
@@ -146,8 +153,9 @@ const BOSS_LEVELS = {
     moves: 34,
     objective: { kind: 'clearJelly' },
     hint: 'BOSS 8 — dismantle the Queen\'s lattice. Clear all jelly.',
-    tip: 'Double-jelly weave with sentry locks. Free the locks to flow the matches.',
+    tip: 'Every 6 moves the Queen LOCKS a random jelly tile (defends her web). Clear locks fast.',
     taunt: 'My web binds every move you make.',
+    mechanic: { kind: 'lock-jelly', everyN: 6 },
     obstacles: {
       jelly: [
         [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
@@ -167,8 +175,9 @@ const BOSS_LEVELS = {
     moves: 36,
     objective: { kind: 'score', target: 10000 },
     hint: 'BOSS 9 — beat the Confectioner at her own game. 10,000 points.',
-    tip: 'She bakes obstacles into the recipe. Cherries fall, locks bind, jelly slows. Score through it all.',
+    tip: 'Every 4 moves she ADDS a fresh cherry at the top of the board — distractions blocking your scoring lanes.',
     taunt: 'I baked this whole game from scratch, dear.',
+    mechanic: { kind: 'spawn-cherry', everyN: 4 },
     obstacles: {
       ingredients: [[1, 0], [4, 0]],
       jelly: [
@@ -189,8 +198,9 @@ const BOSS_LEVELS = {
     moves: 48,
     objective: { kind: 'score', target: 16000 },
     hint: 'FINAL BOSS — the Candy Kraken. 16,000 points. 48 moves. No mercy.',
-    tip: 'The kraken brings every obstacle the run threw at you. Cash in EVERY power-up. Survivors live for this.',
+    tip: 'Every 3 moves the Kraken picks a RANDOM boss mechanic (jelly regen / lock spawn / cherry / lock-harden / lock-jelly). Cash in EVERY power-up.',
     taunt: 'TASTE THE ABYSS.',
+    mechanic: { kind: 'kraken-chaos', everyN: 3 },
     obstacles: {
       ingredients: [[0, 0], [2, 0], [3, 0], [5, 0]],
       jelly: [
