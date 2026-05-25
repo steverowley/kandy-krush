@@ -295,6 +295,8 @@ export const UPGRADES = [
   { id: 'heart-steal', category: 'buff',       archetype: 'sustain', name: 'Heart Steal',        desc: '❤️ Boss kills restore +1 life per stack. Keep your hearts full through the marathon.' },
   { id: 'spark-strike',category: 'synergy',    archetype: 'wild',    name: 'Spark Strike',       desc: '✨ Every 12 matches in a slot, fire a free Lightning bolt (no Lightning upgrade required).' },
   { id: 'sweet-roar',  category: 'synergy',    archetype: 'wild',    name: 'Sweet Roar',         desc: '🐝 Slot start: fire a free Bee Storm per stack. Open big.' },
+  { id: 'bomb-splash', category: 'synergy',    archetype: 'bomber',  name: 'Bomb Splash',        desc: '💧 TNT pop fills Lucky bar +15% per stack. Bomber → Lucky bridge.' },
+  { id: 'lucky-reload',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Reload',       desc: '🚀 When Lucky-MODE fires, +1 "+3 Moves" power-up per stack. Stacks with Cherry Reload.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
