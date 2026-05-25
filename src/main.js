@@ -1276,6 +1276,17 @@ function applyRunUpgradesOnSlotStart() {
       for (let i = 0; i < upgradeCount('storm-caller'); i++) spawnCrazyTile('bolt');
     }, 1300);
   }
+  // 🍬 Sweet Steady upgrade — slot start: gain +1 random powerup per stack.
+  if (upgradeCount('sweet-steady') > 0) {
+    const bank2 = powerupBank();
+    const cap2 = effectivePowerupCap();
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    for (let i = 0; i < upgradeCount('sweet-steady'); i++) {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank2[pick] || 0) < cap2) bank2[pick] = (bank2[pick] || 0) + 1;
+    }
+    setPowerupCounts(bank2);
+  }
   // 🎴 Wild Card upgrade — slot start: spawn 1 random crazy tile per stack.
   if (upgradeCount('wild-card') > 0) {
     setTimeout(() => {
@@ -1466,6 +1477,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
     scored += 50;
     spawnConfetti(12);
   }
+  // Mutator: 🌨 Snowstorm — flat +10 per cleared tile (matchSize-scaled).
+  if (hasMutator('snowstorm') && matchSize > 0) {
+    scored += 10 * matchSize;
+  }
   return scored;
 }
 
@@ -1501,6 +1516,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13e',
+    items: [
+      '🍬 NEW UPGRADE — Sweet Steady (Sustain): slot start grants +1 random power-up per stack. Drip restock.',
+      '🌨 NEW MUTATOR — Snowstorm: every match earns a flat +10 per cleared tile. Big matches snowball with bonus points.',
+    ],
+  },
   {
     id: '2026-05-25-13d',
     items: [
