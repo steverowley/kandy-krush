@@ -1137,6 +1137,11 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   // Scorer synergy: +15% per Scorer stack beyond the first.
   const scorerSyn = synergyStacks(runArchetypeCounts().scorer);
   if (scorerSyn > 0) m *= 1 + 0.15 * scorerSyn;
+  // 🎯 Snowball upgrade — compounding ×1.03 per match per stack.
+  if (upgradeCount('snowball') > 0) {
+    const exponent = (state.slotMatchCount || 0) * upgradeCount('snowball');
+    if (exponent > 0) m *= Math.pow(1.03, Math.min(exponent, 60));
+  }
   // 🍰 Sugar Rush relic — first 3 matches of every slot are 3×.
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
@@ -1192,6 +1197,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9t',
+    items: [
+      '🎯 NEW UPGRADE — Snowball (Scorer). Each match in a slot multiplies the next match\'s score by 3% per stack. Compounds — match 20 with 1 stack scores ×1.80 baseline.',
+      'Capped at 60 effective stacks per match to keep things sane. Pair with Big Brain relic for runaway late-slot scores.',
+      'Upgrade pool now 25.',
+    ],
+  },
   {
     id: '2026-05-25-9s',
     items: [
