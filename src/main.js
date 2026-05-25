@@ -1619,6 +1619,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15a',
+    items: [
+      '🩸 RED-BORDER CLEANUP — the boss-fight red pulsing border now properly clears when you finish or fail a run (was lingering into the main menu and Levels mode after a boss-slot end).',
+      '📦 OFFLINE FIX — service worker cache now includes haptics.js and roguelike.js (were missing, causing module load failures in offline mode). Cache version bumped to v5.',
+    ],
+  },
+  {
     id: '2026-05-25-14l',
     items: [
       '➕ +MOVES REVIVE FIXED — the input-lock from 14k accidentally blocked the +Moves revive when you ran out of moves. Now the lock only applies during the post-WIN settle (movesRemaining > 0). +Moves still revives you from a fail.',
@@ -3395,6 +3402,7 @@ function advanceRoguelikeAfterWin() {
     state.runUpgrades = [];
     state.runRelics = [];
     state.roguelike.currentClass = null;
+    document.body.classList.remove('boss-active', 'boss-final');
     persist();
     refreshRunHud();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
@@ -4184,6 +4192,7 @@ function checkLevelOutcome() {
         state.runUpgrades = [];
         state.runRelics = [];
         state.roguelike.currentClass = null;
+        document.body.classList.remove('boss-active', 'boss-final');
         persist();
         refreshRunHud();
         flashMessage(`Run over — out of lives. +${gems} 💎`, 2400);
