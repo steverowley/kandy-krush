@@ -435,6 +435,8 @@ export const MUTATORS = [
     desc: 'The Eater skips this slot entirely. Plan your matches in peace.' },
   { id: 'big-money',   icon: '💵', name: 'Big Money',
     desc: '+10 💎 immediately at slot start. Pure gem income for the Skill Tree.' },
+  { id: 'confetti-day',icon: '🎊', name: 'Confetti Day',
+    desc: 'Every match earns a flat +50 score and a burst of confetti — pure party.' },
 ];
 
 export function isMutatorSlot(slot) {
