@@ -242,6 +242,7 @@ function showRunInventory() {
     classStats: stats,
     upgradesList: (state.runUpgrades || []).slice(),
     getUpgrade: (id) => UPGRADES.find((u) => u.id === id),
+    highlights: state.runHighlights || null,
   });
 }
 
@@ -277,6 +278,7 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
     awakened: classAwakened(),
     runsCompleted: state.roguelike?.runsCompleted || 0,
     classStats: stats,
+    highlights: state.runHighlights || null,
     onReplay: () => {
       // The run state has already been cleared by the caller (after this
       // function returns it'll be cleared if not already). Kick off a
@@ -1402,6 +1404,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12e',
+    items: [
+      '🏅 RUN HIGHLIGHTS — the run-summary panel now shows your max cascade and biggest single match for the current run. New chase-stats to push for personal bests.',
+    ],
+  },
   {
     id: '2026-05-25-12d',
     items: [
@@ -2619,7 +2627,11 @@ function startRoguelikeRun() {
     state.runUpgrades = [];
     state.runRelics = [];
     state.roguelike.currentClass = null;
+    // Per-run highlights — surfaced on the run-summary panel when the
+    // player finishes (or dies).
+    state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
   }
+  if (!state.runHighlights) state.runHighlights = { maxCascade: 0, biggestMatch: 0 };
   persist();
   // First-ever roguelike run: pop a one-time intro explaining the
   // class / archetype / relic / mutator / enemy systems. Then class.
@@ -3815,6 +3827,15 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       for (let i = 0; i < upgradeCount('cascade-splash'); i++) {
         if (Math.random() < 0.6) spawnCrazyTile();
       }
+    }
+  }
+  // 🏅 Per-run highlight tracking — surfaced on the run summary.
+  if (state.inRoguelikeRun && state.runHighlights) {
+    if (cascadeLevel > (state.runHighlights.maxCascade || 0)) {
+      state.runHighlights.maxCascade = cascadeLevel;
+    }
+    if (allCleared.size > (state.runHighlights.biggestMatch || 0)) {
+      state.runHighlights.biggestMatch = allCleared.size;
     }
   }
   if (cascadeLevel >= 3) spawnConfetti(20);
