@@ -190,7 +190,10 @@ function hasRelic(id) {
 
 // Bottomless Stomach relic multiplier — used in match + clearType counters.
 function bottomlessMulti() {
-  return hasRelic('bottomless') ? 2 : 1;
+  let m = hasRelic('bottomless') ? 2 : 1;
+  // 🥪 Buffet Day mutator — every match also counts double toward the objective.
+  if (hasMutator('buffet-day')) m *= 2;
+  return m;
 }
 
 function activeMutator() {
@@ -1398,6 +1401,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12a',
+    items: [
+      '🎉 NEW MUTATOR — Powerup Party: EVERY power-up is free this slot. Bank doesn\'t decrement on use. Dump your whole arsenal.',
+      '🥪 NEW MUTATOR — Buffet Day: every match counts double toward the objective. Slots end fast.',
+      'Mutator pool now 24 strong — every 5th non-boss slot rolls a fresh weather event.',
+    ],
+  },
+  {
     id: '2026-05-25-11z',
     items: [
       '💬 BOSS TAUNTS — every roguelike boss now opens with a one-line taunt on the battle banner. From "You shall not pass my walls of jelly!" to the Candy Kraken\'s "TASTE THE ABYSS."',
@@ -2277,6 +2288,10 @@ function powerupBank() {
 function spendPowerup(kind) {
   const bank = powerupBank();
   if ((bank[kind] || 0) <= 0) return false;
+  // 🎉 Powerup Party mutator — every power-up is free for the slot.
+  if (hasMutator('powerup-party')) {
+    return true;
+  }
   // 🔨 Hammer Time mutator — hammers are free for the slot.
   if (kind === 'hammer' && hasMutator('hammer-time')) {
     return true;

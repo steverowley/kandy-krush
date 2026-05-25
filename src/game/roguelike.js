@@ -489,6 +489,10 @@ export const MUTATORS = [
     desc: 'Every match adds +20% to the Lucky bar. Trigger Lucky-MODE almost every move.' },
   { id: 'sweet-boost', icon: '🧁', name: 'Sweet Boost',
     desc: 'First 5 matches of every slot score ×2 (think Sugar Rush relic but more).' },
+  { id: 'powerup-party', icon: '🎉', name: 'Powerup Party',
+    desc: 'EVERY power-up is FREE this slot. Bank doesn\'t decrement on use.' },
+  { id: 'buffet-day',  icon: '🥪', name: 'Buffet Day',
+    desc: 'Every match counts double toward the objective. Slots end fast.' },
 ];
 
 export function isMutatorSlot(slot) {
