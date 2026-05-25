@@ -777,7 +777,7 @@ export function showRelicPicker(choices, ownedRelics, onPick) {
   if (firstBtn) firstBtn.focus();
 }
 
-export function showClassPicker(classes, archetypes, onPick) {
+export function showClassPicker(classes, archetypes, onPick, classStats = null) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
   const list = document.getElementById('upgrade-choices');
@@ -800,6 +800,10 @@ export function showClassPicker(classes, archetypes, onPick) {
     btn.type = 'button';
     btn.className = 'upgrade-card class-card flex flex-col gap-1 p-4 text-left border-[3px] border-black rounded-2xl bg-white hover:bg-amber-50 active:bg-amber-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 shadow-md';
     btn.style.borderColor = '#000';
+    const stats = classStats && classStats[cls.id] ? classStats[cls.id] : null;
+    const statsLine = stats
+      ? `<span class="text-xs text-gray-600">📊 Run #${(stats.runs || 0) + 1} · ${stats.completes || 0} ✓ · best slot ${stats.bestSlot || 0}</span>`
+      : '<span class="text-xs text-gray-500 italic">Never played — your first run.</span>';
     btn.innerHTML = `
       <div class="flex items-center gap-2">
         <span class="text-2xl">${cls.icon}</span>
@@ -808,6 +812,7 @@ export function showClassPicker(classes, archetypes, onPick) {
       </div>
       <span class="text-sm sm:text-base text-gray-700">${cls.desc}</span>
       ${cls.awaken ? `<span class="text-xs font-bold text-pink-700">✨ ${cls.awaken}</span>` : ''}
+      ${statsLine}
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');

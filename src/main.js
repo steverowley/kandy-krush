@@ -973,6 +973,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8x',
+    items: [
+      '📊 Class picker now SHOWS your run history per class — "Run #3 · 1 ✓ · best slot 67" — so you can chase your previous bests on the next run.',
+      'Classes you\'ve never played read "Never played — your first run." Try them all!',
+    ],
+  },
+  {
     id: '2026-05-25-8w',
     items: [
       '📈 PER-CLASS RUN STATS — every run tracks runs/completes/best-slot per class. Run summary now shows "Champion run #3, 1 win, best slot 67".',
@@ -1554,7 +1561,7 @@ function startRoguelikeRun() {
       persist();
       refreshRunHud();
       setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot, { announce: true }), 400);
-    });
+    }, state.roguelike.classStats || {});
     return;
   }
   playRoguelikeSlot(state.roguelike.currentSlot, { announce: true });
