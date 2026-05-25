@@ -14,6 +14,11 @@ body.size-large  { --board-size: min(99vw, 900px); }
 #board {
   width: var(--board-size);
   aspect-ratio: 1 / 1;
+  /* Stop iOS Safari from interpreting a board swipe as a page scroll. */
+  touch-action: none;
+  /* Disable text selection on long-press / drag. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .tile {
@@ -966,7 +971,7 @@ body.theme-hc #cascade-text {
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   transform: none;
   opacity: 0;
   animation: particle-screen-flash 480ms ease-out forwards;

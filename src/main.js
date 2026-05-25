@@ -320,8 +320,10 @@ function openStartMenu(subtitle = null) {
       if (btn) btn.click();
     },
     onHelp: () => {
-      const btn = document.getElementById('help-open');
-      if (btn) btn.click();
+      // The start-screen button is labeled "📖 What's New" so it should
+      // show the changelog, not the tutorial. Tutorial is still reachable
+      // via the in-game "?" button in the header.
+      showChangelog(CHANGELOG_ENTRIES.slice(0, 5), () => { /* no-op */ });
     },
     onQuit: () => {
       // Web app — we can't truly close the window from script (browsers
@@ -1738,6 +1740,18 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17a',
+    items: [
+      '📱 HEADER FITS THE iPHONE — Settings + Restart shrink to icon-only buttons on phones so the 🏠 home button is no longer clipped off the right edge of a 390px viewport. The big "Sweet Match" title shrinks to text-2xl on mobile too.',
+      '📲 INSTALL PROMPT NO LONGER COVERS THE BOARD — the iOS "add to home screen" toast was firing on a blind 3-second timer, often landing on top of an active game. It now only appears while the start screen is showing.',
+      '🍎 iOS LAYOUT FIXES — `min-h-screen` swapped for `min-h-dvh` so the start screen doesn\'t overshoot the viewport when Safari\'s URL bar is visible. Board now has `touch-action: none` + `user-select: none` so swipes don\'t race the page scroller or accidentally select text.',
+      '🔊 AUDIO UNLOCK ON FIRST GESTURE — first sound effect could be silent on iOS if the first tap didn\'t happen to be one of the buttons that explicitly unlocked audio. A document-level pointerdown/keydown/touchstart listener now guarantees audio unlocks on any first interaction.',
+      '📖 "WHAT\'S NEW" NOW SHOWS THE CHANGELOG — the start-screen button was wired to the welcome tutorial by mistake. Now opens the actual update list.',
+      '🛡 RUN HUD VISIBLE FROM SLOT 1 — a previous boot-time `setRunHud({ visible: false })` could leave the HUD hidden once a run started. Forced refresh on slot start guarantees the build readout shows immediately.',
+      '🗺 PROJECT_PLAN.md — full consumer-product roadmap (4-phase, ~30 items) lives in-repo for visibility.',
+    ],
+  },
   {
     id: '2026-05-25-15q',
     items: [
@@ -3566,9 +3580,15 @@ document.getElementById('install-dismiss').addEventListener('click', () => {
 });
 
 // iOS doesn't fire beforeinstallprompt; show the manual instructions
-// once on first load if we haven't installed yet.
+// once on first load if we haven't installed yet. Only fire while the
+// start screen is showing — never mid-game (the toast otherwise covers
+// the active board on a small phone, blocking play).
 if (isIOS() && shouldShowInstallPrompt()) {
-  setTimeout(() => showInstallToast('ios'), 3000);
+  setTimeout(() => {
+    if (document.body.classList.contains('start-screen-active')) {
+      showInstallToast('ios');
+    }
+  }, 3000);
 }
 
 function maxLivesForRun() {
@@ -3648,6 +3668,11 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
   applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
   applyRunUpgradesOnSlotStart();
+  // Defensive: a previous setRunHud({ visible: false }) (e.g. from boot
+  // before the run started) could leave the HUD with the `hidden` class
+  // even after the run is live. Forcing a refresh here guarantees the
+  // build readout is visible from slot 1.
+  refreshRunHud();
   refreshLevelUI();
   renderBoard(state.board, state, { intro: true });
   if (announce) {
@@ -5720,6 +5745,21 @@ document.getElementById('restart').addEventListener('click', () => {
   }
   sfx.playRestart();
 });
+
+// 🔊 iOS requires audio to be unlocked from inside a user-gesture event
+// handler. We already call sfx.unlockAudio() from every button handler in
+// the boot flow, but a defensive one-shot at the document level covers
+// any path we missed (e.g. keyboard-only interaction, focus restoration).
+function firstGestureUnlock() {
+  sfx.unlockAudio();
+  document.removeEventListener('pointerdown', firstGestureUnlock, true);
+  document.removeEventListener('keydown', firstGestureUnlock, true);
+  document.removeEventListener('touchstart', firstGestureUnlock, true);
+}
+document.addEventListener('pointerdown', firstGestureUnlock, { capture: true, once: false });
+document.addEventListener('keydown', firstGestureUnlock, { capture: true, once: false });
+document.addEventListener('touchstart', firstGestureUnlock, { capture: true, once: false, passive: true });
+
 async function onSwipe(origin, target) {
   if (state.busy) return;
   if (state.resolved) return;
