@@ -412,6 +412,8 @@ export const MUTATORS = [
     desc: 'Hammers are FREE this slot — bank doesn\'t decrement.' },
   { id: 'lockpick',    icon: '🗝', name: 'Lockpick',
     desc: 'Slot starts with EVERY lock weakened by 1 level — easier crack.' },
+  { id: 'treasure',    icon: '💰', name: 'Treasure Slot',
+    desc: 'Finishing this slot grants +5 💎 on top of the usual reward.' },
 ];
 
 export function isMutatorSlot(slot) {
