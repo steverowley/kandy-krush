@@ -36,7 +36,8 @@ body.size-large  { --board-size: min(99vw, 900px); }
   overflow: hidden;
 }
 
-.tile:focus-visible {
+.tile:focus-visible,
+.tile.kb-focus {
   outline: none;
   box-shadow: 0 0 0 5px #FF006E;
 }
