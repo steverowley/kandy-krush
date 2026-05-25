@@ -314,7 +314,7 @@ export const LEVELS = [
     name: 'Pumpkin spice',
     moves: 24,
     objective: { kind: 'clearType', type: 3, target: 15 },
-    hint: 'Clear 15 orange diamonds.',
+    hint: 'Clear 15 orange hexagons.',
   },
   {
     id: 30,
