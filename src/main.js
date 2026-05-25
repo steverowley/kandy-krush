@@ -958,6 +958,14 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8v',
+    items: [
+      '⚔ 5 NEW STARTING CLASSES — pick from 11 classes (up from 6) at run start. Each archetype now has at least 2 paths.',
+      '🔥 Pyromaniac (Chain Bomb) · 🌟 Comet (Meteor Shower) · 💰 Merchant (Combo Streak) · 🍃 Druid (First Swap Free) · 🃏 Gambler (Lucky Strike).',
+      'Each new class starts with a different free upgrade so you can lean into a Bomber-Wild or Scorer-Sustain hybrid immediately.',
+    ],
+  },
+  {
     id: '2026-05-25-8u',
     items: [
       '🌳 SKILL TREE expands — 4 new permanent meta upgrades to spend gems on!',
