@@ -1422,6 +1422,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-12n',
+    items: [
+      '🏆 BIGGER ACHIEVEMENTS — new pop-up badges for Massive Match (8+), Unbelievable (12+), Mega Cascade (chain ≥6), LEGENDARY (chain ≥9), Cascade God (15+ cascades), 50k and 100k score milestones.',
+    ],
+  },
+  {
     id: '2026-05-25-12m',
     items: [
       '🍨 NEW RELIC — Sundae Saturday: every 8 matches in a slot grants +1 "+3 Moves" power-up. Steady drip for marathon slots.',
