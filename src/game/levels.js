@@ -1257,6 +1257,131 @@ export const LEVELS = [
       ],
     },
   },
+
+  // ===== Chapter: Beyond the Apocalypse (101-110) — post-game brutality =====
+  {
+    id: 101,
+    name: 'Aftermath',
+    moves: 25,
+    objective: { kind: 'score', target: 5000 },
+    hint: 'No obstacles. 25 moves. 5,000 points. Pure skill.',
+    tip: 'Specials and combos only. Cherish every cascade.',
+  },
+  {
+    id: 102,
+    name: 'Cascade trial',
+    moves: 22,
+    objective: { kind: 'specials', target: 8 },
+    hint: 'Eight specials in 22 moves.',
+  },
+  {
+    id: 103,
+    name: 'Jelly armageddon',
+    moves: 40,
+    objective: { kind: 'clearJelly' },
+    hint: 'The whole board is double-jelly. Strap in.',
+    obstacles: {
+      jelly: [
+        [0, 0, 2], [1, 0, 2], [2, 0, 2], [3, 0, 2], [4, 0, 2], [5, 0, 2],
+        [0, 1, 2], [1, 1, 2], [4, 1, 2], [5, 1, 2],
+        [0, 4, 2], [1, 4, 2], [4, 4, 2], [5, 4, 2],
+        [0, 5, 2], [1, 5, 2], [2, 5, 2], [3, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 104,
+    name: 'Cherry purgatory',
+    moves: 36,
+    objective: { kind: 'dropIngredients', target: 7 },
+    hint: 'Seven cherries. Yes, seven. Slot one per column.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [3, 1]],
+      jelly: [
+        [0, 3, 1], [5, 3, 1],
+        [2, 4, 1], [3, 4, 1],
+      ],
+    },
+  },
+  {
+    id: 105,
+    name: 'Iron grip',
+    moves: 32,
+    objective: { kind: 'clearType', type: 2, target: 24 },
+    hint: '24 pink triangles through a maze of double-locks.',
+    obstacles: {
+      locks: [
+        [1, 1, 2], [2, 1, 2], [3, 1, 2], [4, 1, 2],
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [1, 4, 2], [2, 4, 2], [3, 4, 2], [4, 4, 2],
+      ],
+    },
+  },
+  {
+    id: 106,
+    name: 'Centurion',
+    moves: 50,
+    objective: { kind: 'matches', target: 50 },
+    hint: '50 matches in 50 moves. Average 1.0 per move. Cascades help.',
+  },
+  {
+    id: 107,
+    name: 'Champion\'s ladder',
+    moves: 30,
+    objective: { kind: 'score', target: 8000 },
+    hint: '8,000 in 30 — speed-score gauntlet.',
+    obstacles: {
+      jelly: [
+        [2, 2, 1], [3, 2, 1], [2, 3, 1], [3, 3, 1],
+      ],
+    },
+  },
+  {
+    id: 108,
+    name: 'Locked-down vault',
+    moves: 32,
+    objective: { kind: 'score', target: 6000 },
+    hint: 'Every cell except the centre is locked. 6,000 points.',
+    obstacles: {
+      locks: [
+        [0, 0, 2], [1, 0, 2], [2, 0, 2], [3, 0, 2], [4, 0, 2], [5, 0, 2],
+        [0, 1, 2], [5, 1, 2],
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+        [0, 4, 2], [5, 4, 2],
+        [0, 5, 2], [1, 5, 2], [2, 5, 2], [3, 5, 2], [4, 5, 2], [5, 5, 2],
+      ],
+    },
+  },
+  {
+    id: 109,
+    name: 'Rainbow rite',
+    moves: 28,
+    objective: { kind: 'specials', target: 10 },
+    hint: 'Ten specials. Yes ten. Use the centre well.',
+  },
+  {
+    id: 110,
+    name: 'Beyond the summit',
+    moves: 60,
+    objective: { kind: 'score', target: 12000 },
+    hint: 'The final challenge: 12,000 points through EVERY obstacle, harder than Sweet Apocalypse.',
+    tip: 'If you reach this — you\'re a Sweet Match master.',
+    obstacles: {
+      ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
+      jelly: [
+        [0, 1, 2], [1, 1, 2], [4, 1, 2], [5, 1, 2],
+        [2, 2, 2], [3, 2, 2],
+        [2, 3, 2], [3, 3, 2],
+        [0, 4, 2], [1, 4, 2], [4, 4, 2], [5, 4, 2],
+      ],
+      locks: [
+        [0, 2, 2], [5, 2, 2],
+        [0, 3, 2], [5, 3, 2],
+      ],
+    },
+  },
 ];
 
 export function getLevel(id) {
