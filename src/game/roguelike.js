@@ -357,6 +357,13 @@ export const CLASSES = [
   { id: 'witch',        icon: '🔮', name: 'Witch',        archetype: 'lucky',
     desc: 'Hybrid start: Lucky Strike (Lucky) + Hungry Snake (Wild). Channels chaos magic.',
     awaken: 'Awakens at 2+ 🍀 Lucky upgrades: Lucky-MODE (×1.5 sustain) lasts +3 extra matches.', start: ['lucky-strike', 'hungry-snake'] },
+  // Phase 12h — cascade-focused hybrids
+  { id: 'cascadesmith', icon: '🌊', name: 'Cascadesmith',  archetype: 'wild',
+    desc: 'Hybrid start: Cascade King (Scorer) + Cascade Splash (Wild). Build a chain reactor.',
+    awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['cascade-king', 'cascade-splash'] },
+  { id: 'sorcerer',     icon: '🌀', name: 'Sorcerer',      archetype: 'wild',
+    desc: 'Hybrid start: Echo Match (Lucky) + Meteor Shower (Wild). Ride the cascades into Lucky-MODE.',
+    awaken: 'Awakens at 2+ ⚡ Wild upgrades: every Lightning bolt clears a column too — full cross blast.', start: ['echo-match', 'meteor'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
