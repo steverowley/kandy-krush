@@ -1293,6 +1293,12 @@ function applyRunUpgradesOnSlotStart() {
       for (let i = 0; i < upgradeCount('wild-card'); i++) spawnCrazyTile();
     }, 1350);
   }
+  // 🐝 Sweet Roar upgrade — slot start: fire Bee Storm once per stack.
+  if (upgradeCount('sweet-roar') > 0) {
+    setTimeout(() => {
+      for (let i = 0; i < upgradeCount('sweet-roar'); i++) fireBeeStorm();
+    }, 1500);
+  }
   // 🐝 Bee Tonic upgrade — slot start: Lucky bar +20% per stack.
   if (upgradeCount('bee-tonic') > 0) {
     state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20 * upgradeCount('bee-tonic'));
@@ -1556,6 +1562,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13q',
+    items: [
+      '🐝 NEW UPGRADE — Sweet Roar (Wild): slot start fires a free Bee Storm per stack. Open big.',
+      '🪙 NEW MUTATOR — Coin Toss: every match has a 25% chance to drop a random power-up. Bank fills up fast.',
+    ],
+  },
   {
     id: '2026-05-25-13p',
     items: [
@@ -4616,6 +4629,18 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
       if (state.luckyCharge >= 100) state.luckyReady = true;
       setLuckyCharge(state.luckyCharge, state.luckyReady);
+    }
+    // 🪙 Coin Toss mutator — 25% chance per match to grant +1 random powerup.
+    if (hasMutator('coin-toss') && Math.random() < 0.25) {
+      const bank = powerupBank();
+      const cap = effectivePowerupCap();
+      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pick] || 0) < cap) {
+        bank[pick] = (bank[pick] || 0) + 1;
+        setPowerupCounts(bank);
+        flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
+      }
     }
     // 🌶 Spice Box relic — every 12 matches spawn a random crazy tile.
     if (hasRelic('spice-box') && state.slotMatchCount % 12 === 0) {
