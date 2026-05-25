@@ -789,7 +789,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose, stats }) {
   render();
 }
 
-export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade, onReplay, highlights }) {
+export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEarned, totalGems, bestSlot, archetypes, archCounts, relics, getRelic, awakened, runsCompleted, classStats, inProgress, upgradesList, getUpgrade, onReplay, onClose: onCloseCb, highlights }) {
   const overlay = document.getElementById('run-summary-overlay');
   const panel = document.getElementById('run-summary-panel');
   if (!overlay || !panel) return;
@@ -933,6 +933,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     overlay.classList.add('hidden');
     panel.classList.add('hidden');
     restoreFocus();
+    if (onCloseCb) onCloseCb();
   };
   replaceListener(close, 'click', handleClose, 'run-summary-close');
   replaceListener(overlay, 'click', handleClose, 'run-summary-overlay');
@@ -1609,6 +1610,83 @@ export function showChangelog(items, onDismiss) {
   };
   replaceListener(btn, 'click', dismiss, 'changelog-dismiss');
   replaceListener(overlay, 'click', dismiss, 'changelog-overlay');
+}
+
+// IDs of modal overlays + panels that should be closed when a "top-level"
+// menu (start menu) takes over the screen. Prevents the start menu from
+// stacking on top of a leftover run-summary/level/settings panel.
+const MODAL_OVERLAY_IDS = [
+  'run-summary-overlay', 'run-summary-panel',
+  'level-overlay',
+  'level-select-overlay', 'level-select-panel',
+  'settings-overlay', 'settings-panel',
+  'changelog-overlay', 'changelog-panel',
+  'welcome-overlay', 'welcome-panel',
+  'upgrade-overlay', 'upgrade-panel',
+  'skill-tree-overlay', 'skill-tree-panel',
+  'reset-overlay', 'reset-panel',
+  'relic-overlay', 'relic-panel',
+  'shop-overlay', 'shop-panel',
+  'crossroads-overlay', 'crossroads-panel',
+  'class-picker-overlay', 'class-picker-panel',
+  'roguelike-intro-overlay', 'roguelike-intro-panel',
+];
+
+export function hideAllOverlays({ except = [] } = {}) {
+  const skip = new Set(except);
+  for (const id of MODAL_OVERLAY_IDS) {
+    if (skip.has(id)) continue;
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  }
+  // Also hide level-complete/level-fail sub-panels nested inside level-overlay.
+  if (!skip.has('level-overlay')) {
+    const c = document.getElementById('level-complete');
+    const f = document.getElementById('level-fail');
+    if (c) c.classList.add('hidden');
+    if (f) f.classList.add('hidden');
+  }
+}
+
+// Show the start menu (mode-picker). Each `on*` is invoked when the
+// player taps that mode button; `subtitle` is optional flavor text
+// (e.g. "Run over — pick where to go next" on game-over).
+export function showStartMenu({ onRoguelike, onLevels, onFreePlay, onSettings, onHelp, subtitle }) {
+  const overlay = document.getElementById('start-menu-overlay');
+  const panel = document.getElementById('start-menu-panel');
+  const btnRogue = document.getElementById('start-menu-roguelike');
+  const btnLevels = document.getElementById('start-menu-levels');
+  const btnFree = document.getElementById('start-menu-free');
+  const btnSettings = document.getElementById('start-menu-settings');
+  const btnHelp = document.getElementById('start-menu-help');
+  const subEl = document.getElementById('start-menu-subtitle');
+  if (!overlay || !panel || !btnRogue || !btnLevels || !btnFree) return;
+  // Close any other modals first so we never stack on top of a leftover panel.
+  hideAllOverlays({ except: ['start-menu-overlay', 'start-menu-panel'] });
+  if (subEl) subEl.textContent = subtitle || '';
+  const hide = () => {
+    overlay.classList.add('hidden');
+    panel.classList.add('hidden');
+  };
+  const wrap = (fn) => () => { hide(); if (fn) fn(); };
+  replaceListener(btnRogue, 'click', wrap(onRoguelike), 'start-menu-rogue');
+  replaceListener(btnLevels, 'click', wrap(onLevels), 'start-menu-levels');
+  replaceListener(btnFree, 'click', wrap(onFreePlay), 'start-menu-free');
+  // Settings / Help open their own modals; dismiss the start menu first so
+  // those modals are not occluded by ours.
+  if (btnSettings) replaceListener(btnSettings, 'click', wrap(onSettings), 'start-menu-settings');
+  if (btnHelp) replaceListener(btnHelp, 'click', wrap(onHelp), 'start-menu-help');
+  overlay.classList.remove('hidden');
+  panel.classList.remove('hidden');
+  blockClicksFor(panel, 400);
+  btnRogue.focus();
+}
+
+export function hideStartMenu() {
+  const overlay = document.getElementById('start-menu-overlay');
+  const panel = document.getElementById('start-menu-panel');
+  if (overlay) overlay.classList.add('hidden');
+  if (panel) panel.classList.add('hidden');
 }
 
 export function showWelcome(onStart) {
