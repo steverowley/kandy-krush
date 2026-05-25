@@ -259,6 +259,7 @@ export const UPGRADES = [
   { id: 'mover+3',     category: 'buff',       archetype: 'sustain', name: '+3 Moves',           desc: 'Every slot starts with 3 extra moves (stronger than +2 Moves).' },
   { id: 'frost',       category: 'synergy',    archetype: 'sustain', name: 'Frost',              desc: 'Every 7 swaps, every lock on the board loses 1 level per stack — auto-cracks locks over time.' },
   { id: 'hammer-rain', category: 'consumable', archetype: 'sustain', name: 'Hammer Shower',      desc: 'Start of each slot, gain +2 Hammers per stack to your bank.' },
+  { id: 'lucky-magnet',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Magnet',       desc: 'Each match has a 5% chance per stack to instantly fill the Lucky bar (+100).' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
@@ -367,6 +368,10 @@ export const RELICS = [
     desc: 'Every cascade chain of 4 or more earns you a free 💎 mid-run.' },
   { id: 'quick-draw',  icon: '🤠', name: 'Quick Draw',
     desc: 'The first power-up you use each slot is free — doesn\'t decrement your bank.' },
+  { id: 'goldfish',    icon: '🐟', name: 'Goldfish',
+    desc: 'Hint sparkles appear after just 1.5 seconds idle (vs 3s with Hawkeye, 7s default).' },
+  { id: 'strong-drink',icon: '🥃', name: 'Strong Drink',
+    desc: 'Lucky-MODE multiplier doubles — ×3 sustain instead of ×1.5.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {

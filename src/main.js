@@ -1265,6 +1265,15 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-10m',
+    items: [
+      '🍀 NEW UPGRADE — Lucky Magnet (Lucky). 5% chance per stack per match to instantly fill the Lucky bar.',
+      '🐟 NEW RELIC — Goldfish. Hint sparkles appear after 1.5s idle (vs 3s with Hawkeye, 7s default).',
+      '🥃 NEW RELIC — Strong Drink. Lucky-MODE multiplier doubles — ×3 sustain instead of ×1.5.',
+      'Upgrade pool 30, Relic pool 21.',
+    ],
+  },
+  {
     id: '2026-05-25-10l',
     items: [
       '👑 BOSSES SLAIN counter — tracks total bosses defeated across all runs. Surfaces in the Skill Tree gem chip: "💎 47 — 12 runs · 3 completes · best slot 89 · 27 bosses slain".',
@@ -1906,8 +1915,9 @@ function isSwappable(c, r) {
 
 function scheduleHint() {
   cancelHint();
+  // 🐟 Goldfish relic — hints appear after 1.5s idle (beats Hawkeye).
   // 🦅 Hawkeye relic — hints appear after 3s idle instead of 7s.
-  const delay = hasRelic('hawkeye') ? 3000 : HINT_IDLE_MS;
+  const delay = hasRelic('goldfish') ? 1500 : (hasRelic('hawkeye') ? 3000 : HINT_IDLE_MS);
   hintTimer = setTimeout(() => {
     if (state.busy) {
       scheduleHint();
@@ -2444,7 +2454,9 @@ function consumeLuckyIfReady(baseScore) {
       speech.speak('Lucky window over');
     }
     refreshLucky();
-    return Math.round(baseScore * LUCKY_MODE_MULTIPLIER);
+    // 🥃 Strong Drink relic — Lucky-MODE multiplier doubles.
+    const mult = hasRelic('strong-drink') ? LUCKY_MODE_MULTIPLIER * 2 : LUCKY_MODE_MULTIPLIER;
+    return Math.round(baseScore * mult);
   }
   if (!state.luckyReady) return baseScore;
   // Activation moment — burst + start mode
@@ -3379,6 +3391,16 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     if (upgradeCount('crazy-magnet') > 0 && state.slotMatchCount % 3 === 0) {
       for (let i = 0; i < upgradeCount('crazy-magnet'); i++) {
         spawnCrazyTile(pickCrazyKind());
+      }
+    }
+    // 🍀 Lucky Magnet upgrade — 5%/stack to instantly fill Lucky bar.
+    if (upgradeCount('lucky-magnet') > 0) {
+      const chance = 0.05 * upgradeCount('lucky-magnet');
+      if (Math.random() < chance) {
+        state.luckyCharge = 100;
+        state.luckyReady = true;
+        setLuckyCharge(state.luckyCharge, state.luckyReady);
+        flashMessage('🍀 Lucky Magnet! Bar full!', 1000);
       }
     }
     // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
