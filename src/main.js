@@ -1323,6 +1323,11 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (upgradeCount('gold-rush') > 0) scored += 20 * upgradeCount('gold-rush');
   // Mutator: 💎 Diamond Day — flat +100 per match (after multipliers).
   if (hasMutator('diamond-day')) scored += 100;
+  // Mutator: 🎊 Confetti Day — flat +50 per match + confetti burst.
+  if (hasMutator('confetti-day')) {
+    scored += 50;
+    spawnConfetti(12);
+  }
   return scored;
 }
 
@@ -1355,6 +1360,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10w',
+    items: [
+      '🎊 NEW MUTATOR — Confetti Day. Every match earns +50 flat score AND a burst of confetti. Pure party.',
+      'Mutator pool now 17.',
+    ],
+  },
   {
     id: '2026-05-25-10v',
     items: [
