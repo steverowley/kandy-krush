@@ -104,6 +104,11 @@ export const UPGRADES = [
   { id: 'lightning',   category: 'synergy',    name: 'Lightning Strike', desc: '⚡ Every 4 matches a lightning bolt clears a random row.' },
   { id: 'black-hole',  category: 'consumable', name: 'Black Hole',       desc: '🌀 At the start of each slot, a black hole devours 5 random candies.' },
   { id: 'hungry-snake',category: 'synergy',    name: 'Hungry Snake',     desc: '🐍 Make a special candy and a snake slithers across, eating 4 random tiles.' },
+  // Crazy-tile spawners — they make rare poppable tiles appear more
+  // often. Crazy tiles are the BEST: pop one to trigger huge effects.
+  { id: 'bomb-maker',  category: 'synergy',    name: 'Bomb Maker',       desc: '💣 Every special candy you make also spawns a TNT tile somewhere on the board.' },
+  { id: 'void-touched',category: 'synergy',    name: 'Void Touched',     desc: '🌀 Void crazy-tiles spawn twice as often after big matches.' },
+  { id: 'storm-caller',category: 'consumable', name: 'Storm Caller',     desc: '⚡ Start of every slot, a Bolt crazy-tile appears on the board for you to pop.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };

@@ -244,6 +244,120 @@ function maybeTriggerLightning() {
   }
 }
 
+// ---------- Crazy tiles ----------
+const CRAZY_KINDS = ['tnt', 'void', 'bolt'];
+
+function pickCrazyKind() {
+  const weights = { tnt: 1, void: 1 + upgradeCount('void-touched'), bolt: 1 };
+  let total = 0;
+  for (const k of CRAZY_KINDS) total += weights[k] || 1;
+  let pick = Math.random() * total;
+  for (const k of CRAZY_KINDS) {
+    pick -= weights[k] || 1;
+    if (pick < 0) return k;
+  }
+  return 'tnt';
+}
+
+function findCrazyHostCell() {
+  const candidates = [];
+  for (let r = 0; r < state.board.rows; r++) {
+    for (let c = 0; c < state.board.cols; c++) {
+      const cell = state.board.cell(c, r);
+      if (!cell || cell.crazy || cell.special || cell.ingredient) continue;
+      if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+      candidates.push({ c, r });
+    }
+  }
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function spawnCrazyTile(kind) {
+  const target = findCrazyHostCell();
+  if (!target) return;
+  const cell = state.board.cell(target.c, target.r);
+  cell.crazy = kind;
+  renderBoard(state.board, state);
+  spawnTileSparkles(target.c, target.r, 14, { color: '#FF006E' });
+  const labels = { tnt: 'TNT', void: 'Void', bolt: 'Bolt' };
+  flashMessage(`${labels[kind]} appeared! Pop it!`, 1500);
+  haptics.specialBirth();
+}
+
+function maybeSpawnCrazyOnMatch(matchSize, cascadeLevel) {
+  let chance = 0;
+  if (matchSize >= 5) chance += 0.18;
+  if (matchSize >= 6) chance += 0.14;
+  if (cascadeLevel >= 3) chance += 0.10;
+  if (cascadeLevel >= 5) chance += 0.10;
+  if (chance <= 0) return;
+  if (Math.random() > chance) return;
+  spawnCrazyTile(pickCrazyKind());
+}
+
+async function triggerCrazyEffect(pos, kind) {
+  let positions = [];
+  if (kind === 'tnt') {
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const c = pos.c + dc, r = pos.r + dr;
+        if (c < 0 || c >= state.board.cols) continue;
+        if (r < 0 || r >= state.board.rows) continue;
+        if (state.board.isIngredient(c, r)) continue;
+        positions.push({ c, r });
+      }
+    }
+    flashMessage('💣 BOOM!', 1300);
+    speech.speak('Boom!');
+    sfx.playMatch(positions.length, 2);
+    haptics.epic();
+    spawnConfetti(48);
+    screenShake(8, 420);
+  } else if (kind === 'void') {
+    const candidates = [];
+    for (let r = 0; r < state.board.rows; r++) {
+      for (let c = 0; c < state.board.cols; c++) {
+        if (state.board.isIngredient(c, r)) continue;
+        if ((state.lockMap.get(`${c},${r}`) || 0) > 0) continue;
+        candidates.push({ c, r });
+      }
+    }
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    positions = candidates.slice(0, 8);
+    flashMessage('🌀 VOID', 1500);
+    speech.speak('Void!');
+    haptics.combo();
+    spawnBlackHole(positions);
+    await delay(700);
+  } else if (kind === 'bolt') {
+    for (let c = 0; c < state.board.cols; c++) positions.push({ c, r: pos.r });
+    for (let r = 0; r < state.board.rows; r++) {
+      if (r !== pos.r) positions.push({ c: pos.c, r });
+    }
+    flashMessage('⚡ ZAP!', 1300);
+    speech.speak('Zap!');
+    sfx.playMatch(positions.length, 2);
+    haptics.epic();
+    spawnLightningRow(pos.r);
+    screenShake(6, 320);
+    await delay(220);
+  }
+  if (positions.length > 0) {
+    spawnPopSpecks(positions);
+    await animatePop(positions);
+    state.board.clear(positions);
+    decrementJellyAt(positions);
+  }
+  renderBoard(state.board, state);
+  await delay(160);
+  const fallen = gravityWithIngredients();
+  renderBoard(state.board, state, { fallen });
+}
+
 async function fireBlackHole() {
   const stacks = upgradeCount('black-hole');
   if (stacks <= 0) return;
@@ -380,6 +494,11 @@ function applyRunUpgradesOnSlotStart() {
   if (upgradeCount('black-hole') > 0) {
     setTimeout(() => fireBlackHole(), 1200);
   }
+  if (upgradeCount('storm-caller') > 0) {
+    setTimeout(() => {
+      for (let i = 0; i < upgradeCount('storm-caller'); i++) spawnCrazyTile('bolt');
+    }, 1300);
+  }
 }
 
 function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
@@ -403,6 +522,15 @@ function runLuckyRate() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-7o',
+    items: [
+      '💣🌀⚡ NEW: Crazy Tiles appear organically on the board after big matches and deep cascades. Pop them by matching for huge effects.',
+      '💣 TNT — explodes in a 3×3 area. 🌀 Void — sucks 8 random tiles. ⚡ Bolt — clears its whole row + column.',
+      'Three new upgrade cards boost crazy tiles: Bomb Maker (specials also drop TNT), Void Touched (Void spawns 2× more often), Storm Caller (a Bolt waits for you every slot start).',
+      'So roguelike upgrades are now a real mix: passive bonuses + automatic abilities + crazy-tile spawners.',
+    ],
+  },
   {
     id: '2026-05-25-7n',
     items: [
@@ -1699,6 +1827,16 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     haptics.epic();
   }
 
+  // Collect any crazy tiles being cleared so we can trigger their
+  // effects AFTER the regular clear settles.
+  const crazyToTrigger = [];
+  for (const p of toClear) {
+    const cellHere = state.board.cell(p.c, p.r);
+    if (cellHere && cellHere.crazy) {
+      crazyToTrigger.push({ pos: p, kind: cellHere.crazy });
+    }
+  }
+
   drawMatchTrails(result.groups);
   spawnPopSpecks(toClear);
   await animatePop(toClear);
@@ -1713,7 +1851,22 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   state.progress.specials += specialsCreated.length;
   flashObjectiveProgress(specialsCreated.length);
   maybeTriggerLightning();
-  if (specialsCreated.length > 0) maybeFireSnake();
+  if (specialsCreated.length > 0) {
+    maybeFireSnake();
+    // Bomb Maker upgrade — every special also spawns a TNT tile
+    if (upgradeCount('bomb-maker') > 0) {
+      for (let i = 0; i < upgradeCount('bomb-maker'); i++) {
+        if (Math.random() < 0.5 * specialsCreated.length) spawnCrazyTile('tnt');
+      }
+    }
+  }
+  // Trigger crazy-tile pops (after clear, before scoring so the
+  // visual chain reads in the right order).
+  for (const { pos, kind } of crazyToTrigger) {
+    await triggerCrazyEffect(pos, kind);
+  }
+  // Possibly spawn a new crazy tile from this match
+  maybeSpawnCrazyOnMatch(allCleared.size, cascadeLevel);
 
   for (const s of specialsCreated) {
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });

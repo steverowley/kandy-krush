@@ -116,6 +116,32 @@ export function renderBoard(board, state, opts = {}) {
             <circle cx="68" cy="65" r="20" fill="#B91C1C" stroke="#000" stroke-width="5"/>
             <ellipse cx="28" cy="60" rx="6" ry="4" fill="#fff" opacity="0.5"/>
           </svg>`;
+        } else if (cell.crazy === 'tnt') {
+          tile.classList.add('crazy', 'crazy-tnt');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <circle cx="52" cy="60" r="32" fill="#1f1a2e" stroke="#000" stroke-width="6"/>
+            <path d="M50 28 Q60 16 74 14" fill="none" stroke="#6b7280" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="76" cy="14" r="6" fill="#FFD60A" stroke="#000" stroke-width="3"/>
+            <circle cx="76" cy="14" r="3" fill="#fff"/>
+            <text x="52" y="68" text-anchor="middle" font-size="26" font-weight="bold" fill="#fff" stroke="#000" stroke-width="2">TNT</text>
+          </svg>`;
+        } else if (cell.crazy === 'void') {
+          tile.classList.add('crazy', 'crazy-void');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="void-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#3b0066"/><stop offset="100%" stop-color="#8338EC"/></radialGradient>
+            </defs>
+            <circle cx="50" cy="50" r="40" fill="url(#void-${c}-${r})" stroke="#000" stroke-width="5"/>
+            <circle cx="50" cy="50" r="10" fill="#000"/>
+            <circle cx="50" cy="50" r="32" fill="none" stroke="#FF006E" stroke-width="2" opacity="0.6"/>
+            <circle cx="50" cy="50" r="22" fill="none" stroke="#FFD60A" stroke-width="2" opacity="0.4"/>
+          </svg>`;
+        } else if (cell.crazy === 'bolt') {
+          tile.classList.add('crazy', 'crazy-bolt');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <circle cx="50" cy="50" r="42" fill="#1e1a30" stroke="#000" stroke-width="5"/>
+            <polygon points="55,12 28,55 48,55 40,88 72,42 52,42 60,12" fill="#FFD60A" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+          </svg>`;
         } else {
           tile.innerHTML = svgForCell(cell);
         }
