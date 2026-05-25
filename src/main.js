@@ -1556,8 +1556,8 @@ function runLuckyRate() {
   // Lucky synergy: +20% fill per Lucky stack beyond the first.
   const luckySyn = synergyStacks(runArchetypeCounts().lucky);
   if (luckySyn > 0) m *= 1 + 0.2 * luckySyn;
-  // 🍀 Lucky Aura meta-skill — +25% Lucky bar fill globally.
-  if (hasMeta('lucky-aura')) m *= 1.25;
+  // 🍀 Lucky Aura meta-skill — +25% Lucky bar fill. Roguelike-only.
+  if (state.inRoguelikeRun && hasMeta('lucky-aura')) m *= 1.25;
   // 🍀 Lucky Stream mutator — Lucky bar fills 3× faster this slot.
   if (hasMutator('lucky-stream')) m *= 3;
   return LUCKY_PER_MOVE * m;
@@ -1587,6 +1587,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-13y',
+    items: [
+      '🔒 Lucky Aura meta-skill is now strictly Roguelike-only. The wacky stuff stays in Roguelike — Levels and Free Play are back to clean grandma-mode.',
+    ],
+  },
   {
     id: '2026-05-25-13x',
     items: [
