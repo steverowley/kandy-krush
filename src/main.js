@@ -1366,6 +1366,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11g',
+    items: [
+      '👯 NEW RELIC — Lucky Twin. Lucky Strike grants 2 hammers per fire instead of 1.',
+      'Relic pool now 25.',
+    ],
+  },
+  {
     id: '2026-05-25-11f',
     items: [
       '💗 NEW UPGRADE — Heart Beat (Sustain). +1 max lives per stack for the rest of the run. Stack 3× → 6 total lives (8 with Two Extra Lives meta).',
@@ -2745,10 +2752,12 @@ function consumeLuckyIfReady(baseScore) {
   spawnScreenFlash('rgba(255, 214, 10, 0.45)');
   screenShake(6, 360);
   haptics.epic();
-  // Lucky Strike synergy upgrade — also tops up a hammer
+  // Lucky Strike synergy upgrade — also tops up a hammer.
+  // 👯 Lucky Twin relic — doubles the hammers per fire.
   if (state.inRoguelikeRun && upgradeCount('lucky-strike') > 0) {
     const bank = powerupBank();
-    bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike'));
+    const multi = hasRelic('lucky-twin') ? 2 : 1;
+    bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike') * multi);
     setPowerupCounts(bank);
   }
   // 🧠 Mind Reader upgrade — +1 to burst multiplier per stack.

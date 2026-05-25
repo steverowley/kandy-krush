@@ -400,6 +400,8 @@ export const RELICS = [
     desc: 'Every 5 swaps, your most-depleted power-up gets +1. Keeps every slot topped up.' },
   { id: 'coin-purse',  icon: '👛', name: 'Coin Purse',
     desc: 'Every 10 matches in a slot earns you +1 💎 right away.' },
+  { id: 'lucky-twin',  icon: '👯', name: 'Lucky Twin',
+    desc: 'Lucky Strike now grants TWO hammers per Lucky fire instead of one.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
