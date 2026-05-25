@@ -980,6 +980,7 @@ function applyRunUpgradesOnSlotStart() {
     state.slotMutator = null;
   }
   state.movesRemaining += upgradeCount('moves+2') * 2;
+  state.movesRemaining += upgradeCount('mover+3') * 3;
   // 🐢 Slow Turtle relic — +5 moves at slot start.
   if (hasRelic('slow-turtle')) state.movesRemaining += 5;
   // 🌪 Quick Slot mutator — +5 moves
@@ -1197,6 +1198,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9y',
+    items: [
+      '🛡 NEW UPGRADE — +3 Moves (Sustain). Stronger sibling of +2 Moves. Every slot starts with 3 extra moves per stack.',
+      'Upgrade pool now 26.',
+    ],
+  },
   {
     id: '2026-05-25-9x',
     items: [
