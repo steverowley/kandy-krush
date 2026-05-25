@@ -245,6 +245,11 @@ export const UPGRADES = [
   { id: 'bomb-maker',  category: 'synergy',    archetype: 'bomber',  name: 'Bomb Maker',       desc: '💣 Every special candy you make also spawns a TNT tile somewhere on the board.' },
   { id: 'void-touched',category: 'synergy',    archetype: 'bomber',  name: 'Void Touched',     desc: '🌀 Void crazy-tiles spawn twice as often after big matches.' },
   { id: 'storm-caller',category: 'consumable', archetype: 'bomber',  name: 'Storm Caller',     desc: '⚡ Start of every slot, a Bolt crazy-tile appears on the board for you to pop.' },
+  // Phase-8k expansion — deeper archetype synergies
+  { id: 'combo-streak',category: 'synergy',    archetype: 'scorer',  name: 'Combo Streak',     desc: 'Cascades of chain ≥3 score double on top of other bonuses.' },
+  { id: 'chain-bomb',  category: 'synergy',    archetype: 'bomber',  name: 'Chain Bomb',       desc: 'When TNT pops, 30% chance to spawn another TNT in its blast zone.' },
+  { id: 'first-free',  category: 'buff',       archetype: 'sustain', name: 'First Swap Free',  desc: 'First swap of every slot doesn\'t cost a move.' },
+  { id: 'meteor',      category: 'synergy',    archetype: 'wild',    name: 'Meteor Shower',    desc: '☄️ Every 8 matches, 3 random tiles explode in a flash.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
