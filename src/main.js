@@ -1366,6 +1366,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-11f',
+    items: [
+      '💗 NEW UPGRADE — Heart Beat (Sustain). +1 max lives per stack for the rest of the run. Stack 3× → 6 total lives (8 with Two Extra Lives meta).',
+      'Upgrade pool now 38.',
+    ],
+  },
+  {
     id: '2026-05-25-11e',
     items: [
       '👛 NEW RELIC — Coin Purse. Every 10 matches in a slot earns you +1 💎.',
@@ -2379,6 +2386,8 @@ function maxLivesForRun() {
   let lives = RUN_LIVES_BASE;
   if (hasMeta('extra-life-1')) lives += 1;
   if (hasMeta('extra-life-2')) lives += 1;
+  // 💗 Heart Beat upgrade — +1 per stack.
+  if (state.inRoguelikeRun) lives += upgradeCount('heart-beat');
   return lives;
 }
 
