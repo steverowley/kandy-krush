@@ -274,6 +274,12 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
     awakened: classAwakened(),
     runsCompleted: state.roguelike?.runsCompleted || 0,
     classStats: stats,
+    onReplay: () => {
+      // The run state has already been cleared by the caller (after this
+      // function returns it'll be cleared if not already). Kick off a
+      // fresh run immediately.
+      setTimeout(() => startRoguelikeRun(), 100);
+    },
   });
 }
 
@@ -1376,6 +1382,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11p',
+    items: [
+      '🔁 NEW-RUN BUTTON on the end-of-run summary. After completing or failing a run, click "🔁 New run" instead of "Continue" to immediately roll into a fresh roguelike (class picker pops back up).',
+      'Inventory view (mid-run) suppresses the button — it only appears on the actual end-of-run summary.',
+    ],
+  },
   {
     id: '2026-05-25-11o',
     items: [
