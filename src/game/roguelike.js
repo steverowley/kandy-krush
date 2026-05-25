@@ -508,6 +508,10 @@ export const RELICS = [
     desc: 'On boss kill, gain +1 of EVERY power-up. Bigger restock than Boss Bounty.' },
   { id: 'joker',        icon: '🃏', name: 'Joker',
     desc: 'Crossroads events show 4 options instead of 3. More choice, more strategy.' },
+  { id: 'sweet-smile',  icon: '😊', name: 'Sweet Smile',
+    desc: '25% chance to keep a life when you would lose one. Anti-frustration cushion.' },
+  { id: 'power-up',     icon: '🔋', name: 'Power Up',
+    desc: 'Every 10 swaps in a slot, gain +1 of EVERY power-up.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
