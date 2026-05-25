@@ -377,6 +377,8 @@ export const RELICS = [
     desc: 'Lucky-MODE multiplier doubles — ×3 sustain instead of ×1.5.' },
   { id: 'bottomless',  icon: '🍴', name: 'Bottomless Stomach',
     desc: 'Every match counts as 2 toward the slot\'s objective (huge for matches / clearType targets).' },
+  { id: 'sweet-smith', icon: '🛠', name: 'Sweet Smith',
+    desc: 'Every 5 swaps, your most-depleted power-up gets +1. Keeps every slot topped up.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {

@@ -1226,6 +1226,25 @@ function maybeFireRelicsOnSwap() {
     if (state.board) renderBoard(state.board, state);
     flashMessage('❄️ Frost cracks locks', 1000);
   }
+  // 🛠 Sweet Smith relic — every 5 swaps, +1 to the lowest-count power-up.
+  if (hasRelic('sweet-smith') && state.relicSwapCount % 5 === 0) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    let lowestKey = null;
+    let lowestCount = Infinity;
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      const n = bank[key] || 0;
+      if (n < cap && n < lowestCount) {
+        lowestCount = n;
+        lowestKey = key;
+      }
+    }
+    if (lowestKey) {
+      bank[lowestKey] = (bank[lowestKey] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🛠 Sweet Smith! +1 ${lowestKey}`, 1000);
+    }
+  }
   // 🎩 Top Hat relic — every 5 swaps, grant +1 of a random power-up.
   if (hasRelic('top-hat') && state.relicSwapCount % 5 === 0) {
     const bank = powerupBank();
@@ -1336,6 +1355,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-10v',
+    items: [
+      '🛠 NEW RELIC — Sweet Smith. Every 5 swaps, +1 to your most-depleted power-up. Keeps every slot topped up so you\'re never out of options.',
+      'Pairs with Top Hat (random p-up every 5 swaps) for a power-up engine.',
+      'Relic pool now 23.',
+    ],
+  },
   {
     id: '2026-05-25-10u',
     items: [
