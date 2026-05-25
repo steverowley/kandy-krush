@@ -112,6 +112,14 @@ const CANDY_TYPES = 6;
 
 const persistedRaw = loadSave();
 const persisted = bumpStreakForToday(persistedRaw);
+// Daily login gem bonus — fires once per calendar day on first
+// boot. Scales gently with streak (5 + streak, capped at 25).
+const isNewLoginDay = persistedRaw.lastPlayedDate !== persisted.lastPlayedDate;
+let dailyLoginGems = 0;
+if (isNewLoginDay && persisted.roguelike) {
+  dailyLoginGems = Math.min(25, 5 + (persisted.streak || 1));
+  persisted.roguelike.gems = (persisted.roguelike.gems || 0) + dailyLoginGems;
+}
 
 const state = {
   board: new Board(COLS, ROWS, CANDY_TYPES),
@@ -1141,6 +1149,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-9j',
+    items: [
+      '🎁 DAILY LOGIN BONUS — your first visit each calendar day grants gems for the Skill Tree.',
+      '5💎 base + your streak count, capped at 25💎/day. Pair with the Daily Bonus skill in the tree for runaway gem income.',
+    ],
+  },
   {
     id: '2026-05-25-9i',
     items: [
@@ -3195,6 +3210,16 @@ function init({ chime = false, announceLevel = true } = {}) {
 
 applyTheme(state.settings);
 refreshRunHud();
+
+// Daily login bonus toast (only if we awarded gems on this boot).
+if (dailyLoginGems > 0) {
+  setTimeout(() => {
+    flashMessage(`🎁 Daily bonus! +${dailyLoginGems} 💎 (streak ${state.streak || 1})`, 3200);
+    speech.speak(`Daily bonus. Plus ${dailyLoginGems} gems.`);
+  }, 400);
+  // persist the awarded gems immediately
+  persist();
+}
 
 // HUD click → open the run inventory detail modal.
 const runHudEl = document.getElementById('run-hud');
