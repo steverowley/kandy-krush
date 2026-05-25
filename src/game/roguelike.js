@@ -263,6 +263,7 @@ export const UPGRADES = [
   { id: 'hammer-rain', category: 'consumable', archetype: 'sustain', name: 'Hammer Shower',      desc: 'Start of each slot, gain +2 Hammers per stack to your bank.' },
   { id: 'lucky-magnet',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Magnet',       desc: 'Each match has a 5% chance per stack to instantly fill the Lucky bar (+100).' },
   { id: 'lucky-fast-2',category: 'buff',       archetype: 'lucky',   name: 'Lucky Fast II',      desc: 'Lucky bar fills 100% faster per stack (stronger than Lucky Fast).' },
+  { id: 'voodoo-doll', category: 'synergy',    archetype: 'lucky',   name: 'Voodoo Doll',        desc: 'When Lucky bar reaches READY, also gain +1 of every power-up.' },
   { id: 'caretaker',   category: 'buff',       archetype: 'sustain', name: 'Caretaker',          desc: 'Power-up bank cap +1 per stack. Stacks with Bigger Bank meta and Sustain synergy.' },
   { id: 'buttered',    category: 'consumable', archetype: 'sustain', name: 'Buttered Bread',     desc: 'When you would run out of moves, gain +3 moves per stack — once per slot.' },
 ];
@@ -336,6 +337,9 @@ export const CLASSES = [
   { id: 'royal',        icon: '👑', name: 'Royal',        archetype: 'scorer',
     desc: 'Hybrid start: Score Boost (Scorer) + Lucky Strike (Lucky). Born of wealth and luck.',
     awaken: 'Awakens at 2+ 🎯 Scorer upgrades: the FIRST match of every slot scores 5×.', start: ['score+25', 'lucky-strike'] },
+  { id: 'witch',        icon: '🔮', name: 'Witch',        archetype: 'lucky',
+    desc: 'Hybrid start: Lucky Strike (Lucky) + Hungry Snake (Wild). Channels chaos magic.',
+    awaken: 'Awakens at 2+ 🍀 Lucky upgrades: Lucky-MODE (×1.5 sustain) lasts +3 extra matches.', start: ['lucky-strike', 'hungry-snake'] },
 ];
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || null;
