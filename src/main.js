@@ -1517,6 +1517,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-13g',
+    items: [
+      '🎺 NEW RELIC — Lucky Whistle: when Lucky-MODE triggers, drop a random power-up.',
+      '🎶 NEW RELIC — Healing Hum: when Lucky-MODE ends naturally (window expires), gain +1 max life.',
+    ],
+  },
+  {
     id: '2026-05-25-13f',
     items: [
       '🏁 NEW CHAPTER — "Aftermath" (levels 126-130). Glass Maze, Tower Defense, Picky Eater, Marathon, and the new final at 30,000 score: Aftermath.',
@@ -3380,6 +3387,12 @@ function consumeLuckyIfReady(baseScore) {
       state.luckyMode = false;
       flashMessage('Lucky window over', 1200);
       speech.speak('Lucky window over');
+      // 🎶 Healing Hum relic — when Lucky-MODE ends naturally, +1 max life.
+      if (hasRelic('healing-hum')) {
+        state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
+        flashMessage('🎶 Healing Hum! +1 ❤️', 1200);
+        persist();
+      }
     }
     refreshLucky();
     // 🐝 Bee Wing relic — every Lucky-MODE match also spawns a crazy tile.
@@ -3415,6 +3428,18 @@ function consumeLuckyIfReady(baseScore) {
     const multi = hasRelic('lucky-twin') ? 2 : 1;
     bank.hammer = Math.min(effectivePowerupCap(), (bank.hammer || 0) + upgradeCount('lucky-strike') * multi);
     setPowerupCounts(bank);
+  }
+  // 🎺 Lucky Whistle relic — when Lucky fires, also drop a random power-up.
+  if (state.inRoguelikeRun && hasRelic('lucky-whistle')) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if ((bank[pick] || 0) < cap) {
+      bank[pick] = (bank[pick] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🎺 Lucky Whistle! +1 ${pick}`, 1100);
+    }
   }
   // 🍒 Cherry Reload upgrade — Lucky fire also adds +1 Shuffle per stack.
   if (state.inRoguelikeRun && upgradeCount('cherry-reload') > 0) {

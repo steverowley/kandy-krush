@@ -481,6 +481,10 @@ export const RELICS = [
     desc: 'When TNT pops, also drop a random power-up into your bank. Stacks with Bombardier awakening.' },
   { id: 'frosty-crown', icon: '❄️', name: 'Frosty Crown',
     desc: 'Slot start: every lock on the board loses 1 level. Lock-heavy boards open up faster.' },
+  { id: 'lucky-whistle',icon: '🎺', name: 'Lucky Whistle',
+    desc: 'When Lucky-MODE triggers, also drop a random power-up into your bank.' },
+  { id: 'healing-hum',  icon: '🎶', name: 'Healing Hum',
+    desc: 'When Lucky-MODE ends naturally (window expires), gain +1 max life.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
