@@ -3,6 +3,11 @@ let muted = false;
 let musicEnabled = false;
 let musicNodes = null;
 let musicTimer = null;
+// Track every in-flight SFX gain node so we can ramp them to silence
+// when the player flips mute mid-envelope. The natural envelope tail
+// (180-720ms on the larger SFX) would otherwise keep ringing for
+// almost a second after mute.
+const activeGains = new Set();
 
 function ensureCtx() {
   if (!ctx) {
@@ -18,8 +23,23 @@ function ensureCtx() {
 
 export function setMuted(v) {
   muted = !!v;
-  if (muted) stopMusic();
-  else if (musicEnabled) startMusic();
+  if (muted) {
+    stopMusic();
+    // Kill in-flight SFX envelopes so a kick / boom doesn't keep
+    // ringing for ~half a second after the player hits mute.
+    if (ctx) {
+      const now = ctx.currentTime;
+      for (const gain of activeGains) {
+        try {
+          gain.gain.cancelScheduledValues(now);
+          // Read current value safely; if unsupported, fall back to 0.
+          const curr = gain.gain.value || 0.0001;
+          gain.gain.setValueAtTime(curr, now);
+          gain.gain.linearRampToValueAtTime(0, now + 0.04);
+        } catch {}
+      }
+    }
+  } else if (musicEnabled) startMusic();
 }
 
 export function isMuted() {
@@ -46,6 +66,12 @@ function tone(freq, durationMs, type = 'sine', peakGain = 0.16, delayMs = 0) {
   osc.connect(gain).connect(c.destination);
   osc.start(t0);
   osc.stop(t0 + durationMs / 1000 + 0.04);
+  // Track for mute-mid-envelope handling; auto-remove when it ends.
+  activeGains.add(gain);
+  osc.onended = () => {
+    activeGains.delete(gain);
+    try { gain.disconnect(); } catch {}
+  };
 }
 
 export function playSelect() {

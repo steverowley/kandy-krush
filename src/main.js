@@ -1619,6 +1619,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-15d',
+    items: [
+      '🔇 MUTE NOW KILLS IN-FLIGHT SOUNDS — toggling sound off used to let already-playing SFX envelopes ring out for ~half a second (kick drums, boss stingers, epic-cascade). Now all active gain nodes are tracked and ramped to silence in 40ms when you mute.',
+    ],
+  },
+  {
     id: '2026-05-25-15c',
     items: [
       '🌑 HIGH-CONTRAST PANELS — changelog and skill-tree panels now properly render dark in High Contrast mode. Previously they inherited white text on a default white background and became unreadable.',
