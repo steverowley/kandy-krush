@@ -547,7 +547,7 @@ export function showSkillTree({ skills, gems, owned, onBuy, onClose }) {
   render();
 }
 
-export function showUpgradePicker(choices, activeIds, onPick, categoryColor) {
+export function showUpgradePicker(choices, activeIds, onPick, categoryColor, archetypes, archCounts) {
   const overlay = document.getElementById('upgrade-overlay');
   const panel = document.getElementById('upgrade-panel');
   const list = document.getElementById('upgrade-choices');
@@ -555,13 +555,26 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor) {
   if (!overlay || !panel || !list) return;
   list.innerHTML = '';
   for (const u of choices) {
+    const arch = u.archetype && archetypes ? archetypes[u.archetype] : null;
+    const stacks = (archCounts && u.archetype) ? (archCounts[u.archetype] || 0) : 0;
+    const willStack = stacks + 1;
+    const synergyHint = arch && willStack >= 2
+      ? `<span class="text-xs font-bold" style="color:${arch.color}">Synergy ${willStack}× — ${arch.desc}</span>`
+      : '';
+    const archBadge = arch
+      ? `<span class="text-xs font-bold uppercase tracking-wider" style="color:${arch.color}">${arch.icon} ${arch.name}${stacks > 0 ? ` ×${willStack}` : ''}</span>`
+      : '';
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'upgrade-card flex flex-col gap-1 p-4 text-left border-[3px] border-black rounded-2xl bg-white hover:bg-amber-50 active:bg-amber-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 shadow-md';
     btn.innerHTML = `
-      <span class="text-xs font-bold uppercase tracking-wider" style="color:${categoryColor(u.category)}">${u.category}</span>
+      <div class="flex items-center justify-between gap-2">
+        ${archBadge}
+        <span class="text-xs font-bold uppercase tracking-wider opacity-60" style="color:${categoryColor(u.category)}">${u.category}</span>
+      </div>
       <span class="text-lg sm:text-xl font-bold">${u.name}</span>
       <span class="text-sm sm:text-base text-gray-700">${u.desc}</span>
+      ${synergyHint}
     `;
     btn.addEventListener('click', () => {
       overlay.classList.add('hidden');
@@ -570,14 +583,26 @@ export function showUpgradePicker(choices, activeIds, onPick, categoryColor) {
     });
     list.appendChild(btn);
   }
-  if (active && activeIds && activeIds.length > 0) {
-    const counts = new Map();
-    for (const id of activeIds) counts.set(id, (counts.get(id) || 0) + 1);
-    const parts = [];
-    for (const [id, n] of counts) parts.push(n > 1 ? `${id} ×${n}` : id);
-    active.textContent = `Active: ${parts.join(' · ')}`;
-  } else if (active) {
-    active.textContent = 'No upgrades yet — this is your first pick.';
+  if (active) {
+    if (archCounts && archetypes) {
+      const tags = [];
+      for (const key of Object.keys(archCounts)) {
+        const n = archCounts[key];
+        if (n > 0) {
+          const meta = archetypes[key];
+          if (meta) tags.push(`<span style="color:${meta.color}">${meta.icon}${meta.name} ×${n}</span>`);
+        }
+      }
+      active.innerHTML = tags.length ? `Build: ${tags.join(' · ')}` : 'No build yet — your first pick sets the tone.';
+    } else if (activeIds && activeIds.length > 0) {
+      const counts = new Map();
+      for (const id of activeIds) counts.set(id, (counts.get(id) || 0) + 1);
+      const parts = [];
+      for (const [id, n] of counts) parts.push(n > 1 ? `${id} ×${n}` : id);
+      active.textContent = `Active: ${parts.join(' · ')}`;
+    } else {
+      active.textContent = 'No upgrades yet — this is your first pick.';
+    }
   }
   overlay.classList.remove('hidden');
   panel.classList.remove('hidden');

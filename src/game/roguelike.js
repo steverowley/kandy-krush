@@ -216,34 +216,75 @@ export function getRoguelikeLevel(slot) {
 
 // Per-run upgrade pool. Each upgrade is picked once after a non-boss
 // slot win. Stacking is allowed — picking the same upgrade twice
-// doubles its effect.
+// doubles its effect. Each upgrade is tagged with one of five
+// ARCHETYPES, which drive build-synergy bonuses (see synergyBonus).
+//   🎯 scorer  — pile up points
+//   💣 bomber  — crazy tiles + explosions
+//   🍀 lucky   — Lucky bar engine
+//   🛡 sustain — endurance, moves, bank
+//   ⚡ wild    — auto-fire chaos abilities
 export const UPGRADES = [
-  // Stat buffs — apply every slot start until the run ends
-  { id: 'moves+2',     category: 'buff',       name: '+2 Moves',       desc: 'Every slot starts with 2 extra moves.' },
-  { id: 'hammer+1',    category: 'buff',       name: 'Extra Hammer',   desc: 'Each slot starts with +1 free hammer in your bank.' },
-  { id: 'lucky-fast',  category: 'buff',       name: 'Lucky Fast',     desc: 'Lucky bar fills 50% faster per swap.' },
-  { id: 'score+25',    category: 'buff',       name: 'Score Boost',    desc: 'Matches and combos score 25% more.' },
-  // Per-slot consumables — refilled at the start of every slot
-  { id: 'slot-bomb',   category: 'consumable', name: 'Slot Bomb',      desc: 'Start of each slot, gain +1 Color Bomb.' },
-  { id: 'slot-shuffle',category: 'consumable', name: 'Slot Shuffle',   desc: 'Start of each slot, gain +1 Shuffle.' },
-  { id: 'slot-plus3',  category: 'consumable', name: 'Slot +3 Moves',  desc: 'Start of each slot, gain +1 "+3 Moves" charge.' },
+  // Stat buffs
+  { id: 'moves+2',     category: 'buff',       archetype: 'sustain', name: '+2 Moves',       desc: 'Every slot starts with 2 extra moves.' },
+  { id: 'hammer+1',    category: 'buff',       archetype: 'sustain', name: 'Extra Hammer',   desc: 'Each slot starts with +1 free hammer in your bank.' },
+  { id: 'lucky-fast',  category: 'buff',       archetype: 'lucky',   name: 'Lucky Fast',     desc: 'Lucky bar fills 50% faster per swap.' },
+  { id: 'score+25',    category: 'buff',       archetype: 'scorer',  name: 'Score Boost',    desc: 'Matches and combos score 25% more.' },
+  // Per-slot consumables
+  { id: 'slot-bomb',   category: 'consumable', archetype: 'bomber',  name: 'Slot Bomb',      desc: 'Start of each slot, gain +1 Color Bomb.' },
+  { id: 'slot-shuffle',category: 'consumable', archetype: 'sustain', name: 'Slot Shuffle',   desc: 'Start of each slot, gain +1 Shuffle.' },
+  { id: 'slot-plus3',  category: 'consumable', archetype: 'sustain', name: 'Slot +3 Moves',  desc: 'Start of each slot, gain +1 "+3 Moves" charge.' },
   // Synergies — pair with existing systems
-  { id: 'lucky-strike',category: 'synergy',    name: 'Lucky Strike',   desc: 'When Lucky fires, also gain +1 hammer.' },
-  { id: 'cascade-king',category: 'synergy',    name: 'Cascade King',   desc: 'Cascades (chain ≥2) score 50% more on top of the usual bonus.' },
-  { id: 'big-match',   category: 'synergy',    name: 'Big Match',      desc: 'Matches of 5+ tiles score double.' },
+  { id: 'lucky-strike',category: 'synergy',    archetype: 'lucky',   name: 'Lucky Strike',   desc: 'When Lucky fires, also gain +1 hammer.' },
+  { id: 'cascade-king',category: 'synergy',    archetype: 'scorer',  name: 'Cascade King',   desc: 'Cascades (chain ≥2) score 50% more on top of the usual bonus.' },
+  { id: 'big-match',   category: 'synergy',    archetype: 'scorer',  name: 'Big Match',      desc: 'Matches of 5+ tiles score double.' },
   // Wild abilities — they FIRE on their own with big animated effects
-  { id: 'lightning',   category: 'synergy',    name: 'Lightning Strike', desc: '⚡ Every 4 matches a lightning bolt clears a random row.' },
-  { id: 'black-hole',  category: 'consumable', name: 'Black Hole',       desc: '🌀 At the start of each slot, a black hole devours 5 random candies.' },
-  { id: 'hungry-snake',category: 'synergy',    name: 'Hungry Snake',     desc: '🐍 Make a special candy and a snake slithers across, eating 4 random tiles.' },
-  // Crazy-tile spawners — they make rare poppable tiles appear more
-  // often. Crazy tiles are the BEST: pop one to trigger huge effects.
-  { id: 'bomb-maker',  category: 'synergy',    name: 'Bomb Maker',       desc: '💣 Every special candy you make also spawns a TNT tile somewhere on the board.' },
-  { id: 'void-touched',category: 'synergy',    name: 'Void Touched',     desc: '🌀 Void crazy-tiles spawn twice as often after big matches.' },
-  { id: 'storm-caller',category: 'consumable', name: 'Storm Caller',     desc: '⚡ Start of every slot, a Bolt crazy-tile appears on the board for you to pop.' },
+  { id: 'lightning',   category: 'synergy',    archetype: 'wild',    name: 'Lightning Strike', desc: '⚡ Every 4 matches a lightning bolt clears a random row.' },
+  { id: 'black-hole',  category: 'consumable', archetype: 'wild',    name: 'Black Hole',       desc: '🌀 At the start of each slot, a black hole devours 5 random candies.' },
+  { id: 'hungry-snake',category: 'synergy',    archetype: 'wild',    name: 'Hungry Snake',     desc: '🐍 Make a special candy and a snake slithers across, eating 4 random tiles.' },
+  // Crazy-tile spawners
+  { id: 'bomb-maker',  category: 'synergy',    archetype: 'bomber',  name: 'Bomb Maker',       desc: '💣 Every special candy you make also spawns a TNT tile somewhere on the board.' },
+  { id: 'void-touched',category: 'synergy',    archetype: 'bomber',  name: 'Void Touched',     desc: '🌀 Void crazy-tiles spawn twice as often after big matches.' },
+  { id: 'storm-caller',category: 'consumable', archetype: 'bomber',  name: 'Storm Caller',     desc: '⚡ Start of every slot, a Bolt crazy-tile appears on the board for you to pop.' },
 ];
 
 const CATEGORY_COLORS = { buff: '#06A77D', consumable: '#FB5607', synergy: '#8338EC' };
 export function categoryColor(cat) { return CATEGORY_COLORS[cat] || '#FFD60A'; }
+
+// ===== Build archetypes =====
+// Five archetypes drive the synergy system. Each card is tagged with
+// one of these. The more cards you hold in an archetype, the stronger
+// its passive synergy bonus.
+export const ARCHETYPES = {
+  scorer:  { icon: '🎯', name: 'Scorer',  color: '#FFD60A',
+             desc: 'Stacking scorers ramp your score multiplier.' },
+  bomber:  { icon: '💣', name: 'Bomber',  color: '#FB5607',
+             desc: 'Stacking bombers grow TNT blast radius.' },
+  lucky:   { icon: '🍀', name: 'Lucky',   color: '#06A77D',
+             desc: 'Stacking luckies make the Lucky bar fill faster.' },
+  sustain: { icon: '🛡', name: 'Sustain', color: '#3A86FF',
+             desc: 'Stacking sustain raises your power-up bank cap.' },
+  wild:    { icon: '⚡', name: 'Wild',    color: '#8338EC',
+             desc: 'Stacking wild speeds up the auto-fire abilities.' },
+};
+export function archetypeFor(id) {
+  const u = UPGRADES.find((x) => x.id === id);
+  return u ? u.archetype : null;
+}
+export function archetypeCounts(activeIds) {
+  const counts = { scorer: 0, bomber: 0, lucky: 0, sustain: 0, wild: 0 };
+  if (!activeIds) return counts;
+  for (const id of activeIds) {
+    const a = archetypeFor(id);
+    if (a && counts[a] !== undefined) counts[a]++;
+  }
+  return counts;
+}
+// Synergy curve — flat below 2 in an archetype, then a smooth bonus
+// per additional stack. Returns a normalised "stack-above-baseline"
+// number so callers can compute their own scaling.
+export function synergyStacks(archCount) {
+  return Math.max(0, archCount - 1);
+}
 
 // Pick 3 distinct upgrades from the pool. Bias slightly toward
 // categories the player has fewer of, so the choice menu doesn't
