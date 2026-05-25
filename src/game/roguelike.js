@@ -476,6 +476,10 @@ export const RELICS = [
     desc: 'Cascade chains ≥6 instantly trigger Lucky-MODE, regardless of the Lucky bar.' },
   { id: 'bee-wing',     icon: '🐝', name: 'Bee Wing',
     desc: 'Every Lucky-MODE match also spawns a random crazy tile. Lucky-MODE turns into chaos-mode.' },
+  { id: 'bomb-squad',   icon: '💣', name: 'Bomb Squad',
+    desc: 'When TNT pops, also drop a random power-up into your bank. Stacks with Bombardier awakening.' },
+  { id: 'frosty-crown', icon: '❄️', name: 'Frosty Crown',
+    desc: 'Slot start: every lock on the board loses 1 level. Lock-heavy boards open up faster.' },
 ];
 
 export function pickRelicChoices(owned = [], n = 3) {
