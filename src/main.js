@@ -548,6 +548,14 @@ function runLuckyRate() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-8c',
+    items: [
+      '🏰 ROGUELIKE → 100 SLOTS. The run is now a real marathon: 100 slots, bosses every 10.',
+      'Seven new bosses: Chocolate Snail (40), Padlock Pharaoh (50), Cherry Hydra (60), Echo Wraith (70), Lattice Queen (80), The Confectioner (90), and the FINAL BOSS — Candy Kraken (100) — 60 moves to score 12,000 with every obstacle in play.',
+      'Run-complete bonus bumped from 20💎 to 50💎. Each boss still grants 5💎 (10💎 with Boss Slayer skill).',
+    ],
+  },
+  {
     id: '2026-05-25-8b',
     items: [
       '🎯 100 LEVELS! Levels mode expanded from 39 to 100 across 12 themed chapters: Cherry Orchard, Combo Storm, Jelly Maze, Lock Tyrant, Special Lab, Cherry Forest, Match Marathon, Rainbow Rush, Stronghold, Cherry Vault, Jelly Castle, and Mastery.',
