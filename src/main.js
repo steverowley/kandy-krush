@@ -28,6 +28,9 @@ import {
   synergyStacks,
   CLASSES,
   getClass,
+  RELICS,
+  pickRelicChoices,
+  getRelic,
 } from './game/roguelike.js';
 import {
   renderBoard,
@@ -60,6 +63,7 @@ import {
   showChangelog,
   showUpgradePicker,
   showClassPicker,
+  showRelicPicker,
   showSkillTree,
 } from './ui/render.js';
 import { attachInput } from './ui/input.js';
@@ -142,10 +146,19 @@ const state = {
   inRoguelikeRun: false,
   // Upgrades collected during the current run. Reset when a run begins.
   runUpgrades: [],
+  // Relics held during the current run. Awarded after boss wins.
+  runRelics: [],
+  // Per-slot counters for relic triggers. Reset on slot start.
+  slotMatchCount: 0,
+  relicSwapCount: 0,
 };
 
 function upgradeCount(id) {
   return state.runUpgrades.filter((u) => u === id).length;
+}
+
+function hasRelic(id) {
+  return state.runRelics && state.runRelics.includes(id);
 }
 
 // Counters for upgrades that trigger on a schedule. Reset per slot.
@@ -515,7 +528,12 @@ function runArchetypeCounts() {
 
 function applyRunUpgradesOnSlotStart() {
   if (!state.inRoguelikeRun) return;
+  // Reset per-slot relic counters.
+  state.slotMatchCount = 0;
+  state.relicSwapCount = 0;
   state.movesRemaining += upgradeCount('moves+2') * 2;
+  // 🐢 Slow Turtle relic — +5 moves at slot start.
+  if (hasRelic('slow-turtle')) state.movesRemaining += 5;
   const cap = effectivePowerupCap();
   const bank = powerupBank();
   // Meta: Sweet Start — at slot 1 only
@@ -544,6 +562,44 @@ function applyRunUpgradesOnSlotStart() {
       for (let i = 0; i < upgradeCount('storm-caller'); i++) spawnCrazyTile('bolt');
     }, 1300);
   }
+  // 🦴 Iron Tongue relic — at slot start, one random lock loses one level.
+  if (hasRelic('iron-tongue')) setTimeout(() => ironTongueBreak(), 1400);
+}
+
+function maybeFireRelicsOnSwap() {
+  if (!state.inRoguelikeRun) return;
+  state.relicSwapCount = (state.relicSwapCount || 0) + 1;
+  // 🎩 Top Hat relic — every 5 swaps, grant +1 of a random power-up.
+  if (hasRelic('top-hat') && state.relicSwapCount % 5 === 0) {
+    const bank = powerupBank();
+    const cap = effectivePowerupCap();
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if ((bank[pick] || 0) < cap) {
+      bank[pick] = (bank[pick] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🎩 Top Hat! +1 ${pick}`, 1100);
+    }
+  }
+  // 🎰 Slot Machine relic — 8% chance per swap to spawn a crazy tile.
+  if (hasRelic('slot-machine') && Math.random() < 0.08) {
+    spawnCrazyTile();
+    flashMessage('🎰 Jackpot!', 900);
+  }
+}
+
+function ironTongueBreak() {
+  if (!state.lockMap || state.lockMap.size === 0) return;
+  const keys = [...state.lockMap.keys()];
+  const k = keys[Math.floor(Math.random() * keys.length)];
+  const lvl = state.lockMap.get(k);
+  if (lvl > 1) {
+    state.lockMap.set(k, lvl - 1);
+  } else {
+    state.lockMap.delete(k);
+  }
+  flashMessage('🦴 Iron Tongue cracks a lock', 1100);
+  renderBoard(state.board, state);
 }
 
 function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
@@ -556,6 +612,10 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   // Scorer synergy: +15% per Scorer stack beyond the first.
   const scorerSyn = synergyStacks(runArchetypeCounts().scorer);
   if (scorerSyn > 0) m *= 1 + 0.15 * scorerSyn;
+  // 🍰 Sugar Rush relic — first 3 matches of every slot are 3×.
+  if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
+  // 🪞 Mirror Shard relic — 4-in-a-row matches score +50%.
+  if (hasRelic('mirror') && matchSize === 4) m *= 1.5;
   return Math.round(amount * m);
 }
 
@@ -588,6 +648,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8f',
+    items: [
+      '👑 RELICS! Every boss kill rewards you with a Relic pick — choose 1 of 3 rare per-run passives that completely change how the run plays.',
+      'Eight relics in the pool: 🎩 Top Hat (random p-up every 5 swaps) · 🐢 Slow Turtle (+5 moves per slot) · 🍰 Sugar Rush (first 3 matches score 3×) · 👑 Crown of Sweetness (leftover moves → 50 pts each) · 🎰 Slot Machine (8% chance per swap to spawn a crazy tile) · 🦴 Iron Tongue (auto-break a lock each slot) · 🛰 Echo Drone (specials charge Lucky bar) · 🪞 Mirror Shard (4-matches score 50% more).',
+      'Up to 9 relics per full run. Pair them with your class + upgrades for true Slay-the-Spire-style build variety.',
+    ],
+  },
   {
     id: '2026-05-25-8e',
     items: [
@@ -999,6 +1067,7 @@ function startRoguelikeRun() {
   if (state.roguelike.currentSlot === 1) {
     state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
     state.runUpgrades = [];
+    state.runRelics = [];
     state.roguelike.currentClass = null;
   }
   persist();
@@ -1062,6 +1131,7 @@ function advanceRoguelikeAfterWin() {
     state.roguelike.currentSlot = 1;
     state.inRoguelikeRun = false;
     state.runUpgrades = [];
+    state.runRelics = [];
     state.roguelike.currentClass = null;
     persist();
     flashMessage(`RUN COMPLETE! +${gems} 💎`, 2400);
@@ -1081,7 +1151,23 @@ function advanceRoguelikeAfterWin() {
     screenShake(7, 400);
     haptics.levelComplete();
     speech.speak('Boss defeated!');
-    setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 1400);
+    // Boss reward: relic picker. The final boss skips it (no next slot).
+    const isFinalBoss = justFinished >= RUN_LENGTH;
+    if (isFinalBoss) {
+      setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 1400);
+      return;
+    }
+    setTimeout(() => {
+      const choices = pickRelicChoices(state.runRelics || [], 3);
+      showRelicPicker(choices, state.runRelics || [], (relic) => {
+        state.runRelics = state.runRelics || [];
+        state.runRelics.push(relic.id);
+        flashMessage(`${relic.icon} ${relic.name} acquired!`, 1600);
+        speech.speak(`${relic.name} acquired.`);
+        persist();
+        setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot), 350);
+      });
+    }, 1500);
   } else {
     const n = hasMeta('wider-choice') ? 4 : 3;
     const choices = pickUpgradeChoices(state.runUpgrades, n);
@@ -1353,6 +1439,7 @@ function flashObjectiveProgress(specialsCreatedCount) {
 function consumeMove() {
   bumpLuckyCharge();
   maybeFireEater();
+  maybeFireRelicsOnSwap();
   // Free Play has unlimited moves. Levels and Roguelike both count down.
   if (state.settings.mode === 'free' || !state.level) return;
   if (state.movesRemaining > 0) {
@@ -1404,6 +1491,13 @@ function checkLevelOutcome() {
       speech.speak(`Level complete! ${stars} ${stars === 1 ? 'star' : 'stars'}.`);
     }
     if (state.inRoguelikeRun) {
+      // 👑 Crown of Sweetness relic — leftover moves convert to 50pt each.
+      if (hasRelic('crown') && state.movesRemaining > 0) {
+        const bonus = state.movesRemaining * 50;
+        state.score += bonus;
+        setScore(state.score, { animate: true });
+        flashMessage(`👑 +${bonus} from leftover moves`, 1500);
+      }
       const isLastSlot = state.roguelike.currentSlot >= RUN_LENGTH;
       showLevelComplete({
         level: { ...state.level, id: state.roguelike.currentSlot, name: state.level.name },
@@ -2020,6 +2114,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   renderBoard(state.board, state);
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);
   if (specialsCreated.length > 0) haptics.specialBirth();
+  // 🛰 Echo Drone relic — each special created adds +10% to Lucky bar.
+  if (state.inRoguelikeRun && hasRelic('echo-drone') && specialsCreated.length > 0) {
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 10 * specialsCreated.length);
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }
 
   const earned = consumeLuckyIfReady(
     applyRunScoreMultiplier(
@@ -2028,6 +2127,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       allCleared.size
     )
   );
+  // 🍰 Sugar Rush — count this match before any cascade so each round
+  // triggers the bonus at most once per call.
+  if (state.inRoguelikeRun && cascadeLevel === 1) {
+    state.slotMatchCount = (state.slotMatchCount || 0) + 1;
+    if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
+      flashMessage('🍰 Sugar Rush spent', 900);
+    }
+  }
   state.score += earned;
   setScore(state.score, { animate: true });
   spawnFloatingNumber(`+${earned.toLocaleString()}`, toClear);
