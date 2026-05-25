@@ -142,6 +142,20 @@ export function renderBoard(board, state, opts = {}) {
             <circle cx="50" cy="50" r="42" fill="#1e1a30" stroke="#000" stroke-width="5"/>
             <polygon points="55,12 28,55 48,55 40,88 72,42 52,42 60,12" fill="#FFD60A" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
           </svg>`;
+        } else if (cell.crazy === 'prism') {
+          tile.classList.add('crazy', 'crazy-prism');
+          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="prism-${c}-${r}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#FFD60A"/>
+                <stop offset="33%" stop-color="#FB5607"/>
+                <stop offset="66%" stop-color="#8338EC"/>
+                <stop offset="100%" stop-color="#06A77D"/>
+              </linearGradient>
+            </defs>
+            <polygon points="50,8 88,50 50,92 12,50" fill="url(#prism-${c}-${r})" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+            <polygon points="50,18 78,50 50,82 22,50" fill="#fff" opacity="0.35"/>
+          </svg>`;
         } else {
           tile.innerHTML = svgForCell(cell);
         }
