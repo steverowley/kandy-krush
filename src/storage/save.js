@@ -1,10 +1,17 @@
 import { LEVELS } from '../game/levels.js';
 
 const KEY = 'sweet-match.v1';
+const SAVE_VERSION = 1;
 const SIZES = ['small', 'medium', 'large'];
 const MODES = ['levels', 'free', 'roguelike'];
 
+// Last-load status surfaced via `getLoadStatus()` so main.js / telemetry
+// can toast "your save was corrupted, we backed it up and reset" instead
+// of the previous silent-wipe behavior.
+let lastLoadStatus = { ok: true, error: null, backedUpTo: null, versionFrom: null };
+
 const defaults = () => ({
+  version: SAVE_VERSION,
   highScore: 0,
   streak: 0,
   lastPlayedDate: null,
@@ -58,11 +65,59 @@ function yesterdayStamp(d = new Date()) {
   return todayStamp(y);
 }
 
-export function load() {
+// Salvage a corrupt save by writing it under a dated backup key so the
+// player (or support) has a chance to recover it. Returns the backup
+// key on success, null if backup itself failed (e.g. quota exceeded).
+function backupCorrupt(raw, reason) {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return defaults();
-    const parsed = JSON.parse(raw);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupKey = `${KEY}.corrupt.${ts}`;
+    localStorage.setItem(backupKey, JSON.stringify({ raw, reason, at: Date.now() }));
+    return backupKey;
+  } catch {
+    return null;
+  }
+}
+
+export function load() {
+  lastLoadStatus = { ok: true, error: null, backedUpTo: null, versionFrom: null };
+  let raw;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch (err) {
+    lastLoadStatus = { ok: false, error: `localStorage read failed: ${err && err.message || err}`, backedUpTo: null, versionFrom: null };
+    return defaults();
+  }
+  if (!raw) return defaults();
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    const backupKey = backupCorrupt(raw, `JSON.parse failed: ${err && err.message || err}`);
+    lastLoadStatus = {
+      ok: false,
+      error: `Save corrupted (JSON.parse): ${err && err.message || err}`,
+      backedUpTo: backupKey,
+      versionFrom: null,
+    };
+    return defaults();
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    const backupKey = backupCorrupt(raw, 'parsed value not an object');
+    lastLoadStatus = {
+      ok: false,
+      error: 'Save corrupted (not an object)',
+      backedUpTo: backupKey,
+      versionFrom: null,
+    };
+    return defaults();
+  }
+  // Versioning: today there's only one version, so version mismatch is
+  // informational. Once we ship a v2 schema this is where we'd dispatch
+  // to a migrator chain (v1 → v2 → v3 …) before sanitizing.
+  const fromVersion = typeof parsed.version === 'number' ? parsed.version : null;
+  lastLoadStatus.versionFrom = fromVersion;
+  try {
     const s = parsed.settings || {};
     const lp = parsed.levelProgress || {};
     const starsRaw = lp.stars && typeof lp.stars === 'object' ? lp.stars : {};
@@ -72,6 +127,7 @@ export function load() {
       if (Number.isFinite(n) && n >= 1 && n <= 3) stars[k] = Math.floor(n);
     }
     return {
+      version: SAVE_VERSION,
       highScore: Number(parsed.highScore) || 0,
       streak: Number(parsed.streak) || 0,
       lastPlayedDate: parsed.lastPlayedDate || null,
@@ -101,9 +157,21 @@ export function load() {
       runUpgrades: sanitizeRunArray(parsed.runUpgrades),
       runRelics: sanitizeRunArray(parsed.runRelics),
     };
-  } catch {
+  } catch (err) {
+    // A sanitizer threw — partial corruption. Back up and return defaults.
+    const backupKey = backupCorrupt(raw, `sanitizer threw: ${err && err.message || err}`);
+    lastLoadStatus = {
+      ok: false,
+      error: `Save corrupted (sanitizer): ${err && err.message || err}`,
+      backedUpTo: backupKey,
+      versionFrom: fromVersion,
+    };
     return defaults();
   }
+}
+
+export function getLoadStatus() {
+  return { ...lastLoadStatus };
 }
 
 // Sanitize an array of identifier strings (upgrade ids or relic ids).
@@ -195,12 +263,21 @@ function deriveCurrentLevel(saved, stars) {
   return Math.min(LEVELS.length, earned);
 }
 
+let lastSaveStatus = { ok: true, error: null };
+
 export function save(state) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    // Quota or private-mode; non-fatal.
+    const payload = { version: SAVE_VERSION, ...state };
+    localStorage.setItem(KEY, JSON.stringify(payload));
+    lastSaveStatus = { ok: true, error: null };
+  } catch (err) {
+    // QuotaExceededError, SecurityError (Safari private mode), etc.
+    lastSaveStatus = { ok: false, error: err && err.message || String(err) };
   }
+}
+
+export function getSaveStatus() {
+  return { ...lastSaveStatus };
 }
 
 export function resetProgress(currentState) {

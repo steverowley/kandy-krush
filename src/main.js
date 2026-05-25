@@ -112,6 +112,8 @@ import {
   save as saveSave,
   bumpStreakForToday,
   resetProgress as resetProgressSave,
+  getLoadStatus,
+  getSaveStatus,
 } from './storage/save.js';
 
 const COLS = 6;
@@ -126,6 +128,25 @@ const INFINITE_SCORE_THRESHOLD = 1_000_000;
 
 const persistedRaw = loadSave();
 const persisted = bumpStreakForToday(persistedRaw);
+
+// 🛟 Save-load diagnostics. If the save was corrupted on boot, log
+// the details to the console (so we can spot it in dev) and queue a
+// toast for after the start screen is up so the player at least knows
+// "we couldn't read your save — we backed it up and started fresh."
+const _bootLoadStatus = getLoadStatus();
+if (!_bootLoadStatus.ok) {
+  // eslint-disable-next-line no-console
+  console.error('[save] load failed:', _bootLoadStatus);
+  // Defer the user-facing toast — flashMessage / DOM aren't ready at
+  // module-eval time. 800ms after boot is enough for the start screen
+  // to be up.
+  setTimeout(() => {
+    const backupNote = _bootLoadStatus.backedUpTo
+      ? ' Your previous save was backed up.'
+      : '';
+    flashMessage(`⚠ Save was corrupted, started fresh.${backupNote}`, 4000);
+  }, 800);
+}
 // Daily login gem bonus — fires once per calendar day on first
 // boot. Scales gently with streak (5 + streak, capped at 25).
 // 🌳 Generous Daily meta doubles the awarded gems.
@@ -1740,6 +1761,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-17c',
+    items: [
+      '💾 SAVE CORRUPTION NO LONGER SILENTLY WIPES PROGRESS — if your save can\'t be parsed on boot, we back up the raw payload to a dated localStorage key (`sweet-match.v1.corrupt.<timestamp>`) and toast "Save was corrupted, started fresh. Your previous save was backed up." instead of just resetting silently.',
+      '⚠ STORAGE WRITE FAILURES SURFACE — if persist() can\'t write (private mode, quota exceeded, SecurityError) you now see "Saving disabled" once per session instead of losing progress on next reload with no warning.',
+      '🔢 SAVE VERSION FIELD — every save now carries `version: 1` so future schema migrations have a hinge to dispatch on without having to guess.',
+    ],
+  },
   {
     id: '2026-05-25-17b',
     items: [
@@ -3488,6 +3517,7 @@ function playModeTransition(mode) {
   setTimeout(() => el.classList.remove('show'), duration);
 }
 
+let _persistFailureWarned = false;
 function persist() {
   saveSave({
     highScore: state.highScore,
@@ -3504,6 +3534,18 @@ function persist() {
     runUpgrades: state.runUpgrades || [],
     runRelics: state.runRelics || [],
   });
+  // Warn the player ONCE if persist() fails (private mode / quota
+  // exceeded / SecurityError). Without this, progress silently doesn't
+  // save and the player loses their run on next reload.
+  if (!_persistFailureWarned) {
+    const status = getSaveStatus();
+    if (!status.ok) {
+      _persistFailureWarned = true;
+      // eslint-disable-next-line no-console
+      console.error('[save] persist failed:', status.error);
+      flashMessage('⚠ Saving disabled (private mode or storage full)', 5000);
+    }
+  }
 }
 
 // --- Install / Add to Home Screen prompt ---
