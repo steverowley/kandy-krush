@@ -1356,6 +1356,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasRelic('sugar-rush') && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🌹 Crimson Rose relic — first match of every slot is ×5.
   if (hasRelic('crimson-rose') && (state.slotMatchCount || 0) === 0) m *= 5;
+  // 👁 Crit Eye meta-skill — first match of every slot is ×1.5.
+  if (hasMeta('crit-eye') && (state.slotMatchCount || 0) === 0) m *= 1.5;
   // 🍯 Honey Trap relic — boss slots only: first 3 matches score ×3.
   if (hasRelic('honey-trap') && state.level?.isBoss && (state.slotMatchCount || 0) < 3) m *= 3;
   // 🌅 Sunrise Hour relic — slots 1-10 score ×1.5.
@@ -1408,6 +1410,8 @@ function runLuckyRate() {
   // Lucky synergy: +20% fill per Lucky stack beyond the first.
   const luckySyn = synergyStacks(runArchetypeCounts().lucky);
   if (luckySyn > 0) m *= 1 + 0.2 * luckySyn;
+  // 🍀 Lucky Aura meta-skill — +25% Lucky bar fill globally.
+  if (hasMeta('lucky-aura')) m *= 1.25;
   return LUCKY_PER_MOVE * m;
 }
 
@@ -1431,6 +1435,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-12t',
+    items: [
+      '🍀 NEW META-SKILL — Lucky Aura (80💎): Lucky bar fills 25% faster on every run. Compounds with Lucky Fast and Lucky synergy.',
+      '👁 NEW META-SKILL — Crit Eye (70💎): first match of every slot scores ×1.5. Stacks with Crimson Rose / Sugar Rush.',
+    ],
+  },
   {
     id: '2026-05-25-12s',
     items: [

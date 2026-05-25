@@ -598,6 +598,8 @@ export const SKILL_TREE = [
   { id: 'gem-magnet',     cost: 65, name: 'Gem Magnet',         desc: 'All gems earned at the end of a run +10%. Compounds with every other gem source.' },
   { id: 'boss-bounty',    cost: 55, name: 'Boss Bounty',        desc: 'Each boss defeated also grants +1 of a random power-up.' },
   { id: 'treasure-sense', cost: 50, name: 'Treasure Sense',     desc: 'Treasure mutator slots grant +5 extra gems (10 total).' },
+  { id: 'lucky-aura',    cost: 80, name: 'Lucky Aura',          desc: 'Lucky bar fills 25% faster on every run, on every slot. Compounds with Lucky Fast upgrades and Lucky synergy.' },
+  { id: 'crit-eye',      cost: 70, name: 'Crit Eye',            desc: 'First match of every slot scores ×1.5. Stacks with Crimson Rose / Sugar Rush relics.' },
 ];
 
 export const RUN_LIVES_BASE = 3;
