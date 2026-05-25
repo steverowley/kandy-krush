@@ -1102,6 +1102,10 @@ function applyRunUpgradesOnSlotStart() {
     state.roguelike.gems = (state.roguelike.gems || 0) + 10;
     flashMessage('💵 Big Money! +10 💎', 1300);
   }
+  // ✏️ Eraser mutator — clears 3 random tiles at slot start.
+  if (hasMutator('eraser')) {
+    setTimeout(() => { if (state.board) fireMeteor(); }, 1400);
+  }
   // 🗝 Lockpick mutator — weaken every lock by 1 level.
   if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
     const toDelete = [];
@@ -1368,6 +1372,13 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-11l',
+    items: [
+      '✏️ NEW MUTATOR — Eraser. Clears 3 random tiles at slot start, often triggering a free cascade.',
+      'Mutator pool now 20.',
+    ],
+  },
   {
     id: '2026-05-25-11k',
     items: [
