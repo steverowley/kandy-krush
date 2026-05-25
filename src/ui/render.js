@@ -173,6 +173,187 @@ function tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock) {
   return parts.length > 0 ? parts.join('\n') : null;
 }
 
+// 🚀 Diff-render cache (Phase 17m / B7).
+//
+// Old behavior: every renderBoard call rebuilt all 36 buttons + SVGs
+// from scratch via `root.replaceChildren(frag)`. A chain-10 cascade
+// triggered ~7 full rebuilds, throwing away 252 tile nodes + ~280
+// SVG nodes per second. The perf review flagged this as the largest
+// avoidable runtime cost.
+//
+// New: per-cell signature cache. We compute a compact signature for
+// every cell (encodes type, special, crazy, jelly, lock, selected,
+// falling, intro) and only re-paint cells whose signature changed.
+// `intro: true` and dimension changes still force a full rebuild
+// (animations want fresh nodes).
+const _diffCache = new WeakMap(); // boardRoot -> { tiles: [r][c], sigs: [r][c], rows, cols }
+
+function _cellSignature(cell, c, r, state, fallenSet, introDrop) {
+  if (introDrop) return '__intro__'; // forces a rebuild every intro
+  const sel = state.selected;
+  const isSelected = !!(sel && sel.c === c && sel.r === r);
+  let isAdjacent = false;
+  if (sel && !isSelected) {
+    const dc = Math.abs(sel.c - c);
+    const dr = Math.abs(sel.r - r);
+    isAdjacent = (dc === 1 && dr === 0) || (dc === 0 && dr === 1);
+  }
+  const falling = fallenSet && fallenSet.has(cellKey(c, r)) ? 1 : 0;
+  const k = cellKey(c, r);
+  const jelly = state.jellyMap ? (state.jellyMap.get(k) || 0) : 0;
+  const lock = state.lockMap ? (state.lockMap.get(k) || 0) : 0;
+  const grum = state.grumblockSet && state.grumblockSet.has(k) ? 1 : 0;
+  if (!cell) return `e|${isSelected ? 1 : 0}|${isAdjacent ? 1 : 0}|${falling}|${jelly}|${lock}|${grum}`;
+  return [
+    cell.type ?? '',
+    cell.ingredient ? 'i' : '',
+    cell.crazy || '',
+    cell.special || '',
+    isSelected ? 's' : '',
+    isAdjacent ? 'a' : '',
+    falling ? 'f' : '',
+    jelly,
+    lock,
+    grum ? 'g' : '',
+  ].join('|');
+}
+
+function _paintTile(tile, cell, c, r, state, fallenSet, introDrop) {
+  // Reset to a clean baseline so we don't carry over stale classes /
+  // attributes from a previous paint.
+  tile.className = 'tile';
+  tile.dataset.c = String(c);
+  tile.dataset.r = String(r);
+  tile.type = 'button';
+  tile.setAttribute('role', 'gridcell');
+  tile.setAttribute('aria-label', ariaForCell(cell, c, r));
+  tile.removeAttribute('title');
+  tile.innerHTML = '';
+  if (introDrop) {
+    tile.classList.add('intro-drop');
+    tile.style.setProperty('--intro-delay', `${c * 40 + r * 20}ms`);
+  } else {
+    tile.style.removeProperty('--intro-delay');
+  }
+  if (cell) {
+    if (cell.ingredient) {
+      tile.classList.add('ingredient');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <path d="M40 38 Q55 16 76 22" fill="none" stroke="#15803D" stroke-width="6" stroke-linecap="round"/>
+        <path d="M44 38 Q62 12 78 20" fill="none" stroke="#16A34A" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="35" cy="68" r="22" fill="#DC2626" stroke="#000" stroke-width="5"/>
+        <circle cx="68" cy="65" r="20" fill="#B91C1C" stroke="#000" stroke-width="5"/>
+        <ellipse cx="28" cy="60" rx="6" ry="4" fill="#fff" opacity="0.5"/>
+      </svg>`;
+    } else if (cell.crazy === 'tnt') {
+      tile.classList.add('crazy', 'crazy-tnt');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="52" cy="60" r="32" fill="#1f1a2e" stroke="#000" stroke-width="6"/>
+        <path d="M50 28 Q60 16 74 14" fill="none" stroke="#6b7280" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="76" cy="14" r="6" fill="#FFD60A" stroke="#000" stroke-width="3"/>
+        <circle cx="76" cy="14" r="3" fill="#fff"/>
+        <text x="52" y="68" text-anchor="middle" font-size="26" font-weight="bold" fill="#fff" stroke="#000" stroke-width="2">TNT</text>
+      </svg>`;
+    } else if (cell.crazy === 'void') {
+      tile.classList.add('crazy', 'crazy-void');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="void-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#3b0066"/><stop offset="100%" stop-color="#8338EC"/></radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="40" fill="url(#void-${c}-${r})" stroke="#000" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="#000"/>
+        <circle cx="50" cy="50" r="32" fill="none" stroke="#FF006E" stroke-width="2" opacity="0.6"/>
+        <circle cx="50" cy="50" r="22" fill="none" stroke="#FFD60A" stroke-width="2" opacity="0.4"/>
+      </svg>`;
+    } else if (cell.crazy === 'bolt') {
+      tile.classList.add('crazy', 'crazy-bolt');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="42" fill="#1e1a30" stroke="#000" stroke-width="5"/>
+        <polygon points="55,12 28,55 48,55 40,88 72,42 52,42 60,12" fill="#FFD60A" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
+      </svg>`;
+    } else if (cell.crazy === 'wormhole') {
+      tile.classList.add('crazy', 'crazy-wormhole');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <radialGradient id="worm-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#1e1a30"/><stop offset="100%" stop-color="#0353A4"/></radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="42" fill="url(#worm-${c}-${r})" stroke="#000" stroke-width="5"/>
+        <circle cx="50" cy="50" r="30" fill="none" stroke="#06A77D" stroke-width="3" stroke-dasharray="6 4"/>
+        <circle cx="50" cy="50" r="18" fill="none" stroke="#FFD60A" stroke-width="2" stroke-dasharray="3 3"/>
+        <circle cx="50" cy="50" r="6" fill="#000"/>
+      </svg>`;
+    } else if (cell.crazy === 'prism') {
+      tile.classList.add('crazy', 'crazy-prism');
+      tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="prism-${c}-${r}" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFD60A"/>
+            <stop offset="33%" stop-color="#FB5607"/>
+            <stop offset="66%" stop-color="#8338EC"/>
+            <stop offset="100%" stop-color="#06A77D"/>
+          </linearGradient>
+        </defs>
+        <polygon points="50,8 88,50 50,92 12,50" fill="url(#prism-${c}-${r})" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+        <polygon points="50,18 78,50 50,82 22,50" fill="#fff" opacity="0.35"/>
+      </svg>`;
+    } else {
+      tile.innerHTML = svgForCell(cell);
+    }
+  }
+  if (cell && cell.special) tile.classList.add('special', `special-${cell.special}`);
+  if (state.selected && state.selected.c === c && state.selected.r === r) {
+    tile.classList.add('selected');
+  } else if (state.selected) {
+    const dc = Math.abs(state.selected.c - c);
+    const dr = Math.abs(state.selected.r - r);
+    if ((dc === 1 && dr === 0) || (dc === 0 && dr === 1)) {
+      tile.classList.add('adjacent');
+    }
+  }
+  if (fallenSet && fallenSet.has(cellKey(c, r))) {
+    tile.classList.add('falling');
+  }
+  let jellyLvl = 0;
+  if (state.jellyMap) {
+    const j = state.jellyMap.get(cellKey(c, r));
+    if (j === 2) { jellyLvl = 2; tile.classList.add('jelly', 'jelly-2'); }
+    else if (j === 1) { jellyLvl = 1; tile.classList.add('jelly', 'jelly-1'); }
+  }
+  let lockLvl = 0;
+  let isGrumblock = false;
+  if (state.lockMap) {
+    const lk = state.lockMap.get(cellKey(c, r));
+    if (lk && lk > 0) {
+      lockLvl = lk;
+      isGrumblock = state.grumblockSet && state.grumblockSet.has(cellKey(c, r));
+      tile.classList.add('locked');
+      if (lk === 2) tile.classList.add('locked-2');
+      if (isGrumblock) tile.classList.add('grumblock');
+      const badge = document.createElement('span');
+      badge.className = isGrumblock ? 'grumblock-badge' : 'lock-badge';
+      badge.setAttribute('aria-hidden', 'true');
+      if (isGrumblock) {
+        badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 17 L7 9 L13 7 L19 11 L21 17 L17 21 L7 21 Z" fill="#555" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="10" cy="13" r="1.2" fill="#fff"/>
+          <circle cx="15" cy="14" r="1.2" fill="#fff"/>
+          <circle cx="10.4" cy="13" r="0.5" fill="#000"/>
+          <circle cx="15.4" cy="14" r="0.5" fill="#000"/>
+        </svg>`;
+      } else {
+        badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="10" rx="2" fill="#FFD60A" stroke="#000" stroke-width="2"/>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="15" r="1.5" fill="#000"/>
+        </svg>${lk === 2 ? '<span class="lock-hits">2</span>' : ''}`;
+      }
+      tile.appendChild(badge);
+    }
+  }
+  const tipText = tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock);
+  if (tipText) tile.title = tipText;
+}
+
 export function renderBoard(board, state, opts = {}) {
   // Side-car: in canvas mode we still build the DOM grid (transparent
   // hit targets) AND drive the Pixi pipeline. The CSS hides the SVG
@@ -186,145 +367,41 @@ export function renderBoard(board, state, opts = {}) {
     ? new Set(opts.fallen.map((p) => cellKey(p.c, p.r)))
     : null;
   const introDrop = !!opts.intro;
-  const frag = document.createDocumentFragment();
+
+  // 🚀 Diff-render path. On cache hit, only mutate cells whose signature
+  // changed since the last render. Intro drops + dimension changes
+  // bypass the cache (fresh nodes required for the drop animation).
+  let cache = _diffCache.get(root);
+  const fresh = !cache || cache.rows !== board.rows || cache.cols !== board.cols || introDrop;
+  if (fresh) {
+    cache = {
+      tiles: Array.from({ length: board.rows }, () => new Array(board.cols).fill(null)),
+      sigs: Array.from({ length: board.rows }, () => new Array(board.cols).fill(null)),
+      rows: board.rows,
+      cols: board.cols,
+    };
+    _diffCache.set(root, cache);
+    root.replaceChildren();
+  }
   for (let r = 0; r < board.rows; r++) {
     for (let c = 0; c < board.cols; c++) {
       const cell = board.cell(c, r);
-      const tile = document.createElement('button');
-      tile.className = 'tile';
-      if (introDrop) {
-        tile.classList.add('intro-drop');
-        tile.style.setProperty('--intro-delay', `${c * 40 + r * 20}ms`);
+      const sig = _cellSignature(cell, c, r, state, fallenSet, introDrop);
+      let tile = cache.tiles[r][c];
+      if (!tile) {
+        tile = document.createElement('button');
+        cache.tiles[r][c] = tile;
+        root.appendChild(tile);
+      } else if (cache.sigs[r][c] === sig) {
+        continue; // 🚀 no-op — unchanged cell
       }
-      tile.dataset.c = String(c);
-      tile.dataset.r = String(r);
-      tile.type = 'button';
-      tile.setAttribute('role', 'gridcell');
-      tile.setAttribute('aria-label', ariaForCell(cell, c, r));
-      if (cell) {
-        if (cell.ingredient) {
-          tile.classList.add('ingredient');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <path d="M40 38 Q55 16 76 22" fill="none" stroke="#15803D" stroke-width="6" stroke-linecap="round"/>
-            <path d="M44 38 Q62 12 78 20" fill="none" stroke="#16A34A" stroke-width="5" stroke-linecap="round"/>
-            <circle cx="35" cy="68" r="22" fill="#DC2626" stroke="#000" stroke-width="5"/>
-            <circle cx="68" cy="65" r="20" fill="#B91C1C" stroke="#000" stroke-width="5"/>
-            <ellipse cx="28" cy="60" rx="6" ry="4" fill="#fff" opacity="0.5"/>
-          </svg>`;
-        } else if (cell.crazy === 'tnt') {
-          tile.classList.add('crazy', 'crazy-tnt');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <circle cx="52" cy="60" r="32" fill="#1f1a2e" stroke="#000" stroke-width="6"/>
-            <path d="M50 28 Q60 16 74 14" fill="none" stroke="#6b7280" stroke-width="5" stroke-linecap="round"/>
-            <circle cx="76" cy="14" r="6" fill="#FFD60A" stroke="#000" stroke-width="3"/>
-            <circle cx="76" cy="14" r="3" fill="#fff"/>
-            <text x="52" y="68" text-anchor="middle" font-size="26" font-weight="bold" fill="#fff" stroke="#000" stroke-width="2">TNT</text>
-          </svg>`;
-        } else if (cell.crazy === 'void') {
-          tile.classList.add('crazy', 'crazy-void');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <defs>
-              <radialGradient id="void-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#3b0066"/><stop offset="100%" stop-color="#8338EC"/></radialGradient>
-            </defs>
-            <circle cx="50" cy="50" r="40" fill="url(#void-${c}-${r})" stroke="#000" stroke-width="5"/>
-            <circle cx="50" cy="50" r="10" fill="#000"/>
-            <circle cx="50" cy="50" r="32" fill="none" stroke="#FF006E" stroke-width="2" opacity="0.6"/>
-            <circle cx="50" cy="50" r="22" fill="none" stroke="#FFD60A" stroke-width="2" opacity="0.4"/>
-          </svg>`;
-        } else if (cell.crazy === 'bolt') {
-          tile.classList.add('crazy', 'crazy-bolt');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <circle cx="50" cy="50" r="42" fill="#1e1a30" stroke="#000" stroke-width="5"/>
-            <polygon points="55,12 28,55 48,55 40,88 72,42 52,42 60,12" fill="#FFD60A" stroke="#000" stroke-width="4" stroke-linejoin="round"/>
-          </svg>`;
-        } else if (cell.crazy === 'wormhole') {
-          tile.classList.add('crazy', 'crazy-wormhole');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <defs>
-              <radialGradient id="worm-${c}-${r}"><stop offset="0%" stop-color="#000"/><stop offset="60%" stop-color="#1e1a30"/><stop offset="100%" stop-color="#0353A4"/></radialGradient>
-            </defs>
-            <circle cx="50" cy="50" r="42" fill="url(#worm-${c}-${r})" stroke="#000" stroke-width="5"/>
-            <circle cx="50" cy="50" r="30" fill="none" stroke="#06A77D" stroke-width="3" stroke-dasharray="6 4"/>
-            <circle cx="50" cy="50" r="18" fill="none" stroke="#FFD60A" stroke-width="2" stroke-dasharray="3 3"/>
-            <circle cx="50" cy="50" r="6" fill="#000"/>
-          </svg>`;
-        } else if (cell.crazy === 'prism') {
-          tile.classList.add('crazy', 'crazy-prism');
-          tile.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
-            <defs>
-              <linearGradient id="prism-${c}-${r}" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#FFD60A"/>
-                <stop offset="33%" stop-color="#FB5607"/>
-                <stop offset="66%" stop-color="#8338EC"/>
-                <stop offset="100%" stop-color="#06A77D"/>
-              </linearGradient>
-            </defs>
-            <polygon points="50,8 88,50 50,92 12,50" fill="url(#prism-${c}-${r})" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
-            <polygon points="50,18 78,50 50,82 22,50" fill="#fff" opacity="0.35"/>
-          </svg>`;
-        } else {
-          tile.innerHTML = svgForCell(cell);
-        }
-      }
-      if (cell && cell.special) tile.classList.add('special', `special-${cell.special}`);
-      if (state.selected && state.selected.c === c && state.selected.r === r) {
-        tile.classList.add('selected');
-      } else if (state.selected) {
-        const dc = Math.abs(state.selected.c - c);
-        const dr = Math.abs(state.selected.r - r);
-        if ((dc === 1 && dr === 0) || (dc === 0 && dr === 1)) {
-          tile.classList.add('adjacent');
-        }
-      }
-      if (fallenSet && fallenSet.has(cellKey(c, r))) {
-        tile.classList.add('falling');
-      }
-      let jellyLvl = 0;
-      if (state.jellyMap) {
-        const j = state.jellyMap.get(cellKey(c, r));
-        if (j === 2) { jellyLvl = 2; tile.classList.add('jelly', 'jelly-2'); }
-        else if (j === 1) { jellyLvl = 1; tile.classList.add('jelly', 'jelly-1'); }
-      }
-      let lockLvl = 0;
-      let isGrumblock = false;
-      if (state.lockMap) {
-        const lk = state.lockMap.get(cellKey(c, r));
-        if (lk && lk > 0) {
-          lockLvl = lk;
-          isGrumblock = state.grumblockSet && state.grumblockSet.has(cellKey(c, r));
-          tile.classList.add('locked');
-          if (lk === 2) tile.classList.add('locked-2');
-          if (isGrumblock) tile.classList.add('grumblock');
-          const badge = document.createElement('span');
-          badge.className = isGrumblock ? 'grumblock-badge' : 'lock-badge';
-          badge.setAttribute('aria-hidden', 'true');
-          if (isGrumblock) {
-            // 🪨 — wandering enemy. Distinct rock SVG.
-            badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 17 L7 9 L13 7 L19 11 L21 17 L17 21 L7 21 Z" fill="#555" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
-              <circle cx="10" cy="13" r="1.2" fill="#fff"/>
-              <circle cx="15" cy="14" r="1.2" fill="#fff"/>
-              <circle cx="10.4" cy="13" r="0.5" fill="#000"/>
-              <circle cx="15.4" cy="14" r="0.5" fill="#000"/>
-            </svg>`;
-          } else {
-            badge.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="5" y="11" width="14" height="10" rx="2" fill="#FFD60A" stroke="#000" stroke-width="2"/>
-              <path d="M8 11V7a4 4 0 0 1 8 0v4" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/>
-              <circle cx="12" cy="15" r="1.5" fill="#000"/>
-            </svg>${lk === 2 ? '<span class="lock-hits">2</span>' : ''}`;
-          }
-          tile.appendChild(badge);
-        }
-      }
-      const tipText = tooltipForCell(cell, jellyLvl, lockLvl, isGrumblock);
-      if (tipText) tile.title = tipText;
-      frag.appendChild(tile);
+      _paintTile(tile, cell, c, r, state, fallenSet, introDrop);
+      cache.sigs[r][c] = sig;
     }
   }
-  root.replaceChildren(frag);
   ensureTileLongPress(root);
 }
+
 
 // One-time delegated long-press listener on the board root for mobile
 // tooltips. Reuses the title attribute set in renderBoard so there's
