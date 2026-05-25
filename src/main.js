@@ -576,6 +576,17 @@ function applyRunUpgradesOnSlotStart() {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
+  // 🎁 Gift Slot mutator — +1 of every power-up at slot start
+  if (hasMutator('gift-slot')) {
+    const giftBank = powerupBank();
+    const giftCap = effectivePowerupCap();
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      giftBank[key] = Math.min(giftCap, (giftBank[key] || 0) + 1);
+    }
+    setPowerupCounts(giftBank);
+  }
+  // Reset eclipse parity each slot.
+  state.eclipseTick = 0;
   refreshRunHud();
   if (state.slotMutator) {
     const m = activeMutator();
@@ -677,6 +688,8 @@ function applyRunScoreMultiplier(amount, cascadeLevel = 1, matchSize = 0) {
   if (hasMutator('golden-hour')) m *= 2;
   // Mutator: 🏆 Big Spender — 5+ matches score ×3.
   if (hasMutator('big-spender') && matchSize >= 5) m *= 3;
+  // Mutator: 🦄 Unicorn Day — wild random ×0.5 to ×3 per match.
+  if (hasMutator('unicorn')) m *= 0.5 + Math.random() * 2.5;
   let scored = Math.round(amount * m);
   // Mutator: 💎 Diamond Day — flat +100 per match (after multipliers).
   if (hasMutator('diamond-day')) scored += 100;
@@ -712,6 +725,14 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-25-8i',
+    items: [
+      '🌑🎁🦄🍭🔨 FIVE MORE WACKY MUTATORS for variety on the 100-slot marathon. Total mutator pool now 11.',
+      '🌑 Eclipse — free moves every other swap · 🎁 Gift Slot — +1 of EVERY power-up at slot start · 🦄 Unicorn Day — random ×0.5 to ×3 per match · 🍭 Sweet Tooth — every special candy auto-upgrades to RAINBOW · 🔨 Hammer Time — hammers are free this slot.',
+      'Whacky and wild — every 5th slot is a surprise.',
+    ],
+  },
   {
     id: '2026-05-25-8h',
     items: [
@@ -878,6 +899,10 @@ function powerupBank() {
 function spendPowerup(kind) {
   const bank = powerupBank();
   if ((bank[kind] || 0) <= 0) return false;
+  // 🔨 Hammer Time mutator — hammers are free for the slot.
+  if (kind === 'hammer' && hasMutator('hammer-time')) {
+    return true;
+  }
   bank[kind]--;
   setPowerupCounts(bank);
   persist();
@@ -1527,6 +1552,15 @@ function consumeMove() {
   maybeFireRelicsOnSwap();
   // Free Play has unlimited moves. Levels and Roguelike both count down.
   if (state.settings.mode === 'free' || !state.level) return;
+  // 🌑 Eclipse mutator — only every OTHER swap consumes a move.
+  if (hasMutator('eclipse')) {
+    state.eclipseTick = (state.eclipseTick || 0) + 1;
+    if (state.eclipseTick % 2 !== 0) {
+      flashMessage('🌑 Free swap', 600);
+      refreshLevelUI();
+      return;
+    }
+  }
   if (state.movesRemaining > 0) {
     state.movesRemaining--;
     refreshLevelUI();
@@ -2188,6 +2222,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   maybeSpawnCrazyOnMatch(allCleared.size, cascadeLevel);
 
   for (const s of specialsCreated) {
+    // 🍭 Sweet Tooth mutator — auto-upgrade every special to RAINBOW.
+    if (hasMutator('sweet-tooth')) s.kind = 'rainbow';
     state.board.set(s.c, s.r, { type: s.type, special: s.kind });
     spawnTileSparkles(s.c, s.r, s.kind === 'rainbow' ? 14 : 10);
     if (s.kind === 'rainbow') {
