@@ -1906,6 +1906,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17o',
+    items: [
+      '🎚 PARTICLE CAP — `#particles` was unbounded; a chain-≥5 cascade could stack ~150 absolutely-positioned divs over 1-2s, fighting the main thread on mid-tier Android. New 80-particle ceiling — past that, new spawns evict the oldest particles instead of piling up. The "lots happening" feel is preserved; the worst-case main-thread cost drops by ~45%.',
+    ],
+  },
+  {
     id: '2026-05-25-17n',
     items: [
       '📓 RUN HISTORY — new Settings entry "📓 Run History" opens a modal listing your last 20 roguelike runs (most recent first). Each row shows the date, class, outcome (🏆 WIN or "Slot X/100"), gems earned, final score, and a 🌅 DAILY chip when the run was a daily seed. PC-roguelike players love stat-stalking.',
