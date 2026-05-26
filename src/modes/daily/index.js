@@ -13,11 +13,13 @@ import { registerMode } from '../index.js';
 
 export function register(deps) {
   const {
-    state,
     telemetry,
     dailySeed,
     dailySeedStamp,
     createRng,
+    // ── state stores (modes-4) ──
+    runStore,         // ephemeral run state (shared with Roguelike)
+    progressionStore, // persistent roguelike progression
     // Roguelike module's public API — daily composes it.
     roguelikeStart,
     roguelikeEndRunSoft,
@@ -25,16 +27,17 @@ export function register(deps) {
 
   function start() {
     const seed = dailySeed();
-    state.runRng = createRng(seed);
-    state.runIsDaily = true;
-    state.runDailyStamp = dailySeedStamp();
-    telemetry.track('daily_seed_start', { stamp: state.runDailyStamp });
+    runStore.setRng(createRng(seed));
+    runStore.setDaily(true);
+    runStore.setDailyStamp(dailySeedStamp());
+    telemetry.track('daily_seed_start', { stamp: runStore.dailyStamp() });
     // Reset run state so a daily can't inherit upgrades from a previous run.
-    state.inRoguelikeRun = false;
-    state.roguelike.currentSlot = 1;
-    state.runUpgrades = [];
-    state.runRelics = [];
-    state.roguelike.currentClass = null; state.runFreeRerolls = 0;
+    runStore.setActive(false);
+    progressionStore.setCurrentSlot(1);
+    runStore.setUpgrades([]);
+    runStore.setRelics([]);
+    progressionStore.setCurrentClass(null);
+    runStore.setFreeRerolls(0);
     roguelikeStart();
   }
 

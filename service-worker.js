@@ -21,7 +21,7 @@
 // 🔮 Cache name reset for the Arcana Cascada rebrand — the prior
 // 'sweet-match-vN' line evicts cleanly the first time the new SW
 // activates because the names don't match.
-const VERSION = 'arcana-cascada-v2';
+const VERSION = 'arcana-cascada-v3';
 const SHELL = [
   './',
   './index.html',
@@ -41,6 +41,10 @@ const SHELL = [
   './src/modes/roguelike/index.js',
   './src/modes/daily/index.js',
   './src/modes/home/index.js',
+  './src/state/index.js',
+  './src/state/roguelike-run.js',
+  './src/state/roguelike-progression.js',
+  './src/state/levels.js',
   './src/game/board.js',
   './src/game/cascade.js',
   './src/game/match.js',

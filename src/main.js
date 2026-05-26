@@ -129,6 +129,11 @@ import * as levelsMode from './modes/levels/index.js';
 import * as roguelikeMode from './modes/roguelike/index.js';
 import * as dailyMode from './modes/daily/index.js';
 import * as homeMode from './modes/home/index.js';
+import {
+  createRoguelikeRunStore,
+  createRoguelikeProgressionStore,
+  createLevelsStore,
+} from './state/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -1910,6 +1915,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-4-state-slicing',
+    items: [
+      '🗃 MODE SEPARATION — STEP 4: STATE STORES. The shared `state` god-object now has typed companion stores under `src/state/` — `roguelike-run.js` (ephemeral run state: rng, upgrades, relics, mutators, lives, free rerolls, soft-end teardown), `roguelike-progression.js` (persistent: currentSlot, currentClass, gems, bestSlot, runs counters), and `levels.js` (active level + stars + best scores). Each store is a deps-injection factory exposing selectors and mutators — explicit, grep-able, single point of interception for future telemetry/undo/replay. Stores wrap the legacy state.X fields so all 230+ existing call sites keep working in parallel; per-mode modules now use the store API (e.g. `runStore.clearRun()` replaces the inline `state.X = null` cluster). 13 new tests covering selectors, mutators, and the clear-run teardown. 368 total tests pass. Modes 5 will start moving storage off `state` into the stores themselves with a defineProperty back-compat shim.',
+    ],
+  },
   {
     id: '2026-05-26-design-2-palette-migration',
     items: [
@@ -6350,10 +6361,21 @@ applyTheme(state.settings);
 // the next one. enter() still delegates to the existing startX()
 // for now; a future PR will move those bodies into per-mode files
 // under src/modes/<id>.js.
+// ── State stores (modes-4) — instantiated once and threaded into
+// each per-mode register block as a dep. Each store is a thin
+// selector/mutator wrapper around the legacy `state` object, so
+// existing main.js call sites that touch state.X directly keep
+// working in parallel. Migration is incremental.
+const _roguelikeRunStore = createRoguelikeRunStore(state);
+const _roguelikeProgressionStore = createRoguelikeProgressionStore(state);
+const _levelsStore = createLevelsStore(state);
+
 homeMode.register({ sfx, openStartMenu, hideStartMenu });
 ({ start: startRoguelikeRun, playSlot: playRoguelikeSlot, endRunSoft: _endRoguelikeRunSoft } = roguelikeMode.register({
   state,
   bus,
+  runStore: _roguelikeRunStore,
+  progressionStore: _roguelikeProgressionStore,
   persist,
   sfx,
   speech,
@@ -6389,11 +6411,12 @@ homeMode.register({ sfx, openStartMenu, hideStartMenu });
   RUN_LENGTH,
 }));
 ({ start: startDailySeedRun } = dailyMode.register({
-  state,
   telemetry,
   dailySeed,
   dailySeedStamp,
   createRng,
+  runStore: _roguelikeRunStore,
+  progressionStore: _roguelikeProgressionStore,
   roguelikeStart: startRoguelikeRun,
   roguelikeEndRunSoft: _endRoguelikeRunSoft,
 }));
