@@ -36,13 +36,13 @@
 | B3 | Wormhole crazy tile redesign | ✅ shipped | #262 |
 | B4 | Bosses get actual kits | ✅ shipped | #267 |
 | B5 | Scorer dominance cap | ✅ shipped | #262 |
-| B6 | Refactor `main.js` + hook bus | 🚧 in progress — bus + canonical emit points shipped (#278); **42 inline side-effect branches** migrated to `run-effects.js` subscribers across #283 / #284 / #287 / #290–#310. All side-effect branches in `processMatchRound`'s cascade-1 block AND `applyRunUpgradesOnSlotStart`'s mutator/relic branches are now bus subscribers — both functions are now pure flow control + per-slot resets. Remaining inline branches are synchronous score multipliers + boss-mechanic dispatchers (need a request/response shape, not fire-and-forget). |
+| B6 | Refactor `main.js` + hook bus | 🚧 in progress — bus + canonical emit points shipped (#278); **43 inline side-effect branches** migrated to `run-effects.js` subscribers across #283 / #284 / #287 / #290–#312. All side-effect branches in `processMatchRound`'s cascade-1 block AND `applyRunUpgradesOnSlotStart` are now bus subscribers — both functions are now pure flow control + per-slot resets. Remaining inline branches are synchronous score multipliers + boss-mechanic dispatchers (need a request/response shape, not fire-and-forget). |
 | B7 | Diff-render the DOM board | ✅ shipped | #269 |
 | B8 | ~~Cascade pacing tightening~~ | DROPPED under PC-game framing | — |
 | B9 | `purchases.js` scaffolding | ✅ shipped | #264 |
 | B10 | i18n primitives | ✅ shipped | #264 |
 | B11 | PWA manifest prod fields | ✅ shipped | #263 |
-| B12 | Tests (Vitest → node:test) | ✅ shipped (164 tests) | #268 / #278 / #279 / #289–#310 |
+| B12 | Tests (Vitest → node:test) | ✅ shipped (167 tests) | #268 / #278 / #279 / #289–#312 |
 | B13 | HC mode second pass | ✅ shipped | #263 |
 | B14 | Renderer unification | ⏳ deferred (canvas-renderer ships behind a flag; full unification needs particle / shake / special migration) | — |
 
@@ -111,14 +111,46 @@ Everything in Phase A (modulo A2), all of Phase B (modulo B6 final + B14), all o
 - Roguelike-deep (Wild archetype now scores; bosses have kits; Wormhole is real; Scorer is capped; daily seed; endless mode; reroll bank; ascensions)
 - Polished (run history, class mastery, run stats, native share, animated start screen, particle cap)
 - Cache-first (cold-boot is ~one round-trip faster on slow networks)
-- Tested (164 tests, all green)
+- Tested (167 tests, all green)
 
 **Recommended next moves**, in order:
 
 1. **A2 build step + drop Tailwind CDN** — biggest mobile-perf win still unshipped, blocks Lighthouse 90+.
 2. **Bundle Atkinson locally (D8)** — small change, removes the last third-party font dependency, finishes the offline story.
-3. **B6 follow-up — migrate the noisiest inline effect branch to the bus** — pick the loudest one (e.g. Snowball multiplier or Lucky-MODE) and move it to a `bus.on('match', …)` handler so the pattern is established before we ask later branches to follow.
-4. **Native packaging spike (C4)** — a one-week investigation to pick Tauri vs Capacitor, build a tagged release in both, measure binary size + cold-boot.
-5. **Telemetry vendor + privacy policy** — these gate any paid acquisition.
+3. **Native packaging spike (C4)** — a one-week investigation to pick Tauri vs Capacitor, build a tagged release in both, measure binary size + cold-boot.
+4. **Telemetry vendor + privacy policy** — these gate any paid acquisition.
+5. **B6 follow-ups** — score-multiplier function decomposition (synchronous, needs a multiplier-registry shape rather than fire-and-forget), boss-mechanic dispatcher migration.
+
+---
+
+## Tonight's autonomous run (2026-05-26)
+
+Picked up after PR #288 (Endless Mode label fix). 24 PRs landed
+(#289 → #312), with no human review pings:
+
+**B6 — bus migration of all event-driven side effects**
+- New event: `roguelike:match` (fires after slotMatchCount bump) — #299
+- Migrated **43 inline branches** across processMatchRound's cascade-1 block + applyRunUpgradesOnSlotStart:
+  - On `match`: Cherry Wand, Echo Drone, Bomb Maker, Prism Maker, Confectionery, Bottomless Cup, Lucky Magnet
+  - On `cascade`: Glow Stick, Stardust, Echo Match, Furnace, Cascade Splash
+  - On `roguelike:match`: Coin Purse, Diamond Mine, Piñata, Pixie Pouch, Sundae Saturday, Spice Box, Sugar Crash, Spark Strike, Whirlpool, Cracked Mirror, Coin Toss, Lucky Ladybug, Sugar Rush flash, Crazy Magnet
+  - On `slot:start`: Surprise Life, Bonus Round, Big Money, Lucky Day, Gift Slot, Hammer Storm, Bomb Cache, Second Wind, moves-bump bundle (5 sources), Eraser, Lockpick, Generous starter
+  - On `slot:complete`: Treasure Slot
+
+**Bug fix found in the process**
+- #305 — slot:start was emitting BEFORE applyRunUpgradesOnSlotStart ran, so the mutatorsSeen tracker was reading the previous slot's mutator (or null on slot 1). The run-summary's "Mutators encountered" list was effectively empty across every run. Reordered, fixed.
+
+**Test coverage**
+- 68 → 167 tests. Every migrated subscriber has focused coverage (gate gate, payout, cap respect, no-op outside roguelike) and an end-to-end integration test (#289).
+
+**Cleanup**
+- run-effects.js has grown to ~660 lines but is still well-organized (one event group at a time). processMatchRound's cascade-1 block dropped from ~100 lines to ~10. applyRunUpgradesOnSlotStart is ~25 lines of pure resets + the mutator roll.
+
+What's NOT done overnight (carried decisions or product-owner needed):
+- A2 bundler choice (esbuild/Vite/Parcel)
+- D8 font binary commit (script exists, hasn't been run)
+- C4 native packaging
+- C5 cloud save backend
+- Score-multiplier function decomposition (B6 follow-up; needs multiplier-registry shape)
 
 `/* — end PROJECT_PLAN.md — */`

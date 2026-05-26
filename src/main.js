@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bf',
+    items: [
+      '📔 OVERNIGHT RUN SUMMARY — PROJECT_PLAN.md now has a "Tonight\'s autonomous run" appendix listing every PR shipped between #289 and #312 (24 total). The recommended-next-moves list also got reordered: bundler / fonts / native packaging / telemetry-vendor pulled to the top, B6 dropped to follow-ups since the event-driven branches are done. Test count and B6 line refreshed to 167 / 43 migrations.',
+    ],
+  },
+  {
     id: '2026-05-26-17be',
     items: [
       '🎁 GENEROUS STARTER MIGRATED TO THE BUS — the slot-1 "+1 of every power-up" grant (×2 with the powerful-start meta) was the last inline slot-init effect in applyRunUpgradesOnSlotStart. Now a `bus.on(\'slot:start\', …)` subscriber in run-effects.js that reads ctx.slot from the event payload. 3 new tests; 167 total now pass.',
