@@ -123,6 +123,7 @@ import * as i18n from './i18n.js';
 import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
 import * as bus from './game/event-bus.js';
 import { registerRunEffects } from './game/run-effects.js';
+import { registerMode, setActiveMode } from './modes/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -480,7 +481,7 @@ function openStartMenu(subtitle = null) {
       sfx.unlockAudio();
       if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
-      startRoguelikeRun();
+      setActiveMode('roguelike');
     },
     onAbandon: () => {
       sfx.unlockAudio();
@@ -498,28 +499,28 @@ function openStartMenu(subtitle = null) {
       state.runIsDaily = false;
       if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
-      startRoguelikeRun();
+      setActiveMode('roguelike');
     },
     onDaily: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'daily' });
       if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
-      startDailySeedRun();
+      setActiveMode('daily');
     },
     onLevels: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'levels' });
       if (!switchToMode('levels')) return;
       playModeTransition('levels');
-      startLevel(state.levelProgress.currentLevel || 1);
+      setActiveMode('levels');
     },
     onFreePlay: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'free' });
       if (!switchToMode('free')) return;
       playModeTransition('free');
-      startFreePlay();
+      setActiveMode('free');
     },
     onSettings: () => {
       const btn = document.getElementById('settings-open');
@@ -1925,6 +1926,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-1-scaffolding',
+    items: [
+      '🎚 MODE SEPARATION — STEP 1: RUNTIME SCAFFOLDING. New `src/modes/index.js` introduces a mode registry + lifecycle runtime: `registerMode({id, enter, exit})` + `setActiveMode(id, opts)` that tears the previous mode down before bringing the next one up. The four modes (roguelike / daily / levels / free) are registered against the runtime; each enter() currently just delegates to the existing `startX()` function and exit() is a TODO no-op. No behavior change yet — this is plumbing only. Subsequent PRs in the series will pull per-mode state, save slots, and explicit teardown logic into per-mode files. 9 new tests; 355 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-fix-levels-bleeds-roguelike',
     items: [
@@ -6520,6 +6527,32 @@ function init({ chime = false, announceLevel = true } = {}) {
 }
 
 applyTheme(state.settings);
+// 🎚 Register every game mode against the mode runtime. Today each
+// mode's enter() just delegates to the existing start function in
+// this file and exit() is a no-op — scaffolding only, no behavior
+// change. Subsequent PRs will pull state ownership and explicit
+// teardown logic into per-mode files under src/modes/<id>.js so
+// the modes can't leak into each other the way they have been.
+registerMode({
+  id: 'roguelike',
+  enter() { startRoguelikeRun(); },
+  exit() { /* TODO: tear down roguelike-specific UI in a follow-up PR */ },
+});
+registerMode({
+  id: 'daily',
+  enter() { startDailySeedRun(); },
+  exit() { /* TODO: see roguelike */ },
+});
+registerMode({
+  id: 'levels',
+  enter() { startLevel(state.levelProgress.currentLevel || 1); },
+  exit() { /* TODO: hide level-intro overlay if open, etc. */ },
+});
+registerMode({
+  id: 'free',
+  enter() { startFreePlay(); },
+  exit() { /* TODO: see roguelike */ },
+});
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
 registerRunEffects(state, {
