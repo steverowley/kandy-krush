@@ -109,6 +109,35 @@ test("slot:complete handler bumps bestSlotScore on a higher score", () => {
   assert.equal(state.runHighlights.bestSlotScore, 5000);
 });
 
+// --- 💰 Treasure Slot mutator (slot:complete → +5 gems, +10 with meta) ---
+
+test("Treasure Slot grants +5 gems on slot complete", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 }, runHighlights: { bestSlotScore: 0 } };
+  registerRunEffects(s, { hasMutator: (id) => id === 'treasure' });
+  bus.emit('slot:complete', { slot: 5, isBoss: false, score: 1000, movesUsed: 10 });
+  assert.equal(s.roguelike.gems, 5);
+});
+
+test("Treasure Slot grants +10 gems with treasure-sense meta", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 }, runHighlights: { bestSlotScore: 0 } };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'treasure',
+    hasMeta: (id) => id === 'treasure-sense',
+  });
+  bus.emit('slot:complete', { slot: 5, isBoss: false, score: 1000, movesUsed: 10 });
+  assert.equal(s.roguelike.gems, 10);
+});
+
+test("Treasure Slot is a no-op without the mutator", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 }, runHighlights: { bestSlotScore: 0 } };
+  registerRunEffects(s, { hasMutator: () => false });
+  bus.emit('slot:complete', { slot: 5, isBoss: false, score: 1000, movesUsed: 10 });
+  assert.equal(s.roguelike.gems, 0);
+});
+
 test("slot:complete handler is a no-op outside a roguelike run", () => {
   state.inRoguelikeRun = false;
   state.runHighlights.bestSlotScore = 0;
