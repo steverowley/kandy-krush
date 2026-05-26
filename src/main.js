@@ -373,12 +373,45 @@ function bumpClassStats(outcome, slotReached) {
 // in progress) and from the run-summary close on game over.
 // 🎚 Single chokepoint for switching the active game mode. Updates the
 // persistent setting, swaps music style, re-applies the theme (which
-// toggles body.mode-roguelike → the dark roguelike palette), and
-// persists. Every mode-picker handler should call this exactly once,
-// so the on-screen palette + music can't drift away from the active
-// mode the way they did before the fix (Roguelike → Levels left the
-// body still tagged mode-roguelike → dark text on dark background).
+// toggles body.mode-roguelike → the dark roguelike palette), tears
+// down any in-progress roguelike run if the new mode isn't roguelike-
+// flavored, and persists. Every mode-picker handler should call this
+// exactly once.
+//
+// Returns true if the switch went through, false if the player
+// cancelled the "abandon current run?" confirmation.
 function switchToMode(mode) {
+  // If a roguelike run is in flight and the player is switching to a
+  // non-roguelike mode (Levels / Free Play), confirm first — without
+  // this guard, the Levels game starts while state.inRoguelikeRun is
+  // still true, so the run-HUD stays visible and every
+  // `if (state.inRoguelikeRun) …` path keeps firing on top of the new
+  // mode. Reported as "the game opened and then opened roguelike
+  // mode too." `daily` and `roguelike` share the same run state, so
+  // they don't trigger this prompt.
+  const isRoguelikey = (m) => m === 'roguelike' || m === 'daily';
+  if (state.inRoguelikeRun && !isRoguelikey(mode)) {
+    const ok = (typeof window !== 'undefined' && window.confirm)
+      ? window.confirm('You have a Roguelike run in progress. Switching to ' +
+          (mode === 'free' ? 'Free Play' : 'Levels Mode') +
+          ' will end it. Continue?')
+      : true;
+    if (!ok) return false;
+    // Soft-end: drop the run flag + clear ephemeral run state. We
+    // intentionally do NOT call endRoguelikeRun() — that records
+    // telemetry, run-history, and shows the run-summary modal,
+    // which would surprise the player who just wanted to switch
+    // modes. The persisted roguelike progress (currentSlot, gems,
+    // upgrades, relics) stays in `state.roguelike` so a future
+    // Roguelike Run can pick up from where they left off if we
+    // wire that path later.
+    state.inRoguelikeRun = false;
+    state.runRng = null;
+    state.runIsDaily = false;
+    state.runDailyStamp = null;
+    state.cascadeAbort = true;
+    refreshRunHud();
+  }
   state.settings.mode = mode;
   // sfx.setMusicMode internally normalizes the four modes to two
   // music styles ('chip' for roguelike + 'normal' for everything
@@ -390,6 +423,7 @@ function switchToMode(mode) {
   // player switches to Levels / Free Play / Daily.
   applyTheme(state.settings);
   persist();
+  return true;
 }
 
 function openStartMenu(subtitle = null) {
@@ -444,7 +478,7 @@ function openStartMenu(subtitle = null) {
     },
     onResume: () => {
       sfx.unlockAudio();
-      switchToMode('roguelike');
+      if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
       startRoguelikeRun();
     },
@@ -462,28 +496,28 @@ function openStartMenu(subtitle = null) {
       // doesn't inherit a seeded rng from the previous session.
       state.runRng = null;
       state.runIsDaily = false;
-      switchToMode('roguelike');
+      if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
       startRoguelikeRun();
     },
     onDaily: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'daily' });
-      switchToMode('roguelike');
+      if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
       startDailySeedRun();
     },
     onLevels: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'levels' });
-      switchToMode('levels');
+      if (!switchToMode('levels')) return;
       playModeTransition('levels');
       startLevel(state.levelProgress.currentLevel || 1);
     },
     onFreePlay: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'free' });
-      switchToMode('free');
+      if (!switchToMode('free')) return;
       playModeTransition('free');
       startFreePlay();
     },
@@ -1891,6 +1925,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-fix-levels-bleeds-roguelike',
+    items: [
+      '🐛 LEVELS / FREE PLAY NO LONGER OPENS ROGUELIKE ON TOP — the start-menu handlers for Levels / Free Play started the new mode without ending the in-progress Roguelike run, so `state.inRoguelikeRun` stayed `true`, the run-HUD stayed visible, and every `if (state.inRoguelikeRun) …` path kept firing on top of the new mode. Reported as "the game opened and then opened roguelike mode too." Fix: `switchToMode()` now detects "roguelike-in-progress → non-roguelike mode" and prompts a confirm before soft-ending the run. Soft end clears the run flag but leaves persisted progress (currentSlot / gems / upgrades / relics) in place, so a future Roguelike Run can pick up from where they left off if we wire that path later.',
+    ],
+  },
   {
     id: '2026-05-26-fix-mode-theme-bleed',
     items: [
