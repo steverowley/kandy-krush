@@ -18,7 +18,7 @@
        chrome stays legible at small sizes. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Caveat:wght@400;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
   <!-- Pixi.js is only loaded when the player opts into the WebGL
@@ -124,10 +124,13 @@
   </section>
 
   <div id="run-summary-overlay" class="hidden fixed inset-0 bg-black/70 z-[78]" aria-hidden="true"></div>
-  <div id="run-summary-panel" class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[80] flex flex-col gap-3 max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
+  <div id="run-summary-panel" class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[80] flex flex-col gap-3 max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" data-arcana="world">
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XXI</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">The Reading</span>
-    <div id="run-summary-tier" class="text-base font-bold uppercase tracking-[0.3em] text-center text-pink-700">Run complete</div>
-    <h2 id="run-summary-title" class="text-3xl sm:text-4xl font-bold text-center">Sweet King defeated!</h2>
+    <div id="run-summary-tier" class="text-base font-bold uppercase tracking-[0.3em] text-center">Run complete</div>
+    <h2 id="run-summary-title" class="text-2xl sm:text-3xl font-bold text-center">Sweet King defeated!</h2>
     <div id="run-summary-stats" class="grid grid-cols-2 gap-3 text-base"></div>
     <div id="run-summary-class" class="text-base sm:text-lg text-center font-bold"></div>
     <div id="run-summary-builds" class="flex flex-wrap items-center justify-center gap-2"></div>
@@ -136,6 +139,11 @@
       <button id="run-summary-share" class="px-4 py-2 bg-white text-black border-[3px] border-black rounded-2xl font-bold text-base active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" title="Share or copy a text summary of this run">📤 Share</button>
       <button id="run-summary-replay" class="px-4 py-2 bg-pink-300 text-black border-[3px] border-black rounded-2xl font-bold text-base active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" title="Start a brand-new run">🔁 New run</button>
       <button id="run-summary-close" class="px-6 py-3 bg-yellow-400 text-black border-[3px] border-black rounded-2xl font-bold text-lg active:translate-y-0.5 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Continue</button>
+    </div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The World</div>
+      <div class="ac-card__script">your reading</div>
+      <div class="ac-card__italic">il mondo</div>
     </div>
   </div>
 
@@ -313,17 +321,26 @@
   <div
     id="class-mastery-panel"
     class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
+    data-arcana="chariot"
     role="dialog"
     aria-modal="true"
     aria-labelledby="class-mastery-title"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">VII</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">Mastery</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="class-mastery-title" class="text-2xl sm:text-3xl font-bold">🏅 Class Mastery</h2>
       <button id="class-mastery-close" type="button" class="text-xl font-bold bg-white hover:bg-amber-100 border-[3px] border-black rounded-2xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Done</button>
     </div>
-    <p class="text-base text-gray-700">🥉 Bronze — clear slot 10 with this class. 🥈 Silver — clear slot 30. 🥇 Gold — full run complete.</p>
+    <p class="text-base">🥉 Bronze — clear slot 10 with this class. 🥈 Silver — clear slot 30. 🥇 Gold — full run complete.</p>
     <div id="class-mastery-list" class="flex flex-col gap-2"></div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Chariot</div>
+      <div class="ac-card__script">mastery</div>
+      <div class="ac-card__italic">il carro</div>
+    </div>
   </div>
 
   <div id="run-history-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
@@ -333,7 +350,11 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="run-history-title"
+    data-arcana="judgement"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XX</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">Past Readings</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="run-history-title" class="text-2xl sm:text-3xl font-bold">📓 Run History</h2>
@@ -341,7 +362,12 @@
     </div>
     <p class="text-base text-gray-700">Your last 20 roguelike runs, most recent first.</p>
     <div id="run-history-list" class="flex flex-col gap-2"></div>
-    <div id="run-history-empty" class="hidden text-center text-gray-600 italic py-6">No runs yet. Pick a class and run starts here.</div>
+    <div id="run-history-empty" class="hidden text-center italic py-6">No runs yet. Pick a class and run starts here.</div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">Judgement</div>
+      <div class="ac-card__script">past readings</div>
+      <div class="ac-card__italic">il giudizio</div>
+    </div>
   </div>
 
   <div id="skill-tree-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
@@ -351,7 +377,11 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="skill-tree-title"
+    data-arcana="magician"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">I</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">The Sigils</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="skill-tree-title" class="text-2xl sm:text-3xl font-bold">Skill Tree</h2>
@@ -364,6 +394,11 @@
       type="button"
       class="mt-2 self-end text-lg font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-2"
     >Done</button>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Magician</div>
+      <div class="ac-card__script">your sigils</div>
+      <div class="ac-card__italic">il mago</div>
+    </div>
   </div>
 
   <div id="upgrade-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
@@ -373,12 +408,21 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="upgrade-title"
+    data-arcana="hierophant"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">V</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">The Offering</span>
-    <div id="upgrade-subtitle" class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700 text-center">Choose a sigil</div>
-    <h2 id="upgrade-title" class="text-2xl sm:text-3xl font-bold text-center">Pick one to take into your next reading</h2>
+    <div id="upgrade-subtitle" class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-center">Choose a sigil</div>
+    <h2 id="upgrade-title" class="text-xl sm:text-2xl font-bold text-center">Pick one to take into your next reading</h2>
     <div id="upgrade-choices" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
-    <div id="upgrade-active-list" class="text-sm sm:text-base text-gray-700 text-center"></div>
+    <div id="upgrade-active-list" class="text-sm sm:text-base text-center"></div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Hierophant</div>
+      <div class="ac-card__script">the offering</div>
+      <div class="ac-card__italic">il papa</div>
+    </div>
   </div>
 
   <div id="changelog-overlay" class="hidden fixed inset-0 bg-black/55 z-[110]" aria-hidden="true"></div>
@@ -388,9 +432,13 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="changelog-title"
+    data-arcana="star"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XVII</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">The Scrolls</span>
-    <div class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700">What's new</div>
+    <div class="text-base sm:text-lg font-bold uppercase tracking-[0.2em]">What's new</div>
     <h2 id="changelog-title" class="text-2xl sm:text-3xl font-bold">Arcana Cascada update</h2>
     <ul id="changelog-list" class="text-lg sm:text-xl list-disc pl-6 flex flex-col gap-1.5"></ul>
     <button
@@ -398,6 +446,11 @@
       type="button"
       class="mt-2 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 self-center"
     >Got it!</button>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Star</div>
+      <div class="ac-card__script">what's new</div>
+      <div class="ac-card__italic">le stelle</div>
+    </div>
   </div>
 
   <!-- Full-page start screen. Not a modal — it replaces the entire game
@@ -409,11 +462,14 @@
     role="region"
     aria-labelledby="start-screen-title"
   >
-    <div class="w-full max-w-md ac-card flex flex-col items-center gap-4 text-center">
-      <span class="ac-card__banner-top" aria-hidden="true">The Reading</span>
+    <div class="w-full max-w-md ac-card flex flex-col items-center gap-4 text-center" data-arcana="hermit">
+      <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+      <span class="ac-card__numeral" aria-hidden="true">IX</span>
+      <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+      <span class="ac-card__banner-top" aria-hidden="true">The Reading Begins</span>
       <div id="start-screen-icon" class="text-7xl sm:text-8xl select-none" aria-hidden="true">🌙</div>
-      <h1 id="start-screen-title" class="text-5xl sm:text-6xl font-bold tracking-tight">Arcana Cascada</h1>
-      <p class="text-lg sm:text-xl text-gray-700">Draw the cards. Read your fortune.</p>
+      <h1 id="start-screen-title" class="text-3xl sm:text-4xl font-bold tracking-tight">Arcana Cascada</h1>
+      <p class="text-base sm:text-lg">Draw the cards. Read your fortune.</p>
       <p id="start-screen-subtitle" class="text-base sm:text-lg text-pink-900 font-bold min-h-[1.5em]"></p>
       <div id="start-screen-stats" class="hidden flex-wrap items-center justify-center gap-2 text-sm sm:text-base text-gray-900"></div>
       <!-- Resume featured above the spread when there's a run in progress. -->
@@ -452,8 +508,12 @@
         <button id="start-menu-help" type="button" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">📖 What's New</button>
       </div>
       <button id="start-menu-quit" type="button" class="mt-2 text-sm sm:text-base font-bold text-gray-900 hover:text-black underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-700 rounded px-2 py-1">🚪 Quit Game</button>
-      <div id="start-screen-version" class="mt-3 text-sm text-gray-800 select-none rounded-full px-3 py-0.5"></div>
-      <span class="ac-card__banner-bottom" aria-hidden="true">Arcana Cascada</span>
+      <div id="start-screen-version" class="mt-3 text-sm select-none rounded-full px-3 py-0.5 opacity-70"></div>
+      <div class="ac-card__name-area">
+        <div class="ac-card__serif-name">The Hermit</div>
+        <div class="ac-card__script">arcana cascada</div>
+        <div class="ac-card__italic">l'eremita</div>
+      </div>
     </div>
   </section>
 
@@ -466,35 +526,50 @@
     role="region"
     aria-labelledby="goodbye-title"
   >
-    <div class="w-full max-w-md ac-card flex flex-col items-center gap-4">
-      <span class="ac-card__banner-top" aria-hidden="true">Farewell</span>
-      <div class="text-7xl sm:text-8xl my-2" aria-hidden="true">🌙</div>
-      <h2 id="goodbye-title" class="text-4xl sm:text-5xl font-bold mb-2">Until the next reading.</h2>
-      <p class="text-lg sm:text-xl font-semibold mb-4">The cards will be here when you return.</p>
-      <button id="goodbye-return" type="button" class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">↩ Back to the table</button>
-      <span class="ac-card__banner-bottom" aria-hidden="true">XXII · The World</span>
+    <div class="w-full max-w-md ac-card flex flex-col items-center gap-3" data-arcana="world">
+      <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+      <span class="ac-card__numeral" aria-hidden="true">XXI</span>
+      <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+      <span class="ac-card__banner-top" aria-hidden="true">Farewell, Seeker</span>
+      <div class="text-6xl sm:text-7xl my-2" aria-hidden="true">🌙</div>
+      <h2 id="goodbye-title" class="text-2xl sm:text-3xl font-bold mb-2">Until the next reading</h2>
+      <p class="text-base sm:text-lg font-semibold mb-3">The cards will be here when you return.</p>
+      <button id="goodbye-return" type="button" class="text-base sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-5 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">↩ Back to the table</button>
+      <div class="ac-card__name-area">
+        <div class="ac-card__serif-name">The World</div>
+        <div class="ac-card__script">completion</div>
+        <div class="ac-card__italic">il mondo</div>
+      </div>
     </div>
   </section>
 
   <div id="welcome-overlay" class="hidden fixed inset-0 bg-black/60 z-[110]" aria-hidden="true"></div>
   <div
     id="welcome-panel"
-    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[115] flex flex-col items-center gap-4 text-center"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[115] flex flex-col items-center gap-3 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="welcome-title"
+    data-arcana="fool"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">0</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">Welcome, Seeker</span>
-    <h2 id="welcome-title" class="text-3xl sm:text-4xl font-bold">Arcana Cascada</h2>
-    <p class="text-xl sm:text-2xl">Tap two neighbors, or swipe a card toward its neighbor to swap.</p>
-    <p class="text-xl sm:text-2xl">Align 3 or more of a suit to read a fortune.</p>
-    <p class="text-lg sm:text-xl">No timer. No losing. Read at your own pace.</p>
+    <h2 id="welcome-title" class="text-2xl sm:text-3xl font-bold">A new reading</h2>
+    <p class="text-base sm:text-lg">Tap two neighbors, or swipe a card toward its neighbor to swap.</p>
+    <p class="text-base sm:text-lg">Align 3 or more of a suit to read a fortune.</p>
+    <p class="text-sm sm:text-base">No timer. No losing. Read at your own pace.</p>
     <button
       id="welcome-start"
       type="button"
-      class="mt-2 text-2xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-8 py-4 shadow-md"
+      class="mt-2 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3"
     >Draw the first card</button>
-    <span class="ac-card__banner-bottom" aria-hidden="true">0 · The Fool</span>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Fool</div>
+      <div class="ac-card__script">the beginning</div>
+      <div class="ac-card__italic">il matto</div>
+    </div>
   </div>
 
   <div id="level-select-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
@@ -505,7 +580,11 @@
     aria-modal="true"
     aria-labelledby="ls-title"
     aria-hidden="true"
+    data-arcana="strength"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">VIII</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">The Path</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="ls-title" class="text-2xl sm:text-3xl font-bold">Choose a card</h2>
@@ -517,23 +596,37 @@
       >Done</button>
     </div>
     <div id="level-select-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">Strength</div>
+      <div class="ac-card__script">the path</div>
+      <div class="ac-card__italic">la forza</div>
+    </div>
   </div>
 
   <div id="level-overlay" class="hidden fixed inset-0 bg-black/60 z-40" aria-hidden="true"></div>
   <div
     id="level-complete"
-    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 flex flex-col items-center gap-4 text-center"
+    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 flex flex-col items-center gap-3 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="lc-title"
+    data-arcana="sun"
   >
-    <span class="ac-card__banner-top" aria-hidden="true">XIX · The Sun</span>
-    <h2 id="lc-title" class="text-3xl sm:text-4xl font-bold">Card cleared!</h2>
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XIX</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+    <span class="ac-card__banner-top" aria-hidden="true">Cleared</span>
+    <h2 id="lc-title" class="text-2xl sm:text-3xl font-bold">Card cleared!</h2>
     <div id="lc-stars" class="text-6xl sm:text-7xl text-yellow-500 leading-none" aria-label="0 of 3 stars">☆☆☆</div>
     <div id="lc-score" class="text-2xl font-bold text-gray-800">Score: 0</div>
     <div class="flex flex-col sm:flex-row gap-3 w-full">
       <button id="lc-replay" type="button" class="flex-1 text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-3">Replay</button>
       <button id="lc-next" type="button" class="flex-1 text-xl font-bold bg-yellow-300 hover:bg-yellow-200 border-[3px] border-black rounded-2xl px-4 py-3">Next level</button>
+    </div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Sun</div>
+      <div class="ac-card__script">cleared</div>
+      <div class="ac-card__italic">il sole</div>
     </div>
   </div>
   <div
@@ -553,15 +646,19 @@
   <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-[110]" aria-hidden="true"></div>
   <div
     id="settings-panel"
-    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[115] flex flex-col gap-5"
+    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[115] flex flex-col gap-4"
     role="dialog"
     aria-modal="true"
     aria-labelledby="settings-title"
     aria-hidden="true"
+    data-arcana="justice"
   >
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XI</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
     <span class="ac-card__banner-top" aria-hidden="true">Ritual Settings</span>
     <div class="flex items-center justify-between gap-3">
-      <h2 id="settings-title" class="text-3xl font-bold">Settings</h2>
+      <h2 id="settings-title" class="text-2xl font-bold">Settings</h2>
       <button
         id="settings-close"
         type="button"
@@ -673,6 +770,11 @@
         data-tip="Erases stars, level progress, and high score"
       >Reset progress&hellip;</button>
     </div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">Justice</div>
+      <div class="ac-card__script">ritual settings</div>
+      <div class="ac-card__italic">la giustizia</div>
+    </div>
   </div>
 
   <div id="pause-overlay" class="hidden fixed inset-0 bg-black/70 z-[78]" aria-hidden="true"></div>
@@ -682,25 +784,38 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="pause-title"
+    data-arcana="hangedman"
   >
-    <span class="ac-card__banner-top" aria-hidden="true">The Pause</span>
-    <h2 id="pause-title" class="text-3xl sm:text-4xl font-bold">⏸ The Reading Pauses</h2>
-    <p class="text-base sm:text-lg text-gray-700">Your reading is preserved.</p>
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XII</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+    <span class="ac-card__banner-top" aria-hidden="true">Paused</span>
+    <h2 id="pause-title" class="text-2xl sm:text-3xl font-bold">The reading pauses</h2>
+    <p class="text-base sm:text-lg">Your reading is preserved.</p>
     <button id="pause-resume" type="button" class="w-full mt-2 text-2xl font-bold bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">▶ Resume</button>
     <button id="pause-settings" type="button" class="w-full text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">⚙ Settings</button>
-    <button id="pause-quit" type="button" class="w-full text-lg font-bold text-gray-800 hover:text-red-700 underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded px-2 py-1">🏠 Quit to start screen</button>
+    <button id="pause-quit" type="button" class="w-full text-lg font-bold underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded px-2 py-1">🏠 Quit to start screen</button>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">The Hanged Man</div>
+      <div class="ac-card__script">suspended</div>
+      <div class="ac-card__italic">l'appeso</div>
+    </div>
   </div>
 
   <div id="reset-overlay" class="hidden fixed inset-0 bg-black/60 z-[80]" aria-hidden="true"></div>
   <div
     id="reset-panel"
-    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[90] flex flex-col gap-4 text-center"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[90] flex flex-col gap-3 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="reset-title"
     aria-hidden="true"
+    data-arcana="death"
   >
-    <span class="ac-card__banner-top" aria-hidden="true">XIII · Death</span>
+    <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+    <span class="ac-card__numeral" aria-hidden="true">XIII</span>
+    <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+    <span class="ac-card__banner-top" aria-hidden="true">Final Cut</span>
     <h2 id="reset-title" class="text-2xl sm:text-3xl font-bold">Burn the deck?</h2>
     <p class="text-lg sm:text-xl">This erases your stars, level progress, high score, and streak. Settings like Sound and High Contrast stay the same.</p>
     <p class="text-base text-gray-900 font-semibold">There's no undo.</p>
@@ -715,6 +830,11 @@
         type="button"
         class="flex-1 text-xl font-bold bg-red-500 hover:bg-red-400 active:bg-red-600 text-white border-[3px] border-black rounded-2xl px-4 py-3"
       >Yes, reset</button>
+    </div>
+    <div class="ac-card__name-area">
+      <div class="ac-card__serif-name">Death</div>
+      <div class="ac-card__script">final cut</div>
+      <div class="ac-card__italic">la morte</div>
     </div>
   </div>
 

@@ -36,19 +36,46 @@
   --ac-oxblood:   #7B1E2B;  /* danger / boss / harm                 */
   --ac-ember:     #E25822;  /* call-out highlight / lucky charge    */
 
-  /* Design-4 — card / tarot-frame palette
-     The inspiration set is ink-line-art on cream parchment. These
-     tokens let card-surface components (modals, panels, cartouches)
-     break out of the velvet+gold chrome and read as actual tarot
-     cards laid on the velvet table. */
-  --ac-parchment:      #F2EAD0;  /* card face (alias of bone)        */
+  /* Design-4 — card / tarot-frame palette */
+  --ac-parchment:      #F4ECDC;  /* card outer border (cream/ivory)  */
   --ac-parchment-warm: #ECDFB3;  /* aged parchment, banner ground    */
-  --ac-ink:            #2D1B69;  /* deep ink-violet line art         */
-  --ac-ink-soft:       #4A3580;  /* secondary ink for body text      */
+  --ac-ink:            #1A1A1A;  /* card name + line art (true ink)  */
+  --ac-ink-soft:       #4A3580;  /* secondary ink                    */
+
+  /* 🎴 Design-10 — editorial card palette (Devil/Death reference).
+     The arcana INNER PANEL color — each card surface picks one of
+     these via `data-arcana="..."` on the .ac-card element. Picked to
+     match the Rider-Waite-Smith mood for each Major Arcana while
+     reading boldly at modal size. */
+  --ac-arcana-fool:        #ECDFB3;  /* 0 The Fool          — cream */
+  --ac-arcana-magician:    #C29B4C;  /* I The Magician      — antique gold */
+  --ac-arcana-priestess:   #3F6E9C;  /* II High Priestess   — deep blue */
+  --ac-arcana-empress:     #7A9275;  /* III The Empress     — sage */
+  --ac-arcana-emperor:     #7B1E2B;  /* IV The Emperor      — oxblood */
+  --ac-arcana-hierophant:  #B5805A;  /* V Hierophant        — terracotta */
+  --ac-arcana-lovers:      #C76A8A;  /* VI The Lovers       — rose */
+  --ac-arcana-chariot:     #4A3580;  /* VII The Chariot     — violet */
+  --ac-arcana-strength:    #C76528;  /* VIII Strength       — ember */
+  --ac-arcana-hermit:      #9E8EC9;  /* IX The Hermit       — lavender (Devil ref) */
+  --ac-arcana-wheel:       #D4A24C;  /* X Wheel of Fortune  — gold */
+  --ac-arcana-justice:     #4F5D5A;  /* XI Justice          — slate */
+  --ac-arcana-hangedman:   #5B7C8A;  /* XII Hanged Man      — sea-blue */
+  --ac-arcana-death:       #C44545;  /* XIII Death          — coral (Death ref) */
+  --ac-arcana-temperance:  #A8B5A0;  /* XIV Temperance      — pale green */
+  --ac-arcana-devil:       #2A0F3A;  /* XV The Devil        — velvet */
+  --ac-arcana-tower:       #2A0F3A;  /* XVI The Tower       — deep purple */
+  --ac-arcana-star:        #6B89B5;  /* XVII The Star       — twilight blue */
+  --ac-arcana-moon:        #4A3580;  /* XVIII The Moon      — indigo */
+  --ac-arcana-sun:         #E6B341;  /* XIX The Sun         — sun gold */
+  --ac-arcana-judgement:   #8E7CC3;  /* XX Judgement        — lilac */
+  --ac-arcana-world:       #2D5A47;  /* XXI The World       — forest */
+  --ac-arcana-default:     #4A3580;  /* fallback            — violet */
 
   /* Typography */
   --ac-font-display: 'Cinzel', 'Atkinson Hyperlegible', serif;
   --ac-font-body:    'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --ac-font-serif:   'Playfair Display', 'Cinzel', Georgia, serif;
+  --ac-font-script:  'Caveat', 'Brush Script MT', cursive;
 }
 
 html, body {
@@ -56,13 +83,21 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Apply the velvet palette as the default page surface. The Tailwind
-   candy class overrides below remap the saccharine palette to the
-   arcana tokens so every chip/button/modal reads in the new
-   language without rewriting individual class attributes. */
+/* Apply the design-10 pitch-black palette as the default page
+   surface. Cards float on the black ground with a faint gold
+   stardust speckle for "midnight reading table" atmosphere. */
 body {
-  background-color: var(--ac-velvet);
+  background-color: #050207;
   color: var(--ac-bone);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(212, 162, 76, 0.06) 0, transparent 1.5px),
+    radial-gradient(circle at 82% 14%, rgba(212, 162, 76, 0.05) 0, transparent 1.5px),
+    radial-gradient(circle at 30% 80%, rgba(212, 162, 76, 0.05) 0, transparent 1.5px),
+    radial-gradient(circle at 70% 65%, rgba(212, 162, 76, 0.06) 0, transparent 1.5px),
+    radial-gradient(circle at 50% 50%, rgba(212, 162, 76, 0.04) 0, transparent 1.5px);
+  background-attachment: fixed;
+  background-size: 280px 280px;
+  background-repeat: repeat;
 }
 
 /* 🎴 ARCANA PALETTE REMAP (design-2) — Tailwind utility classes have
@@ -2357,108 +2392,254 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
    physical tarot card sits on a reading cloth. Outer-card glow +
    subtle drop shadow sell the depth. */
 
+/* ──────────────────────────────────────────────────────────────
+   🎴 EDITORIAL TAROT CARD (design-10) — Devil/Death anatomy
+   ──────────────────────────────────────────────────────────────
+   The .ac-card surface now matches the editorial-poster reference:
+   cream outer border + bold colored inner panel + bottom name-area
+   with giant Playfair serif + Caveat script overlay + Italian tag.
+
+   Anatomy:
+
+   ┌────[ cream outer ]────┐
+   │ (a.   ─ XV ─    b.✷  │  ← corner markers + numeral
+   │  ┌──[ colored ]────┐  │
+   │  │   inner panel    │  │  ← per-arcana --ac-arcana-X
+   │  │   content here   │  │     (modal body sits in here)
+   │  │   TEMPTATION     │  │
+   │  └──────────────────┘  │
+   │   The Devil            │  ← Playfair giant serif
+   │   ‾temptation‾         │  ← Caveat script overlay
+   │   el diablo            │  ← Italian translation tag
+   └────────────────────────┘
+
+   Per-surface arcana color via [data-arcana="hermit"] etc.
+   Defaults to violet when unset so an un-themed card still ships. */
+
 .ac-card {
   position: relative;
   background-color: var(--ac-parchment);
   color: var(--ac-ink);
-  border: 2px solid var(--ac-ink);
-  border-radius: 14px;
-  /* Internal inset double-line frame — classic tarot-card border. */
+  border-radius: 8px;
+  /* Cream border thick at top + sides, thicker at bottom for the
+     giant Playfair name area. The inner colored panel is painted
+     by the ::before pseudoelement and sits inside this padding box. */
+  padding: 52px 18px 96px;
+  /* Stack-of-cards effect — two faint shadow layers behind suggest
+     a deck this card was drawn from. */
   box-shadow:
-    inset 0 0 0 4px var(--ac-parchment),
-    inset 0 0 0 5px var(--ac-ink),
-    0 0 0 1px rgba(212, 162, 76, 0.18),
-    0 18px 40px rgba(0, 0, 0, 0.55);
-  /* Generous padding so the inner frame doesn't crowd content,
-     compact on mobile so the card still fits a 360px viewport. */
-  padding: 36px 22px 30px;
+    /* the back-stack */
+    6px 8px 0 -2px rgba(244, 236, 220, 0.85),
+    8px 12px 0 -4px rgba(244, 236, 220, 0.65),
+    /* outer drop on the black ground */
+    0 18px 40px rgba(0, 0, 0, 0.7);
+  /* Subtle hairline outline on the cream */
+  outline: 1px solid rgba(26, 26, 26, 0.65);
+  outline-offset: -1px;
 }
 
 @media (min-width: 640px) {
   .ac-card {
-    padding: 48px 32px 40px;
-    border-radius: 18px;
+    padding: 60px 24px 110px;
+    border-radius: 10px;
   }
 }
 
-/* Art-nouveau corner curls. Inline SVG via background-image so the
-   ornaments live in the stylesheet (no asset fetch). The ::before
-   and ::after pseudoelements double up to cover all four corners
-   via background-position. Color is set via the SVG stroke. */
-.ac-card::before,
-.ac-card::after {
+/* The bold colored inner panel — per-arcana color via data-arcana
+   on the card element. This is the "Devil purple" or "Death red"
+   layer. Sits behind the modal content (which has its own stacking
+   context via .ac-card__panel-content if present, otherwise just
+   uses z-index to layer above this background). */
+.ac-card::before {
   content: '';
   position: absolute;
-  width: 56px;
-  height: 56px;
-  pointer-events: none;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  /* The SVG below is a single corner ornament; ::before lives in
-     the top-left (no transform), ::after in the bottom-right
-     (rotate 180°). The unused two corners are handled by .ac-card
-     itself flipping the same SVG via CSS transforms on inline
-     spans (added in markup by future PRs if we want all four). */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56' fill='none' stroke='%232D1B69' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M 6 6 L 6 24'/><path d='M 6 6 L 24 6'/><path d='M 10 10 Q 18 10 18 18'/><path d='M 10 10 Q 10 18 18 18'/><circle cx='18' cy='18' r='1.5' fill='%232D1B69'/><path d='M 8 28 Q 12 24 16 28 Q 14 30 12 28'/><path d='M 28 8 Q 24 12 28 16 Q 30 14 28 12'/></svg>");
-}
-
-.ac-card::before {
-  top: 6px;
-  left: 6px;
-}
-
-.ac-card::after {
-  bottom: 6px;
-  right: 6px;
-  transform: rotate(180deg);
-}
-
-/* Top-banner cartouche — sits on the card's top border like a
-   tarot card's roman-numeral / arcana-number label. Use for
-   "READING" / "XII" / "THE TOWER" labels. */
-.ac-card__banner-top,
-.ac-card__banner-bottom {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--ac-parchment-warm);
-  color: var(--ac-ink);
-  border: 2px solid var(--ac-ink);
+  top: 44px;
+  left: 14px;
+  right: 14px;
+  bottom: 88px;
+  background-color: var(--ac-arcana, var(--ac-arcana-default));
   border-radius: 4px;
-  padding: 4px 18px;
-  font-family: var(--ac-font-display);
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  line-height: 1.2;
-  white-space: nowrap;
-  box-shadow:
-    inset 0 0 0 3px var(--ac-parchment-warm),
-    inset 0 0 0 4px var(--ac-ink);
-}
-
-.ac-card__banner-top {
-  top: -16px;
-}
-
-.ac-card__banner-bottom {
-  bottom: -16px;
+  z-index: 0;
 }
 
 @media (min-width: 640px) {
-  .ac-card__banner-top,
-  .ac-card__banner-bottom {
-    font-size: 1.05rem;
-    padding: 6px 26px;
+  .ac-card::before {
+    top: 52px;
+    left: 20px;
+    right: 20px;
+    bottom: 100px;
   }
 }
 
-/* Card content readability: when an .ac-card wraps Tailwind
-   buttons / chips, the dark-on-light context fights with the
-   design-2 candy-class remap (which assumed dark grounds).
-   Inside an .ac-card, restore dark-text-on-light for the candy
-   text-* classes that were remapped to bone in design-2. */
+/* All direct content children of .ac-card sit ABOVE the colored
+   panel pseudo. Without this z-index, the panel's background paints
+   over the actual content. */
+.ac-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Apply per-arcana colors. data-arcana="hermit" → --ac-arcana
+   becomes --ac-arcana-hermit. Each rule sets the CSS variable
+   on the element so .ac-card::before's background-color picks it
+   up via var(--ac-arcana). */
+.ac-card[data-arcana="fool"]        { --ac-arcana: var(--ac-arcana-fool); }
+.ac-card[data-arcana="magician"]    { --ac-arcana: var(--ac-arcana-magician); }
+.ac-card[data-arcana="priestess"]   { --ac-arcana: var(--ac-arcana-priestess); }
+.ac-card[data-arcana="empress"]     { --ac-arcana: var(--ac-arcana-empress); }
+.ac-card[data-arcana="emperor"]     { --ac-arcana: var(--ac-arcana-emperor); }
+.ac-card[data-arcana="hierophant"]  { --ac-arcana: var(--ac-arcana-hierophant); }
+.ac-card[data-arcana="lovers"]      { --ac-arcana: var(--ac-arcana-lovers); }
+.ac-card[data-arcana="chariot"]     { --ac-arcana: var(--ac-arcana-chariot); }
+.ac-card[data-arcana="strength"]    { --ac-arcana: var(--ac-arcana-strength); }
+.ac-card[data-arcana="hermit"]      { --ac-arcana: var(--ac-arcana-hermit); }
+.ac-card[data-arcana="wheel"]       { --ac-arcana: var(--ac-arcana-wheel); }
+.ac-card[data-arcana="justice"]     { --ac-arcana: var(--ac-arcana-justice); }
+.ac-card[data-arcana="hangedman"]   { --ac-arcana: var(--ac-arcana-hangedman); }
+.ac-card[data-arcana="death"]       { --ac-arcana: var(--ac-arcana-death); }
+.ac-card[data-arcana="temperance"]  { --ac-arcana: var(--ac-arcana-temperance); }
+.ac-card[data-arcana="devil"]       { --ac-arcana: var(--ac-arcana-devil); }
+.ac-card[data-arcana="tower"]       { --ac-arcana: var(--ac-arcana-tower); }
+.ac-card[data-arcana="star"]        { --ac-arcana: var(--ac-arcana-star); }
+.ac-card[data-arcana="moon"]        { --ac-arcana: var(--ac-arcana-moon); }
+.ac-card[data-arcana="sun"]         { --ac-arcana: var(--ac-arcana-sun); }
+.ac-card[data-arcana="judgement"]   { --ac-arcana: var(--ac-arcana-judgement); }
+.ac-card[data-arcana="world"]       { --ac-arcana: var(--ac-arcana-world); }
+
+/* Top markers row — corner letters + center roman numeral with
+   arc brackets. Absolutely positioned at the very top of the
+   cream border, above the colored panel. */
+.ac-card__numeral {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: var(--ac-font-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  color: var(--ac-ink);
+  padding: 0 18px;
+  /* Arc brackets above the numeral, drawn as inline SVG-style
+     pseudoelements so the layout is pure CSS. */
+}
+.ac-card__numeral::before,
+.ac-card__numeral::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 9px;
+  border: 1px solid var(--ac-ink);
+  border-bottom: 0;
+  border-radius: 11px 11px 0 0;
+  transform: translateY(-12px);
+}
+.ac-card__numeral::before { left: -10px; }
+.ac-card__numeral::after  { right: -10px; }
+
+.ac-card__corner {
+  position: absolute;
+  top: 14px;
+  z-index: 2;
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ac-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ac-card__corner--l { left: 16px; }
+.ac-card__corner--r { right: 16px; }
+
+/* The legacy .ac-card__banner-top now becomes a subdued uppercase
+   tracking label centered inside the top of the colored panel.
+   (Used to be a cartouche over the top border in design-4.) */
+.ac-card__banner-top {
+  position: relative;
+  display: block;
+  margin: -6px auto 6px;
+  font-family: var(--ac-font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ac-parchment);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .ac-card__banner-top { font-size: 0.78rem; }
+}
+
+/* Bottom legacy banner — no longer mounted on the border. Reuses
+   the slot at the BOTTOM of the colored panel for a small italic
+   uppercase tagline above the giant name area. */
+.ac-card__banner-bottom {
+  display: block;
+  margin: 14px auto 0;
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--ac-parchment);
+  opacity: 0.85;
+}
+
+/* The signature bottom block — giant Playfair card name + Caveat
+   script overlay + Italian translation tag. Sits OUTSIDE the
+   colored panel, on the cream border at the bottom of the card. */
+.ac-card__name-area {
+  position: absolute;
+  bottom: 12px;
+  left: 14px;
+  right: 14px;
+  z-index: 2;
+  text-align: center;
+  padding-top: 6px;
+  border-top: 1px solid rgba(26, 26, 26, 0.15);
+}
+
+.ac-card__serif-name {
+  font-family: var(--ac-font-serif);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(1.85rem, 6vw, 2.6rem);
+  line-height: 1;
+  color: var(--ac-ink);
+  letter-spacing: -0.01em;
+}
+
+.ac-card__script {
+  font-family: var(--ac-font-script);
+  font-weight: 400;
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  line-height: 0.7;
+  color: var(--ac-ink);
+  opacity: 0.85;
+  margin-top: -4px;
+  letter-spacing: 0.02em;
+}
+
+.ac-card__italic {
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-size: 0.7rem;
+  color: var(--ac-ink);
+  opacity: 0.75;
+  margin-top: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* Card content readability. The modal content sits inside the
+   colored panel — that ground is dark (most arcana colors are
+   saturated), so any inherited dark text from design-2 needs
+   flipping back to parchment for legibility. */
+.ac-card,
 .ac-card .text-pink-600,
 .ac-card .text-pink-700,
 .ac-card .text-pink-800,
@@ -2466,19 +2647,38 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
 .ac-card .text-gray-700,
 .ac-card .text-gray-800,
 .ac-card .text-gray-900 {
+  color: var(--ac-parchment);
+}
+
+/* Card NAME area sits on the cream border below the colored panel —
+   its text needs the INK color, not parchment. Re-override. */
+.ac-card__name-area,
+.ac-card__name-area * {
   color: var(--ac-ink);
 }
 
-/* Buttons inside a card take the ink-on-cream treatment — gold
-   accent fill for primary CTAs, parchment fill with ink border
-   for secondary. The design-2 global remap still applies; this
-   layer only adjusts the in-card variant. */
+/* Buttons inside the colored panel — cream face + ink border + ink
+   text reads as "card-stock chip" against the bold panel color. */
 .ac-card button[class*="bg-pink-"],
 .ac-card button[class*="bg-yellow-"],
 .ac-card button[class*="bg-rose-"],
-.ac-card button[class*="bg-fuchsia-"] {
-  border-color: var(--ac-ink);
-  color: var(--ac-ink);
+.ac-card button[class*="bg-fuchsia-"],
+.ac-card button[class*="bg-white"],
+.ac-card button[class*="bg-green-"],
+.ac-card button[class*="bg-purple-"],
+.ac-card button[class*="bg-blue-"] {
+  background-color: var(--ac-parchment) !important;
+  border-color: var(--ac-ink) !important;
+  color: var(--ac-ink) !important;
+}
+
+/* Headings inside a card inherit the parchment color above; force
+   stronger weight so they pop against the colored panel. */
+.ac-card h1,
+.ac-card h2,
+.ac-card h3 {
+  color: var(--ac-parchment);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 /* Roman-numeral utility — small uppercase serif tag, used by the
