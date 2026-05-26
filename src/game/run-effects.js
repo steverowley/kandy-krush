@@ -222,6 +222,35 @@ export function registerRunEffects(state, helpers = {}) {
     flashMessage(`🧁 Confectionery! +${n} 🎁`, 1000);
   }));
 
+  // 🍵 Bottomless Cup mutator. Was inline in processMatchRound under
+  // the `cascadeLevel === 1` block. +20% Lucky bar per match (gated to
+  // cascade level 1 so chains don't tick the bar more than once per
+  // swap). Clamps at 100 and marks ready.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel !== 1) return;
+    if (!hasMutator('bottomless-cup')) return;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }));
+
+  // 🍀 Lucky Magnet upgrade. Was inline in processMatchRound under
+  // the `cascadeLevel === 1` block. 5% chance per stack to instantly
+  // fill the Lucky bar; on success, flashes a confirmation message.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel !== 1) return;
+    const stacks = upgradeCount('lucky-magnet');
+    if (stacks <= 0) return;
+    const chance = 0.05 * stacks;
+    if (Math.random() >= chance) return;
+    state.luckyCharge = 100;
+    state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage('🍀 Lucky Magnet! Bar full!', 1000);
+  }));
+
   // 🛰 Echo Drone relic. Was inline in processMatchRound after the
   // specials block. +10% Lucky bar per special spawned this round.
   // No flash, no marking ready beyond the natural clamp — matches the

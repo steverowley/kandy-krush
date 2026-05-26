@@ -338,6 +338,101 @@ test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
   assert.equal(s.luckyCharge, 0);
 });
 
+// --- 🍵 Bottomless Cup mutator (cascade 1 match → +20% Lucky bar) ---
+
+test("Bottomless Cup adds 20% Lucky on every cascade-1 match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasMutator: (id) => id === 'bottomless-cup' });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.equal(s.luckyCharge, 20);
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.equal(s.luckyCharge, 40);
+});
+
+test("Bottomless Cup is a no-op on cascades (level > 1)", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasMutator: () => true });
+  bus.emit('match', { cascadeLevel: 2, matchSize: 4, specialsCreated: [] });
+  assert.equal(s.luckyCharge, 0);
+});
+
+test("Bottomless Cup marks luckyReady when it crosses 100", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 90, luckyReady: false };
+  registerRunEffects(s, { hasMutator: () => true });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  // 90 + 20 = 110 → clamps to 100 + marks ready.
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+});
+
+// --- 🍀 Lucky Magnet upgrade (cascade 1 match → 5%/stack roll to fill Lucky) ---
+
+test("Lucky Magnet fills Lucky bar on a passing roll", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  const calls = { flash: [] };
+  const realRandom = Math.random;
+  Math.random = () => 0.01; // < 0.05, fires
+  try {
+    registerRunEffects(s, {
+      upgradeCount: (id) => (id === 'lucky-magnet' ? 1 : 0),
+      flashMessage: (msg) => calls.flash.push(msg),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 4, specialsCreated: [] });
+    assert.equal(s.luckyCharge, 100);
+    assert.equal(s.luckyReady, true);
+    assert.equal(calls.flash.length, 1);
+    assert.match(calls.flash[0], /Lucky Magnet/);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Lucky Magnet chance scales with stacks", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  const realRandom = Math.random;
+  Math.random = () => 0.09; // > 0.05, < 0.10 — fires only with 2+ stacks
+  try {
+    registerRunEffects(s, { upgradeCount: (id) => (id === 'lucky-magnet' ? 2 : 0) });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+    assert.equal(s.luckyCharge, 100);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Lucky Magnet is a no-op on failed roll", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  const realRandom = Math.random;
+  Math.random = () => 0.99; // way above 0.05 cap
+  try {
+    registerRunEffects(s, { upgradeCount: (id) => (id === 'lucky-magnet' ? 1 : 0) });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+    assert.equal(s.luckyCharge, 0);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Lucky Magnet is a no-op on cascade levels above 1", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  const realRandom = Math.random;
+  Math.random = () => 0; // always-pass roll
+  try {
+    registerRunEffects(s, { upgradeCount: (id) => (id === 'lucky-magnet' ? 1 : 0) });
+    bus.emit('match', { cascadeLevel: 2, matchSize: 4, specialsCreated: [] });
+    assert.equal(s.luckyCharge, 0);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
 // --- 🛰 Echo Drone relic (special spawned → +10% Lucky bar per special) ---
 
 test("Echo Drone fills Lucky bar 10% per special spawned this round", () => {

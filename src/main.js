@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17aq',
+    items: [
+      '🍵🍀 BOTTOMLESS CUP + LUCKY MAGNET MIGRATED TO THE BUS — both per-swap (cascade level 1) Lucky-bar effects (Bottomless Cup mutator: +20%/match; Lucky Magnet upgrade: 5%/stack chance to instafill) moved from the `if (cascadeLevel === 1)` block in processMatchRound to `bus.on(\'match\', …)` subscribers in run-effects.js. Both gate on ctx.cascadeLevel === 1 from the match payload. 7 new tests; 112 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ap',
     items: [
       '🛰 ECHO DRONE MIGRATED TO THE BUS — the relic\'s "+10% Lucky bar per special spawned" branch lived as the last roguelike inline in processMatchRound\'s specials region. Now a `bus.on(\'match\', …)` subscriber in run-effects.js. Helpers channel also gains `hasMutator` so the upcoming mutator-event migrations (Bottomless Cup, Diamond Mine, Sweet Tooth, ...) don\'t need to grow the channel each time. 3 new tests; 105 total now pass.',
@@ -6048,22 +6054,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         spawnCrazyTile(pickCrazyKind());
       }
     }
-    // 🍀 Lucky Magnet upgrade — 5%/stack to instantly fill Lucky bar.
-    if (upgradeCount('lucky-magnet') > 0) {
-      const chance = 0.05 * upgradeCount('lucky-magnet');
-      if (Math.random() < chance) {
-        state.luckyCharge = 100;
-        state.luckyReady = true;
-        setLuckyCharge(state.luckyCharge, state.luckyReady);
-        flashMessage('🍀 Lucky Magnet! Bar full!', 1000);
-      }
-    }
-    // 🍵 Bottomless Cup mutator — +20% Lucky bar per match.
-    if (hasMutator('bottomless-cup')) {
-      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
-      if (state.luckyCharge >= 100) state.luckyReady = true;
-      setLuckyCharge(state.luckyCharge, state.luckyReady);
-    }
+    // 🍀 Lucky Magnet upgrade + 🍵 Bottomless Cup mutator — both
+    // migrated to bus.on('match', …) subscribers in run-effects.js
+    // (PR #17aq). Each gates on cascadeLevel === 1 from the match
+    // event payload.
     // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
     if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
       flashMessage('🌀 Whirlpool reshuffle!', 1100);
