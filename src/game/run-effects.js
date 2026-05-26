@@ -28,9 +28,21 @@ import * as bus from './event-bus.js';
 
 // Initialize all run-effect subscribers against a `state` ref so each
 // handler has access to the live game state without needing to import
-// the main module (which would create a cycle). Returns an `unsubscribe`
-// function for tests + clean shutdown.
-export function registerRunEffects(state) {
+// the main module (which would create a cycle).
+//
+// `helpers` carries the small set of side-effect functions handlers
+// occasionally need (relic lookup, UI flash, lucky-bar update). Each
+// defaults to a no-op so tests can register handlers against a bare
+// state object without stubbing the world. main.js passes the real
+// implementations.
+//
+// Returns an `unsubscribe` function for tests + clean shutdown.
+export function registerRunEffects(state, helpers = {}) {
+  const {
+    hasRelic = () => false,
+    setLuckyCharge = () => {},
+    flashMessage = () => {},
+  } = helpers;
   const unsubs = [];
 
   // 🏅 Per-run highlight tracker. Was inline in processMatchRound; now
@@ -83,6 +95,22 @@ export function registerRunEffects(state) {
   unsubs.push(bus.on('infinite', () => {
     if (!state.inRoguelikeRun || !state.runHighlights) return;
     state.runHighlights.infiniteCount = (state.runHighlights.infiniteCount || 0) + 1;
+  }));
+
+  // 🌟 Glow Stick relic. Was inline in processMatchRound: cascade chains
+  // ≥ 6 instantly fill the Lucky bar to 100 and mark it ready. Now a
+  // cascade-event subscriber. First effect to use the `helpers` channel
+  // (hasRelic / setLuckyCharge / flashMessage) so the run-effects file
+  // can stay clear of main.js imports and the cycle that would cause.
+  unsubs.push(bus.on('cascade', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel < 6) return;
+    if (state.luckyMode || state.luckyReady) return;
+    if (!hasRelic('glow-stick')) return;
+    state.luckyCharge = 100;
+    state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage('🌟 GLOW STICK! Lucky ready!', 1300);
   }));
 
   return () => {
