@@ -5,9 +5,15 @@
 //
 // Daily is a composition of Roguelike: it seeds the run-rng + flags
 // the run as daily, then delegates to the roguelike mode's start().
-// Sharing run state with Roguelike is intentional — there's only
-// ever one run in flight, and the runtime enforces that one mode is
-// active at a time.
+//
+// Modes-7 — Daily no longer clobbers an in-progress Roguelike run.
+// The previous design overwrote `roguelike.currentSlot`, `currentClass`,
+// `livesRemaining`, and the run-store fields when Daily started, so
+// a player on Roguelike slot 5 who tapped Daily would lose their
+// progression. Now Daily snapshots the roguelike slice on enter()
+// and restores it on exit(). The two modes still share the *runtime*
+// run state (one cascade engine, one HUD), but the persisted slots
+// stay isolated by mode.
 
 import { registerMode } from '../index.js';
 
@@ -25,7 +31,43 @@ export function register(deps) {
     roguelikeEndRunSoft,
   } = deps;
 
+  // 📸 Snapshot of the Roguelike slice taken at Daily's enter() and
+  // restored at Daily's exit(). null while Daily isn't active.
+  let _roguelikeSnapshot = null;
+
+  function takeRoguelikeSnapshot() {
+    _roguelikeSnapshot = {
+      progression: {
+        currentSlot: progressionStore.currentSlot(),
+        currentClass: progressionStore.currentClass(),
+        livesRemaining: progressionStore.livesRemaining(),
+      },
+      run: {
+        wasActive: runStore.isActive(),
+        upgrades: [...runStore.upgrades()],
+        relics: [...runStore.relics()],
+        freeRerolls: runStore.freeRerolls(),
+      },
+    };
+  }
+
+  function restoreRoguelikeSnapshot() {
+    if (!_roguelikeSnapshot) return;
+    progressionStore.setCurrentSlot(_roguelikeSnapshot.progression.currentSlot);
+    progressionStore.setCurrentClass(_roguelikeSnapshot.progression.currentClass);
+    progressionStore.setLivesRemaining(_roguelikeSnapshot.progression.livesRemaining);
+    runStore.setUpgrades(_roguelikeSnapshot.run.upgrades);
+    runStore.setRelics(_roguelikeSnapshot.run.relics);
+    runStore.setFreeRerolls(_roguelikeSnapshot.run.freeRerolls);
+    // Re-flag the run as active only if it WAS active before Daily
+    // hijacked the slot. This lets the start-menu show "Resume Run"
+    // after the player returns from a daily attempt.
+    runStore.setActive(_roguelikeSnapshot.run.wasActive);
+    _roguelikeSnapshot = null;
+  }
+
   function start() {
+    takeRoguelikeSnapshot();
     const seed = dailySeed();
     runStore.setRng(createRng(seed));
     runStore.setDaily(true);
@@ -42,12 +84,20 @@ export function register(deps) {
     roguelikeStart();
   }
 
+  function exit() {
+    // Soft-end the daily run, then restore whatever Roguelike state
+    // we snapshotted on entry. Restoration order matters: clear
+    // ephemeral run fields first (so cascadeAbort + daily flags are
+    // gone) then write the snapshot back over the progression slice.
+    roguelikeEndRunSoft();
+    restoreRoguelikeSnapshot();
+  }
+
   registerMode({
     id: 'daily',
     enter() { start(); },
-    // Daily shares run state with Roguelike — same soft-end teardown.
-    exit() { roguelikeEndRunSoft(); },
+    exit,
   });
 
-  return { start };
+  return { start, exit };
 }
