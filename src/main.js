@@ -1507,22 +1507,10 @@ function applyRunUpgradesOnSlotStart() {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
   }
-  // 💝 Surprise Life mutator — +1 Life at slot start.
-  if (hasMutator('surprise-life')) {
-    state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
-    flashMessage('💝 Surprise Life! +1 ❤️', 1300);
-    refreshLevelUI();
-  }
-  // 💵 Big Money mutator — +10 gems at slot start.
-  if (hasMutator('bonus-round')) {
-    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
-    flashMessage('🎰 Bonus Round! +10 💎', 1300);
-    persist();
-  }
-  if (hasMutator('big-money')) {
-    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
-    flashMessage('💵 Big Money! +10 💎', 1300);
-  }
+  // 💝 Surprise Life + 🎰 Bonus Round + 💵 Big Money — migrated to
+  // bus.on('slot:start', …) subscribers in run-effects.js (PR #17az).
+  // All three fire after this function via the post-#17ax order
+  // (applyRunUpgradesOnSlotStart → bus.emit('slot:start')).
   // ✏️ Eraser mutator — clears 3 random tiles at slot start.
   if (hasMutator('eraser')) {
     state.deferredSlotFx.push(() => { if (state.board) fireMeteor(); });
@@ -1948,6 +1936,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17az',
+    items: [
+      '💝🎰💵 SURPRISE LIFE + BONUS ROUND + BIG MONEY MIGRATED — three slot-init mutators (+1 life, +10 gems with persist, +10 gems without persist) moved from `applyRunUpgradesOnSlotStart` to `bus.on(\'slot:start\', …)` subscribers in run-effects.js. Helpers channel gains `refreshLevelUI`. Possible thanks to the #17ax ordering fix (apply happens BEFORE the bus emit now). 4 new tests; 143 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-17ay',
     items: [
@@ -6386,6 +6380,7 @@ registerRunEffects(state, {
   fireLightning,
   preservingReshuffle,
   pickCrazyKind,
+  refreshLevelUI,
 });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp

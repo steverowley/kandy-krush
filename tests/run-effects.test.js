@@ -89,6 +89,62 @@ test("slot:start handler is a no-op when slotMutator is null", () => {
   assert.deepEqual(state.runHighlights.mutatorsSeen, []);
 });
 
+// --- 💝 Surprise Life mutator (slot:start → +1 life + flash + UI refresh) ---
+
+test("Surprise Life bumps livesRemaining on slot start", () => {
+  bus.clear();
+  let uiCalls = 0;
+  const s = { inRoguelikeRun: true, roguelike: { livesRemaining: 3 } };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'surprise-life',
+    refreshLevelUI: () => uiCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.livesRemaining, 4);
+  assert.equal(uiCalls, 1);
+});
+
+test("Surprise Life no-op without the mutator", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { livesRemaining: 3 } };
+  registerRunEffects(s, { hasMutator: () => false });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.livesRemaining, 3);
+});
+
+// --- 🎰 Bonus Round mutator (slot:start → +10 gems + persist) ---
+
+test("Bonus Round grants +10 gems on slot start with persist", () => {
+  bus.clear();
+  let persistCalls = 0;
+  const s = { inRoguelikeRun: true, roguelike: { gems: 5 } };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'bonus-round',
+    persist: () => persistCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.gems, 15);
+  assert.equal(persistCalls, 1);
+});
+
+// --- 💵 Big Money mutator (slot:start → +10 gems, no persist) ---
+
+test("Big Money grants +10 gems on slot start WITHOUT persist", () => {
+  bus.clear();
+  let persistCalls = 0;
+  const s = { inRoguelikeRun: true, roguelike: { gems: 5 } };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'big-money',
+    persist: () => persistCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.gems, 15);
+  // Persist is intentionally NOT called — the original inline branch
+  // didn't persist either; the surrounding slot-start flow handles
+  // saving before the player can swap.
+  assert.equal(persistCalls, 0);
+});
+
 test("slot:start handler caps mutatorsSeen at 32", () => {
   state.runHighlights.mutatorsSeen = new Array(32).fill('old');
   state.slotMutator = 'overflow';
