@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17as',
+    items: [
+      '🪅👜🍨 PIÑATA + PIXIE POUCH + SUNDAE SATURDAY MIGRATED — three per-Nth-match power-up grants moved to `bus.on(\'roguelike:match\', …)` subscribers in run-effects.js. Piñata (% 5 → random pick), Pixie Pouch (% 18 → +1 each kind, cap-respecting), Sundae Saturday (% 8 → +1 plusMoves, cap-respecting). Same shape as Coin Purse / Diamond Mine from #299. 6 new tests; 122 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ar',
     items: [
       '🚌 NEW BUS EVENT: `roguelike:match` — fires immediately after slotMatchCount is incremented inside processMatchRound\'s cascade-level-1 block. Carries `{ slotMatchCount, cascadeLevel, matchSize }`. Unlocks migration of the entire family of per-Nth-match relics/upgrades (Coin Purse, Diamond Mine, Whirlpool, Piñata, Spice Box, Sugar Crash, Sundae Saturday, Pixie Pouch, Spark Strike) that couldn\'t use the canonical `match` event because that fires before the increment.',
@@ -6085,17 +6091,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // 👛 Coin Purse + ⛏ Diamond Mine — migrated to
     // bus.on('roguelike:match', …) subscribers in run-effects.js
     // (PR #17ar).
-    // 🪅 Piñata relic — every 5 matches drop a random power-up.
-    if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {
-      const bank = powerupBank();
-      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
-        bank[pick] = (bank[pick] || 0) + 1;
-        setPowerupCounts(bank);
-        flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
-      }
-    }
+    // 🪅 Piñata — migrated to bus.on('roguelike:match', …) in
+    // run-effects.js (PR #17as).
     // 🪞 Cracked Mirror relic — matches of 5+ tiles fill Lucky bar +20%.
     if (hasRelic('cracked-mirror') && allCleared.size >= 5) {
       state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
@@ -6123,24 +6120,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       spawnCrazyTile('tnt');
       flashMessage('💥 Sugar Crash!', 900);
     }
-    // 👜 Pixie Pouch relic — every 18 matches grant +1 of EVERY power-up.
-    if (hasRelic('pixie-pouch') && state.slotMatchCount % 18 === 0) {
-      const bank = powerupBank();
-      for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-        bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
-      }
-      setPowerupCounts(bank);
-      flashMessage('👜 Pixie Pouch! +1 of each', 1200);
-    }
-    // 🍨 Sundae Saturday relic — every 8 matches grant +1 plusMoves powerup.
-    if (hasRelic('sundae-saturday') && state.slotMatchCount % 8 === 0) {
-      const bank = powerupBank();
-      if ((bank.plusMoves || 0) < effectivePowerupCap('plusMoves')) {
-        bank.plusMoves = (bank.plusMoves || 0) + 1;
-        setPowerupCounts(bank);
-        flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
-      }
-    }
+    // 👜 Pixie Pouch + 🍨 Sundae Saturday — migrated to
+    // bus.on('roguelike:match', …) subscribers in run-effects.js
+    // (PR #17as).
     // ✨ Spark Strike upgrade — every 12 matches fire a free Lightning.
     if (upgradeCount('spark-strike') > 0 && state.slotMatchCount % 12 === 0) {
       flashMessage('✨ Spark Strike!', 900);
