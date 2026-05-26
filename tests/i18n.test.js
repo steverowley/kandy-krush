@@ -9,7 +9,7 @@ test('default locale is en', () => {
 });
 
 test('t() returns the translation for a known key', () => {
-  assert.equal(t('start.title'), 'Sweet Match');
+  assert.equal(t('start.title'), 'Arcana Cascada');
 });
 
 test('t() falls back to the key for an unknown lookup', () => {

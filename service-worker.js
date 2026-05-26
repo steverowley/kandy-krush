@@ -1,4 +1,4 @@
-// Sweet Match service worker — cache-first with stale-while-revalidate
+// Arcana Cascada service worker — cache-first with stale-while-revalidate
 // (Phase 17w / D5).
 //
 // Old behavior: network-first → cache fallback. On a slow / flaky
@@ -18,7 +18,10 @@
 // asset so an offline cold-boot works even without a prior online
 // visit.
 
-const VERSION = 'sweet-match-v96';
+// 🔮 Cache name reset for the Arcana Cascada rebrand — the prior
+// 'sweet-match-vN' line evicts cleanly the first time the new SW
+// activates because the names don't match.
+const VERSION = 'arcana-cascada-v1';
 const SHELL = [
   './',
   './index.html',

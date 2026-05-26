@@ -1247,7 +1247,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         ? relics.map((id) => (getRelic && getRelic(id) ? getRelic(id).icon : '?')).join('')
         : 'none';
       const lines = [
-        `🍬 Sweet Match — ${outcome === 'complete' ? '🏆 RUN COMPLETE' : 'Slot ' + slotReached + '/' + totalSlots}`,
+        `🔮 Arcana Cascada — ${outcome === 'complete' ? '🏆 READING COMPLETE' : 'Card ' + slotReached + '/' + totalSlots}`,
         `Class: ${klassStr}${awakened ? ' ✨ AWAKENED' : ''}`,
         `Build: ${archStr || '—'}`,
         `Relics: ${relicStr}`,
@@ -1259,7 +1259,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
       // mobile (most useful path for a PWA).
       if (typeof navigator !== 'undefined' && navigator.share) {
         try {
-          await navigator.share({ title: 'Sweet Match run', text });
+          await navigator.share({ title: 'Arcana Cascada reading', text });
           shareBtn.textContent = '✅ Shared!';
           setTimeout(() => { shareBtn.textContent = original; }, 1500);
           return;

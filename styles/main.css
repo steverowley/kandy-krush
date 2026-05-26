@@ -20,9 +20,53 @@
   src: url('../assets/fonts/atkinson-hyperlegible-bold.woff2') format('woff2');
 }
 
+/* 🎨 ARCANA CASCADA — design tokens (design-1).
+   Single source of truth for the tarot/arcana palette and type
+   pairing. Use these tokens in component CSS instead of literal
+   hex codes so a theme swap is one-edit-here. */
+:root {
+  /* Palette */
+  --ac-velvet:    #2A0F3A;  /* primary background (velvet purple)   */
+  --ac-indigo:    #1B1240;  /* deeper recess + cards-on-cloth shade */
+  --ac-obsidian:  #0A0612;  /* deepest layer / vignette ground      */
+  --ac-gold:      #D4A24C;  /* accent + UI chrome (antique gold)    */
+  --ac-gold-soft: #C9A95E;  /* lower-intensity gold for borders     */
+  --ac-bone:      #F2EAD0;  /* text on dark (parchment)             */
+  --ac-bone-mute: #C9BFA0;  /* secondary text on dark               */
+  --ac-oxblood:   #7B1E2B;  /* danger / boss / harm                 */
+  --ac-ember:     #E25822;  /* call-out highlight / lucky charge    */
+
+  /* Typography */
+  --ac-font-display: 'Cinzel', 'Atkinson Hyperlegible', serif;
+  --ac-font-body:    'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
 html, body {
-  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: var(--ac-font-body);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Apply the velvet palette as the default page surface. Tailwind
+   utility classes on specific elements (bg-amber-50 etc) still
+   win their local battles, but the underlying page reads as the
+   arcana ground. Component refresh per-Tailwind-button is design-2. */
+body {
+  background-color: var(--ac-velvet);
+  color: var(--ac-bone);
+}
+
+/* Display headers inherit the serif. The brand title (h1) leans
+   on Cinzel's all-caps tracking for a tarot-card-front feel. */
+h1, h2, h3 {
+  font-family: var(--ac-font-display);
+  letter-spacing: 0.02em;
+}
+#start-screen-title,
+header h1 {
+  font-family: var(--ac-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ac-gold);
 }
 
 /* 🐛 The user-agent stylesheet sets `color: ButtonText` (a system
