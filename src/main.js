@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ax',
+    items: [
+      '🐛 BUG FIX — slot:start emitted in the WRONG ORDER. playRoguelikeSlot was emitting `bus.emit(\'slot:start\', …)` BEFORE calling `applyRunUpgradesOnSlotStart()`, which is the function that sets `state.slotMutator`. Net effect: the mutatorsSeen tracker (added in #284) was reading the previous slot\'s mutator (or `null` on the first one), and the run-summary "Mutators encountered" list was effectively empty across every run. Swapped the two calls so the mutator is set before the event fires. 136 tests still pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17aw',
     items: [
       '🧹 CASCADE-1 BLOCK CLEANUP — processMatchRound\'s cascade-1 block was carrying 50 lines of per-PR migration comment trail. Collapsed to a single 6-line summary listing every migrated subscriber + where it lives in run-effects.js. PROJECT_PLAN.md refreshed: B6 line now reflects all 29 inline side-effect migrations (#283–#303); B12 test count 102 → 136. No behavioral change. 136 tests still pass.',
@@ -4307,8 +4313,13 @@ function playRoguelikeSlot(slot, { announce = true } = {}) {
   resetBoard();
   applyLevelObstacles(state.level);
   state.movesRemaining = state.level.moves;
-  bus.emit('slot:start', { slot, isBoss: !!lvl.isBoss, mechanic: lvl.mechanic || null });
+  // Apply slot-start mutators / relics FIRST (which is what sets
+  // state.slotMutator), THEN emit. With the old order, the
+  // mutatorsSeen tracker in run-effects.js was reading the previous
+  // slot's mutator instead of the current one — silently empty list
+  // for the run summary. Fixed here.
   applyRunUpgradesOnSlotStart();
+  bus.emit('slot:start', { slot, isBoss: !!lvl.isBoss, mechanic: lvl.mechanic || null });
   // Defensive: a previous setRunHud({ visible: false }) (e.g. from boot
   // before the run started) could leave the HUD with the `hidden` class
   // even after the run is live. Forcing a refresh here guarantees the
