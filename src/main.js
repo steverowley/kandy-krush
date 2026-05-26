@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bl',
+    items: [
+      '🧪 MATCH MODULE EXTRAS COVERAGE — `tests/match.test.js` covered `findMatches` only; the other 4 functions had zero coverage. New `tests/match-extras.test.js` covers: `deriveNewSpecials` (length gate, swap-target priority, middle-fallback, length-5+ → rainbow, longest-first sort, no double-plant on same cell), `detectCombo` (every combo kind: double-rainbow, rainbow-stripes, rainbow-type, stripes-pair, plus null cases), `applyCombo` (clear-the-whole-board, type-targeted clear, row+col cross, dual stripes pair), `activationClears` (line-h fills row, line-v fills column, rainbow fills by type, plain cells no-op, out-of-bounds no-op). 23 new tests; 283 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bk',
     items: [
       '🧪 LEVELS MODULE COVERAGE — new `tests/levels.test.js` exercises `getLevel` (id lookup + fallback), `nextLevelId` (cursor + null at end), `isLastLevel`, `progressTowardObjective` across every objective kind (score / clearType / matches / specials / clearJelly / dropIngredients) including missing-progress-fields defaults, and `starsForLevel` (3/2/1 thresholds + null-level fallback). Plus LEVELS-table sanity: non-empty, every entry has unique id + required fields. 21 new tests; 260 total now pass.',
