@@ -1916,6 +1916,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-3-tarot-tile-reskin',
+    items: [
+      '🎴 TILES RESKIN — tarot palette + cards-on-velvet board. Six tile families renamed to tarot suits (`pentacles` · `cups` · `star` · `wands` · `moon` · `swords`) with a coordinated palette: antique gold disk, deep blue chalice, dusky rose, ember orange, sage moon, violet steel. The legacy heavy black SVG stroke is now thin gold-foil (`#D4A24C`) so each tile reads as a small card. The board itself sits inside a velvet-cloth frame — radial gradient from indigo center to obsidian edges, gold-trim outline, inner shadow, and a soft outer drop. Tile selected/adjacent halos swapped from candy-yellow + pink to gold + obsidian. Gameplay legibility preserved (shapes are still circle / square / triangle / hexagon / star / heart so each tile is instantly distinguishable). Design-4 will replace the shapes themselves with literal tarot iconography (chalice, wand, sword outlines etc.).',
+    ],
+  },
+  {
     id: '2026-05-26-modes-4-state-slicing',
     items: [
       '🗃 MODE SEPARATION — STEP 4: STATE STORES. The shared `state` god-object now has typed companion stores under `src/state/` — `roguelike-run.js` (ephemeral run state: rng, upgrades, relics, mutators, lives, free rerolls, soft-end teardown), `roguelike-progression.js` (persistent: currentSlot, currentClass, gems, bestSlot, runs counters), and `levels.js` (active level + stars + best scores). Each store is a deps-injection factory exposing selectors and mutators — explicit, grep-able, single point of interception for future telemetry/undo/replay. Stores wrap the legacy state.X fields so all 230+ existing call sites keep working in parallel; per-mode modules now use the store API (e.g. `runStore.clearRun()` replaces the inline `state.X = null` cluster). 13 new tests covering selectors, mutators, and the clear-run teardown. 368 total tests pass. Modes 5 will start moving storage off `state` into the stores themselves with a defineProperty back-compat shim.',
