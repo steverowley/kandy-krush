@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ao',
+    items: [
+      '🧹 ROADMAP + DEAD-COMMENT CLEANUP — PROJECT_PLAN.md now reflects the 13 inline-effect migrations completed in this run (B6 line + test count bumped from 52 → 102). processMatchRound\'s migrated-out branches lost their per-PR comment trail in favor of one short pointer per block to src/game/run-effects.js — the noise was useful while migrating, less useful now that the destination is established.',
+    ],
+  },
+  {
     id: '2026-05-26-17an',
     items: [
       '🧁 CONFECTIONERY MIGRATED TO THE BUS — the relic\'s "+1 random power-up per special spawned" branch lived inline in processMatchRound under the specials block; now a `bus.on(\'match\', …)` subscriber in run-effects.js. Helpers channel gains `powerupBank`, `setPowerupCounts`, `effectivePowerupCap`. The `if (specialsCreated.length > 0)` block in processMatchRound is now empty of roguelike branches — pure cleanup of legacy code coming. 4 new tests; 102 total now pass.',
@@ -5888,8 +5894,6 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     sfx.playCascade();
     showCascadeBanner(cascadeLevel);
     haptics.cascade(cascadeLevel);
-    // 🌊 Cascade Splash upgrade — migrated to bus.on('cascade', …)
-    // subscriber in run-effects.js (PR #17al).
   }
   // 🚌 Emit the canonical `match` event so subscribers (relics,
   // upgrades, future B6 effects) can hook in without editing this
@@ -5908,20 +5912,16 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   for (const s of specialsCreated) {
     bus.emit('special:birth', { type: s.type, c: s.c, r: s.r, kind: s.kind });
   }
-  // 🏅 Per-run highlight tracking now lives in src/game/run-effects.js
-  // as a `bus.on('match', ...)` subscriber. The bus.emit('match', …)
-  // call earlier in this function feeds the handler with the same
-  // payload this inline block used to read directly. Migrated PR #17ab.
+  // Roguelike effects gated on cascade level (Stardust, Echo Match,
+  // Furnace, Glow Stick, Cascade Splash, run-highlight tracker, etc.)
+  // all live as `bus.on('cascade'|'match', …)` subscribers in
+  // src/game/run-effects.js — see PRs #283 / #290–#295.
   if (cascadeLevel >= 3) {
     spawnConfetti(20);
-    // 🔥 Furnace upgrade — migrated to bus.on('cascade', …) subscriber
-    // in run-effects.js (PR #17al).
   }
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
     spawnConfetti(36);
-    // ✨ Stardust relic + 🪞 Echo Match upgrade — both migrated to
-    // bus.on('cascade', …) subscribers in run-effects.js (PR #17aj).
   }
   if (cascadeLevel >= 5) {
     spawnScreenFlash('rgba(255, 0, 110, 0.35)');
@@ -5989,17 +5989,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   maybeTriggerBeeStorm();
   if (specialsCreated.length > 0) {
     maybeFireSnake();
-    // 💣 Bomb Maker + 🌈 Prism Maker upgrades — both migrated to
-    // bus.on('match', …) subscribers in run-effects.js (PR #17am). The
-    // match event carries specialsCreated in its payload so the
-    // subscribers read it once per round, matching the inline
-    // round-scoped behavior.
-    // 🌸 Cherry Wand relic — migrated to bus.on('match', …) in
-    // run-effects.js (PR #17ak). The `match` event carries
-    // specialsCreated in its payload so the subscriber reads it once
-    // per round, matching the original round-scoped behavior.
-    // 🧁 Confectionery relic — migrated to bus.on('match', …)
-    // subscriber in run-effects.js (PR #17an).
+    // Roguelike on-special effects (Bomb Maker, Prism Maker, Cherry
+    // Wand, Confectionery) live as `bus.on('match', …)` subscribers in
+    // src/game/run-effects.js — see PRs #292 / #294 / #295. The match
+    // event payload includes `specialsCreated.length`.
   }
   // Trigger crazy-tile pops (after clear, before scoring so the
   // visual chain reads in the right order).

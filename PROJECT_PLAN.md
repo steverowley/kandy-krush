@@ -36,13 +36,13 @@
 | B3 | Wormhole crazy tile redesign | ✅ shipped | #262 |
 | B4 | Bosses get actual kits | ✅ shipped | #267 |
 | B5 | Scorer dominance cap | ✅ shipped | #262 |
-| B6 | Refactor `main.js` + hook bus | 🚧 in progress — bus + canonical emit points shipped (#278). Full module split / inline-effect migration still ahead. |
+| B6 | Refactor `main.js` + hook bus | 🚧 in progress — bus + canonical emit points shipped (#278); 13 inline effects migrated to `run-effects.js` subscribers (#283 / #284 / #287 / #290 / #291 / #292 / #293 / #294 / #295). Remaining inline branches in `processMatchRound` are mostly synchronous score multipliers + boss-mechanic dispatchers that need a different shape. |
 | B7 | Diff-render the DOM board | ✅ shipped | #269 |
 | B8 | ~~Cascade pacing tightening~~ | DROPPED under PC-game framing | — |
 | B9 | `purchases.js` scaffolding | ✅ shipped | #264 |
 | B10 | i18n primitives | ✅ shipped | #264 |
 | B11 | PWA manifest prod fields | ✅ shipped | #263 |
-| B12 | Tests (Vitest → node:test) | ✅ shipped (52 tests) | #268 / #278 / #279 |
+| B12 | Tests (Vitest → node:test) | ✅ shipped (102 tests) | #268 / #278 / #279 / #289 / #290 / #291 / #292 / #293 / #294 / #295 |
 | B13 | HC mode second pass | ✅ shipped | #263 |
 | B14 | Renderer unification | ⏳ deferred (canvas-renderer ships behind a flag; full unification needs particle / shake / special migration) | — |
 
@@ -111,7 +111,7 @@ Everything in Phase A (modulo A2), all of Phase B (modulo B6 final + B14), all o
 - Roguelike-deep (Wild archetype now scores; bosses have kits; Wormhole is real; Scorer is capped; daily seed; endless mode; reroll bank; ascensions)
 - Polished (run history, class mastery, run stats, native share, animated start screen, particle cap)
 - Cache-first (cold-boot is ~one round-trip faster on slow networks)
-- Tested (52 tests, all green)
+- Tested (102 tests, all green)
 
 **Recommended next moves**, in order:
 
