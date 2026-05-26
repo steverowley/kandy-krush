@@ -44,6 +44,7 @@ export function registerRunEffects(state, helpers = {}) {
     setLuckyCharge = () => {},
     flashMessage = () => {},
     persist = () => {},
+    spawnCrazyTile = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -141,6 +142,30 @@ export function registerRunEffects(state, helpers = {}) {
     if (state.luckyCharge >= 100) state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
     flashMessage(`🪞 Echo Match +${add}% 🍀`, 800);
+  }));
+
+  // 🌊 Cascade Splash upgrade. Was inline in processMatchRound under
+  // `if (cascadeLevel >= 2)`. Each stack rolls a 60% chance to spawn a
+  // random crazy tile (kind omitted → random pick by spawnCrazyTile).
+  unsubs.push(bus.on('cascade', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel < 2) return;
+    const stacks = upgradeCount('cascade-splash');
+    if (stacks <= 0) return;
+    for (let i = 0; i < stacks; i++) {
+      if (Math.random() < 0.6) spawnCrazyTile();
+    }
+  }));
+
+  // 🔥 Furnace upgrade. Was inline in processMatchRound under
+  // `if (cascadeLevel >= 3)`. Each stack deterministically spawns a TNT
+  // crazy tile. No RNG gate — the upgrade rewards reaching the chain.
+  unsubs.push(bus.on('cascade', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel < 3) return;
+    const stacks = upgradeCount('furnace');
+    if (stacks <= 0) return;
+    for (let i = 0; i < stacks; i++) spawnCrazyTile('tnt');
   }));
 
   // 🌸 Cherry Wand relic. Was inline in processMatchRound under

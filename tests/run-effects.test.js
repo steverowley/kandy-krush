@@ -337,3 +337,84 @@ test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
   bus.emit('match', { cascadeLevel: 1, matchSize: 3 });
   assert.equal(s.luckyCharge, 0);
 });
+
+// --- 🔥 Furnace upgrade (cascade ≥3 → 1 TNT crazy tile per stack) ---
+
+test("Furnace spawns 1 TNT crazy tile per stack on cascade ≥3", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'furnace' ? 3 : 0),
+    spawnCrazyTile: (kind) => spawned.push(kind),
+  });
+  bus.emit('cascade', { cascadeLevel: 3, totalCleared: 5 });
+  assert.deepEqual(spawned, ['tnt', 'tnt', 'tnt']);
+});
+
+test("Furnace is a no-op below cascade 3", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    // Furnace only — keep Cascade Splash silent.
+    upgradeCount: (id) => (id === 'furnace' ? 1 : 0),
+    spawnCrazyTile: (kind) => spawned.push(kind),
+  });
+  bus.emit('cascade', { cascadeLevel: 2, totalCleared: 4 });
+  assert.deepEqual(spawned, []);
+});
+
+test("Furnace is a no-op outside a roguelike run", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: false };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'furnace' ? 1 : 0),
+    spawnCrazyTile: (kind) => spawned.push(kind),
+  });
+  bus.emit('cascade', { cascadeLevel: 5, totalCleared: 6 });
+  assert.deepEqual(spawned, []);
+});
+
+// --- 🌊 Cascade Splash upgrade (cascade ≥2 → 60% per stack to spawn) ---
+
+test("Cascade Splash rolls 60% chance per stack on cascade ≥2", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  // Stub Math.random to be deterministic: 0.5 < 0.6, so every roll fires.
+  const realRandom = Math.random;
+  Math.random = () => 0.5;
+  try {
+    registerRunEffects(s, {
+      upgradeCount: (id) => (id === 'cascade-splash' ? 2 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind ?? 'random'),
+    });
+    bus.emit('cascade', { cascadeLevel: 2, totalCleared: 3 });
+    // 2 stacks × passing-roll = 2 spawns, both random kinds (no arg).
+    assert.equal(spawned.length, 2);
+    assert.deepEqual(spawned, ['random', 'random']);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Cascade Splash doesn't fire when the random roll fails", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  const realRandom = Math.random;
+  Math.random = () => 0.95; // > 0.6, fails the gate
+  try {
+    registerRunEffects(s, {
+      // Only Cascade Splash — keep Furnace silent for this test.
+      upgradeCount: (id) => (id === 'cascade-splash' ? 1 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind ?? 'random'),
+    });
+    bus.emit('cascade', { cascadeLevel: 3, totalCleared: 4 });
+    assert.deepEqual(spawned, []);
+  } finally {
+    Math.random = realRandom;
+  }
+});
