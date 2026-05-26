@@ -36,6 +36,16 @@
   --ac-oxblood:   #7B1E2B;  /* danger / boss / harm                 */
   --ac-ember:     #E25822;  /* call-out highlight / lucky charge    */
 
+  /* Design-4 — card / tarot-frame palette
+     The inspiration set is ink-line-art on cream parchment. These
+     tokens let card-surface components (modals, panels, cartouches)
+     break out of the velvet+gold chrome and read as actual tarot
+     cards laid on the velvet table. */
+  --ac-parchment:      #F2EAD0;  /* card face (alias of bone)        */
+  --ac-parchment-warm: #ECDFB3;  /* aged parchment, banner ground    */
+  --ac-ink:            #2D1B69;  /* deep ink-violet line art         */
+  --ac-ink-soft:       #4A3580;  /* secondary ink for body text      */
+
   /* Typography */
   --ac-font-display: 'Cinzel', 'Atkinson Hyperlegible', serif;
   --ac-font-body:    'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -2327,3 +2337,156 @@ body.theme-hc .setting-size:focus-visible {
 .lt-lock { font-size: 12px; padding: 3px 8px; }
 body.theme-hc .lt-hint,
 body.mode-roguelike .lt-hint { color: #d4d4d4; }
+
+/* ──────────────────────────────────────────────────────────────
+   🎴 TAROT CARD FRAME SYSTEM (design-4)
+   ──────────────────────────────────────────────────────────────
+   The .ac-card class turns any panel into a tarot-card surface:
+   parchment ground, double ink-violet frame, art-nouveau corner
+   ornaments, and optional top/bottom banner cartouches.
+   Compose with .ac-card__banner-top / .ac-card__banner-bottom
+   children for the gothic-uppercase labels that bookend a card.
+
+   Used by:
+     - Start screen (mode picker) → bottom banner "ARCANA CASCADA"
+     - Run summary modal          → top banner "READING"
+     - Welcome / Goodbye overlays → labels matching the moment
+     - Future PRs: class picker, upgrade picker, install card, etc.
+
+   The card sits on the velvet table (body background) the way a
+   physical tarot card sits on a reading cloth. Outer-card glow +
+   subtle drop shadow sell the depth. */
+
+.ac-card {
+  position: relative;
+  background-color: var(--ac-parchment);
+  color: var(--ac-ink);
+  border: 2px solid var(--ac-ink);
+  border-radius: 14px;
+  /* Internal inset double-line frame — classic tarot-card border. */
+  box-shadow:
+    inset 0 0 0 4px var(--ac-parchment),
+    inset 0 0 0 5px var(--ac-ink),
+    0 0 0 1px rgba(212, 162, 76, 0.18),
+    0 18px 40px rgba(0, 0, 0, 0.55);
+  /* Generous padding so the inner frame doesn't crowd content,
+     compact on mobile so the card still fits a 360px viewport. */
+  padding: 36px 22px 30px;
+}
+
+@media (min-width: 640px) {
+  .ac-card {
+    padding: 48px 32px 40px;
+    border-radius: 18px;
+  }
+}
+
+/* Art-nouveau corner curls. Inline SVG via background-image so the
+   ornaments live in the stylesheet (no asset fetch). The ::before
+   and ::after pseudoelements double up to cover all four corners
+   via background-position. Color is set via the SVG stroke. */
+.ac-card::before,
+.ac-card::after {
+  content: '';
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  /* The SVG below is a single corner ornament; ::before lives in
+     the top-left (no transform), ::after in the bottom-right
+     (rotate 180°). The unused two corners are handled by .ac-card
+     itself flipping the same SVG via CSS transforms on inline
+     spans (added in markup by future PRs if we want all four). */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56' fill='none' stroke='%232D1B69' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M 6 6 L 6 24'/><path d='M 6 6 L 24 6'/><path d='M 10 10 Q 18 10 18 18'/><path d='M 10 10 Q 10 18 18 18'/><circle cx='18' cy='18' r='1.5' fill='%232D1B69'/><path d='M 8 28 Q 12 24 16 28 Q 14 30 12 28'/><path d='M 28 8 Q 24 12 28 16 Q 30 14 28 12'/></svg>");
+}
+
+.ac-card::before {
+  top: 6px;
+  left: 6px;
+}
+
+.ac-card::after {
+  bottom: 6px;
+  right: 6px;
+  transform: rotate(180deg);
+}
+
+/* Top-banner cartouche — sits on the card's top border like a
+   tarot card's roman-numeral / arcana-number label. Use for
+   "READING" / "XII" / "THE TOWER" labels. */
+.ac-card__banner-top,
+.ac-card__banner-bottom {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--ac-parchment-warm);
+  color: var(--ac-ink);
+  border: 2px solid var(--ac-ink);
+  border-radius: 4px;
+  padding: 4px 18px;
+  font-family: var(--ac-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 0 0 3px var(--ac-parchment-warm),
+    inset 0 0 0 4px var(--ac-ink);
+}
+
+.ac-card__banner-top {
+  top: -16px;
+}
+
+.ac-card__banner-bottom {
+  bottom: -16px;
+}
+
+@media (min-width: 640px) {
+  .ac-card__banner-top,
+  .ac-card__banner-bottom {
+    font-size: 1.05rem;
+    padding: 6px 26px;
+  }
+}
+
+/* Card content readability: when an .ac-card wraps Tailwind
+   buttons / chips, the dark-on-light context fights with the
+   design-2 candy-class remap (which assumed dark grounds).
+   Inside an .ac-card, restore dark-text-on-light for the candy
+   text-* classes that were remapped to bone in design-2. */
+.ac-card .text-pink-600,
+.ac-card .text-pink-700,
+.ac-card .text-pink-800,
+.ac-card .text-pink-900,
+.ac-card .text-gray-700,
+.ac-card .text-gray-800,
+.ac-card .text-gray-900 {
+  color: var(--ac-ink);
+}
+
+/* Buttons inside a card take the ink-on-cream treatment — gold
+   accent fill for primary CTAs, parchment fill with ink border
+   for secondary. The design-2 global remap still applies; this
+   layer only adjusts the in-card variant. */
+.ac-card button[class*="bg-pink-"],
+.ac-card button[class*="bg-yellow-"],
+.ac-card button[class*="bg-rose-"],
+.ac-card button[class*="bg-fuchsia-"] {
+  border-color: var(--ac-ink);
+  color: var(--ac-ink);
+}
+
+/* Roman-numeral utility — small uppercase serif tag, used by the
+   slot counters and arcana labels. */
+.ac-roman {
+  font-family: var(--ac-font-display);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ac-ink);
+}
