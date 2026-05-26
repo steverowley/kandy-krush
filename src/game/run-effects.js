@@ -53,6 +53,7 @@ export function registerRunEffects(state, helpers = {}) {
     fireLightning = () => {},
     preservingReshuffle = () => {},
     pickCrazyKind = () => null,
+    refreshLevelUI = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -87,6 +88,42 @@ export function registerRunEffects(state, helpers = {}) {
     if (!Array.isArray(list)) return;
     if (list.length >= 32) return; // cap so a long run can't bloat the save
     list.push(state.slotMutator);
+  }));
+
+  // 💝 Surprise Life mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +1 life at slot start. Now a slot:start subscriber. The #17ax
+  // ordering fix means by the time this fires, the mutator has already
+  // been rolled / set on state.slotMutator.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('surprise-life')) return;
+    if (!state.roguelike) return;
+    state.roguelike.livesRemaining = (state.roguelike.livesRemaining || 0) + 1;
+    flashMessage('💝 Surprise Life! +1 ❤️', 1300);
+    refreshLevelUI();
+  }));
+
+  // 🎰 Bonus Round mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +10 gems at slot start (with a persist so the gems survive a reload).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('bonus-round')) return;
+    if (!state.roguelike) return;
+    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
+    flashMessage('🎰 Bonus Round! +10 💎', 1300);
+    persist();
+  }));
+
+  // 💵 Big Money mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +10 gems at slot start. No persist on this branch (the inline
+  // version didn't either — it relied on the surrounding slot-start
+  // flow to save before the player could swap).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('big-money')) return;
+    if (!state.roguelike) return;
+    state.roguelike.gems = (state.roguelike.gems || 0) + 10;
+    flashMessage('💵 Big Money! +10 💎', 1300);
   }));
 
   // 🏔 Best-slot-score tracker. Was inline at the top of
