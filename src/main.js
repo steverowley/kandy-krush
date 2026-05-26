@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bk',
+    items: [
+      '🧪 LEVELS MODULE COVERAGE — new `tests/levels.test.js` exercises `getLevel` (id lookup + fallback), `nextLevelId` (cursor + null at end), `isLastLevel`, `progressTowardObjective` across every objective kind (score / clearType / matches / specials / clearJelly / dropIngredients) including missing-progress-fields defaults, and `starsForLevel` (3/2/1 thresholds + null-level fallback). Plus LEVELS-table sanity: non-empty, every entry has unique id + required fields. 21 new tests; 260 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bj',
     items: [
       '🧪 HINT / RESHUFFLE MODULE COVERAGE — new `tests/hint.test.js` exercises `findAnyValidSwap`, `hasAnyValidSwap`, and `reshuffle`. Coverage includes: finds horizontal swap producing a row of 3; finds vertical swap; returns null on a deadlocked 4-type Latin-square; honors the `isSwappable` lock predicate (full-board lock + selective unlock); non-destructive (board is identical before and after the lookahead); hasAnyValidSwap as thin boolean wrapper; reshuffle\'s no-match-and-swap-exists invariant across 5 fresh boards. 10 new tests; 239 total now pass.',
