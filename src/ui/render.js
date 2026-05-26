@@ -24,17 +24,34 @@ function ensureCanvasReady(cols, rows) {
   return canvasReadyPromise;
 }
 
+// 🎴 ARCANA CASCADA — tile families. Each row is a tarot suit /
+// minor arcana symbol; the SVG shape is preserved from the legacy
+// candy set so gameplay legibility doesn't regress (each shape is
+// still readable at a glance), but the *palette* is now tarot-
+// flavored to match the velvet+gold design language. A future
+// design-4 PR replaces the shapes themselves with literal tarot
+// iconography (chalice / wand / sword / etc).
+//
+//   pentacles → antique gold disk    (was sunshine yellow circle)
+//   cups      → deep blue chalice    (was ocean blue square)
+//   star      → dusky rose 7-point   (was rose pink triangle)
+//   wands     → ember-orange staff   (was pumpkin hexagon)
+//   moon      → sage crescent        (was meadow green star)
+//   swords    → violet-steel blade   (was plum purple heart)
 export const CANDY_DEFS = [
-  { name: 'sunshine', color: '#FFD60A', shape: 'circle' },
-  { name: 'ocean',    color: '#0353A4', shape: 'square' },
-  { name: 'rose',     color: '#FF006E', shape: 'triangle' },
-  { name: 'pumpkin',  color: '#FB5607', shape: 'hexagon' },
-  { name: 'meadow',   color: '#06A77D', shape: 'star' },
-  { name: 'plum',     color: '#8338EC', shape: 'heart' },
+  { name: 'pentacles', color: '#D4A24C', shape: 'circle' },
+  { name: 'cups',      color: '#3F6E9C', shape: 'square' },
+  { name: 'star',      color: '#A85A78', shape: 'triangle' },
+  { name: 'wands',     color: '#C76528', shape: 'hexagon' },
+  { name: 'moon',      color: '#7A9275', shape: 'star' },
+  { name: 'swords',    color: '#7A5A9D', shape: 'heart' },
 ];
 
-const STROKE = '#000';
-const SW = 8;
+// Gold-foil outline replaces the legacy heavy black stroke so each
+// tile reads as a card-on-cloth. The lighter stroke width keeps
+// gold from overwhelming the fill at small tile sizes.
+const STROKE = '#D4A24C';
+const SW = 6;
 
 function shapeMarkup(shape, fill) {
   switch (shape) {
