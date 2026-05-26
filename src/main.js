@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-6-roman-numerals-card-back',
+    items: [
+      '🔢 ROMAN NUMERALS + "SLOT" → "CARD". Every visible slot indicator in the UI now reads like a tarot card: "Card V / XXII" instead of "Slot 5/100". New `toRoman()` utility in render.js handles 1–3999 with graceful fallback to arabic for out-of-range values (so the UI never throws). Applied to: the HUD chip ("Card V / XXII · ♥♥♥ · 12💎"), the level-intro banner, the run-summary slot-reached row, the share copy, the run-history chip ("Card IX / C"), and the Resume button on the start menu ("▶ Resume ⚔ Reading · Card V / XXII"). Speech narration deliberately keeps arabic numbers because TTS engines read roman numerals letter-by-letter. New `.ac-card-back` CSS pattern (indigo + gold-foil star filigree) shipped for design-7\'s slot-transition flips. 6 new tests cover the full roman conversion range + edge cases. 398 tests pass.',
+    ],
+  },
+  {
     id: '2026-05-26-design-5-tarot-tile-glyphs',
     items: [
       '🎴 TILE GLYPHS — ACTUAL TAROT SUIT SYMBOLS. The six tile families are now drawn as proper minor-arcana iconography in ink-violet line art on the cream tile face: pentacles (coin + inscribed pentagram), cups (chalice with stem + foot + soul gem), star (7-point heptagram with inner star + jewel), wands (vertical staff with capped ends + grip wraps), moon (waning crescent with face suggestion + radiating ink-marks), swords (upright blade with crossguard + grip + pommel). Each glyph keeps a distinct silhouette so colorblind players + small-tile rendering both stay legible. Inspired by the black-and-gold ornate-occult deck reference. Stroke is the design-4 `--ac-ink` token (#2D1B69) so the board reads as a spread of cream tarot cards on the velvet cloth. The Pixi canvas renderer (opt-in via ?canvas=1) gets a temporary fallback to a disk for the new shape names; a follow-up will render the same tarot glyphs in canvas mode.',

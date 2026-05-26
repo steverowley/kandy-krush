@@ -2490,3 +2490,30 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
   text-transform: uppercase;
   color: var(--ac-ink);
 }
+
+/* 🎴 Tarot card-back pattern (design-6) — apply .ac-card-back to
+   any panel that should render as the BACK of a tarot card
+   (loading screens, slot transitions, draws-not-yet-revealed).
+   Indigo ground with a gold star + filigree pattern. Used by
+   follow-up animations + the slot-transition card flip. */
+.ac-card-back {
+  position: relative;
+  background-color: var(--ac-indigo);
+  color: var(--ac-gold);
+  border: 2px solid var(--ac-gold);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 4px var(--ac-indigo),
+    inset 0 0 0 5px var(--ac-gold-soft),
+    0 18px 40px rgba(0, 0, 0, 0.6);
+  background-image:
+    radial-gradient(circle at 50% 50%, transparent 40%, rgba(212, 162, 76, 0.22) 100%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><g fill='%23D4A24C' opacity='0.20'><circle cx='32' cy='32' r='2'/><path d='M32 6 L34 26 L54 28 L36 32 L54 36 L34 38 L32 58 L30 38 L10 36 L28 32 L10 28 L30 26 Z'/></g></svg>");
+}
+
+/* Mini card-back for transition / preview use. */
+.ac-card-back--mini {
+  width: 64px;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+}
