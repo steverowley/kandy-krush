@@ -90,6 +90,23 @@ export function registerRunEffects(state, helpers = {}) {
     list.push(state.slotMutator);
   }));
 
+  // 🚶 Moves-bump bundle. Each was inline in applyRunUpgradesOnSlotStart;
+  // collectively they tweak state.movesRemaining at slot start. Each
+  // is gated by its own flag, all use the same payload (no read), and
+  // none flash. Bundled into one subscriber to avoid five near-identical
+  // bus.on calls — the per-source effect is still trivially traceable.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    let add = 0;
+    add += upgradeCount('moves+2') * 2;
+    add += upgradeCount('mover+3') * 3;
+    if (hasRelic('slow-turtle')) add += 5;
+    if (hasMutator('quick-slot')) add += 5;
+    if (hasMutator('long-lunch')) add += 10;
+    if (add === 0) return;
+    state.movesRemaining = (state.movesRemaining || 0) + add;
+  }));
+
   // 💝 Surprise Life mutator. Was inline in applyRunUpgradesOnSlotStart.
   // +1 life at slot start. Now a slot:start subscriber. The #17ax
   // ordering fix means by the time this fires, the mutator has already

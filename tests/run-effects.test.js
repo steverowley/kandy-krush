@@ -89,6 +89,70 @@ test("slot:start handler is a no-op when slotMutator is null", () => {
   assert.deepEqual(state.runHighlights.mutatorsSeen, []);
 });
 
+// --- 🚶 Moves bundle (slot:start → +N moves from upgrades / relics / mutators) ---
+
+test("moves+2 upgrade adds 2 moves per stack", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, { upgradeCount: (id) => (id === 'moves+2' ? 3 : 0) });
+  bus.emit('slot:start', { slot: 5 });
+  // 3 stacks × +2 = +6 moves.
+  assert.equal(s.movesRemaining, 16);
+});
+
+test("mover+3 upgrade adds 3 moves per stack", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, { upgradeCount: (id) => (id === 'mover+3' ? 2 : 0) });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.movesRemaining, 16);
+});
+
+test("Slow Turtle relic adds 5 moves at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, { hasRelic: (id) => id === 'slow-turtle' });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.movesRemaining, 15);
+});
+
+test("Quick Slot mutator adds 5 moves at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, { hasMutator: (id) => id === 'quick-slot' });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.movesRemaining, 15);
+});
+
+test("Long Lunch mutator adds 10 moves at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, { hasMutator: (id) => id === 'long-lunch' });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.movesRemaining, 20);
+});
+
+test("Moves bundle stacks across sources additively", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'moves+2' ? 1 : id === 'mover+3' ? 1 : 0),
+    hasRelic: (id) => id === 'slow-turtle',
+    hasMutator: (id) => id === 'quick-slot' || id === 'long-lunch',
+  });
+  bus.emit('slot:start', { slot: 5 });
+  // +2 + +3 + +5 + +5 + +10 = +25.
+  assert.equal(s.movesRemaining, 35);
+});
+
+test("Moves bundle is a no-op when nothing applies", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, movesRemaining: 10 };
+  registerRunEffects(s, {});
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.movesRemaining, 10);
+});
+
 // --- 💝 Surprise Life mutator (slot:start → +1 life + flash + UI refresh) ---
 
 test("Surprise Life bumps livesRemaining on slot start", () => {
