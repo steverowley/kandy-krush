@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ay',
+    items: [
+      '💰 TREASURE SLOT MIGRATED TO THE BUS — the mutator\'s "+5 gems on slot win (+10 with treasure-sense meta)" branch lived inline at the top of advanceRoguelikeAfterWin. Now a `bus.on(\'slot:complete\', …)` subscriber in run-effects.js. Helpers channel gains `hasMeta`. 3 new tests; 139 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ax',
     items: [
       '🐛 BUG FIX — slot:start emitted in the WRONG ORDER. playRoguelikeSlot was emitting `bus.emit(\'slot:start\', …)` BEFORE calling `applyRunUpgradesOnSlotStart()`, which is the function that sets `state.slotMutator`. Net effect: the mutatorsSeen tracker (added in #284) was reading the previous slot\'s mutator (or `null` on the first one), and the run-summary "Mutators encountered" list was effectively empty across every run. Swapped the two calls so the mutator is set before the event fires. 136 tests still pass.',
@@ -4391,12 +4397,8 @@ function advanceRoguelikeAfterWin() {
     score: state.score,
     moves_used: (state.level?.moves || 0) - (state.movesRemaining || 0),
   });
-  // 💰 Treasure Slot mutator — finishing this slot grants +5 💎.
-  if (hasMutator('treasure')) {
-    const bonus = hasMeta('treasure-sense') ? 10 : 5;
-    state.roguelike.gems = (state.roguelike.gems || 0) + bonus;
-    flashMessage(`💰 Treasure Slot! +${bonus} 💎`, 1400);
-  }
+  // 💰 Treasure Slot mutator — migrated to bus.on('slot:complete', …)
+  // subscriber in run-effects.js (PR #17ay).
   // 🔓 Endless mode: if the player owns `endless-mode` and they've
   // already cleared the Kraken (runsCompleted > 0 OR currentSlot === 100),
   // treat any slot win the same as a regular advance — increment +1
@@ -6372,6 +6374,7 @@ applyTheme(state.settings);
 registerRunEffects(state, {
   hasRelic,
   hasMutator,
+  hasMeta,
   upgradeCount,
   setLuckyCharge,
   flashMessage,

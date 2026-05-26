@@ -41,6 +41,7 @@ export function registerRunEffects(state, helpers = {}) {
   const {
     hasRelic = () => false,
     hasMutator = () => false,
+    hasMeta = () => false,
     upgradeCount = () => 0,
     setLuckyCharge = () => {},
     flashMessage = () => {},
@@ -97,6 +98,19 @@ export function registerRunEffects(state, helpers = {}) {
     if (ctx && typeof ctx.score === 'number' && ctx.score > (state.runHighlights.bestSlotScore || 0)) {
       state.runHighlights.bestSlotScore = ctx.score;
     }
+  }));
+
+  // 💰 Treasure Slot mutator. Was inline in advanceRoguelikeAfterWin.
+  // Slot win on a Treasure Slot grants +5 gems (+10 with the
+  // treasure-sense meta skill). Subscribes to `slot:complete`, gates
+  // on hasMutator('treasure'). Meta upgrade doubles the payout.
+  unsubs.push(bus.on('slot:complete', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('treasure')) return;
+    if (!state.roguelike) return;
+    const bonus = hasMeta('treasure-sense') ? 10 : 5;
+    state.roguelike.gems = (state.roguelike.gems || 0) + bonus;
+    flashMessage(`💰 Treasure Slot! +${bonus} 💎`, 1400);
   }));
 
   // ♾ Infinite-combo tracker. Was inline in maybeTriggerInfiniteScore;
