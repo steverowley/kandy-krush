@@ -24,6 +24,31 @@ function ensureCanvasReady(cols, rows) {
   return canvasReadyPromise;
 }
 
+// 🎴 Roman-numeral formatter — every visible slot/card indicator
+// in the UI uses this so the labels read like tarot cards
+// ("Card V of XXII") instead of arabic counters ("Slot 5 of 22").
+// Speech narration deliberately keeps arabic numbers (TTS engines
+// read roman numerals letter-by-letter, which is awful).
+//
+// Handles 1–3999. Returns the arabic input as a string for
+// out-of-range values so we degrade gracefully instead of throwing.
+export function toRoman(n) {
+  const v = Math.floor(Number(n));
+  if (!Number.isFinite(v) || v < 1 || v > 3999) return String(n);
+  const map = [
+    ['M', 1000], ['CM', 900], ['D', 500], ['CD', 400],
+    ['C', 100],  ['XC', 90],  ['L', 50],  ['XL', 40],
+    ['X', 10],   ['IX', 9],   ['V', 5],   ['IV', 4],
+    ['I', 1],
+  ];
+  let out = '';
+  let r = v;
+  for (const [s, x] of map) {
+    while (r >= x) { out += s; r -= x; }
+  }
+  return out;
+}
+
 // 🎴 ARCANA CASCADA — tile families. Each row is a tarot suit /
 // minor arcana symbol; the SVG shape is preserved from the legacy
 // candy set so gameplay legibility doesn't regress (each shape is
@@ -789,7 +814,7 @@ export function setLevelChip(level, mode, stars, opts = {}) {
     const lives = Math.max(0, Math.min(9, opts.lives || 0));
     const maxLives = Math.max(lives, Math.min(9, opts.maxLives || lives));
     const hearts = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, maxLives - lives));
-    chip.textContent = `Slot ${slot}/${total}${boss} · ${hearts} · ${gems}💎`;
+    chip.textContent = `Card ${toRoman(slot)} / ${toRoman(total)}${boss} · ${hearts} · ${gems}💎`;
     return;
   }
   if (mode !== 'levels' || !level) {
@@ -825,7 +850,7 @@ export function setLevelUI({ level, movesRemaining, current, target, mode }) {
     if (mode === 'roguelike') {
       const slot = level.runSlot || level.id;
       const bossTag = level.isBoss ? ' · BOSS' : '';
-      nameEl.textContent = `Slot ${slot} of 100${bossTag} — ${level.name}`;
+      nameEl.textContent = `Card ${toRoman(slot)} of C${bossTag} — ${level.name}`;
     } else {
       nameEl.textContent = `Level ${level.id} — ${level.name}`;
     }
@@ -1038,7 +1063,7 @@ export function showRunHistory({ entries, getClass, onClose }) {
       const dailyChip = e.daily ? '<span class="px-2 py-0.5 rounded-full bg-purple-300 text-black font-bold text-sm">🌅 DAILY</span>' : '';
       const outcomeChip = isWin
         ? '<span class="px-2 py-0.5 rounded-full bg-yellow-300 text-black font-bold text-sm">🏆 WIN</span>'
-        : `<span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-900 font-bold text-sm">Slot ${e.slot}/100</span>`;
+        : `<span class="px-2 py-0.5 rounded-full bg-gray-200 text-gray-900 font-bold text-sm">Card ${toRoman(e.slot)} / C</span>`;
       row.className = 'border-2 border-black rounded-xl p-3 bg-amber-50 flex flex-col gap-1';
       row.innerHTML = `
         <div class="flex items-center gap-2 flex-wrap">
@@ -1146,8 +1171,8 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
   if (title) title.textContent = isComplete
     ? 'You crowned the Candy Kraken!'
     : inProgress
-      ? (slotReached > totalSlots ? `Slot ${slotReached} ♾` : `Slot ${slotReached}/${totalSlots}`)
-      : (slotReached > totalSlots ? `You reached slot ${slotReached} (Endless)` : `You reached slot ${slotReached}`);
+      ? (slotReached > totalSlots ? `Card ${toRoman(slotReached)} ♾` : `Card ${toRoman(slotReached)} / ${toRoman(totalSlots)}`)
+      : (slotReached > totalSlots ? `Drew card ${toRoman(slotReached)} (Endless)` : `Drew card ${toRoman(slotReached)}`);
   if (stats) {
     // 🏅 Extended end-of-run stats. Hide the section entirely when no
     // run is in progress / no data; otherwise render whatever fields
@@ -1340,7 +1365,7 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
         ? relics.map((id) => (getRelic && getRelic(id) ? getRelic(id).icon : '?')).join('')
         : 'none';
       const lines = [
-        `🔮 Arcana Cascada — ${outcome === 'complete' ? '🏆 READING COMPLETE' : 'Card ' + slotReached + '/' + totalSlots}`,
+        `🔮 Arcana Cascada — ${outcome === 'complete' ? '🏆 READING COMPLETE' : 'Card ' + toRoman(slotReached) + ' / ' + toRoman(totalSlots)}`,
         `Class: ${klassStr}${awakened ? ' ✨ AWAKENED' : ''}`,
         `Build: ${archStr || '—'}`,
         `Relics: ${relicStr}`,
@@ -2157,13 +2182,13 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
       // Switch to "Slot 137 ♾" when the player is past the standard cap.
       const slotStr = runInProgress.slot && runInProgress.totalSlots
         ? (runInProgress.slot > runInProgress.totalSlots
-            ? ` · Slot ${runInProgress.slot} ♾`
-            : ` · Slot ${runInProgress.slot} / ${runInProgress.totalSlots}`)
+            ? ` · Card ${toRoman(runInProgress.slot)} ♾`
+            : ` · Card ${toRoman(runInProgress.slot)} / ${toRoman(runInProgress.totalSlots)}`)
         : '';
       const classStr = runInProgress.classIcon
         ? `${runInProgress.classIcon} `
         : '';
-      btnResume.innerHTML = `▶ Resume ${classStr}Run${slotStr}`;
+      btnResume.innerHTML = `▶ Resume ${classStr}Reading${slotStr}`;
       btnResume.classList.remove('hidden');
       btnAbandon.classList.remove('hidden');
       // Hide the regular "Roguelike Run" button to prevent confusion —
