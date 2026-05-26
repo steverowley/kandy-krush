@@ -2992,6 +2992,21 @@ section#run-hud {
   .ac-mode-card__name { font-size: 0.95rem; }
 }
 
+/* Small caption sitting under the serif card name — used by the
+   Daily card to show today's date + "✓ Slot N" status. Tiny
+   non-italic sans against the bold italic name above. */
+.ac-mode-card__stamp {
+  display: inline-block;
+  margin-top: 4px;
+  font-family: var(--ac-font-serif);
+  font-weight: 400;
+  font-style: normal;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
 /* Per-suit accent — each mini card picks its inner-panel color.
    Maps to the existing CANDY_DEFS colors (so the suit on the board
    matches the suit on the start menu). */

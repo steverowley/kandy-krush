@@ -2276,11 +2276,19 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
     // while a NON-daily run is in progress prompts a confirmation
     // before abandoning the existing run, so the player still can't
     // accidentally lose mid-run progress.
-    const stampStr = dailyStatus?.stamp ? ` · ${dailyStatus.stamp}` : '';
+    const stampStr = dailyStatus?.stamp ? `<br><span class="ac-mode-card__stamp">${escapeHtml(dailyStatus.stamp)}</span>` : '';
     const playedStr = dailyStatus?.playedToday
-      ? ` ✓ Slot ${dailyStatus.bestSlot || 0}`
+      ? `<br><span class="ac-mode-card__stamp">✓ Slot ${dailyStatus.bestSlot || 0}</span>`
       : '';
-    btnDaily.innerHTML = `🌅 Today's Daily Seed${stampStr}${playedStr}`;
+    // 🎴 Preserve the editorial-card anatomy (numeral / icon / name)
+    // that the HTML ships with. Earlier this clobbered all of it with
+    // a flat "🌅 Today's Daily Seed · 2026-05-26" string, leaving the
+    // mode card visually empty next to its three siblings.
+    btnDaily.innerHTML = `
+      <span class="ac-mode-card__numeral">II</span>
+      <span class="ac-mode-card__icon" aria-hidden="true">🌅</span>
+      <span class="ac-mode-card__name">Today's Draw${stampStr}${playedStr}</span>
+    `;
     btnDaily.classList.remove('hidden');
     const dailyHandler = () => {
       // Confirmation gate must use the RUN'S type, not the daily-badge
