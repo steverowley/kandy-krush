@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17at',
+    items: [
+      '🌶💥✨ SPICE BOX + SUGAR CRASH + SPARK STRIKE MIGRATED — three more per-Nth-match effects moved to `bus.on(\'roguelike:match\', …)` subscribers. Spice Box (% 12 → random crazy tile), Sugar Crash (% 14 → TNT), Spark Strike (% 12 → free Lightning). Helpers channel gains `fireLightning`. 4 new tests; 126 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17as',
     items: [
       '🪅👜🍨 PIÑATA + PIXIE POUCH + SUNDAE SATURDAY MIGRATED — three per-Nth-match power-up grants moved to `bus.on(\'roguelike:match\', …)` subscribers in run-effects.js. Piñata (% 5 → random pick), Pixie Pouch (% 18 → +1 each kind, cap-respecting), Sundae Saturday (% 8 → +1 plusMoves, cap-respecting). Same shape as Coin Purse / Diamond Mine from #299. 6 new tests; 122 total now pass.',
@@ -6110,24 +6116,12 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
         flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
       }
     }
-    // 🌶 Spice Box relic — every 12 matches spawn a random crazy tile.
-    if (hasRelic('spice-box') && state.slotMatchCount % 12 === 0) {
-      spawnCrazyTile();
-      flashMessage('🌶 Spice Box!', 900);
-    }
-    // 💥 Sugar Crash relic — every 14 matches spawn a TNT tile.
-    if (hasRelic('sugar-crash') && state.slotMatchCount % 14 === 0) {
-      spawnCrazyTile('tnt');
-      flashMessage('💥 Sugar Crash!', 900);
-    }
+    // 🌶 Spice Box + 💥 Sugar Crash + ✨ Spark Strike — migrated to
+    // bus.on('roguelike:match', …) subscribers in run-effects.js
+    // (PR #17at).
     // 👜 Pixie Pouch + 🍨 Sundae Saturday — migrated to
     // bus.on('roguelike:match', …) subscribers in run-effects.js
     // (PR #17as).
-    // ✨ Spark Strike upgrade — every 12 matches fire a free Lightning.
-    if (upgradeCount('spark-strike') > 0 && state.slotMatchCount % 12 === 0) {
-      flashMessage('✨ Spark Strike!', 900);
-      fireLightning();
-    }
     // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
     if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
       const bank = powerupBank();
@@ -6416,6 +6410,7 @@ registerRunEffects(state, {
   powerupBank,
   setPowerupCounts,
   effectivePowerupCap,
+  fireLightning,
 });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp

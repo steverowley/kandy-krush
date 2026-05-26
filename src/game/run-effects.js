@@ -49,6 +49,7 @@ export function registerRunEffects(state, helpers = {}) {
     powerupBank = () => ({}),
     setPowerupCounts = () => {},
     effectivePowerupCap = () => Infinity,
+    fireLightning = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -300,6 +301,41 @@ export function registerRunEffects(state, helpers = {}) {
       setPowerupCounts(bank);
       flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
     }
+  }));
+
+  // 🌶 Spice Box relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 12 matches spawn a random
+  // crazy tile (no kind arg → random pick).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 12 !== 0) return;
+    if (!hasRelic('spice-box')) return;
+    spawnCrazyTile();
+    flashMessage('🌶 Spice Box!', 900);
+  }));
+
+  // 💥 Sugar Crash relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 14 matches spawn a TNT.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 14 !== 0) return;
+    if (!hasRelic('sugar-crash')) return;
+    spawnCrazyTile('tnt');
+    flashMessage('💥 Sugar Crash!', 900);
+  }));
+
+  // ✨ Spark Strike upgrade. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 12 matches fires a free
+  // Lightning effect (via the fireLightning helper).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 12 !== 0) return;
+    if (upgradeCount('spark-strike') <= 0) return;
+    flashMessage('✨ Spark Strike!', 900);
+    fireLightning();
   }));
 
   // 🍵 Bottomless Cup mutator. Was inline in processMatchRound under

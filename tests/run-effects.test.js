@@ -501,6 +501,70 @@ test("Sundae Saturday respects plusMoves cap", () => {
   assert.equal(bank.plusMoves, 3); // capped
 });
 
+// --- 🌶 Spice Box relic (roguelike:match every 12th → random crazy tile) ---
+
+test("Spice Box spawns a random crazy tile every 12th match", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'spice-box',
+    spawnCrazyTile: (kind) => spawned.push(kind ?? 'random'),
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 11, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, []);
+  bus.emit('roguelike:match', { slotMatchCount: 12, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, ['random']);
+  bus.emit('roguelike:match', { slotMatchCount: 24, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, ['random', 'random']);
+});
+
+// --- 💥 Sugar Crash relic (roguelike:match every 14th → TNT) ---
+
+test("Sugar Crash spawns a TNT every 14th match", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'sugar-crash',
+    spawnCrazyTile: (kind) => spawned.push(kind),
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 13, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, []);
+  bus.emit('roguelike:match', { slotMatchCount: 14, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, ['tnt']);
+});
+
+// --- ✨ Spark Strike upgrade (roguelike:match every 12th → free Lightning) ---
+
+test("Spark Strike fires a Lightning every 12th match when held", () => {
+  bus.clear();
+  let lightningCalls = 0;
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'spark-strike' ? 1 : 0),
+    fireLightning: () => lightningCalls++,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 11, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(lightningCalls, 0);
+  bus.emit('roguelike:match', { slotMatchCount: 12, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(lightningCalls, 1);
+  bus.emit('roguelike:match', { slotMatchCount: 24, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(lightningCalls, 2);
+});
+
+test("Spark Strike no-op without the upgrade", () => {
+  bus.clear();
+  let lightningCalls = 0;
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: () => 0,
+    fireLightning: () => lightningCalls++,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 12, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(lightningCalls, 0);
+});
+
 test("Both Coin Purse + Diamond Mine can stack on the same match", () => {
   bus.clear();
   const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
