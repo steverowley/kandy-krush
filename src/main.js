@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-9-all-modals-themed',
+    items: [
+      '🎴 EVERY MODAL IS NOW A TAROT CARD. The remaining nine modal panels migrated to the `.ac-card` system with thematic banner labels: Class Mastery ("Mastery"), Run History ("Past Readings"), Skill Tree ("The Sigils"), Upgrade Picker ("The Offering"), Changelog ("The Scrolls"), Level Select ("The Path"), Settings ("Ritual Settings"), Pause ("The Pause"), Reset Confirm ("XIII · Death" — the destruction arcana), Level Complete ("XIX · The Sun"). Some copy also re-flavored ("Choose a card" instead of "Choose a level", "Pick one to take into your next reading", "Burn the deck?" instead of "Reset all progress?"). Closes the wave — every framed surface in the game now reads as a real tarot card on the velvet table. SW -> v13.',
+    ],
+  },
+  {
     id: '2026-05-26-design-8-boss-major-arcana',
     items: [
       '🎴 BOSS SLOTS REVEAL AS MAJOR ARCANA. Every boss now plays as "the next card in the spread is turned over and revealed." The banner mounts face-down with the gold-foil card-back pattern, then flips via CSS 3D rotateY (700ms cubic-bezier) to show the boss\'s assigned Major Arcana card on the parchment + ink face. Ten bosses → ten arcana: 🍮 boss-1 → XV The Devil (temptation), 🔒 boss-2 → IV The Emperor (control), 👑 boss-3 → III The Empress (abundance), 🐌 boss-4 → VIII Strength (slow fortitude), 🗿 boss-5 → XVI The Tower (collapse), 🍒 boss-6 → VI The Lovers (union), 👻 boss-7 → XVIII The Moon (illusion), 🕷 boss-8 → XIII Death (transformation), 🧁 boss-9 → XIV Temperance (balance), 🐙 boss-10 final → XXI The World (completion). Roman numeral cartouche above, arcana-name cartouche below, boss icon + name + tip in the middle — the same `.ac-card` anatomy as every other framed surface in the game. The pre-flip card-back is the `.ac-card-back` pattern shipped in design-6. Closes the design-4..8 arc that turns every UI surface into a real tarot-table interaction. SW -> v12.',
