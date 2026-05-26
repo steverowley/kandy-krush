@@ -40,8 +40,10 @@ import * as bus from './event-bus.js';
 export function registerRunEffects(state, helpers = {}) {
   const {
     hasRelic = () => false,
+    upgradeCount = () => 0,
     setLuckyCharge = () => {},
     flashMessage = () => {},
+    persist = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -111,6 +113,34 @@ export function registerRunEffects(state, helpers = {}) {
     state.luckyReady = true;
     setLuckyCharge(state.luckyCharge, state.luckyReady);
     flashMessage('🌟 GLOW STICK! Lucky ready!', 1300);
+  }));
+
+  // ✨ Stardust relic. Was inline in processMatchRound under
+  // `if (cascadeLevel >= 4)`. +1 gem per qualifying cascade, with a
+  // flash + persist call so the gem total survives a reload.
+  unsubs.push(bus.on('cascade', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel < 4) return;
+    if (!hasRelic('stardust')) return;
+    if (!state.roguelike) return;
+    state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+    flashMessage('✨ Stardust +1 💎', 800);
+    persist();
+  }));
+
+  // 🪞 Echo Match upgrade. Was inline in processMatchRound under
+  // `if (cascadeLevel >= 4)`. Fills Lucky bar by 50% per stack on every
+  // qualifying cascade; clamps at 100 and marks ready when full.
+  unsubs.push(bus.on('cascade', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.cascadeLevel < 4) return;
+    const stacks = upgradeCount('echo-match');
+    if (stacks <= 0) return;
+    const add = 50 * stacks;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + add);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+    flashMessage(`🪞 Echo Match +${add}% 🍀`, 800);
   }));
 
   return () => {
