@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-7-mode-picker-card-spread',
+    items: [
+      '🎴 MODE PICKER IS A TAROT SPREAD. The four mode buttons on the start menu (Roguelike / Daily / Levels / Free Play) are now small face-up tarot cards laid out as a 2×2 grid on mobile and a 4-column row on tablet+. Each card has the same anatomy as a real card from the deck: roman numeral top, suit glyph center (⚔ 🌅 🎯 🜄), gothic uppercase name bottom — small-scale echo of the design-4 `.ac-card` frame language. Per-suit accent glow tints the top of each card so the four reading options stay visually distinct without overpowering the parchment palette. Hover/focus lifts the card 3px + swaps the inner-frame line to gold-foil. Button IDs preserved so every existing handler in main.js still binds. Resume Reading promoted above the spread when a run is in progress. SW -> v11.',
+    ],
+  },
+  {
     id: '2026-05-26-design-6-roman-numerals-card-back',
     items: [
       '🔢 ROMAN NUMERALS + "SLOT" → "CARD". Every visible slot indicator in the UI now reads like a tarot card: "Card V / XXII" instead of "Slot 5/100". New `toRoman()` utility in render.js handles 1–3999 with graceful fallback to arabic for out-of-range values (so the UI never throws). Applied to: the HUD chip ("Card V / XXII · ♥♥♥ · 12💎"), the level-intro banner, the run-summary slot-reached row, the share copy, the run-history chip ("Card IX / C"), and the Resume button on the start menu ("▶ Resume ⚔ Reading · Card V / XXII"). Speech narration deliberately keeps arabic numbers because TTS engines read roman numerals letter-by-letter. New `.ac-card-back` CSS pattern (indigo + gold-foil star filigree) shipped for design-7\'s slot-transition flips. 6 new tests cover the full roman conversion range + edge cases. 398 tests pass.',
