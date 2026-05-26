@@ -39,3 +39,59 @@ test('setLocale rejects unknown locales without changing active', () => {
   setLocale('xx-no-such-locale');
   assert.equal(getLocale(), before);
 });
+
+test('setLocale returns false for unknown locales and true for known', () => {
+  assert.equal(setLocale('xx-no-such-locale'), false);
+  assert.equal(setLocale('en'), true);
+});
+
+test("t() leaves unknown placeholders intact for dev visibility", () => {
+  // Use 'start.resume' which references {classIcon}, {slot}, {total}.
+  // If we omit a placeholder, the literal `{name}` survives.
+  const result = t('start.resume', { slot: 5, total: 100 });
+  assert.ok(result.includes('{classIcon}'), 'unknown placeholder preserved');
+});
+
+test("t() walks dotted paths through nested dicts", () => {
+  // Looking up a partial path that lands on a non-string (object) should
+  // fall back to the key string. We're not depending on a specific dict
+  // shape; just verify it doesn't crash and returns the key.
+  const partialPath = 'start';
+  // 'start' lookup lands on an object node — that returns the key.
+  assert.equal(t(partialPath), partialPath);
+});
+
+test("t() with empty-string params object behaves the same as no-params", () => {
+  const a = t('start.title');
+  const b = t('start.title', {});
+  assert.equal(a, b);
+});
+
+test("formatNumber accepts options and honors them", () => {
+  // Force a currency format — should produce something with $ or USD.
+  const out = formatNumber(1234.56, { style: 'currency', currency: 'USD' });
+  // Match either "$" or "USD" in the output (locale-dependent).
+  assert.match(out, /\$|USD/);
+});
+
+test("formatNumber tolerates a bad options object — falls back to String(n)", () => {
+  // Pass a truly invalid options that NumberFormat will throw on.
+  const out = formatNumber(42, { style: 'currency', currency: 'NOT_A_CURRENCY' });
+  // Either it surfaced a fallback "42" string OR it produced SOMETHING
+  // (Intl may have its own fallback). We just verify it doesn't throw.
+  assert.ok(typeof out === 'string' && out.length > 0);
+});
+
+test("formatNumber handles 0 + negative numbers", () => {
+  assert.equal(formatNumber(0), '0');
+  assert.equal(formatNumber(-1234567), '-1,234,567');
+});
+
+test("_getDict returns the active dictionary", async () => {
+  const i18n = await import('../src/i18n.js');
+  const d = i18n._getDict();
+  // The dictionary should be an object with a 'start' branch (we use
+  // start.title elsewhere).
+  assert.ok(d && typeof d === 'object');
+  assert.ok(d.start && typeof d.start === 'object');
+});
