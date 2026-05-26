@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17aw',
+    items: [
+      '🧹 CASCADE-1 BLOCK CLEANUP — processMatchRound\'s cascade-1 block was carrying 50 lines of per-PR migration comment trail. Collapsed to a single 6-line summary listing every migrated subscriber + where it lives in run-effects.js. PROJECT_PLAN.md refreshed: B6 line now reflects all 29 inline side-effect migrations (#283–#303); B12 test count 102 → 136. No behavioral change. 136 tests still pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17av',
     items: [
       '🍰💣 SUGAR RUSH FLASH + CRAZY MAGNET MIGRATED — the last two side-effect branches in processMatchRound\'s cascade-1 block moved to `bus.on(\'roguelike:match\', …)` subscribers. Sugar Rush\'s third-match "spent" flash and Crazy Magnet\'s % 3 random crazy-tile spawn now live in run-effects.js. Sugar Rush\'s score multiplier itself stays inline — it\'s a synchronous score function, not a side effect. Helpers channel gains `pickCrazyKind`. 3 new tests; 136 total now pass.',
@@ -6072,49 +6078,20 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       allCleared.size
     )
   );
-  // 🍰 Sugar Rush — count this match before any cascade so each round
-  // triggers the bonus at most once per call.
+  // Roguelike per-swap effects (Coin Purse, Diamond Mine, Piñata,
+  // Pixie Pouch, Sundae Saturday, Spice Box, Sugar Crash, Spark
+  // Strike, Whirlpool, Cracked Mirror, Coin Toss, Lucky Ladybug,
+  // Sugar Rush flash, Crazy Magnet) all live as
+  // `bus.on('roguelike:match', …)` subscribers in run-effects.js.
+  // Bottomless Cup + Lucky Magnet subscribe to plain `match` and
+  // gate on cascadeLevel === 1.
   if (state.inRoguelikeRun && cascadeLevel === 1) {
     state.slotMatchCount = (state.slotMatchCount || 0) + 1;
-    // 🚌 Emit a roguelike-match event AFTER the slotMatchCount bump so
-    // subscribers can read the post-increment count from the payload.
-    // This is the natural home for per-Nth-match relics (Coin Purse,
-    // Diamond Mine, Whirlpool, Piñata, Spice Box, Sugar Crash, ...) —
-    // the canonical `match` event (which fires earlier in this
-    // function) doesn't carry slotMatchCount because at that point
-    // it hasn't been incremented yet.
     bus.emit('roguelike:match', {
       slotMatchCount: state.slotMatchCount,
       cascadeLevel,
       matchSize: allCleared.size,
     });
-    // 🍰 Sugar Rush flash + 💣 Crazy Magnet — migrated to
-    // bus.on('roguelike:match', …) subscribers in run-effects.js
-    // (PR #17av). The Sugar Rush score multiplier itself stays in
-    // the score function (it's a synchronous multiplier, not a
-    // side effect).
-    // 🍀 Lucky Magnet upgrade + 🍵 Bottomless Cup mutator — both
-    // migrated to bus.on('match', …) subscribers in run-effects.js
-    // (PR #17aq). Each gates on cascadeLevel === 1 from the match
-    // event payload.
-    // 🌀 Whirlpool relic — migrated to bus.on('roguelike:match', …)
-    // subscriber in run-effects.js (PR #17au).
-    // 👛 Coin Purse + ⛏ Diamond Mine — migrated to
-    // bus.on('roguelike:match', …) subscribers in run-effects.js
-    // (PR #17ar).
-    // 🪅 Piñata — migrated to bus.on('roguelike:match', …) in
-    // run-effects.js (PR #17as).
-    // 🪞 Cracked Mirror + 🪙 Coin Toss — migrated to
-    // bus.on('roguelike:match', …) subscribers in run-effects.js
-    // (PR #17au).
-    // 🌶 Spice Box + 💥 Sugar Crash + ✨ Spark Strike — migrated to
-    // bus.on('roguelike:match', …) subscribers in run-effects.js
-    // (PR #17at).
-    // 👜 Pixie Pouch + 🍨 Sundae Saturday — migrated to
-    // bus.on('roguelike:match', …) subscribers in run-effects.js
-    // (PR #17as).
-    // 🐞 Lucky Ladybug — migrated to bus.on('roguelike:match', …)
-    // subscriber in run-effects.js (PR #17au).
   }
   state.score += earned;
   setScore(state.score, { animate: true });
