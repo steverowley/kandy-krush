@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ah',
+    items: [
+      '🧪 BUS INTEGRATION TEST FOR THE RUN LIFECYCLE — new `tests/integration-run-flow.test.js` simulates a complete roguelike slot end-to-end through the event bus (slot:start → match × N → cascade chain → infinite → slot:complete) and asserts the migrated `run-effects.js` subscribers aggregate `state.runHighlights` the same way the old inline branches did. Also covers: 32-mutator cap holds across a 40-slot run, non-roguelike runs do not pollute highlights, single `unsub()` call removes every handler. Catches future B6 bus-migration regressions before they ship. 72 tests pass.',
+    ],
+  },
+  {
     id: '2026-05-25-17ag',
     items: [
       '♾ ENDLESS MODE LABELS READ RIGHT — Resume button used to show "Slot 137 / 100" past slot 100, which was nonsensical. Now it reads "Slot 137 ♾" when the player is past the standard cap. Run-summary modal title gets the same treatment: "You reached slot 137 (Endless)" instead of the cap-comparison.',
