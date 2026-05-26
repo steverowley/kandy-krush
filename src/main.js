@@ -573,10 +573,12 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
     classStats: stats,
     highlights: state.runHighlights || null,
     onReplay: () => {
-      // The run state has already been cleared by the caller (after this
-      // function returns it'll be cleared if not already). Kick off a
-      // fresh run immediately.
-      setTimeout(() => startRoguelikeRun(), 100);
+      // Route through the mode runtime so daily.exit() can restore
+      // its Roguelike snapshot before a fresh Roguelike run starts.
+      // If we already are in Roguelike mode the runtime treats this
+      // as a refresh (no exit), so behavior is unchanged for that
+      // path. Modes-7.
+      setTimeout(() => setActiveMode('roguelike'), 100);
     },
     onClose: () => {
       setActiveMode('home', {
@@ -1921,6 +1923,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-7-daily-no-longer-clobbers-roguelike',
+    items: [
+      '🛡 MODE SEPARATION — STEP 7: DAILY CAN\'T CLOBBER ROGUELIKE. Bug — starting a Daily run while a Roguelike run was in flight reset the Roguelike progression (currentSlot, currentClass, livesRemaining, upgrades, relics, free rerolls) and there was no way back. Fix — the Daily mode now snapshots the Roguelike slice on `enter()` and restores it on `exit()`. Re-flags `inRun` only if Roguelike was active before Daily so the start-menu correctly shows "Resume Run" after the player returns. The run-summary "Replay" button routes through `setActiveMode(\'roguelike\')` instead of calling `startRoguelikeRun` directly, so Daily\'s exit() lifecycle fires before the next Roguelike run picks up the restored state. Snapshot is private to the daily module — no schema migration required. 8 new tests cover the round-trip + the consecutive-cycle case. 392 tests pass.',
+    ],
+  },
   {
     id: '2026-05-26-modes-6-audio-haptics-subscribers',
     items: [

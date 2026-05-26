@@ -21,7 +21,7 @@
 // 🔮 Cache name reset for the Arcana Cascada rebrand — the prior
 // 'sweet-match-vN' line evicts cleanly the first time the new SW
 // activates because the names don't match.
-const VERSION = 'arcana-cascada-v6';
+const VERSION = 'arcana-cascada-v7';
 const SHELL = [
   './',
   './index.html',
