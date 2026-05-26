@@ -400,14 +400,36 @@
       <p class="text-lg sm:text-xl text-gray-700">Draw the cards. Read your fortune.</p>
       <p id="start-screen-subtitle" class="text-base sm:text-lg text-pink-900 font-bold min-h-[1.5em]"></p>
       <div id="start-screen-stats" class="hidden flex-wrap items-center justify-center gap-2 text-sm sm:text-base text-gray-900"></div>
-      <div class="w-full flex flex-col gap-3 mt-2">
-        <button id="start-menu-resume" type="button" class="hidden w-full text-2xl sm:text-3xl font-bold bg-green-400 hover:bg-green-300 active:bg-green-500 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-green-700">▶ Resume Run</button>
-        <button id="start-menu-roguelike" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-pink-400 hover:bg-pink-300 active:bg-pink-500 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-600">⚔ Roguelike Run</button>
-        <button id="start-menu-ascension" type="button" class="hidden w-full text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-700 -mt-1">🆙 Ascension: A0 ↕</button>
-        <button id="start-menu-daily" type="button" class="w-full text-xl sm:text-2xl font-bold bg-purple-300 hover:bg-purple-200 active:bg-purple-400 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-600">🌅 Today's Daily Seed</button>
-        <button id="start-menu-levels" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-yellow-600">🎯 Levels Mode</button>
-        <button id="start-menu-free" type="button" class="w-full text-2xl sm:text-3xl font-bold bg-blue-300 hover:bg-blue-200 active:bg-blue-400 border-[3px] border-black rounded-2xl px-6 py-4 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-600">🎨 Free Play</button>
+      <!-- Resume featured above the spread when there's a run in progress. -->
+      <button id="start-menu-resume" type="button" class="hidden w-full text-xl sm:text-2xl font-bold bg-green-400 hover:bg-green-300 active:bg-green-500 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-green-700">▶ Resume Reading</button>
+      <!-- 🎴 Mode spread — four minor-arcana cards the player draws from.
+           Each button is a small tarot card: roman numeral top, suit
+           glyph center, name bottom. Layout is a 2×2 grid on mobile and
+           a 4-column row on >= 640px. Button IDs preserved so the
+           existing event handlers in main.js still bind. -->
+      <div class="ac-mode-spread w-full mt-2">
+        <button id="start-menu-roguelike" type="button" class="ac-mode-card" data-suit="swords" aria-label="Begin a roguelike reading">
+          <span class="ac-mode-card__numeral">I</span>
+          <span class="ac-mode-card__icon" aria-hidden="true">⚔</span>
+          <span class="ac-mode-card__name">The Reading</span>
+        </button>
+        <button id="start-menu-daily" type="button" class="ac-mode-card" data-suit="moon" aria-label="Today's daily seed">
+          <span class="ac-mode-card__numeral">II</span>
+          <span class="ac-mode-card__icon" aria-hidden="true">🌅</span>
+          <span class="ac-mode-card__name">Today's Draw</span>
+        </button>
+        <button id="start-menu-levels" type="button" class="ac-mode-card" data-suit="pentacles" aria-label="Levels mode">
+          <span class="ac-mode-card__numeral">III</span>
+          <span class="ac-mode-card__icon" aria-hidden="true">🎯</span>
+          <span class="ac-mode-card__name">Levels</span>
+        </button>
+        <button id="start-menu-free" type="button" class="ac-mode-card" data-suit="cups" aria-label="Free play">
+          <span class="ac-mode-card__numeral">IV</span>
+          <span class="ac-mode-card__icon" aria-hidden="true">🜄</span>
+          <span class="ac-mode-card__name">Free Play</span>
+        </button>
       </div>
+      <button id="start-menu-ascension" type="button" class="hidden w-full text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-700">🆙 Ascension: A0 ↕</button>
       <button id="start-menu-abandon" type="button" class="hidden text-sm sm:text-base font-bold text-gray-900 hover:text-red-700 underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded px-2 py-1 -mt-1">⨯ Abandon current run</button>
       <div class="flex w-full gap-2 mt-3">
         <button id="start-menu-settings" type="button" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">⚙ Settings</button>
