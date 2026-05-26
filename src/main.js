@@ -127,6 +127,7 @@ import { registerMode, setActiveMode } from './modes/index.js';
 import * as freePlayMode from './modes/free-play/index.js';
 import * as levelsMode from './modes/levels/index.js';
 import * as roguelikeMode from './modes/roguelike/index.js';
+import * as dailyMode from './modes/daily/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -4362,20 +4363,8 @@ function runRng() {
 // every player on the same calendar day gets the same class options,
 // upgrade picks, mutators, and relic choices. This is the single
 // highest-leverage retention feature in the genre.
-function startDailySeedRun() {
-  const seed = dailySeed();
-  state.runRng = createRng(seed);
-  state.runIsDaily = true;
-  state.runDailyStamp = dailySeedStamp();
-  telemetry.track('daily_seed_start', { stamp: state.runDailyStamp });
-  // Reset run state so a daily can't inherit upgrades from a previous run.
-  state.inRoguelikeRun = false;
-  state.roguelike.currentSlot = 1;
-  state.runUpgrades = [];
-  state.runRelics = [];
-  state.roguelike.currentClass = null; state.runFreeRerolls = 0;
-  startRoguelikeRun();
-}
+// Daily start function — see src/modes/daily/index.js.
+let startDailySeedRun;
 
 // Roguelike start/playSlot/endRunSoft — see src/modes/roguelike/index.js.
 // Slots are assigned at boot once roguelikeMode.register returns its
@@ -6395,11 +6384,15 @@ registerMode({
   ARCHETYPES,
   RUN_LENGTH,
 }));
-registerMode({
-  id: 'daily',
-  enter() { startDailySeedRun(); },
-  exit() { _endRoguelikeRunSoft(); },
-});
+({ start: startDailySeedRun } = dailyMode.register({
+  state,
+  telemetry,
+  dailySeed,
+  dailySeedStamp,
+  createRng,
+  roguelikeStart: startRoguelikeRun,
+  roguelikeEndRunSoft: _endRoguelikeRunSoft,
+}));
 ({ start: startLevel } = levelsMode.register({
   state,
   sfx,
