@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-fix-tile-stale-transforms',
+    items: [
+      '🐛 TILES NO LONGER SHOOT OFF SCREEN / MOVE AROUND / DISAPPEAR — `animateSwap` set inline `transform`, `zIndex`, and `transition` on tile DOM nodes and never cleared them. Before the diff-render refactor (#269) the board rebuilt fresh tiles on every render so leftover styles got tossed out automatically. The diff renderer recycles the SAME DOM nodes, so the stale transform persisted and visually displaced tiles on subsequent renders. Fix: animateSwap now cleans up its own inline styles when the animation completes, AND `_paintTile` defensively resets transform / transition / zIndex on every paint so future animation code can\'t reintroduce this class of bug.',
+    ],
+  },
+  {
     id: '2026-05-26-fix-daily-vanishes',
     items: [
       '🐛 DAILY SEED NO LONGER VANISHES MID-DAY — the daily-seed button was hidden the moment any run was in progress, so a player who picked Roguelike Run in the morning lost access to the daily for the rest of the day (unless they abandoned). Daily is now always visible on the start screen. Clicking it while a non-daily run is in progress prompts a confirmation before abandoning the existing run, so mid-run progress is still protected from accidental loss.',

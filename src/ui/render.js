@@ -222,6 +222,15 @@ function _paintTile(tile, cell, c, r, state, fallenSet, introDrop) {
   // Reset to a clean baseline so we don't carry over stale classes /
   // attributes from a previous paint.
   tile.className = 'tile';
+  // 🧹 Clear any inline styles a previous animation may have left on
+  // this tile. The diff renderer recycles DOM nodes across renders,
+  // so a stale `transform`, `zIndex`, or `transition` from animateSwap
+  // (or any future tween) would persist and visually displace the
+  // tile. Animation code SHOULD clean up its own inline styles when
+  // it finishes — this is the belt-and-suspenders fallback.
+  tile.style.transform = '';
+  tile.style.transition = '';
+  tile.style.zIndex = '';
   tile.dataset.c = String(c);
   tile.dataset.r = String(r);
   tile.type = 'button';
@@ -533,6 +542,16 @@ export async function animateSwap(a, b) {
   tA.style.transform = `translate(${dx}px, ${dy}px)`;
   tB.style.transform = `translate(${-dx}px, ${-dy}px)`;
   await new Promise((res) => setTimeout(res, 235));
+  // 🧹 Clear the inline styles we set above. Before the diff-render
+  // landed (#269) the board rebuilt fresh tiles on every render, so
+  // stale inline styles got tossed out automatically. The diff
+  // renderer recycles the SAME DOM nodes across renders, so without
+  // this cleanup the transform persists and visually displaces tiles
+  // on subsequent paints ("tiles shooting off screen, disappearing,
+  // moving around the map").
+  tA.style.transform = tB.style.transform = '';
+  tA.style.transition = tB.style.transition = '';
+  tA.style.zIndex = tB.style.zIndex = '';
 }
 
 export async function animatePop(positions) {
