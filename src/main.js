@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bi',
+    items: [
+      '🧪 CASCADE MODULE COVERAGE — new `tests/cascade.test.js` exercises `applyGravity`: single-hole + middle-hole + entirely-empty column behavior, no-op when full, fallenCells reporting (only-spawn, fall+spawn, multi-column), candyTypes ceiling, and the critical "shifted tiles keep their cell object" rule so specials don\'t lose their `special` tag when they fall. 10 new tests; 229 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bh',
     items: [
       '🧪 BOARD MODULE COVERAGE — new `tests/board.test.js` exercises `src/game/board.js`: idx (row-major), inBounds (rejects negatives + overflow), cell/at/typeAt/specialAt accessors (including the "ingredient cells read as null type" rule), set/setType writers, fillNoMatches (verifies no horizontal OR vertical 3-in-a-row at fill time across 10 trials), swap (symmetric), adjacent (4-way only, not diagonal), and clear (with empty-list no-op). 22 new tests; 219 total now pass.',
