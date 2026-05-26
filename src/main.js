@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-10-editorial-pivot',
+    items: [
+      '🎴 EDITORIAL POSTER PIVOT — the .ac-card system rewritten from scratch to match the Devil/Death reference. Each surface is now a real editorial tarot card: cream/ivory outer border, bold colored INNER panel (per-arcana color), top corner letter markers + center roman numeral with arc brackets, bottom name area on the cream with GIANT Playfair Display italic serif name + Caveat handwritten script overlay + tiny italic Italian translation. Page ground = pitch black with subtle gold stardust speckle (matches the reference exactly). 22 arcana color tokens added (`--ac-arcana-fool` through `--ac-arcana-world`). Per-surface mapping: Start = IX The Hermit (l\'eremita), Welcome = 0 The Fool (il matto), Run Summary = XXI The World (il mondo), Settings = XI Justice (la giustizia), Pause = XII The Hanged Man (l\'appeso), Reset = XIII Death (la morte), Level Complete = XIX The Sun (il sole), Upgrade = V The Hierophant (il papa), Skill Tree = I The Magician (il mago), Run History = XX Judgement (il giudizio), Changelog = XVII The Star (le stelle), Level Select = VIII Strength (la forza), Class Mastery = VII The Chariot (il carro), Goodbye = XXI The World (il mondo). Stack-of-cards shadow effect behind each card. Playfair Display + Caveat fonts loaded via Google Fonts. Closes the design-2/3/4 era (which were just paint jobs) — every modal now reads as a real editorial tarot card. SW -> v14.',
+    ],
+  },
+  {
     id: '2026-05-26-design-9-all-modals-themed',
     items: [
       '🎴 EVERY MODAL IS NOW A TAROT CARD. The remaining nine modal panels migrated to the `.ac-card` system with thematic banner labels: Class Mastery ("Mastery"), Run History ("Past Readings"), Skill Tree ("The Sigils"), Upgrade Picker ("The Offering"), Changelog ("The Scrolls"), Level Select ("The Path"), Settings ("Ritual Settings"), Pause ("The Pause"), Reset Confirm ("XIII · Death" — the destruction arcana), Level Complete ("XIX · The Sun"). Some copy also re-flavored ("Choose a card" instead of "Choose a level", "Pick one to take into your next reading", "Burn the deck?" instead of "Reset all progress?"). Closes the wave — every framed surface in the game now reads as a real tarot card on the velvet table. SW -> v13.',
