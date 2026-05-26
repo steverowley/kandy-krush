@@ -621,6 +621,7 @@ export function setMusicMode(mode) {
   let next;
   if (mode === 'boss') next = 'boss';
   else if (mode === 'roguelike') next = 'chip';
+  else if (mode === 'home') next = 'home';
   else next = 'normal';
   if (next === musicMode) return;
   musicMode = next;
@@ -780,6 +781,13 @@ function scheduleNextBeatBar() {
   }
   const c = ensureCtx();
   if (!c) return;
+  // 🏠 Home-screen music is an ambient chord pad — no drums, no bass.
+  // The chord scheduler keeps running; we just skip the rhythm layer
+  // so the start menu sounds distinct from in-game lo-fi.
+  if (musicMode === 'home') {
+    beatTimer = null;
+    return;
+  }
   if (musicMode === 'chip' || musicMode === 'boss') {
     const song = currentSong();
     const bar = song[beatBarCount % song.length];
