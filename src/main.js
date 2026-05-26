@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-fix-button-text-color',
+    items: [
+      '🐛 BUTTON TEXT NO LONGER WHITE ON BRIGHT BACKGROUNDS (DARK-MODE OS) — every `<button>` in the game inherited the user-agent `color: ButtonText` system value, which resolves to WHITE on a dark-mode OS (Mac / Windows / Android with system dark theme enabled). Tailwind class `bg-pink-400` etc. set the background but no rule set the text color, so dark-mode players saw white text on bright HUD chips, modal buttons, and start-screen mode picker — unreadable. Added a single global `button { color: inherit }` rule so buttons pick up the body text-color chain (and any explicit Tailwind text-* class on the button itself still wins via higher specificity).',
+    ],
+  },
+  {
     id: '2026-05-26-fix-tile-stale-transforms',
     items: [
       '🐛 TILES NO LONGER SHOOT OFF SCREEN / MOVE AROUND / DISAPPEAR — `animateSwap` set inline `transform`, `zIndex`, and `transition` on tile DOM nodes and never cleared them. Before the diff-render refactor (#269) the board rebuilt fresh tiles on every render so leftover styles got tossed out automatically. The diff renderer recycles the SAME DOM nodes, so the stale transform persisted and visually displaced tiles on subsequent renders. Fix: animateSwap now cleans up its own inline styles when the animation completes, AND `_paintTile` defensively resets transform / transition / zIndex on every paint so future animation code can\'t reintroduce this class of bug.',
