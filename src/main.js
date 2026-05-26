@@ -371,6 +371,27 @@ function bumpClassStats(outcome, slotReached) {
 // Show the mode-picker start menu. Each button switches modes and
 // starts the appropriate flow. Called from app boot (when no run is
 // in progress) and from the run-summary close on game over.
+// 🎚 Single chokepoint for switching the active game mode. Updates the
+// persistent setting, swaps music style, re-applies the theme (which
+// toggles body.mode-roguelike → the dark roguelike palette), and
+// persists. Every mode-picker handler should call this exactly once,
+// so the on-screen palette + music can't drift away from the active
+// mode the way they did before the fix (Roguelike → Levels left the
+// body still tagged mode-roguelike → dark text on dark background).
+function switchToMode(mode) {
+  state.settings.mode = mode;
+  // sfx.setMusicMode internally normalizes the four modes to two
+  // music styles ('chip' for roguelike + 'normal' for everything
+  // else). Passing the player-facing mode string keeps the source
+  // of truth on this side.
+  sfx.setMusicMode(mode);
+  // Re-apply the theme so body.mode-roguelike is set/cleared.
+  // Without this, the roguelike dark palette stays on when the
+  // player switches to Levels / Free Play / Daily.
+  applyTheme(state.settings);
+  persist();
+}
+
 function openStartMenu(subtitle = null) {
   // 📂 Surface a Resume affordance when there's a persisted roguelike
   // run. The Resume button reuses startRoguelikeRun (which preserves
@@ -423,9 +444,7 @@ function openStartMenu(subtitle = null) {
     },
     onResume: () => {
       sfx.unlockAudio();
-      state.settings.mode = 'roguelike';
-      sfx.setMusicMode('roguelike');
-      persist();
+      switchToMode('roguelike');
       playModeTransition('roguelike');
       startRoguelikeRun();
     },
@@ -439,40 +458,32 @@ function openStartMenu(subtitle = null) {
     onRoguelike: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'roguelike' });
-      state.settings.mode = 'roguelike';
-      sfx.setMusicMode('roguelike');
       // Clear any prior daily-seed flag so a fresh "Roguelike Run"
       // doesn't inherit a seeded rng from the previous session.
       state.runRng = null;
       state.runIsDaily = false;
-      persist();
+      switchToMode('roguelike');
       playModeTransition('roguelike');
       startRoguelikeRun();
     },
     onDaily: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'daily' });
-      state.settings.mode = 'roguelike';
-      sfx.setMusicMode('roguelike');
-      persist();
+      switchToMode('roguelike');
       playModeTransition('roguelike');
       startDailySeedRun();
     },
     onLevels: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'levels' });
-      state.settings.mode = 'levels';
-      sfx.setMusicMode('levels');
-      persist();
+      switchToMode('levels');
       playModeTransition('levels');
       startLevel(state.levelProgress.currentLevel || 1);
     },
     onFreePlay: () => {
       sfx.unlockAudio();
       telemetry.track('mode_picked', { mode: 'free' });
-      state.settings.mode = 'free';
-      sfx.setMusicMode('free');
-      persist();
+      switchToMode('free');
       playModeTransition('free');
       startFreePlay();
     },
@@ -1880,6 +1891,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-fix-mode-theme-bleed',
+    items: [
+      '🐛 ROGUELIKE PALETTE NO LONGER BLEEDS INTO LEVELS / FREE PLAY — `applyTheme()` toggles `body.mode-roguelike` (which drives the dark roguelike CSS palette), but it was only called at boot and inside the settings panel. The five start-menu handlers (Resume / Roguelike / Daily / Levels / Free Play) updated `state.settings.mode` and `sfx.setMusicMode()` but never re-applied the theme — so switching from Roguelike → Levels left `body.mode-roguelike` stuck on and the Levels game inherited the dark palette (looked like "the roguelike background is still there"). Refactored all five handlers through a single `switchToMode()` helper that updates state.settings.mode, sets music, re-applies the theme, and persists — one chokepoint, no drift. First small step toward the "separate each mode" architectural ask.',
+    ],
+  },
   {
     id: '2026-05-26-fix-daily-confirm-uses-isDaily',
     items: [
