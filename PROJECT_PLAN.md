@@ -42,7 +42,7 @@
 | B9 | `purchases.js` scaffolding | ✅ shipped | #264 |
 | B10 | i18n primitives | ✅ shipped | #264 |
 | B11 | PWA manifest prod fields | ✅ shipped | #263 |
-| B12 | Tests (Vitest → node:test) | ✅ shipped (320 tests across 18 files) | #268 / #278 / #279 / #289–#322 |
+| B12 | Tests (Vitest → node:test) | ✅ shipped (338 tests across 18 files) | #268 / #278 / #279 / #289–#326 |
 | B13 | HC mode second pass | ✅ shipped | #263 |
 | B14 | Renderer unification | ⏳ deferred (canvas-renderer ships behind a flag; full unification needs particle / shake / special migration) | — |
 
@@ -111,7 +111,7 @@ Everything in Phase A (modulo A2), all of Phase B (modulo B6 final + B14), all o
 - Roguelike-deep (Wild archetype now scores; bosses have kits; Wormhole is real; Scorer is capped; daily seed; endless mode; reroll bank; ascensions)
 - Polished (run history, class mastery, run stats, native share, animated start screen, particle cap)
 - Cache-first (cold-boot is ~one round-trip faster on slow networks)
-- Tested (320 tests across 18 files, all green)
+- Tested (338 tests across 18 files, all green; every `src/game/*`, `src/audio/*`, `src/storage/*`, plus `telemetry.js`, `purchases.js`, `i18n.js`, `event-bus.js`, the service worker SHELL, and an end-to-end run-flow integration)
 
 **Recommended next moves**, in order:
 
@@ -125,8 +125,8 @@ Everything in Phase A (modulo A2), all of Phase B (modulo B6 final + B14), all o
 
 ## Tonight's autonomous run (2026-05-26)
 
-Picked up after PR #288 (Endless Mode label fix). **34 PRs landed
-(#289 → #322)**, with no human review pings:
+Picked up after PR #288 (Endless Mode label fix). **38 PRs landed
+(#289 → #326)**, with no human review pings:
 
 **B6 — bus migration of all event-driven side effects**
 - New event: `roguelike:match` (fires after slotMatchCount bump) — #299
@@ -140,18 +140,21 @@ Picked up after PR #288 (Endless Mode label fix). **34 PRs landed
 **Bug fix found in the process**
 - #305 — slot:start was emitting BEFORE applyRunUpgradesOnSlotStart ran, so the mutatorsSeen tracker was reading the previous slot's mutator (or null on slot 1). The run-summary's "Mutators encountered" list was effectively empty across every run. Reordered, fixed.
 
-**Test coverage push (#314 → #322)**
-- 167 → **320 tests across 18 files**. Filled coverage gaps on the
-  pure-function modules that had none:
+**Test coverage push (#314 → #326)**
+- 167 → **338 tests across 18 files**. Filled every previously-uncovered
+  pure-function module + filled gaps on the partially-covered ones:
   - `roguelike.js` (30 tests) — slot scaling, mutator cadence, archetype synergy, deterministic picks
   - `board.js` (22 tests) — every public method on the grid primitive
   - `cascade.js` (10 tests) — gravity + fall reporting + special-tag preservation
   - `hint.js` (10 tests) — findAnyValidSwap + reshuffle invariants
   - `levels.js` (21 tests) — getLevel / nextLevelId / progressTowardObjective / starsForLevel + table sanity
-  - `match-extras.js` (23 tests) — deriveNewSpecials / detectCombo / applyCombo / activationClears (findMatches was already covered)
+  - `match-extras.js` (23 tests) — deriveNewSpecials / detectCombo / applyCombo / activationClears
   - `haptics.js` (11 tests) — pattern shape + enable/reduce-motion gates + thrown-vibrate guard
   - `speech.js` (10 tests) — queue cap, pump semantics, flush
   - `telemetry.js` (16 tests) — provider switch, buffer cap, sendBeacon swallow, captureError breadcrumbs
+  - `purchases.js` (+9 tests) — error coercion, throw-tolerance, every grant/handler combo
+  - `i18n.js` (+8 tests) — setLocale return values, placeholder dev-visibility, formatNumber options + fallback
+  - `sw-shell.js` (+1 test) — regression guard: every `src/` JS file must be in the precache SHELL
 
 **Cleanup**
 - run-effects.js has grown to ~660 lines but is still well-organized (one event group at a time). processMatchRound's cascade-1 block dropped from ~100 lines to ~10. applyRunUpgradesOnSlotStart is ~25 lines of pure resets + the mutator roll.

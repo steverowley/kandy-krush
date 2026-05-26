@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bt',
+    items: [
+      '📔 OVERNIGHT RUN — END OF SHIFT. 38 PRs landed (#289–#326). 68 tests → 338 tests. 43 inline branches migrated to bus subscribers. 1 latent ordering bug found + fixed (slot:start). 12 new test files added (or extended). PROJECT_PLAN.md refreshed with the final count + the full test-coverage table. Closing the autonomous run in a clean state — main branch green, no open PRs, no follow-up work waiting on review.',
+    ],
+  },
+  {
     id: '2026-05-26-17bs',
     items: [
       '🧪 SW SHELL COMPLETENESS GUARD — `tests/sw-shell.test.js` already verified every SHELL entry exists on disk + no dupes. New test walks `src/` recursively and verifies EVERY `.js` file is precached by SHELL. Without this guard, adding a new module without updating service-worker.js would silently break offline cold-boot for that module. All 18 src/ JS files currently in SHELL. 338 total tests now pass.',
