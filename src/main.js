@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bj',
+    items: [
+      '🧪 HINT / RESHUFFLE MODULE COVERAGE — new `tests/hint.test.js` exercises `findAnyValidSwap`, `hasAnyValidSwap`, and `reshuffle`. Coverage includes: finds horizontal swap producing a row of 3; finds vertical swap; returns null on a deadlocked 4-type Latin-square; honors the `isSwappable` lock predicate (full-board lock + selective unlock); non-destructive (board is identical before and after the lookahead); hasAnyValidSwap as thin boolean wrapper; reshuffle\'s no-match-and-swap-exists invariant across 5 fresh boards. 10 new tests; 239 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bi',
     items: [
       '🧪 CASCADE MODULE COVERAGE — new `tests/cascade.test.js` exercises `applyGravity`: single-hole + middle-hole + entirely-empty column behavior, no-op when full, fallenCells reporting (only-spawn, fall+spawn, multi-column), candyTypes ceiling, and the critical "shifted tiles keep their cell object" rule so specials don\'t lose their `special` tag when they fall. 10 new tests; 229 total now pass.',
