@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-8-boss-major-arcana',
+    items: [
+      '🎴 BOSS SLOTS REVEAL AS MAJOR ARCANA. Every boss now plays as "the next card in the spread is turned over and revealed." The banner mounts face-down with the gold-foil card-back pattern, then flips via CSS 3D rotateY (700ms cubic-bezier) to show the boss\'s assigned Major Arcana card on the parchment + ink face. Ten bosses → ten arcana: 🍮 boss-1 → XV The Devil (temptation), 🔒 boss-2 → IV The Emperor (control), 👑 boss-3 → III The Empress (abundance), 🐌 boss-4 → VIII Strength (slow fortitude), 🗿 boss-5 → XVI The Tower (collapse), 🍒 boss-6 → VI The Lovers (union), 👻 boss-7 → XVIII The Moon (illusion), 🕷 boss-8 → XIII Death (transformation), 🧁 boss-9 → XIV Temperance (balance), 🐙 boss-10 final → XXI The World (completion). Roman numeral cartouche above, arcana-name cartouche below, boss icon + name + tip in the middle — the same `.ac-card` anatomy as every other framed surface in the game. The pre-flip card-back is the `.ac-card-back` pattern shipped in design-6. Closes the design-4..8 arc that turns every UI surface into a real tarot-table interaction. SW -> v12.',
+    ],
+  },
+  {
     id: '2026-05-26-design-7-mode-picker-card-spread',
     items: [
       '🎴 MODE PICKER IS A TAROT SPREAD. The four mode buttons on the start menu (Roguelike / Daily / Levels / Free Play) are now small face-up tarot cards laid out as a 2×2 grid on mobile and a 4-column row on tablet+. Each card has the same anatomy as a real card from the deck: roman numeral top, suit glyph center (⚔ 🌅 🎯 🜄), gothic uppercase name bottom — small-scale echo of the design-4 `.ac-card` frame language. Per-suit accent glow tints the top of each card so the four reading options stay visually distinct without overpowering the parchment palette. Hover/focus lifts the card 3px + swaps the inner-frame line to gold-foil. Button IDs preserved so every existing handler in main.js still binds. Resume Reading promoted above the spread when a run is in progress. SW -> v11.',

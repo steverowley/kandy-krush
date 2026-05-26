@@ -1455,14 +1455,43 @@ export function showBossDefeatedBanner(boss, { isFinal = false, holdMs = 2200 } 
   });
 }
 
+// 🎴 Major Arcana mapping — each of the ten boss slots reveals
+// as one of the 22 traditional Major Arcana cards, narratively
+// chosen to fit the boss's vibe. Final boss is The World (XXI) —
+// completion of the spread.
+const MAJOR_ARCANA_BY_BOSS = {
+  'boss-1':  { numeral: 'XV',   name: 'The Devil' },        // Pudding/jelly — temptation, indulgence
+  'boss-2':  { numeral: 'IV',   name: 'The Emperor' },      // Lock — control, structure
+  'boss-3':  { numeral: 'III',  name: 'The Empress' },      // Sweet King → reframed as Empress (abundance, sweetness)
+  'boss-4':  { numeral: 'VIII', name: 'Strength' },         // Snail — slow but steady fortitude
+  'boss-5':  { numeral: 'XVI',  name: 'The Tower' },        // Statue — collapse, upheaval
+  'boss-6':  { numeral: 'VI',   name: 'The Lovers' },       // Cherry — union, choice
+  'boss-7':  { numeral: 'XVIII',name: 'The Moon' },         // Ghost — illusion, the unknown
+  'boss-8':  { numeral: 'XIII', name: 'Death' },            // Spider — transformation, decay
+  'boss-9':  { numeral: 'XIV',  name: 'Temperance' },       // Cupcake — balance, sweet measure
+  'boss-10': { numeral: 'XXI',  name: 'The World' },        // Final boss — completion of the spread
+};
+
 export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 : 3000 } = {}) {
   const root = document.getElementById('boss-banner');
   if (!root) return Promise.resolve();
+  const flipper = root.querySelector('.ac-boss-card-flipper');
   const tier = document.getElementById('boss-banner-tier');
   const icon = document.getElementById('boss-banner-icon');
   const name = document.getElementById('boss-banner-name');
   const tip = document.getElementById('boss-banner-tip');
-  if (tier) tier.textContent = isFinal ? 'FINAL BOSS' : 'BOSS BATTLE';
+  const numeral = document.getElementById('boss-banner-numeral');
+  const arcanaLabel = document.getElementById('boss-banner-arcana-label');
+
+  // Resolve the boss to its assigned Major Arcana. Unknown bosses
+  // fall back to "XX · Judgement" (catch-all reveal) so the banner
+  // is never empty.
+  const arcana = MAJOR_ARCANA_BY_BOSS[boss && boss.id]
+    || { numeral: 'XX', name: 'Judgement' };
+
+  if (numeral) numeral.textContent = arcana.numeral;
+  if (arcanaLabel) arcanaLabel.textContent = arcana.name;
+  if (tier) tier.textContent = isFinal ? 'Major Arcana · Final' : 'Major Arcana';
   if (name) name.textContent = (boss && boss.name) || 'Boss';
   // Pick an icon based on boss id (matches the in-game lore naming).
   const iconByBossId = {
@@ -1484,8 +1513,21 @@ export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 
     }
   }
   if (tip) tip.textContent = (boss && boss.tip) || '';
+
+  // Mount face-down, then trigger the flip on the next frame so
+  // the CSS transition runs. The flip itself is 700ms (per
+  // .ac-boss-card-flipper transition); holdMs measures from after
+  // the flip lands.
   root.classList.remove('hidden', 'fading');
   root.classList.add('show');
+  if (flipper) {
+    flipper.classList.remove('revealed');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flipper.classList.add('revealed');
+      });
+    });
+  }
   return new Promise((resolve) => {
     setTimeout(() => {
       root.classList.remove('show');
@@ -1493,9 +1535,11 @@ export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 
       setTimeout(() => {
         root.classList.add('hidden');
         root.classList.remove('fading');
+        // Reset the flipper to face-down for the next reveal.
+        if (flipper) flipper.classList.remove('revealed');
         resolve();
       }, 350);
-    }, holdMs);
+    }, holdMs + 700);
   });
 }
 
