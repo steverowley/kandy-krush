@@ -124,6 +124,11 @@ import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
 import * as bus from './game/event-bus.js';
 import { registerRunEffects } from './game/run-effects.js';
 import { registerMode, setActiveMode } from './modes/index.js';
+import * as freePlayMode from './modes/free-play/index.js';
+import * as levelsMode from './modes/levels/index.js';
+import * as roguelikeMode from './modes/roguelike/index.js';
+import * as dailyMode from './modes/daily/index.js';
+import * as homeMode from './modes/home/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -1905,6 +1910,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-3-per-mode-files',
+    items: [
+      '🧱 MODE SEPARATION — STEP 3: PER-MODE FILES. Every mode now lives in its own file under `src/modes/<id>/index.js` — Home, Roguelike, Daily, Levels, Free Play — each declaring its dependencies explicitly via `register(deps)`. No more implicit reach into main.js globals. Each module is now testable in isolation, movable between projects, and has a single grep-able list of every helper it touches. `main.js` lost ~450 lines of mode-specific logic (4400-line `playRoguelikeSlot` body, level intro flow, free play init, etc.). Internal callers keep their names (`startRoguelikeRun`, `playRoguelikeSlot`, `startLevel`, …) — they now resolve to the module\'s returned API instead of inline functions, so the refactor is mechanical at the call sites. Foundation for Modes 4 (per-mode state slices) and Modes 5 (screen router). 355 tests still pass.',
+    ],
+  },
   {
     id: '2026-05-26-modes-2-real-exit-and-home',
     items: [
@@ -4359,165 +4370,17 @@ function runRng() {
 // every player on the same calendar day gets the same class options,
 // upgrade picks, mutators, and relic choices. This is the single
 // highest-leverage retention feature in the genre.
-function startDailySeedRun() {
-  const seed = dailySeed();
-  state.runRng = createRng(seed);
-  state.runIsDaily = true;
-  state.runDailyStamp = dailySeedStamp();
-  telemetry.track('daily_seed_start', { stamp: state.runDailyStamp });
-  // Reset run state so a daily can't inherit upgrades from a previous run.
-  state.inRoguelikeRun = false;
-  state.roguelike.currentSlot = 1;
-  state.runUpgrades = [];
-  state.runRelics = [];
-  state.roguelike.currentClass = null; state.runFreeRerolls = 0;
-  startRoguelikeRun();
-}
+// Daily start function — see src/modes/daily/index.js.
+let startDailySeedRun;
 
-function startRoguelikeRun() {
-  state.inRoguelikeRun = true;
-  if (!state.roguelike.currentSlot || state.roguelike.currentSlot < 1) {
-    state.roguelike.currentSlot = 1;
-  }
-  // Refresh lives if this is a fresh start (slot 1 or zero lives).
-  if (state.roguelike.currentSlot === 1 || !state.roguelike.livesRemaining) {
-    state.roguelike.livesRemaining = maxLivesForRun();
-  }
-  if (state.roguelike.currentSlot === 1) {
-    state.roguelike.runsStarted = (state.roguelike.runsStarted || 0) + 1;
-    state.runUpgrades = [];
-    state.runRelics = [];
-    state.roguelike.currentClass = null; state.runFreeRerolls = 0;
-    // Per-run highlights — surfaced on the run-summary panel when the
-    // player finishes (or dies).
-    state.runHighlights = {
-      maxCascade: 0,
-      biggestMatch: 0,
-      totalMatches: 0,
-      bestSlotScore: 0,
-      infiniteCount: 0,
-      mutatorsSeen: [],
-    };
-    // 🔄 Reroll Bank meta — start each run with 3 free upgrade rerolls.
-    // Carries between slots; consumed by the upgrade picker.
-    state.runFreeRerolls = hasMeta('reroll-bank') ? 3 : 0;
-    // 🎒 Pocket Friend meta-skill — start each run with 1 random relic.
-    if (hasMeta('pocket-friend')) {
-      const choices = pickRelicChoices([], 1, runRng());
-      if (choices.length > 0) {
-        state.runRelics = [choices[0].id];
-        setTimeout(() => {
-          flashMessage(`🎒 Pocket Friend: ${choices[0].icon} ${choices[0].name}!`, 1800);
-        }, 800);
-      }
-    }
-  }
-  if (!state.runHighlights) state.runHighlights = { maxCascade: 0, biggestMatch: 0, totalMatches: 0, bestSlotScore: 0, infiniteCount: 0, mutatorsSeen: [] };
-  // Backfill missing fields on resumed runs (forward-compat with old saves).
-  if (state.runHighlights.totalMatches == null) state.runHighlights.totalMatches = 0;
-  if (state.runHighlights.bestSlotScore == null) state.runHighlights.bestSlotScore = 0;
-  if (state.runHighlights.infiniteCount == null) state.runHighlights.infiniteCount = 0;
-  if (!Array.isArray(state.runHighlights.mutatorsSeen)) state.runHighlights.mutatorsSeen = [];
-  persist();
-  // First-ever roguelike run: pop a one-time intro explaining the
-  // class / archetype / relic / mutator / enemy systems. Then class.
-  if (state.roguelike.currentSlot === 1 && !state.roguelike.currentClass && !state.seenRoguelikeIntro) {
-    showRoguelikeIntro(() => {
-      state.seenRoguelikeIntro = true;
-      persist();
-      startRoguelikeRun(); // re-enter to hit the class picker branch
-    });
-    return;
-  }
-  // Fresh run with no class yet — show the class picker. The picker
-  // grants free starting upgrades that shape the run's archetype.
-  if (state.roguelike.currentSlot === 1 && !state.roguelike.currentClass) {
-    showClassPicker(CLASSES, ARCHETYPES, (cls) => {
-      state.roguelike.currentClass = cls.id;
-      for (const id of (cls.start || [])) state.runUpgrades.push(id);
-      telemetry.track('run_start', {
-        class: cls.id,
-        archetype: cls.archetype,
-        starting_upgrades: (cls.start || []).slice(),
-        runs_completed_before: state.roguelike?.runsCompleted || 0,
-      });
-      flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
-      speech.speak(`${cls.name} chosen.`);
-      spawnConfetti(30);
-      haptics.specialBirth();
-      persist();
-      refreshRunHud();
-      setTimeout(() => playRoguelikeSlot(state.roguelike.currentSlot, { announce: true }), 400);
-    }, state.roguelike.classStats || {});
-    return;
-  }
-  playRoguelikeSlot(state.roguelike.currentSlot, { announce: true });
-}
-
-function playRoguelikeSlot(slot, { announce = true } = {}) {
-  const lvl = applyAscensionMods(getRoguelikeLevel(slot));
-  cancelHint();
-  hideLevelOverlay();
-  state.level = lvl;
-  resetBoard();
-  applyLevelObstacles(state.level);
-  state.movesRemaining = state.level.moves;
-  // Apply slot-start mutators / relics FIRST (which is what sets
-  // state.slotMutator), THEN emit. With the old order, the
-  // mutatorsSeen tracker in run-effects.js was reading the previous
-  // slot's mutator instead of the current one — silently empty list
-  // for the run summary. Fixed here.
-  applyRunUpgradesOnSlotStart();
-  bus.emit('slot:start', { slot, isBoss: !!lvl.isBoss, mechanic: lvl.mechanic || null });
-  // Defensive: a previous setRunHud({ visible: false }) (e.g. from boot
-  // before the run started) could leave the HUD with the `hidden` class
-  // even after the run is live. Forcing a refresh here guarantees the
-  // build readout is visible from slot 1.
-  refreshRunHud();
-  refreshLevelUI();
-  renderBoard(state.board, state, { intro: true });
-  if (announce) {
-    state.busy = true;
-    const done = async () => {
-      state.busy = true;
-      try {
-        // Fire any visual slot-start FX (Black Hole, Storm Caller, etc.)
-        // now that the intro is gone so they don't run under the overlay.
-        runDeferredSlotEffects();
-        await cascadePendingMatches();
-      } finally {
-        state.busy = false;
-      }
-      scheduleHint();
-    };
-    const p = showLevelIntro(state.level, RUN_LENGTH);
-    if (p && typeof p.then === 'function') p.then(done);
-    else done();
-    if (lvl.isBoss) {
-      // Boss intro: dramatic banner overlay + screen flash + shake.
-      showBossBanner(lvl, { isFinal: slot === RUN_LENGTH });
-      spawnScreenFlash('rgba(255, 0, 110, 0.55)');
-      screenShake(10, 520);
-      sfx.playBossStinger();
-      haptics.epic();
-      // Boss music — faster, more aggressive variant of the chiptune.
-      sfx.setMusicMode('boss');
-      // Red pulsing border on the board for the whole boss fight.
-      document.body.classList.add('boss-active');
-      if (slot === RUN_LENGTH) document.body.classList.add('boss-final');
-    } else {
-      // Non-boss slot: back to the standard chip variant.
-      sfx.setMusicMode('roguelike');
-      document.body.classList.remove('boss-active', 'boss-final');
-    }
-    speech.speak(
-      `Slot ${slot} of ${RUN_LENGTH}.${lvl.isBoss ? ` Boss battle. ${lvl.name}.` : ''} ${lvl.hint}.`
-    );
-  } else {
-    runDeferredSlotEffects();
-    cascadePendingMatches().then(() => scheduleHint());
-  }
-}
+// Roguelike start/playSlot/endRunSoft — see src/modes/roguelike/index.js.
+// Slots are assigned at boot once roguelikeMode.register returns its
+// public API. Internal callers (run-summary "play again", header
+// restart button, this file's exit lifecycle) keep their existing
+// names so the refactor stays mechanical.
+let startRoguelikeRun;
+let playRoguelikeSlot;
+let _endRoguelikeRunSoft;
 
 function advanceRoguelikeAfterWin() {
   const slot = state.roguelike.currentSlot;
@@ -6446,59 +6309,15 @@ function decrementJellyAt(positions) {
   return dec;
 }
 
-function startLevel(levelId, { announce = true } = {}) {
-  cancelHint();
-  hideLevelOverlay();
-  state.level = getLevel(levelId);
-  resetBoard();
-  applyLevelObstacles(state.level);
-  state.movesRemaining = state.level.moves;
-  refreshLevelUI();
-  renderBoard(state.board, state, { intro: true });
-  if (announce) {
-    const bestStars = state.levelProgress.stars[state.level.id] || 0;
-    const bestScore = (state.levelProgress.bestScores || {})[state.level.id] || 0;
-    let bestPhrase = '';
-    if (bestStars > 0 || bestScore > 0) {
-      const parts = [];
-      if (bestStars > 0) parts.push(`${bestStars} ${bestStars === 1 ? 'star' : 'stars'}`);
-      if (bestScore > 0) parts.push(`${bestScore.toLocaleString()} points`);
-      bestPhrase = ` Your best: ${parts.join(', ')}.`;
-    }
-    const tipPhrase = state.level.tip ? ` Tip: ${state.level.tip}` : '';
-    speech.speak(
-      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}${tipPhrase}`
-    );
-    // Block input while intro is up; the intro resolves on tap or timeout.
-    state.busy = true;
-    const done = async () => {
-      // Safety net: eat any stale matches on the freshly-loaded board.
-      state.busy = true;
-      try {
-        await cascadePendingMatches();
-      } finally {
-        state.busy = false;
-      }
-      scheduleHint();
-    };
-    const p = showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
-    if (p && typeof p.then === 'function') p.then(done);
-    else done();
-  } else {
-    cascadePendingMatches().then(() => scheduleHint());
-  }
-}
+// Levels start function — assigned at boot once levelsMode.register
+// returns its public API. See src/modes/levels/index.js.
+let startLevel;
 
-function startFreePlay() {
-  cancelHint();
-  hideLevelOverlay();
-  state.level = null;
-  resetBoard();
-  state.movesRemaining = 0;
-  refreshLevelUI();
-  renderBoard(state.board, state, { intro: true });
-  scheduleHint();
-}
+// Free Play start function — exported by the per-mode module so
+// internal callers (init, restart button, boot fallback) can invoke
+// it without going through the mode runtime. The runtime path uses
+// the same `start` via the registered enter() hook.
+let startFreePlay; // assigned at boot after deps are wired
 
 function init({ chime = false, announceLevel = true } = {}) {
   if (state.settings.mode === 'roguelike') {
@@ -6519,63 +6338,82 @@ applyTheme(state.settings);
 // the next one. enter() still delegates to the existing startX()
 // for now; a future PR will move those bodies into per-mode files
 // under src/modes/<id>.js.
-function _endRoguelikeRunSoft() {
-  // Drop the run flag + ephemeral run state, refresh the HUD so it
-  // hides. We intentionally do NOT call endRoguelikeRun() — that
-  // records telemetry + run-history + shows the run-summary modal,
-  // which would surprise a player who just switched modes. The
-  // persisted roguelike progress (currentSlot, gems, upgrades,
-  // relics) stays in state.roguelike for a future Resume path.
-  state.inRoguelikeRun = false;
-  state.runRng = null;
-  state.runIsDaily = false;
-  state.runDailyStamp = null;
-  state.cascadeAbort = true;
-  refreshRunHud();
-}
-registerMode({
-  id: 'home',
-  // 🏠 Home is a first-class mode now. enter() swaps to the ambient
-  // home-screen music, force-clears the roguelike palette (without
-  // mutating state.settings.mode — that's the player's last *game*
-  // mode preference), and shows the start menu. exit() hides the
-  // menu so the next mode's UI isn't painted underneath it.
-  enter(opts) {
-    sfx.setMusicMode('home');
-    document.body.classList.remove('mode-roguelike');
-    openStartMenu(opts && opts.subtitle ? opts.subtitle : null);
-  },
-  exit() {
-    hideStartMenu();
-  },
-});
-registerMode({
-  id: 'roguelike',
-  enter() { startRoguelikeRun(); },
-  exit() { _endRoguelikeRunSoft(); },
-});
-registerMode({
-  id: 'daily',
-  enter() { startDailySeedRun(); },
-  exit() { _endRoguelikeRunSoft(); },
-});
-registerMode({
-  id: 'levels',
-  enter() { startLevel(state.levelProgress.currentLevel || 1); },
-  exit() {
-    // Cancel any in-flight cascade so a Levels match that's still
-    // animating can't keep mutating state after the player switches
-    // modes.
-    state.cascadeAbort = true;
-  },
-});
-registerMode({
-  id: 'free',
-  enter() { startFreePlay(); },
-  exit() {
-    state.cascadeAbort = true;
-  },
-});
+homeMode.register({ sfx, openStartMenu, hideStartMenu });
+({ start: startRoguelikeRun, playSlot: playRoguelikeSlot, endRunSoft: _endRoguelikeRunSoft } = roguelikeMode.register({
+  state,
+  bus,
+  persist,
+  sfx,
+  speech,
+  telemetry,
+  haptics,
+  refreshRunHud,
+  refreshLevelUI,
+  cancelHint,
+  hideLevelOverlay,
+  resetBoard,
+  applyLevelObstacles,
+  applyRunUpgradesOnSlotStart,
+  applyAscensionMods,
+  cascadePendingMatches,
+  runDeferredSlotEffects,
+  scheduleHint,
+  renderBoard,
+  flashMessage,
+  spawnConfetti,
+  spawnScreenFlash,
+  screenShake,
+  showRoguelikeIntro,
+  showClassPicker,
+  showLevelIntro,
+  showBossBanner,
+  getRoguelikeLevel,
+  runRng,
+  hasMeta,
+  pickRelicChoices,
+  maxLivesForRun,
+  CLASSES,
+  ARCHETYPES,
+  RUN_LENGTH,
+}));
+({ start: startDailySeedRun } = dailyMode.register({
+  state,
+  telemetry,
+  dailySeed,
+  dailySeedStamp,
+  createRng,
+  roguelikeStart: startRoguelikeRun,
+  roguelikeEndRunSoft: _endRoguelikeRunSoft,
+}));
+({ start: startLevel } = levelsMode.register({
+  state,
+  sfx,
+  speech,
+  cancelHint,
+  hideLevelOverlay,
+  resetBoard,
+  refreshLevelUI,
+  renderBoard,
+  scheduleHint,
+  cascadePendingMatches,
+  showLevelIntro,
+  getLevel,
+  applyLevelObstacles,
+  LEVELS,
+}));
+// Free Play is now its own self-contained module — see
+// src/modes/free-play/index.js. register() returns the module's
+// public API ({ start }) which we expose to in-file callers via
+// the previously-declared `startFreePlay` slot.
+({ start: startFreePlay } = freePlayMode.register({
+  state,
+  cancelHint,
+  hideLevelOverlay,
+  resetBoard,
+  refreshLevelUI,
+  renderBoard,
+  scheduleHint,
+}));
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
 registerRunEffects(state, {

@@ -18,7 +18,7 @@
 // asset so an offline cold-boot works even without a prior online
 // visit.
 
-const VERSION = 'sweet-match-v95';
+const VERSION = 'sweet-match-v96';
 const SHELL = [
   './',
   './index.html',
@@ -33,6 +33,11 @@ const SHELL = [
   './src/game/event-bus.js',
   './src/game/run-effects.js',
   './src/modes/index.js',
+  './src/modes/free-play/index.js',
+  './src/modes/levels/index.js',
+  './src/modes/roguelike/index.js',
+  './src/modes/daily/index.js',
+  './src/modes/home/index.js',
   './src/game/board.js',
   './src/game/cascade.js',
   './src/game/match.js',
