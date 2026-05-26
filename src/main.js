@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-12-tiles-and-chrome-as-cards',
+    items: [
+      '🎴 EVERY TILE AND EVERY CHROME ELEMENT IS NOW AN EDITORIAL CARD. Pushed the design-10 anatomy down to the 36 board tiles AND outward to the in-game chrome. (1) TILES: each of the six suits (pentacles / cups / star / wands / moon / swords) now renders as a mini editorial tarot card — cream outer + bold per-suit colored inner panel (via ::before) + line-art ink suit glyph + tiny italic Playfair serif suit-name strip at the bottom. data-suit on the .tile drives the panel color. The board now reads as a 6×6 spread of real cards, not a colored grid. (2) NEW CHROME CARD: new `.ac-chrome-card` compact editorial variant for in-game panels — same per-arcana color system, italic Playfair numeral top-left + serif name strip bottom-right + faint colored-tint inner panel that doesn\'t fight the content. (3) APPLIED TO: level-info panel (VIII · The Trial), run-hud (I · The Hand), score chip (X · Score / Wheel of Fortune), best chip (IX · Best / The Hermit). Every visible surface in the game — modals + spreads + tiles + chrome + boss reveal — now shares one editorial card language. SW -> v16.',
+    ],
+  },
+  {
     id: '2026-05-26-design-11-chrome-and-spreads',
     items: [
       '🎴 EDITORIAL PASS ACROSS GAMEPLAY CHROME + MODE SPREAD + BOSS FLIP. Three follow-up surfaces from design-10 now adopt the same editorial card anatomy: (1) The mode-picker spread on the start menu — each of the four mini cards is now cream outer + bold per-suit colored inner panel + Playfair italic serif name at the bottom, matching the big-card system in miniature. (2) The boss-card flip — the front face after the 700ms 3D rotate now reveals an editorial card with per-arcana colored panel + giant Playfair serif name + Caveat script + Italian translation. boss-1..boss-10 each carry their assigned arcana slug + Italian (`il diavolo`, `l\'imperatore`, `la torre`, `gli amanti`, `la luna`, `la morte`, `la temperanza`, `il mondo`, …). (3) In-game chrome — the page header, level-info panel, run-HUD, score display all sit on cream `.ac-panel` chips with ink borders + Playfair italic numerals. The big score number is now gold Playfair italic so the most-watched value on screen reads as a tarot numeral, not a counter. Closes the design-10 follow-up arc — modals + chrome + spreads + boss reveal all share one cohesive editorial card language. SW -> v15.',
