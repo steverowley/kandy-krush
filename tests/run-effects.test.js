@@ -338,6 +338,68 @@ test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
   assert.equal(s.luckyCharge, 0);
 });
 
+// --- 👛 Coin Purse relic (roguelike:match every 10th → +1 gem) ---
+
+test("Coin Purse fires every 10th roguelike match", () => {
+  bus.clear();
+  let persistCalls = 0;
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'coin-purse',
+    persist: () => persistCalls++,
+  });
+  // Matches 1–9: no fire.
+  for (let i = 1; i <= 9; i++) {
+    bus.emit('roguelike:match', { slotMatchCount: i, cascadeLevel: 1, matchSize: 3 });
+  }
+  assert.equal(s.roguelike.gems, 0);
+  assert.equal(persistCalls, 0);
+  // Match 10: fires.
+  bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 1);
+  assert.equal(persistCalls, 1);
+  // Match 20: fires again.
+  bus.emit('roguelike:match', { slotMatchCount: 20, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 2);
+  assert.equal(persistCalls, 2);
+});
+
+test("Coin Purse no-op without the relic", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
+  registerRunEffects(s, { hasRelic: () => false });
+  bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 0);
+});
+
+// --- ⛏ Diamond Mine mutator (roguelike:match every 6th → +1 gem) ---
+
+test("Diamond Mine fires every 6th roguelike match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
+  registerRunEffects(s, { hasMutator: (id) => id === 'diamond-mine' });
+  bus.emit('roguelike:match', { slotMatchCount: 5, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 0);
+  bus.emit('roguelike:match', { slotMatchCount: 6, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 1);
+  bus.emit('roguelike:match', { slotMatchCount: 12, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 2);
+  bus.emit('roguelike:match', { slotMatchCount: 13, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 2); // no fire
+});
+
+test("Both Coin Purse + Diamond Mine can stack on the same match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'coin-purse',
+    hasMutator: (id) => id === 'diamond-mine',
+  });
+  // LCM(6, 10) = 30 → both fire at slot match 30.
+  bus.emit('roguelike:match', { slotMatchCount: 30, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.roguelike.gems, 2);
+});
+
 // --- 🍵 Bottomless Cup mutator (cascade 1 match → +20% Lucky bar) ---
 
 test("Bottomless Cup adds 20% Lucky on every cascade-1 match", () => {

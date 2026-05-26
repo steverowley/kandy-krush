@@ -222,6 +222,36 @@ export function registerRunEffects(state, helpers = {}) {
     flashMessage(`🧁 Confectionery! +${n} 🎁`, 1000);
   }));
 
+  // 👛 Coin Purse relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 10 matches in a slot earns +1
+  // gem with a flash + persist. Subscribes to the new `roguelike:match`
+  // event so it can read the post-increment slotMatchCount from the
+  // payload (the canonical `match` event fires before the increment).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 10 !== 0) return;
+    if (!hasRelic('coin-purse')) return;
+    if (!state.roguelike) return;
+    state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+    flashMessage('👛 Coin Purse +1 💎', 900);
+    persist();
+  }));
+
+  // ⛏ Diamond Mine mutator. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 6 matches in a slot earns +1
+  // gem. Same shape as Coin Purse, different cadence + holder type.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 6 !== 0) return;
+    if (!hasMutator('diamond-mine')) return;
+    if (!state.roguelike) return;
+    state.roguelike.gems = (state.roguelike.gems || 0) + 1;
+    flashMessage('⛏ Diamond Mine +1 💎', 800);
+    persist();
+  }));
+
   // 🍵 Bottomless Cup mutator. Was inline in processMatchRound under
   // the `cascadeLevel === 1` block. +20% Lucky bar per match (gated to
   // cascade level 1 so chains don't tick the bar more than once per
