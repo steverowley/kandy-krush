@@ -1510,17 +1510,8 @@ function applyRunUpgradesOnSlotStart() {
   state.butteredUsed = false;
   // 🌬 Second Wind relic — migrated to bus.on('slot:start', …) in
   // run-effects.js (PR #17bb).
-  // 🎁 Generous starter — slot 1 of every run grants +1 of every power-up.
-  // 💪 Powerful Start meta doubles it to +2.
-  if (state.roguelike.currentSlot === 1) {
-    const startBank = powerupBank();
-    const bonus = hasMeta('powerful-start') ? 2 : 1;
-    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      startBank[key] = Math.min(effectivePowerupCap(key), (startBank[key] || 0) + bonus);
-    }
-    setPowerupCounts(startBank);
-    flashMessage(`🎁 Welcome gift: +${bonus} of each power-up`, 1600);
-  }
+  // 🎁 Generous starter — migrated to bus.on('slot:start', …) in
+  // run-effects.js (PR #17be). Reads ctx.slot from the payload.
   // first-free upgrade — fresh first-swap flag.
   state.firstSwapUsed = false;
   // first-free-reroll meta — fresh per slot.
@@ -1885,6 +1876,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17be',
+    items: [
+      '🎁 GENEROUS STARTER MIGRATED TO THE BUS — the slot-1 "+1 of every power-up" grant (×2 with the powerful-start meta) was the last inline slot-init effect in applyRunUpgradesOnSlotStart. Now a `bus.on(\'slot:start\', …)` subscriber in run-effects.js that reads ctx.slot from the event payload. 3 new tests; 167 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-17bd',
     items: [
