@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17aj',
+    items: [
+      '✨🪞 STARDUST + ECHO MATCH MIGRATED TO THE BUS — both cascade-≥4 effects (Stardust relic\'s +1 gem with persist, Echo Match upgrade\'s 50%-per-stack Lucky-bar fill) used to live in the cascade-level inline block in processMatchRound. Now both are `bus.on(\'cascade\', …)` subscribers in `run-effects.js`. Helpers channel gains `upgradeCount` + `persist`. 7 new tests; 84 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ai',
     items: [
       '🌟 GLOW STICK MIGRATED TO THE BUS — the relic\'s cascade-≥6-fills-Lucky branch used to live as an `if (...)` inside processMatchRound; now a `bus.on(\'cascade\', …)` subscriber in `run-effects.js`. First effect to use the new `helpers` injection channel (hasRelic / setLuckyCharge / flashMessage) so run-effects can keep up its no-import-from-main.js rule. 5 new tests; 77 total now pass.',
@@ -5897,20 +5903,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
     spawnConfetti(36);
-    // ✨ Stardust relic — +1 gem per cascade ≥ 4.
-    if (state.inRoguelikeRun && hasRelic('stardust')) {
-      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
-      flashMessage('✨ Stardust +1 💎', 800);
-      persist();
-    }
-    // 🪞 Echo Match upgrade — cascade ≥4 also fills Lucky bar by 50% per stack.
-    if (state.inRoguelikeRun && upgradeCount('echo-match') > 0) {
-      const add = 50 * upgradeCount('echo-match');
-      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + add);
-      if (state.luckyCharge >= 100) state.luckyReady = true;
-      setLuckyCharge(state.luckyCharge, state.luckyReady);
-      flashMessage(`🪞 Echo Match +${add}% 🍀`, 800);
-    }
+    // ✨ Stardust relic + 🪞 Echo Match upgrade — both migrated to
+    // bus.on('cascade', …) subscribers in run-effects.js (PR #17aj).
   }
   if (cascadeLevel >= 5) {
     spawnScreenFlash('rgba(255, 0, 110, 0.35)');
@@ -6430,7 +6424,7 @@ function init({ chime = false, announceLevel = true } = {}) {
 applyTheme(state.settings);
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
-registerRunEffects(state, { hasRelic, setLuckyCharge, flashMessage });
+registerRunEffects(state, { hasRelic, upgradeCount, setLuckyCharge, flashMessage, persist });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
 // down to the current effective cap so the UI doesn't show "9 hammers"

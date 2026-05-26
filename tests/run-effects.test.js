@@ -200,3 +200,80 @@ test("Glow Stick is a no-op when Lucky is already ready", () => {
   assert.equal(s.luckyCharge, 100);
   assert.equal(s.luckyReady, true);
 });
+
+// --- ✨ Stardust relic (cascade ≥4 → +1 gem) ---
+
+test("Stardust relic bumps gems on cascade ≥4 and persists", () => {
+  bus.clear();
+  let persistCalls = 0;
+  const s = { inRoguelikeRun: true, roguelike: { gems: 5 } };
+  registerRunEffects(s, { hasRelic: (id) => id === 'stardust', persist: () => persistCalls++ });
+  bus.emit('cascade', { cascadeLevel: 4, totalCleared: 5 });
+  assert.equal(s.roguelike.gems, 6);
+  assert.equal(persistCalls, 1);
+  bus.emit('cascade', { cascadeLevel: 7, totalCleared: 9 });
+  assert.equal(s.roguelike.gems, 7);
+  assert.equal(persistCalls, 2);
+});
+
+test("Stardust is a no-op below cascade 4", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 5 } };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('cascade', { cascadeLevel: 3, totalCleared: 4 });
+  assert.equal(s.roguelike.gems, 5);
+});
+
+test("Stardust is a no-op without the relic", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { gems: 5 } };
+  registerRunEffects(s, { hasRelic: () => false });
+  bus.emit('cascade', { cascadeLevel: 5, totalCleared: 6 });
+  assert.equal(s.roguelike.gems, 5);
+});
+
+test("Stardust tolerates a missing roguelike subtree", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: null };
+  registerRunEffects(s, { hasRelic: () => true });
+  // Should not throw.
+  bus.emit('cascade', { cascadeLevel: 6, totalCleared: 7 });
+});
+
+// --- 🪞 Echo Match upgrade (cascade ≥4 → fills Lucky bar 50% per stack) ---
+
+test("Echo Match fills Lucky bar by 50% per stack on cascade ≥4", () => {
+  bus.clear();
+  const calls = [];
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'echo-match' ? 1 : 0),
+    setLuckyCharge: (c, r) => calls.push({ c, r }),
+  });
+  bus.emit('cascade', { cascadeLevel: 4, totalCleared: 5 });
+  assert.equal(s.luckyCharge, 50);
+  assert.equal(s.luckyReady, false);
+  bus.emit('cascade', { cascadeLevel: 4, totalCleared: 5 });
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+  assert.equal(calls.length, 2);
+});
+
+test("Echo Match scales linearly per stack", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'echo-match' ? 2 : 0),
+  });
+  bus.emit('cascade', { cascadeLevel: 4, totalCleared: 5 });
+  assert.equal(s.luckyCharge, 100); // 50 × 2 = 100, clamped at 100
+  assert.equal(s.luckyReady, true);
+});
+
+test("Echo Match is a no-op without the upgrade", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { upgradeCount: () => 0 });
+  bus.emit('cascade', { cascadeLevel: 6, totalCleared: 7 });
+  assert.equal(s.luckyCharge, 0);
+});
