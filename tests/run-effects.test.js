@@ -132,3 +132,71 @@ test("infinite handler is a no-op outside a roguelike run", () => {
   bus.emit('infinite', { nth_this_session: 1, score: 1_000_001 });
   assert.equal(state.runHighlights.infiniteCount, 0);
 });
+
+// --- 🌟 Glow Stick relic (cascade ≥6 → instant Lucky-ready) ---
+//
+// Glow Stick is the first relic effect to ride the helpers channel. The
+// inline branch in processMatchRound used to do all four side effects;
+// the subscriber now does the same, but receives hasRelic /
+// setLuckyCharge / flashMessage as helper injections so it doesn't have
+// to import from main.js (which would cycle).
+test("Glow Stick relic fills Lucky bar on cascade ≥6 when held", () => {
+  bus.clear();
+  const calls = { lucky: [], flash: [] };
+  const s = {
+    inRoguelikeRun: true,
+    luckyMode: false,
+    luckyReady: false,
+    luckyCharge: 0,
+    runHighlights: { maxCascade: 0, biggestMatch: 0, totalMatches: 0 },
+  };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'glow-stick',
+    setLuckyCharge: (charge, ready) => calls.lucky.push({ charge, ready }),
+    flashMessage: (msg, ms) => calls.flash.push({ msg, ms }),
+  });
+  bus.emit('cascade', { cascadeLevel: 6, totalCleared: 7 });
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+  assert.deepEqual(calls.lucky, [{ charge: 100, ready: true }]);
+  assert.equal(calls.flash.length, 1);
+  assert.match(calls.flash[0].msg, /GLOW STICK/);
+});
+
+test("Glow Stick is a no-op below cascade 6", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyMode: false, luckyReady: false, luckyCharge: 0 };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('cascade', { cascadeLevel: 5, totalCleared: 6 });
+  assert.equal(s.luckyCharge, 0);
+  assert.equal(s.luckyReady, false);
+});
+
+test("Glow Stick is a no-op when the relic isn't held", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyMode: false, luckyReady: false, luckyCharge: 0 };
+  registerRunEffects(s, { hasRelic: () => false });
+  bus.emit('cascade', { cascadeLevel: 7, totalCleared: 8 });
+  assert.equal(s.luckyCharge, 0);
+  assert.equal(s.luckyReady, false);
+});
+
+test("Glow Stick is a no-op while Lucky-MODE is already running", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyMode: true, luckyReady: false, luckyCharge: 30 };
+  registerRunEffects(s, { hasRelic: (id) => id === 'glow-stick' });
+  bus.emit('cascade', { cascadeLevel: 8, totalCleared: 9 });
+  // Should not overwrite a charge in progress.
+  assert.equal(s.luckyCharge, 30);
+  assert.equal(s.luckyReady, false);
+});
+
+test("Glow Stick is a no-op when Lucky is already ready", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyMode: false, luckyReady: true, luckyCharge: 100 };
+  registerRunEffects(s, { hasRelic: (id) => id === 'glow-stick' });
+  bus.emit('cascade', { cascadeLevel: 6, totalCleared: 7 });
+  // Already at 100 — handler should bail rather than re-firing the flash.
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+});

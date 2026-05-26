@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ai',
+    items: [
+      '🌟 GLOW STICK MIGRATED TO THE BUS — the relic\'s cascade-≥6-fills-Lucky branch used to live as an `if (...)` inside processMatchRound; now a `bus.on(\'cascade\', …)` subscriber in `run-effects.js`. First effect to use the new `helpers` injection channel (hasRelic / setLuckyCharge / flashMessage) so run-effects can keep up its no-import-from-main.js rule. 5 new tests; 77 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ah',
     items: [
       '🧪 BUS INTEGRATION TEST FOR THE RUN LIFECYCLE — new `tests/integration-run-flow.test.js` simulates a complete roguelike slot end-to-end through the event bus (slot:start → match × N → cascade chain → infinite → slot:complete) and asserts the migrated `run-effects.js` subscribers aggregate `state.runHighlights` the same way the old inline branches did. Also covers: 32-mutator cap holds across a 40-slot run, non-roguelike runs do not pollute highlights, single `unsub()` call removes every handler. Catches future B6 bus-migration regressions before they ship. 72 tests pass.',
@@ -5860,13 +5866,6 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       }
     }
   }
-  // 🌟 Glow Stick relic — cascade chains ≥6 instantly trigger Lucky-MODE.
-  if (cascadeLevel >= 6 && hasRelic('glow-stick') && !state.luckyMode && !state.luckyReady) {
-    state.luckyCharge = 100;
-    state.luckyReady = true;
-    setLuckyCharge(state.luckyCharge, state.luckyReady);
-    flashMessage('🌟 GLOW STICK! Lucky ready!', 1300);
-  }
   // 🚌 Emit the canonical `match` event so subscribers (relics,
   // upgrades, future B6 effects) can hook in without editing this
   // function. Today the existing inline relic/upgrade branches still
@@ -6431,7 +6430,7 @@ function init({ chime = false, announceLevel = true } = {}) {
 applyTheme(state.settings);
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
-registerRunEffects(state);
+registerRunEffects(state, { hasRelic, setLuckyCharge, flashMessage });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
 // down to the current effective cap so the UI doesn't show "9 hammers"
