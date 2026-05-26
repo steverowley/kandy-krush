@@ -20,6 +20,12 @@ export function register(deps) {
     speech,
     telemetry,
     haptics,
+    // ── state stores (modes-4) ──
+    // Roguelike modes read/write their ephemeral run state through
+    // this store API. The selectors/mutators wrap the underlying
+    // state.X fields so legacy main.js call sites keep working in
+    // parallel — incremental migration.
+    runStore,
     // helpers from main.js
     refreshRunHud,
     refreshLevelUI,
@@ -203,11 +209,7 @@ export function register(deps) {
     // which would surprise a player who just switched modes. The
     // persisted roguelike progress (currentSlot, gems, upgrades,
     // relics) stays in state.roguelike for a future Resume path.
-    state.inRoguelikeRun = false;
-    state.runRng = null;
-    state.runIsDaily = false;
-    state.runDailyStamp = null;
-    state.cascadeAbort = true;
+    runStore.clearRun();
     refreshRunHud();
   }
 
