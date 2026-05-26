@@ -130,6 +130,8 @@ import * as roguelikeMode from './modes/roguelike/index.js';
 import * as dailyMode from './modes/daily/index.js';
 import * as homeMode from './modes/home/index.js';
 import * as telemetrySubscribers from './subscribers/telemetry.js';
+import * as audioSubscribers from './subscribers/audio.js';
+import * as hapticsSubscribers from './subscribers/haptics.js';
 import {
   createRoguelikeRunStore,
   createRoguelikeProgressionStore,
@@ -1919,6 +1921,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-6-audio-haptics-subscribers',
+    items: [
+      '🔊 MODE SEPARATION — STEP 6: AUDIO + HAPTICS SUBSCRIBERS. Two new bus-subscriber modules join `telemetry.js`: `src/subscribers/audio.js` (`match` → sfx.playMatch, `cascade` → sfx.playCascade) and `src/subscribers/haptics.js` (`match` → haptics.match with size→intensity bucket, `cascade` → haptics.cascade, `special:birth` → haptics.specialBirth). The inline `sfx.playMatch / haptics.match / sfx.playCascade / haptics.cascade` calls cleared out of `processMatchRound` — that function now just emits the `match` event and the subscribers handle every side effect. Audio + haptics register *before* run-effects so they fire first on the event (matches the legacy "sfx then logic" ordering). The `infinite` event payload gained `mode` so telemetry can be a subscriber too — the inline `telemetry.track(\'infinite_combo\')` is gone. 10 new tests cover the event-to-call contracts + intensity bucket. 384 tests pass.',
+    ],
+  },
   {
     id: '2026-05-26-modes-5-event-bus-subscribers',
     items: [
@@ -4092,12 +4100,11 @@ function maybeTriggerInfiniteScore() {
   // highlight tracker, future relics, etc.) can hook in. Migrated the
   // inline `runHighlights.infiniteCount` bump to a bus.on('infinite')
   // handler in src/game/run-effects.js (PR #17ae).
+  // 🚌 Telemetry for infinite-combo is now a bus subscriber — see
+  // src/subscribers/telemetry.js. The payload carries the full
+  // context (mode + slot) so the analytics shape matches the legacy
+  // inline track().
   bus.emit('infinite', {
-    nth_this_session: state.infiniteCount,
-    score: state.score,
-    slot: state.roguelike?.currentSlot,
-  });
-  telemetry.track('infinite_combo', {
     nth_this_session: state.infiniteCount,
     score: state.score,
     mode: state.settings?.mode,
@@ -5994,18 +6001,14 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   const { clearable: toClear, blocked: lockedBlocked } = splitByLock(candidate);
   const clearedTypes = toClear.map((p) => state.board.typeAt(p.c, p.r));
 
-  sfx.playMatch(allCleared.size, cascadeLevel);
-  const matchIntensity = allCleared.size >= 5 ? 3 : allCleared.size >= 4 ? 2 : 1;
-  haptics.match(matchIntensity);
+  // 🚌 Audio + haptics + run-effects all live as bus subscribers
+  // (modes-5/6 + B6 series). The `match` event is the single
+  // join point. `showCascadeBanner` is UI-state-dependent (touches
+  // the cascade-banner DOM element) so it stays inline rather than
+  // becoming a subscriber.
   if (cascadeLevel >= 2) {
-    sfx.playCascade();
     showCascadeBanner(cascadeLevel);
-    haptics.cascade(cascadeLevel);
   }
-  // 🚌 Emit the canonical `match` event so subscribers (relics,
-  // upgrades, future B6 effects) can hook in without editing this
-  // function. Today the existing inline relic/upgrade branches still
-  // run; subscribers are additive until each branch migrates over.
   bus.emit('match', {
     positions: toClear,
     cascadeLevel,
@@ -6383,6 +6386,11 @@ applyTheme(state.settings);
 // translates semantic bus events ('mode:picked', 'run:class_chosen',
 // 'daily:start') into its own side effect. Per-mode files no longer
 // need to know about telemetry.
+// Audio + haptics first so their handlers run before run-effects
+// subscribers — preserves the legacy "sfx then logic" ordering
+// from when these were inline calls in processMatchRound.
+audioSubscribers.register({ bus, sfx });
+hapticsSubscribers.register({ bus, haptics });
 telemetrySubscribers.register({ bus, telemetry });
 
 // ── State stores (modes-4) — instantiated once and threaded into

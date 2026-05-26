@@ -49,6 +49,18 @@ export function register(deps) {
     telemetry.track('ascension_picked', { level: ctx.level });
   }));
 
+  // ---- Infinite-combo fired (score crossed the threshold mid-cascade) ----
+  // The bus payload carries mode + slot context so the analytics shape
+  // matches the legacy inline telemetry.track('infinite_combo', ...).
+  unsubs.push(bus.on('infinite', (ctx) => {
+    telemetry.track('infinite_combo', {
+      nth_this_session: ctx.nth_this_session,
+      score: ctx.score,
+      mode: ctx.mode,
+      slot: ctx.slot,
+    });
+  }));
+
   return {
     off() {
       for (const u of unsubs) u();
