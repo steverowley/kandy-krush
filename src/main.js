@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bn',
+    items: [
+      '🧪 SPEECH MODULE COVERAGE — new `tests/speech.test.js` covers `src/audio/speech.js`: enabled toggle (off by default, no-op when off, isSpeechEnabled reflects current state), queue + pump behavior (one-at-a-time speak, onend pumps next, onerror also pumps next, MAX_QUEUE=4 cap drops oldest pending past 5 active+queued), text coercion (empty/null/undefined ignored, numbers stringified), and flushSpeech (cancels + drops queue, post-flush onend doesn\'t pump more). 10 new tests; 304 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bm',
     items: [
       '🧪 HAPTICS MODULE COVERAGE — new `tests/haptics.test.js` covers `src/audio/haptics.js`: pattern shape per haptic kind (tap, swap, match × intensity, cascade × level, combo, powerup, specialBirth, epic, levelComplete, invalid, drop), the match-clamp at 50ms, the cascade-clamp at 120ms, and every gate that should silence haptics — setHapticsEnabled(false), body.reduce-motion class, and a throwing navigator.vibrate (which must NOT bubble up). 11 new tests; 294 total now pass.',
