@@ -168,6 +168,36 @@ export function registerRunEffects(state, helpers = {}) {
     for (let i = 0; i < stacks; i++) spawnCrazyTile('tnt');
   }));
 
+  // 💣 Bomb Maker upgrade. Was inline in processMatchRound under
+  // `if (specialsCreated.length > 0)`. For each stack, rolls a chance
+  // of 50% × specialsCount to spawn a TNT crazy tile — so two specials
+  // in one round guarantee every stack fires. Round-scoped, so we
+  // subscribe to `match` and read ctx.specialsCreated.length once.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    const n = ctx && ctx.specialsCreated ? ctx.specialsCreated.length : 0;
+    if (n === 0) return;
+    const stacks = upgradeCount('bomb-maker');
+    if (stacks <= 0) return;
+    for (let i = 0; i < stacks; i++) {
+      if (Math.random() < 0.5 * n) spawnCrazyTile('tnt');
+    }
+  }));
+
+  // 🌈 Prism Maker upgrade. Was inline in processMatchRound under
+  // `if (specialsCreated.length > 0)`. Single roll per round; chance
+  // = min(0.6, 0.15 × stacks × specialsCount). Spawns a Prism crazy
+  // tile on success.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    const n = ctx && ctx.specialsCreated ? ctx.specialsCreated.length : 0;
+    if (n === 0) return;
+    const stacks = upgradeCount('prism-maker');
+    if (stacks <= 0) return;
+    const chance = Math.min(0.6, 0.15 * stacks * n);
+    if (Math.random() < chance) spawnCrazyTile('prism');
+  }));
+
   // 🌸 Cherry Wand relic. Was inline in processMatchRound under
   // `if (specialsCreated.length > 0)`. Fills Lucky bar by 25% per
   // special spawned this round (so a swap that births 2 specials fills
