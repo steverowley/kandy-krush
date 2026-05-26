@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17am',
+    items: [
+      '💣🌈 BOMB MAKER + PRISM MAKER MIGRATED TO THE BUS — both probabilistic crazy-tile spawners that fire when a special is born (Bomb Maker: 50%×N roll per stack to spawn TNT; Prism Maker: single roll capped at 60% to spawn a Prism) moved from inline branches in processMatchRound to `bus.on(\'match\', …)` subscribers in run-effects.js. 5 new tests; 98 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17al',
     items: [
       '🔥🌊 FURNACE + CASCADE SPLASH MIGRATED TO THE BUS — both cascade-gated crazy-tile spawners (Furnace: cascade ≥3 → 1 TNT per stack; Cascade Splash: cascade ≥2 → 60% chance per stack to spawn a random kind) moved from inline `if (cascadeLevel >= …)` branches in processMatchRound to `bus.on(\'cascade\', …)` subscribers in `run-effects.js`. Helpers channel gains `spawnCrazyTile`. 5 new tests; 93 total now pass.',
@@ -5977,17 +5983,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   maybeTriggerBeeStorm();
   if (specialsCreated.length > 0) {
     maybeFireSnake();
-    // Bomb Maker upgrade — every special also spawns a TNT tile
-    if (upgradeCount('bomb-maker') > 0) {
-      for (let i = 0; i < upgradeCount('bomb-maker'); i++) {
-        if (Math.random() < 0.5 * specialsCreated.length) spawnCrazyTile('tnt');
-      }
-    }
-    // 🌈 Prism Maker — 15% chance per stack to spawn a Prism on a special
-    if (upgradeCount('prism-maker') > 0) {
-      const chance = Math.min(0.6, 0.15 * upgradeCount('prism-maker') * specialsCreated.length);
-      if (Math.random() < chance) spawnCrazyTile('prism');
-    }
+    // 💣 Bomb Maker + 🌈 Prism Maker upgrades — both migrated to
+    // bus.on('match', …) subscribers in run-effects.js (PR #17am). The
+    // match event carries specialsCreated in its payload so the
+    // subscribers read it once per round, matching the inline
+    // round-scoped behavior.
     // 🌸 Cherry Wand relic — migrated to bus.on('match', …) in
     // run-effects.js (PR #17ak). The `match` event carries
     // specialsCreated in its payload so the subscriber reads it once

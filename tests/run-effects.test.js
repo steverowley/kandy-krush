@@ -400,6 +400,97 @@ test("Cascade Splash rolls 60% chance per stack on cascade ≥2", () => {
   }
 });
 
+// --- 💣 Bomb Maker upgrade (special spawned → 50% × N chance per stack to spawn TNT) ---
+
+test("Bomb Maker rolls 50% × specialsCount per stack on a match round", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  const realRandom = Math.random;
+  Math.random = () => 0.3; // < 0.5, always fires
+  try {
+    registerRunEffects(s, {
+      upgradeCount: (id) => (id === 'bomb-maker' ? 3 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+    assert.deepEqual(spawned, ['tnt', 'tnt', 'tnt']);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Bomb Maker is guaranteed when 2+ specials spawn (0.5 × 2 = 1.0)", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  const realRandom = Math.random;
+  Math.random = () => 0.999; // any chance < 1.0 should still gate
+  try {
+    registerRunEffects(s, {
+      upgradeCount: (id) => (id === 'bomb-maker' ? 2 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 7, specialsCreated: [{}, {}] });
+    // 0.999 < 0.5 × 2 = 1.0, so both stacks fire.
+    assert.deepEqual(spawned, ['tnt', 'tnt']);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Bomb Maker is a no-op when no specials this round", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'bomb-maker' ? 5 : 0),
+    spawnCrazyTile: (kind) => spawned.push(kind),
+  });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.deepEqual(spawned, []);
+});
+
+// --- 🌈 Prism Maker upgrade (special spawned → single roll, capped at 60%) ---
+
+test("Prism Maker rolls once per round with chance capped at 60%", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  const realRandom = Math.random;
+  Math.random = () => 0.1; // < 0.6 cap, fires
+  try {
+    registerRunEffects(s, {
+      // Big stacks × big special count would exceed 0.6 — verify the cap.
+      upgradeCount: (id) => (id === 'prism-maker' ? 10 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 9, specialsCreated: [{}, {}] });
+    // Only ONE spawn per round, not per-stack — matches the inline logic.
+    assert.deepEqual(spawned, ['prism']);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Prism Maker doesn't fire when the roll fails", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  const realRandom = Math.random;
+  Math.random = () => 0.99; // > 0.6 cap, fails
+  try {
+    registerRunEffects(s, {
+      upgradeCount: (id) => (id === 'prism-maker' ? 1 : 0),
+      spawnCrazyTile: (kind) => spawned.push(kind),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+    assert.deepEqual(spawned, []);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
 test("Cascade Splash doesn't fire when the random roll fails", () => {
   bus.clear();
   const spawned = [];
