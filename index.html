@@ -42,15 +42,15 @@
 <body class="size-medium start-screen-active min-h-dvh flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
   <header class="w-full max-w-3xl flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
     <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-      <h1 class="text-2xl sm:text-5xl font-bold tracking-tight">Arcana Cascada</h1>
-      <button id="level-chip" type="button" class="hidden text-sm sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 text-black border-[3px] border-black rounded-full px-2 sm:px-3 py-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Open level select" aria-haspopup="dialog" data-tip="Tap to choose a level" data-tip-pos="below">Level 1 / 8</button>
-      <span id="streak" class="hidden text-sm sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-2 sm:px-3 py-1">Day 1</span>
+      <h1 class="text-2xl sm:text-5xl font-bold tracking-tight" style="font-family: var(--ac-font-serif); font-style: italic; color: var(--ac-gold);">Arcana Cascada</h1>
+      <button id="level-chip" type="button" class="hidden ac-btn ac-btn--chip" aria-label="Open level select" aria-haspopup="dialog" data-tip="Tap to choose a level" data-tip-pos="below">Level 1 / 8</button>
+      <span id="streak" class="hidden ac-btn ac-btn--chip" style="cursor: default;">Day 1</span>
     </div>
     <div class="flex items-center gap-1.5 sm:gap-3">
       <button
         id="help-open"
         type="button"
-        class="text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl w-11 h-11 sm:w-14 sm:h-14 leading-none shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 inline-flex items-center justify-center"
+        class="ac-btn ac-btn--icon"
         aria-label="How to play"
         aria-haspopup="dialog"
         title="How to play"
@@ -60,7 +60,7 @@
       <button
         id="home-open"
         type="button"
-        class="text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl w-11 h-11 sm:w-14 sm:h-14 leading-none shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 inline-flex items-center justify-center"
+        class="ac-btn ac-btn--icon"
         aria-label="Back to start menu"
         title="Back to start menu"
         data-tip="Back to start menu"
@@ -69,22 +69,22 @@
       <button
         id="settings-open"
         type="button"
-        class="text-lg sm:text-xl font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl w-11 h-11 sm:w-auto sm:h-auto sm:px-4 sm:py-3 leading-none shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 inline-flex items-center justify-center"
+        class="ac-btn ac-btn--icon"
         aria-label="Open settings"
         aria-haspopup="dialog"
         title="Game settings"
         data-tip="Sound, contrast, size"
         data-tip-pos="below"
-      ><span class="sm:hidden" aria-hidden="true">⚙</span><span class="hidden sm:inline">Settings</span></button>
+      ><span class="sm:hidden" aria-hidden="true">⚙</span><span class="hidden sm:inline" style="font-style: italic;">Settings</span></button>
       <button
         id="restart"
         type="button"
-        class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl w-11 h-11 sm:w-auto sm:h-auto sm:px-4 sm:py-3 leading-none shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 inline-flex items-center justify-center"
+        class="ac-btn ac-btn--icon ac-btn--accent"
         aria-label="Start over"
         title="Restart this level"
         data-tip="Restart this level"
         data-tip-pos="below"
-      ><span class="sm:hidden" aria-hidden="true">↻</span><span class="hidden sm:inline">Start Over</span></button>
+      ><span class="sm:hidden" aria-hidden="true">↻</span><span class="hidden sm:inline" style="font-style: italic;">Start Over</span></button>
     </div>
   </header>
 
@@ -217,7 +217,7 @@
     <button
       id="pu-hammer"
       type="button"
-      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn ac-btn relative gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Hammer power-up: smash one candy"
       title="Smash one candy (not jelly or locks)"
       data-tip="Smash one candy (not jelly or locks)"
@@ -227,12 +227,12 @@
         <path d="M4 20l9-9"/>
       </svg>
       <span>Hammer</span>
-      <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">3</span>
+      <span id="pu-hammer-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 rounded-full text-sm sm:text-base" style="background-color: var(--ac-gold-soft, #E8D5A8); border: 1px solid var(--ac-ink);">3</span>
     </button>
     <button
       id="pu-shuffle"
       type="button"
-      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn ac-btn relative gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Shuffle power-up: rearrange the board"
       title="Mix up the board"
       data-tip="Mix up the board"
@@ -245,12 +245,12 @@
         <path d="M4 4l5 5"/>
       </svg>
       <span>Shuffle</span>
-      <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">2</span>
+      <span id="pu-shuffle-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 rounded-full text-sm sm:text-base" style="background-color: var(--ac-gold-soft, #E8D5A8); border: 1px solid var(--ac-ink);">2</span>
     </button>
     <button
       id="pu-colorbomb"
       type="button"
-      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn ac-btn relative gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Color bomb power-up: clear every candy of one color"
       title="Clear every candy of one color (skips jelly + locks)"
       data-tip="Clear every candy of one color (skips jelly + locks)"
@@ -268,12 +268,12 @@
         <circle cx="12" cy="12" r="2.5" fill="#fff" stroke="currentColor" stroke-width="1.5"/>
       </svg>
       <span>Bomb</span>
-      <span id="pu-colorbomb-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+      <span id="pu-colorbomb-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 rounded-full text-sm sm:text-base" style="background-color: var(--ac-gold-soft, #E8D5A8); border: 1px solid var(--ac-ink);">1</span>
     </button>
     <button
       id="pu-plusmoves"
       type="button"
-      class="powerup-btn relative flex items-center gap-2 text-base sm:text-lg font-bold bg-white hover:bg-amber-100 active:bg-amber-200 border-[3px] border-black rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500 disabled:opacity-40 disabled:cursor-not-allowed"
+      class="powerup-btn ac-btn relative gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
       aria-label="Plus three moves power-up: add three moves"
       title="Add 3 moves to your budget"
       data-tip="Add 3 moves to your budget"
@@ -284,7 +284,7 @@
         <path d="M7 12h10"/>
       </svg>
       <span>+3 Moves</span>
-      <span id="pu-plusmoves-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 bg-yellow-300 border-2 border-black rounded-full text-sm sm:text-base">1</span>
+      <span id="pu-plusmoves-count" class="inline-flex items-center justify-center min-w-[2ch] px-2 rounded-full text-sm sm:text-base" style="background-color: var(--ac-gold-soft, #E8D5A8); border: 1px solid var(--ac-ink);">1</span>
     </button>
     <div id="pu-hint" class="hidden w-full text-center text-base sm:text-lg text-pink-700 font-bold">Tap a candy to smash</div>
   </section>
@@ -605,7 +605,7 @@
       <button
         id="level-select-close"
         type="button"
-        class="text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-2"
+        class="ac-btn"
         aria-label="Close level select"
       >Done</button>
     </div>
@@ -676,7 +676,7 @@
       <button
         id="settings-close"
         type="button"
-        class="text-xl font-bold bg-white hover:bg-gray-100 border-[3px] border-black rounded-2xl px-4 py-2"
+        class="ac-btn"
         aria-label="Close settings"
       >Done</button>
     </div>
@@ -685,7 +685,7 @@
       <button
         id="setting-sound"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="true"
         data-tip="Pops, swaps, cascades, and chimes"
       >Sound: On</button>
@@ -693,7 +693,7 @@
       <button
         id="setting-speech"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="false"
         data-tip="Speaks 'Wow!', 'Combo!', level intros, etc."
       >Spoken cheers: Off</button>
@@ -701,7 +701,7 @@
       <button
         id="setting-music"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="false"
         data-tip="Gentle ambient pad behind the SFX"
       >Background music: Off</button>
@@ -709,7 +709,7 @@
       <button
         id="setting-contrast"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="false"
         data-tip="Darker theme with bolder borders"
       >High Contrast: Off</button>
@@ -717,7 +717,7 @@
       <button
         id="setting-reduce-motion"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="false"
         data-tip="Disable shake, screen flash, and pulsing glow"
       >Reduce motion: Off</button>
@@ -725,7 +725,7 @@
       <button
         id="setting-enemies"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="true"
         data-tip="Toggle The Eater + Grumblock enemies in Roguelike mode"
       >Enemies: On</button>
@@ -733,7 +733,7 @@
       <button
         id="setting-canvas"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         aria-pressed="false"
         data-tip="Experimental — render the board with WebGL (Pixi.js) for smoother animations. Reload required."
       >🎨 WebGL renderer: Off</button>
@@ -741,28 +741,28 @@
       <button
         id="setting-home"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         data-tip="Return to the start menu to pick a different mode"
       >🏠 Back to Start Menu</button>
 
       <button
         id="setting-skill-tree"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         data-tip="Spend gems on permanent roguelike boosts"
       >Skill Tree</button>
 
       <button
         id="setting-run-history"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         data-tip="See your last 20 roguelike runs"
       >📓 Run History</button>
 
       <button
         id="setting-class-mastery"
         type="button"
-        class="setting-toggle text-2xl font-bold border-[3px] border-black rounded-2xl px-4 py-3 bg-white text-left"
+        class="setting-toggle ac-btn ac-btn--toggle"
         data-tip="Mastery progress across all 11 classes — bronze / silver / gold tiers"
       >🏅 Class Mastery</button>
 

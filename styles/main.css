@@ -3294,3 +3294,120 @@ section#run-hud {
   border: 1px solid rgba(244, 236, 220, 0.4);
   border-radius: 4px;
 }
+
+/* 🎴 EDITORIAL CHROME BUTTONS (design-14)
+   One restrained editorial button style for in-game chrome: header
+   buttons (Help, Home, Settings, Restart), small chips (level chip,
+   day streak), action buttons (Hammer, Shuffle, etc.), and the
+   toggles inside the Settings modal. Replaces the bubblegum
+   yellow-300 / pink-100 / black-3px-border Tailwind chips that
+   clashed with the editorial card system.
+
+   Anatomy: cream parchment face + thin ink border + Playfair italic
+   label + subtle inset shadow for press feedback. Two variants:
+     .ac-btn         — square / pill icon button for header + actions
+     .ac-btn--chip   — small inline chip for status (level / streak)
+     .ac-btn--accent — gold inner fill for the primary CTA
+     .ac-btn--toggle — full-width row toggle for Settings modal */
+
+.ac-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  background-color: var(--ac-parchment);
+  color: var(--ac-ink);
+  border: 1px solid var(--ac-ink);
+  border-radius: 6px;
+  font-family: var(--ac-font-serif);
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 80ms ease, background-color 120ms ease,
+              box-shadow 120ms ease;
+  box-shadow:
+    inset 0 -2px 0 rgba(26, 26, 26, 0.08),
+    0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.ac-btn:hover {
+  background-color: var(--ac-bone);
+}
+
+.ac-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(26, 26, 26, 0.2);
+}
+
+.ac-btn:focus-visible {
+  outline: 2px solid var(--ac-gold);
+  outline-offset: 2px;
+}
+
+/* Square icon variant — header icons (?, 🏠, ⚙, ↻). */
+.ac-btn--icon {
+  width: 44px;
+  padding: 8px;
+  font-size: 1.15rem;
+  font-style: normal;
+}
+
+@media (min-width: 640px) {
+  .ac-btn--icon { width: 50px; height: 50px; font-size: 1.35rem; }
+}
+
+/* Small chip — level chip + day streak. Pill border, smaller type. */
+.ac-btn--chip {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+@media (min-width: 640px) {
+  .ac-btn--chip { min-height: 36px; font-size: 0.95rem; }
+}
+
+/* Accent variant — the primary CTA. Faint gold-tinted face so it
+   reads as "the thing to tap" without the old neon yellow. */
+.ac-btn--accent {
+  background-color: var(--ac-gold-soft, #E8D5A8);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(244, 236, 220, 0.5),
+    rgba(212, 162, 76, 0.18)
+  );
+}
+
+.ac-btn--accent:hover {
+  background-color: #EFDDB5;
+}
+
+/* Full-width row toggle for the Settings modal. Reads as a row of
+   editorial chips stacked vertically. */
+.ac-btn--toggle {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  font-size: 1.05rem;
+  border-radius: 4px;
+}
+
+/* When .ac-btn--toggle is in the pressed/on state (existing class
+   already applied by the toggle JS), shift face color so the on/off
+   distinction reads at a glance. */
+.ac-btn--toggle[aria-pressed="true"],
+.ac-btn--toggle.is-on {
+  background-color: var(--ac-gold-soft, #E8D5A8);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(244, 236, 220, 0.4),
+    rgba(212, 162, 76, 0.22)
+  );
+}
