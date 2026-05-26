@@ -54,6 +54,8 @@ export function registerRunEffects(state, helpers = {}) {
     preservingReshuffle = () => {},
     pickCrazyKind = () => null,
     refreshLevelUI = () => {},
+    fireMeteor = () => {},
+    renderBoard = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -194,6 +196,34 @@ export function registerRunEffects(state, helpers = {}) {
     if ((state.roguelike.livesRemaining || 0) !== 1) return;
     state.roguelike.livesRemaining = 2;
     flashMessage('🌬 Second Wind! +1 life', 1300);
+  }));
+
+  // ✏️ Eraser mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // Queues a meteor strike onto state.deferredSlotFx so the visual
+  // fires AFTER the intro card closes (rather than under the overlay).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('eraser')) return;
+    if (!Array.isArray(state.deferredSlotFx)) return;
+    state.deferredSlotFx.push(() => { if (state.board) fireMeteor(); });
+  }));
+
+  // 🗝 Lockpick mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // Walks every entry in state.lockMap: locks at level 1 disappear,
+  // locks at level 2+ drop by 1. Re-renders the board so the lock
+  // visuals refresh + flashes "locks weakened" to the player.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('lockpick')) return;
+    if (!state.lockMap || state.lockMap.size === 0) return;
+    const toDelete = [];
+    for (const [k, v] of state.lockMap) {
+      if (v <= 1) toDelete.push(k);
+      else state.lockMap.set(k, v - 1);
+    }
+    for (const k of toDelete) state.lockMap.delete(k);
+    if (state.board) renderBoard(state.board, state);
+    flashMessage('🗝 Lockpick: locks weakened!', 1300);
   }));
 
   // 🏔 Best-slot-score tracker. Was inline at the top of
