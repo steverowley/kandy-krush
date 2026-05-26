@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ak',
+    items: [
+      '🌸 CHERRY WAND MIGRATED TO THE BUS — the relic\'s "+25% Lucky bar per special spawned" branch lived in the `if (specialsCreated.length > 0)` block inside processMatchRound. Now a `bus.on(\'match\', …)` subscriber in run-effects.js that reads `ctx.specialsCreated.length` from the match payload, keeping the round-scoped semantics of the inline branch. 4 new tests; 88 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17aj',
     items: [
       '✨🪞 STARDUST + ECHO MATCH MIGRATED TO THE BUS — both cascade-≥4 effects (Stardust relic\'s +1 gem with persist, Echo Match upgrade\'s 50%-per-stack Lucky-bar fill) used to live in the cascade-level inline block in processMatchRound. Now both are `bus.on(\'cascade\', …)` subscribers in `run-effects.js`. Helpers channel gains `upgradeCount` + `persist`. 7 new tests; 84 total now pass.',
@@ -5983,13 +5989,10 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       const chance = Math.min(0.6, 0.15 * upgradeCount('prism-maker') * specialsCreated.length);
       if (Math.random() < chance) spawnCrazyTile('prism');
     }
-    // 🌸 Cherry Wand relic — each special spawned also fills Lucky bar +25%.
-    if (hasRelic('cherry-wand')) {
-      const fill = 25 * specialsCreated.length;
-      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + fill);
-      if (state.luckyCharge >= 100) state.luckyReady = true;
-      setLuckyCharge(state.luckyCharge, state.luckyReady);
-    }
+    // 🌸 Cherry Wand relic — migrated to bus.on('match', …) in
+    // run-effects.js (PR #17ak). The `match` event carries
+    // specialsCreated in its payload so the subscriber reads it once
+    // per round, matching the original round-scoped behavior.
     // 🧁 Confectionery relic — each special spawned also drops a random power-up.
     if (hasRelic('confectionery')) {
       const bank = powerupBank();

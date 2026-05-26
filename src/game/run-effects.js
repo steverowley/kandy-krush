@@ -143,6 +143,23 @@ export function registerRunEffects(state, helpers = {}) {
     flashMessage(`🪞 Echo Match +${add}% 🍀`, 800);
   }));
 
+  // 🌸 Cherry Wand relic. Was inline in processMatchRound under
+  // `if (specialsCreated.length > 0)`. Fills Lucky bar by 25% per
+  // special spawned this round (so a swap that births 2 specials fills
+  // 50%). Subscribes to `match` rather than `special:birth` so the
+  // batch fires once per round, not once per individual special — the
+  // inline branch was likewise round-scoped, not per-special.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    const n = ctx && ctx.specialsCreated ? ctx.specialsCreated.length : 0;
+    if (n === 0) return;
+    if (!hasRelic('cherry-wand')) return;
+    const fill = 25 * n;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + fill);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }));
+
   return () => {
     for (const u of unsubs) u();
     unsubs.length = 0;

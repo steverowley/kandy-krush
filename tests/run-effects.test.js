@@ -277,3 +277,63 @@ test("Echo Match is a no-op without the upgrade", () => {
   bus.emit('cascade', { cascadeLevel: 6, totalCleared: 7 });
   assert.equal(s.luckyCharge, 0);
 });
+
+// --- 🌸 Cherry Wand relic (special spawned → +25% Lucky bar per special) ---
+
+test("Cherry Wand fills Lucky bar by 25% per special on a match round", () => {
+  bus.clear();
+  const calls = [];
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'cherry-wand',
+    setLuckyCharge: (c, r) => calls.push({ c, r }),
+  });
+  bus.emit('match', {
+    cascadeLevel: 1,
+    matchSize: 5,
+    specialsCreated: [{ type: 'A', kind: 'striped-h' }],
+  });
+  assert.equal(s.luckyCharge, 25);
+  // Two specials in one round: +50%
+  bus.emit('match', {
+    cascadeLevel: 1,
+    matchSize: 7,
+    specialsCreated: [{ type: 'B', kind: 'striped-v' }, { type: 'C', kind: 'wrapped' }],
+  });
+  assert.equal(s.luckyCharge, 75);
+  assert.equal(s.luckyReady, false);
+  // Once it hits 100 it clamps and marks ready.
+  bus.emit('match', {
+    cascadeLevel: 1,
+    matchSize: 9,
+    specialsCreated: [{}, {}],
+  });
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+  assert.equal(calls.length, 3);
+});
+
+test("Cherry Wand is a no-op when no specials were created", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.equal(s.luckyCharge, 0);
+});
+
+test("Cherry Wand is a no-op without the relic", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasRelic: () => false });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+  assert.equal(s.luckyCharge, 0);
+});
+
+test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0 };
+  registerRunEffects(s, { hasRelic: () => true });
+  // Should not throw and should not fill.
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3 });
+  assert.equal(s.luckyCharge, 0);
+});
