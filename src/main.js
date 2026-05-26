@@ -1911,6 +1911,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-2-palette-migration',
+    items: [
+      '🎴 PALETTE MIGRATION — velvet + gold everywhere. Every Tailwind candy class (`bg-pink-*`, `bg-amber-*`, `bg-yellow-*`, `bg-rose-*`, `bg-fuchsia-*`, `text-pink-*`, `text-yellow-*`, `border-pink-*`, `border-yellow-*`, `text-gray-9*`, `bg-white`, `border-black`) is now remapped via design-token-driven CSS overrides — light grounds turn into deep cards-on-cloth indigo, primary CTAs become antique gold, hot accents go ember, danger goes oxblood, dark-on-light text flips to parchment bone. Selectors use `body .candy-class` (specificity 0,1,1) so the rebrand wins the cascade without `!important` (best practice). The result is a coherent tarot-table chrome across HUD chips, modal buttons, install card, run summary, and the welcome overlay — no per-element edits. Future component-specific deviations override locally; the global remap is the safety net. design-3 will reskin the tile sprites themselves to the 6 tarot families.',
+    ],
+  },
+  {
     id: '2026-05-26-design-1-arcana-cascada',
     items: [
       '🔮 REBRAND — ARCANA CASCADA. The game has a new name + design language to fit its roguelike soul. Sweet Match was a candy-colored match-3; Arcana Cascada is a tarot-flavored match-3 roguelike — every reading is a draw of cards, every match is a fortune read. New velvet-purple + antique-gold palette via CSS design tokens (`--ac-velvet`, `--ac-gold`, `--ac-bone`, etc.) so future theming is one-edit-here. Cinzel serif loaded for the brand mark + headers, paired against Atkinson Hyperlegible for body. UI strings re-flavored ("Begin a Reading" / "Resume Reading · Card N / total" / "Until the next reading"). Manifest + service-worker + page title + share copy + install prompts all carry the new name. The deeper visual refresh (per-component palette migration off Tailwind candy colors, tile sprite reskin to tarot suits, scene-specific backgrounds) lands in design-2+ PRs. Save data + localStorage keys keep the legacy prefix for back-compat so existing players don\'t lose progress.',
