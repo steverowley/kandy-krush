@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17al',
+    items: [
+      '🔥🌊 FURNACE + CASCADE SPLASH MIGRATED TO THE BUS — both cascade-gated crazy-tile spawners (Furnace: cascade ≥3 → 1 TNT per stack; Cascade Splash: cascade ≥2 → 60% chance per stack to spawn a random kind) moved from inline `if (cascadeLevel >= …)` branches in processMatchRound to `bus.on(\'cascade\', …)` subscribers in `run-effects.js`. Helpers channel gains `spawnCrazyTile`. 5 new tests; 93 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ak',
     items: [
       '🌸 CHERRY WAND MIGRATED TO THE BUS — the relic\'s "+25% Lucky bar per special spawned" branch lived in the `if (specialsCreated.length > 0)` block inside processMatchRound. Now a `bus.on(\'match\', …)` subscriber in run-effects.js that reads `ctx.specialsCreated.length` from the match payload, keeping the round-scoped semantics of the inline branch. 4 new tests; 88 total now pass.',
@@ -5870,13 +5876,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     sfx.playCascade();
     showCascadeBanner(cascadeLevel);
     haptics.cascade(cascadeLevel);
-    // 🌊 Cascade Splash upgrade — every cascade ≥2 has a 60% chance per
-    // stack to also spawn a random crazy tile.
-    if (state.inRoguelikeRun && upgradeCount('cascade-splash') > 0) {
-      for (let i = 0; i < upgradeCount('cascade-splash'); i++) {
-        if (Math.random() < 0.6) spawnCrazyTile();
-      }
-    }
+    // 🌊 Cascade Splash upgrade — migrated to bus.on('cascade', …)
+    // subscriber in run-effects.js (PR #17al).
   }
   // 🚌 Emit the canonical `match` event so subscribers (relics,
   // upgrades, future B6 effects) can hook in without editing this
@@ -5901,10 +5902,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   // payload this inline block used to read directly. Migrated PR #17ab.
   if (cascadeLevel >= 3) {
     spawnConfetti(20);
-    // 🔥 Furnace upgrade — cascade chain ≥3 spawns a TNT crazy tile per stack.
-    if (state.inRoguelikeRun && upgradeCount('furnace') > 0) {
-      for (let i = 0; i < upgradeCount('furnace'); i++) spawnCrazyTile('tnt');
-    }
+    // 🔥 Furnace upgrade — migrated to bus.on('cascade', …) subscriber
+    // in run-effects.js (PR #17al).
   }
   if (cascadeLevel >= 4) {
     screenShake(7, 380);
@@ -6427,7 +6426,7 @@ function init({ chime = false, announceLevel = true } = {}) {
 applyTheme(state.settings);
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
-registerRunEffects(state, { hasRelic, upgradeCount, setLuckyCharge, flashMessage, persist });
+registerRunEffects(state, { hasRelic, upgradeCount, setLuckyCharge, flashMessage, persist, spawnCrazyTile });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
 // down to the current effective cap so the UI doesn't show "9 hammers"
