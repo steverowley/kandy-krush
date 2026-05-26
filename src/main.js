@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bp',
+    items: [
+      '📔 OVERNIGHT RUN — FINAL SUMMARY UPDATE. 34 PRs (#289–#322) landed since the night started: 43 inline branches migrated to bus subscribers across all event-driven side effects, one real bug found+fixed (slot:start ordering), test count 68 → 320 across 18 files. PROJECT_PLAN.md refreshed with the test-coverage push details. Closing out the autonomous shift.',
+    ],
+  },
+  {
     id: '2026-05-26-17bo',
     items: [
       '🧪 TELEMETRY MODULE COVERAGE — new `tests/telemetry.test.js` covers `src/telemetry.js`: init (default \'console\' provider, deviceId persistence across boots, regenerates when storage cleared, opts override), track (50-event buffer cap, timestamp stamping, sessionId/deviceId/appVersion stamps), setUserProps merging, beacon provider (POSTs via sendBeacon, no-op without endpoint, swallows throwing sendBeacon), noop provider, captureError (ships message+stack+recent_events with last 10 breadcrumbs, handles non-Error throws, does NOT add the error event itself to the buffer). 16 new tests; 320 total now pass.',
