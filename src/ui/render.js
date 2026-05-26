@@ -2114,7 +2114,14 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
     btnDaily.innerHTML = `🌅 Today's Daily Seed${stampStr}${playedStr}`;
     btnDaily.classList.remove('hidden');
     const dailyHandler = () => {
-      const inNonDailyRun = !!runInProgress && !dailyStatus?.playedToday;
+      // Confirmation gate must use the RUN'S type, not the daily-badge
+      // status. `playedToday` only tells us whether today's daily was
+      // ever completed (or partly played) — it says nothing about
+      // whether the current in-flight run is the daily. If a player
+      // cleared the daily this morning and is now mid-Roguelike,
+      // `playedToday=true` but `runIsDaily=false`, and clicking Daily
+      // would silently abandon real progress. Gate on isDaily.
+      const inNonDailyRun = !!runInProgress && !runInProgress.isDaily;
       if (inNonDailyRun) {
         const ok = (typeof window !== 'undefined' && window.confirm)
           ? window.confirm('Abandon your current run and start today\'s daily seed?')

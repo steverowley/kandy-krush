@@ -382,6 +382,10 @@ function openStartMenu(subtitle = null) {
         slot: state.roguelike?.currentSlot || 1,
         totalSlots: RUN_LENGTH,
         classIcon: cls?.icon || null,
+        // Carry the daily flag so the start menu can tell whether
+        // the in-flight run is itself the daily (clicking Daily then
+        // is a no-op continuation, not a destructive abandon).
+        isDaily: !!state.runIsDaily,
       }
     : null;
   const todayStamp = dailySeedStamp();
@@ -1876,6 +1880,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-fix-daily-confirm-uses-isDaily',
+    items: [
+      '🐛 DAILY CONFIRM PROMPT NOW CHECKS RUN TYPE — the prior fix (#330) gated the "Abandon current run?" prompt on `dailyStatus.playedToday`, which only reflects whether today\'s daily has EVER been completed. A player who finished the daily this morning and is now mid-Roguelike would have `playedToday=true` and click Daily → no prompt → silent abandon of non-daily progress. Caught by Codex review. Now gates on the in-flight run\'s actual type (`runIsDaily`), so the prompt fires whenever a non-daily run is in progress, regardless of daily-badge history.',
+    ],
+  },
   {
     id: '2026-05-26-fix-button-text-color',
     items: [
