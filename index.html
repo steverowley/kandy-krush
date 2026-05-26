@@ -124,7 +124,8 @@
   </section>
 
   <div id="run-summary-overlay" class="hidden fixed inset-0 bg-black/70 z-[78]" aria-hidden="true"></div>
-  <div id="run-summary-panel" class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[80] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-7 flex flex-col gap-3 max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
+  <div id="run-summary-panel" class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[80] flex flex-col gap-3 max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
+    <span class="ac-card__banner-top" aria-hidden="true">The Reading</span>
     <div id="run-summary-tier" class="text-base font-bold uppercase tracking-[0.3em] text-center text-pink-700">Run complete</div>
     <h2 id="run-summary-title" class="text-3xl sm:text-4xl font-bold text-center">Sweet King defeated!</h2>
     <div id="run-summary-stats" class="grid grid-cols-2 gap-3 text-base"></div>
@@ -392,10 +393,11 @@
     role="region"
     aria-labelledby="start-screen-title"
   >
-    <div class="w-full max-w-md flex flex-col items-center gap-4 text-center">
-      <div id="start-screen-icon" class="text-7xl sm:text-8xl select-none" aria-hidden="true">🍬</div>
+    <div class="w-full max-w-md ac-card flex flex-col items-center gap-4 text-center">
+      <span class="ac-card__banner-top" aria-hidden="true">The Reading</span>
+      <div id="start-screen-icon" class="text-7xl sm:text-8xl select-none" aria-hidden="true">🌙</div>
       <h1 id="start-screen-title" class="text-5xl sm:text-6xl font-bold tracking-tight">Arcana Cascada</h1>
-      <p class="text-lg sm:text-xl text-gray-700">Match candies. Pick your adventure.</p>
+      <p class="text-lg sm:text-xl text-gray-700">Draw the cards. Read your fortune.</p>
       <p id="start-screen-subtitle" class="text-base sm:text-lg text-pink-900 font-bold min-h-[1.5em]"></p>
       <div id="start-screen-stats" class="hidden flex-wrap items-center justify-center gap-2 text-sm sm:text-base text-gray-900"></div>
       <div class="w-full flex flex-col gap-3 mt-2">
@@ -412,7 +414,8 @@
         <button id="start-menu-help" type="button" class="flex-1 text-base sm:text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">📖 What's New</button>
       </div>
       <button id="start-menu-quit" type="button" class="mt-2 text-sm sm:text-base font-bold text-gray-900 hover:text-black underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-700 rounded px-2 py-1">🚪 Quit Game</button>
-      <div id="start-screen-version" class="mt-3 text-sm text-gray-800 select-none bg-white/70 rounded-full px-3 py-0.5"></div>
+      <div id="start-screen-version" class="mt-3 text-sm text-gray-800 select-none rounded-full px-3 py-0.5"></div>
+      <span class="ac-card__banner-bottom" aria-hidden="true">Arcana Cascada</span>
     </div>
   </section>
 
@@ -421,33 +424,39 @@
        user close the tab themselves. -->
   <section
     id="goodbye-screen"
-    class="hidden fixed inset-0 z-[120] flex flex-col items-center justify-center px-4 py-8 bg-gradient-to-b from-purple-200 via-pink-100 to-amber-50 text-center"
+    class="hidden fixed inset-0 z-[120] flex flex-col items-center justify-center px-4 py-8 text-center"
     role="region"
     aria-labelledby="goodbye-title"
   >
-    <div class="text-7xl sm:text-8xl mb-4" aria-hidden="true">👋</div>
-    <h2 id="goodbye-title" class="text-4xl sm:text-5xl font-bold mb-2">Thanks for playing!</h2>
-    <p class="text-lg sm:text-xl text-gray-900 font-semibold mb-6">Arcana Cascada will be here whenever you're back. 🍬</p>
-    <button id="goodbye-return" type="button" class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">↩ Back to start screen</button>
+    <div class="w-full max-w-md ac-card flex flex-col items-center gap-4">
+      <span class="ac-card__banner-top" aria-hidden="true">Farewell</span>
+      <div class="text-7xl sm:text-8xl my-2" aria-hidden="true">🌙</div>
+      <h2 id="goodbye-title" class="text-4xl sm:text-5xl font-bold mb-2">Until the next reading.</h2>
+      <p class="text-lg sm:text-xl font-semibold mb-4">The cards will be here when you return.</p>
+      <button id="goodbye-return" type="button" class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">↩ Back to the table</button>
+      <span class="ac-card__banner-bottom" aria-hidden="true">XXII · The World</span>
+    </div>
   </section>
 
   <div id="welcome-overlay" class="hidden fixed inset-0 bg-black/60 z-[110]" aria-hidden="true"></div>
   <div
     id="welcome-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[115] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center gap-4 text-center"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[520px] z-[115] flex flex-col items-center gap-4 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="welcome-title"
   >
-    <h2 id="welcome-title" class="text-3xl sm:text-4xl font-bold">Welcome to Arcana Cascada!</h2>
-    <p class="text-xl sm:text-2xl">Tap two neighbors, or swipe a candy toward its neighbor to swap.</p>
-    <p class="text-xl sm:text-2xl">Match 3 or more in a row to score points.</p>
-    <p class="text-lg sm:text-xl text-gray-700">There's no timer and no losing — just play at your own pace.</p>
+    <span class="ac-card__banner-top" aria-hidden="true">Welcome, Seeker</span>
+    <h2 id="welcome-title" class="text-3xl sm:text-4xl font-bold">Arcana Cascada</h2>
+    <p class="text-xl sm:text-2xl">Tap two neighbors, or swipe a card toward its neighbor to swap.</p>
+    <p class="text-xl sm:text-2xl">Align 3 or more of a suit to read a fortune.</p>
+    <p class="text-lg sm:text-xl">No timer. No losing. Read at your own pace.</p>
     <button
       id="welcome-start"
       type="button"
       class="mt-2 text-2xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-8 py-4 shadow-md"
-    >Let's play!</button>
+    >Draw the first card</button>
+    <span class="ac-card__banner-bottom" aria-hidden="true">0 · The Fool</span>
   </div>
 
   <div id="level-select-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>

@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-4-tarot-card-frame-system',
+    items: [
+      '🎴 TAROT CARD FRAME SYSTEM. Every modal/panel surface in the game is now a tarot card, not just a styled rectangle: ink-on-parchment double-line frame, art-nouveau corner ornaments inlined as SVG, and gothic-uppercase banner cartouches at the top + bottom. The reusable `.ac-card` CSS class composes with `.ac-card__banner-top` / `.ac-card__banner-bottom` children to label each surface. Two new palette tokens — `--ac-parchment` (card face) + `--ac-ink` (#2D1B69 line-art violet) — break out of the dark velvet+gold chrome where cards need to read like the inspiration set (cream parchment with deep violet ink illustrations). Applied to start screen ("THE READING" / "ARCANA CASCADA" banners), welcome overlay ("WELCOME, SEEKER" / "0 · THE FOOL"), goodbye screen ("FAREWELL" / "XXII · THE WORLD"), run-summary modal ("THE READING" top banner). Design 5/6/7/8 will continue: tile glyphs as real tarot iconography, roman-numeral slot indicators, mode picker as a card spread, boss slots reveal as Major Arcana.',
+    ],
+  },
+  {
     id: '2026-05-26-modes-7-daily-no-longer-clobbers-roguelike',
     items: [
       '🛡 MODE SEPARATION — STEP 7: DAILY CAN\'T CLOBBER ROGUELIKE. Bug — starting a Daily run while a Roguelike run was in flight reset the Roguelike progression (currentSlot, currentClass, livesRemaining, upgrades, relics, free rerolls) and there was no way back. Fix — the Daily mode now snapshots the Roguelike slice on `enter()` and restores it on `exit()`. Re-flags `inRun` only if Roguelike was active before Daily so the start-menu correctly shows "Resume Run" after the player returns. The run-summary "Replay" button routes through `setActiveMode(\'roguelike\')` instead of calling `startRoguelikeRun` directly, so Daily\'s exit() lifecycle fires before the next Roguelike run picks up the restored state. Snapshot is private to the daily module — no schema migration required. 8 new tests cover the round-trip + the consecutive-cycle case. 392 tests pass.',
