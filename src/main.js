@@ -124,6 +124,7 @@ import { createRng, dailySeed, dailySeedStamp } from './game/rng.js';
 import * as bus from './game/event-bus.js';
 import { registerRunEffects } from './game/run-effects.js';
 import { registerMode, setActiveMode } from './modes/index.js';
+import * as freePlayMode from './modes/free-play/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -6489,16 +6490,11 @@ function startLevel(levelId, { announce = true } = {}) {
   }
 }
 
-function startFreePlay() {
-  cancelHint();
-  hideLevelOverlay();
-  state.level = null;
-  resetBoard();
-  state.movesRemaining = 0;
-  refreshLevelUI();
-  renderBoard(state.board, state, { intro: true });
-  scheduleHint();
-}
+// Free Play start function — exported by the per-mode module so
+// internal callers (init, restart button, boot fallback) can invoke
+// it without going through the mode runtime. The runtime path uses
+// the same `start` via the registered enter() hook.
+let startFreePlay; // assigned at boot after deps are wired
 
 function init({ chime = false, announceLevel = true } = {}) {
   if (state.settings.mode === 'roguelike') {
@@ -6569,13 +6565,19 @@ registerMode({
     state.cascadeAbort = true;
   },
 });
-registerMode({
-  id: 'free',
-  enter() { startFreePlay(); },
-  exit() {
-    state.cascadeAbort = true;
-  },
-});
+// Free Play is now its own self-contained module — see
+// src/modes/free-play/index.js. register() returns the module's
+// public API ({ start }) which we expose to in-file callers via
+// the previously-declared `startFreePlay` slot.
+({ start: startFreePlay } = freePlayMode.register({
+  state,
+  cancelHint,
+  hideLevelOverlay,
+  resetBoard,
+  refreshLevelUI,
+  renderBoard,
+  scheduleHint,
+}));
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
 registerRunEffects(state, {
