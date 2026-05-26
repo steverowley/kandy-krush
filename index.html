@@ -154,16 +154,22 @@
        Roman numeral + arcana name in cartouche banners; the boss
        icon + name + tip sit as the "illustration" between them. -->
   <div id="boss-banner" class="hidden fixed inset-0 z-[72] flex items-center justify-center pointer-events-none">
-    <div class="ac-boss-card-flipper boss-banner-card">
+    <div class="ac-boss-card-flipper boss-banner-card" data-arcana="tower">
       <div class="ac-boss-card__face ac-boss-card__face--back ac-card-back"></div>
       <div class="ac-boss-card__face ac-boss-card__face--front">
-        <span id="boss-banner-numeral" class="ac-card__banner-top">XVI</span>
-        <div id="boss-banner-tier" class="text-sm uppercase tracking-[0.3em] mt-2">Major Arcana</div>
+        <span class="ac-card__corner ac-card__corner--l" aria-hidden="true">a.</span>
+        <span id="boss-banner-numeral" class="ac-card__numeral" aria-hidden="true">XVI</span>
+        <span class="ac-card__corner ac-card__corner--r" aria-hidden="true">b.✷</span>
+        <div id="boss-banner-tier" class="text-xs uppercase tracking-[0.3em] mt-2">Major Arcana</div>
         <div id="boss-banner-icon" class="text-6xl sm:text-7xl">👑</div>
-        <div id="boss-banner-name" class="text-3xl sm:text-4xl font-extrabold text-center tracking-tight">The Tower</div>
+        <div id="boss-banner-name" class="text-2xl sm:text-3xl font-extrabold text-center tracking-tight">The Tower</div>
         <div id="boss-banner-taunt" class="hidden text-sm sm:text-base italic text-center max-w-md px-3 py-1"></div>
         <div id="boss-banner-tip" class="text-sm sm:text-base font-semibold text-center max-w-md"></div>
-        <span id="boss-banner-arcana-label" class="ac-card__banner-bottom">The Tower</span>
+        <div class="ac-card__name-area">
+          <div class="ac-card__serif-name" id="boss-banner-arcana-name">The Tower</div>
+          <div class="ac-card__script" id="boss-banner-script">major arcana</div>
+          <div class="ac-card__italic" id="boss-banner-italic">la torre</div>
+        </div>
       </div>
     </div>
   </div>

@@ -1460,16 +1460,16 @@ export function showBossDefeatedBanner(boss, { isFinal = false, holdMs = 2200 } 
 // chosen to fit the boss's vibe. Final boss is The World (XXI) —
 // completion of the spread.
 const MAJOR_ARCANA_BY_BOSS = {
-  'boss-1':  { numeral: 'XV',   name: 'The Devil' },        // Pudding/jelly — temptation, indulgence
-  'boss-2':  { numeral: 'IV',   name: 'The Emperor' },      // Lock — control, structure
-  'boss-3':  { numeral: 'III',  name: 'The Empress' },      // Sweet King → reframed as Empress (abundance, sweetness)
-  'boss-4':  { numeral: 'VIII', name: 'Strength' },         // Snail — slow but steady fortitude
-  'boss-5':  { numeral: 'XVI',  name: 'The Tower' },        // Statue — collapse, upheaval
-  'boss-6':  { numeral: 'VI',   name: 'The Lovers' },       // Cherry — union, choice
-  'boss-7':  { numeral: 'XVIII',name: 'The Moon' },         // Ghost — illusion, the unknown
-  'boss-8':  { numeral: 'XIII', name: 'Death' },            // Spider — transformation, decay
-  'boss-9':  { numeral: 'XIV',  name: 'Temperance' },       // Cupcake — balance, sweet measure
-  'boss-10': { numeral: 'XXI',  name: 'The World' },        // Final boss — completion of the spread
+  'boss-1':  { numeral: 'XV',   name: 'The Devil',     slug: 'devil',      italian: 'il diavolo' },
+  'boss-2':  { numeral: 'IV',   name: 'The Emperor',   slug: 'emperor',    italian: "l'imperatore" },
+  'boss-3':  { numeral: 'III',  name: 'The Empress',   slug: 'empress',    italian: "l'imperatrice" },
+  'boss-4':  { numeral: 'VIII', name: 'Strength',      slug: 'strength',   italian: 'la forza' },
+  'boss-5':  { numeral: 'XVI',  name: 'The Tower',     slug: 'tower',      italian: 'la torre' },
+  'boss-6':  { numeral: 'VI',   name: 'The Lovers',    slug: 'lovers',     italian: 'gli amanti' },
+  'boss-7':  { numeral: 'XVIII',name: 'The Moon',      slug: 'moon',       italian: 'la luna' },
+  'boss-8':  { numeral: 'XIII', name: 'Death',         slug: 'death',      italian: 'la morte' },
+  'boss-9':  { numeral: 'XIV',  name: 'Temperance',    slug: 'temperance', italian: 'la temperanza' },
+  'boss-10': { numeral: 'XXI',  name: 'The World',     slug: 'world',      italian: 'il mondo' },
 };
 
 export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 : 3000 } = {}) {
@@ -1481,16 +1481,23 @@ export function showBossBanner(boss, { isFinal = false, holdMs = isFinal ? 4200 
   const name = document.getElementById('boss-banner-name');
   const tip = document.getElementById('boss-banner-tip');
   const numeral = document.getElementById('boss-banner-numeral');
-  const arcanaLabel = document.getElementById('boss-banner-arcana-label');
+  const arcanaName = document.getElementById('boss-banner-arcana-name');
+  const arcanaScript = document.getElementById('boss-banner-script');
+  const arcanaItalic = document.getElementById('boss-banner-italic');
 
   // Resolve the boss to its assigned Major Arcana. Unknown bosses
   // fall back to "XX · Judgement" (catch-all reveal) so the banner
   // is never empty.
   const arcana = MAJOR_ARCANA_BY_BOSS[boss && boss.id]
-    || { numeral: 'XX', name: 'Judgement' };
+    || { numeral: 'XX', name: 'Judgement', slug: 'judgement', italian: 'il giudizio' };
 
   if (numeral) numeral.textContent = arcana.numeral;
-  if (arcanaLabel) arcanaLabel.textContent = arcana.name;
+  if (arcanaName) arcanaName.textContent = arcana.name;
+  if (arcanaScript) arcanaScript.textContent = isFinal ? 'final reading' : 'major arcana';
+  if (arcanaItalic) arcanaItalic.textContent = arcana.italian;
+  // Set the per-arcana color on the flipper so the colored inner
+  // panel uses the right token (design-10).
+  if (flipper) flipper.setAttribute('data-arcana', arcana.slug);
   if (tier) tier.textContent = isFinal ? 'Major Arcana · Final' : 'Major Arcana';
   if (name) name.textContent = (boss && boss.name) || 'Boss';
   // Pick an icon based on boss id (matches the in-game lore naming).
