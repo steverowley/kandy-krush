@@ -1924,6 +1924,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-5-tarot-tile-glyphs',
+    items: [
+      '🎴 TILE GLYPHS — ACTUAL TAROT SUIT SYMBOLS. The six tile families are now drawn as proper minor-arcana iconography in ink-violet line art on the cream tile face: pentacles (coin + inscribed pentagram), cups (chalice with stem + foot + soul gem), star (7-point heptagram with inner star + jewel), wands (vertical staff with capped ends + grip wraps), moon (waning crescent with face suggestion + radiating ink-marks), swords (upright blade with crossguard + grip + pommel). Each glyph keeps a distinct silhouette so colorblind players + small-tile rendering both stay legible. Inspired by the black-and-gold ornate-occult deck reference. Stroke is the design-4 `--ac-ink` token (#2D1B69) so the board reads as a spread of cream tarot cards on the velvet cloth. The Pixi canvas renderer (opt-in via ?canvas=1) gets a temporary fallback to a disk for the new shape names; a follow-up will render the same tarot glyphs in canvas mode.',
+    ],
+  },
+  {
     id: '2026-05-26-design-4-tarot-card-frame-system',
     items: [
       '🎴 TAROT CARD FRAME SYSTEM. Every modal/panel surface in the game is now a tarot card, not just a styled rectangle: ink-on-parchment double-line frame, art-nouveau corner ornaments inlined as SVG, and gothic-uppercase banner cartouches at the top + bottom. The reusable `.ac-card` CSS class composes with `.ac-card__banner-top` / `.ac-card__banner-bottom` children to label each surface. Two new palette tokens — `--ac-parchment` (card face) + `--ac-ink` (#2D1B69 line-art violet) — break out of the dark velvet+gold chrome where cards need to read like the inspiration set (cream parchment with deep violet ink illustrations). Applied to start screen ("THE READING" / "ARCANA CASCADA" banners), welcome overlay ("WELCOME, SEEKER" / "0 · THE FOOL"), goodbye screen ("FAREWELL" / "XXII · THE WORLD"), run-summary modal ("THE READING" top banner). Design 5/6/7/8 will continue: tile glyphs as real tarot iconography, roman-numeral slot indicators, mode picker as a card spread, boss slots reveal as Major Arcana.',
