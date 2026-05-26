@@ -313,6 +313,50 @@ test("Second Wind is a no-op at 0 lives (you've already lost)", () => {
   assert.equal(s.roguelike.livesRemaining, 0); // doesn't revive
 });
 
+// --- 🎁 Generous starter (slot:start, slot === 1 → +1 of each power-up) ---
+
+test("Generous starter grants +1 of each power-up on slot 1 only", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('slot:start', { slot: 2 });
+  assert.deepEqual(bank, { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 });
+  bus.emit('slot:start', { slot: 1 });
+  assert.deepEqual(bank, { hammer: 1, shuffle: 1, colorBomb: 1, plusMoves: 1 });
+});
+
+test("Generous starter doubles to +2 with powerful-start meta", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    hasMeta: (id) => id === 'powerful-start',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('slot:start', { slot: 1 });
+  assert.deepEqual(bank, { hammer: 2, shuffle: 2, colorBomb: 2, plusMoves: 2 });
+});
+
+test("Generous starter respects per-kind cap", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 5, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    powerupBank: () => bank,
+    effectivePowerupCap: (k) => (k === 'hammer' ? 5 : 99),
+  });
+  bus.emit('slot:start', { slot: 1 });
+  assert.equal(bank.hammer, 5); // at cap
+  assert.equal(bank.shuffle, 1);
+});
+
 // --- ✏️ Eraser mutator (slot:start → queue a meteor on deferredSlotFx) ---
 
 test("Eraser queues a meteor onto state.deferredSlotFx at slot start", () => {

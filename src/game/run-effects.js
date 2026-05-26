@@ -208,6 +208,22 @@ export function registerRunEffects(state, helpers = {}) {
     state.deferredSlotFx.push(() => { if (state.board) fireMeteor(); });
   }));
 
+  // 🎁 Generous starter. Was inline in applyRunUpgradesOnSlotStart.
+  // Slot 1 of every run grants +1 of each power-up (×2 with the
+  // powerful-start meta). Reads ctx.slot from the event payload
+  // rather than poking state.roguelike directly.
+  unsubs.push(bus.on('slot:start', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.slot !== 1) return;
+    const bonus = hasMeta('powerful-start') ? 2 : 1;
+    const bank = powerupBank() || {};
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + bonus);
+    }
+    setPowerupCounts(bank);
+    flashMessage(`🎁 Welcome gift: +${bonus} of each power-up`, 1600);
+  }));
+
   // 🗝 Lockpick mutator. Was inline in applyRunUpgradesOnSlotStart.
   // Walks every entry in state.lockMap: locks at level 1 disappear,
   // locks at level 2+ drop by 1. Re-renders the board so the lock
