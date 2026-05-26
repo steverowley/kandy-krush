@@ -687,6 +687,57 @@ test("Whirlpool reshuffle is gated on state.board being present", async () => {
   assert.equal(reshuffles, 0);
 });
 
+// --- 🍰 Sugar Rush relic (roguelike:match #3 → "spent" flash) ---
+
+test("Sugar Rush flashes 'spent' exactly on the 3rd match of a slot", () => {
+  bus.clear();
+  const calls = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'sugar-rush',
+    flashMessage: (msg) => calls.push(msg),
+  });
+  for (let i = 1; i <= 5; i++) {
+    bus.emit('roguelike:match', { slotMatchCount: i, cascadeLevel: 1, matchSize: 3 });
+  }
+  const sugarFlashes = calls.filter((c) => /Sugar Rush/.test(c));
+  // Only fires on match 3 — not 4 or 5.
+  assert.equal(sugarFlashes.length, 1);
+});
+
+// --- 💣 Crazy Magnet upgrade (roguelike:match every 3rd → N random crazy tiles) ---
+
+test("Crazy Magnet spawns one crazy tile per stack every 3rd match", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: (id) => (id === 'crazy-magnet' ? 2 : 0),
+    spawnCrazyTile: (kind) => spawned.push(kind),
+    pickCrazyKind: () => 'wormhole',
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 1, cascadeLevel: 1, matchSize: 3 });
+  bus.emit('roguelike:match', { slotMatchCount: 2, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, []);
+  bus.emit('roguelike:match', { slotMatchCount: 3, cascadeLevel: 1, matchSize: 3 });
+  // 2 stacks → 2 wormhole spawns on slot match 3.
+  assert.deepEqual(spawned, ['wormhole', 'wormhole']);
+  bus.emit('roguelike:match', { slotMatchCount: 6, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, ['wormhole', 'wormhole', 'wormhole', 'wormhole']);
+});
+
+test("Crazy Magnet no-op without stacks", () => {
+  bus.clear();
+  const spawned = [];
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    upgradeCount: () => 0,
+    spawnCrazyTile: (k) => spawned.push(k),
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 3, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(spawned, []);
+});
+
 test("Both Coin Purse + Diamond Mine can stack on the same match", () => {
   bus.clear();
   const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };

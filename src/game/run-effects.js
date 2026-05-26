@@ -51,6 +51,7 @@ export function registerRunEffects(state, helpers = {}) {
     effectivePowerupCap = () => Infinity,
     fireLightning = () => {},
     preservingReshuffle = () => {},
+    pickCrazyKind = () => null,
   } = helpers;
   const unsubs = [];
 
@@ -381,6 +382,33 @@ export function registerRunEffects(state, helpers = {}) {
       bank[pick] = (bank[pick] || 0) + 1;
       setPowerupCounts(bank);
       flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
+    }
+  }));
+
+  // 🍰 Sugar Rush relic — third-match flash. Was inline in
+  // processMatchRound's `cascadeLevel === 1` block. The relic's
+  // score-multiplier branch lives elsewhere (it's a synchronous
+  // multiplier on the score function); only the "spent" flash on
+  // the third match migrates here. Roguelike-match event payload
+  // gives us the exact post-increment count.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || ctx.slotMatchCount !== 3) return;
+    if (!hasRelic('sugar-rush')) return;
+    flashMessage('🍰 Sugar Rush spent', 900);
+  }));
+
+  // 💣 Crazy Magnet upgrade. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 3 matches, spawns one crazy
+  // tile per stack with a random kind (via pickCrazyKind helper).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 3 !== 0) return;
+    const stacks = upgradeCount('crazy-magnet');
+    if (stacks <= 0) return;
+    for (let i = 0; i < stacks; i++) {
+      spawnCrazyTile(pickCrazyKind());
     }
   }));
 

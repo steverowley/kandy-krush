@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17av',
+    items: [
+      '🍰💣 SUGAR RUSH FLASH + CRAZY MAGNET MIGRATED — the last two side-effect branches in processMatchRound\'s cascade-1 block moved to `bus.on(\'roguelike:match\', …)` subscribers. Sugar Rush\'s third-match "spent" flash and Crazy Magnet\'s % 3 random crazy-tile spawn now live in run-effects.js. Sugar Rush\'s score multiplier itself stays inline — it\'s a synchronous score function, not a side effect. Helpers channel gains `pickCrazyKind`. 3 new tests; 136 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17au',
     items: [
       '🌀🪞🪙🐞 WHIRLPOOL + CRACKED MIRROR + COIN TOSS + LADYBUG MIGRATED — four more cascade-1 inline branches moved to `bus.on(\'roguelike:match\', …)` subscribers in run-effects.js. Whirlpool (% 10 → 280ms-delayed reshuffle), Cracked Mirror (matchSize ≥ 5 → +20% Lucky), Coin Toss (25% chance per match → random power-up), Lucky Ladybug (% 11 → random power-up). Helpers channel gains `preservingReshuffle`. 7 new tests; 133 total now pass.',
@@ -6082,15 +6088,11 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       cascadeLevel,
       matchSize: allCleared.size,
     });
-    if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
-      flashMessage('🍰 Sugar Rush spent', 900);
-    }
-    // 💣 Crazy Magnet upgrade — every 3rd match spawns a crazy tile.
-    if (upgradeCount('crazy-magnet') > 0 && state.slotMatchCount % 3 === 0) {
-      for (let i = 0; i < upgradeCount('crazy-magnet'); i++) {
-        spawnCrazyTile(pickCrazyKind());
-      }
-    }
+    // 🍰 Sugar Rush flash + 💣 Crazy Magnet — migrated to
+    // bus.on('roguelike:match', …) subscribers in run-effects.js
+    // (PR #17av). The Sugar Rush score multiplier itself stays in
+    // the score function (it's a synchronous multiplier, not a
+    // side effect).
     // 🍀 Lucky Magnet upgrade + 🍵 Bottomless Cup mutator — both
     // migrated to bus.on('match', …) subscribers in run-effects.js
     // (PR #17aq). Each gates on cascadeLevel === 1 from the match
@@ -6392,6 +6394,7 @@ registerRunEffects(state, {
   effectivePowerupCap,
   fireLightning,
   preservingReshuffle,
+  pickCrazyKind,
 });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
