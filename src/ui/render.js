@@ -427,6 +427,22 @@ function _paintTile(tile, cell, c, r, state, fallenSet, introDrop) {
       tile.innerHTML = svgForCell(cell);
     }
   }
+  // 🎴 Editorial-card tile (design-12) — stamp the suit name on the
+  // tile via data-suit so the colored-inner-panel CSS hook fires,
+  // and append a tiny serif suit-name strip at the bottom so the
+  // tile reads as a mini editorial card. Suit-name strip is skipped
+  // for obstacle / empty / special cells where it would be noise.
+  const def = cell ? CANDY_DEFS[cell.type] : null;
+  if (def && !cell.special && !cell.obstacle) {
+    tile.dataset.suit = def.name;
+    const strip = document.createElement('span');
+    strip.className = 'tile__name';
+    strip.textContent = def.name;
+    strip.setAttribute('aria-hidden', 'true');
+    tile.appendChild(strip);
+  } else {
+    delete tile.dataset.suit;
+  }
   if (cell && cell.special) tile.classList.add('special', `special-${cell.special}`);
   if (state.selected && state.selected.c === c && state.selected.r === r) {
     tile.classList.add('selected');

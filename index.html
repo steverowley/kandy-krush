@@ -88,7 +88,9 @@
     </div>
   </header>
 
-  <section id="level-info" class="hidden w-full max-w-3xl bg-white border-[3px] border-black rounded-2xl px-4 py-3 flex flex-col gap-2 shadow-md">
+  <section id="level-info" class="hidden ac-chrome-card w-full max-w-3xl flex flex-col gap-2" data-arcana="strength">
+    <span class="ac-chrome-card__numeral" aria-hidden="true">VIII</span>
+    <span class="ac-chrome-card__name">The Trial</span>
     <div class="flex items-center justify-between gap-3 flex-wrap">
       <div id="level-name" class="text-xl sm:text-2xl font-bold">Level 1</div>
       <div class="flex items-center gap-3">
@@ -117,7 +119,9 @@
     </div>
   </section>
 
-  <section id="run-hud" class="hidden w-full max-w-3xl bg-white border-[3px] border-black rounded-2xl px-3 py-2 flex flex-wrap items-center gap-2 shadow-md text-base sm:text-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" role="button" tabindex="0" aria-label="Open run inventory: full build details">
+  <section id="run-hud" class="hidden ac-chrome-card w-full max-w-3xl flex flex-wrap items-center gap-2 text-base sm:text-lg focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" role="button" tabindex="0" aria-label="Open run inventory: full build details" data-arcana="magician">
+    <span class="ac-chrome-card__numeral" aria-hidden="true">I</span>
+    <span class="ac-chrome-card__name">The Hand</span>
     <span id="run-hud-class" class="font-bold"></span>
     <span id="run-hud-builds" class="flex items-center gap-1"></span>
     <span id="run-hud-relics" class="flex items-center gap-1 ml-auto"></span>
@@ -174,17 +178,21 @@
     </div>
   </div>
 
-  <section class="w-full max-w-3xl flex items-end justify-between gap-4" aria-live="polite">
-    <div class="relative">
-      <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Score</div>
-      <div id="score" class="text-5xl sm:text-7xl font-bold tabular-nums leading-none">0</div>
-      <div id="combo-meter" class="hidden absolute -top-6 left-0 sm:-top-7 px-3 py-1 rounded-full bg-pink-600 text-white text-base sm:text-xl font-extrabold border-[3px] border-black shadow-lg pointer-events-none">CHAIN ×2</div>
+  <section class="w-full max-w-3xl flex items-stretch justify-between gap-3" aria-live="polite">
+    <!-- 🎴 The Tally — score chip as a mini editorial card. -->
+    <div class="ac-chrome-card relative flex-1 max-w-[210px]" data-arcana="wheel">
+      <span class="ac-chrome-card__numeral" aria-hidden="true">X</span>
+      <span class="ac-chrome-card__name">Score</span>
+      <div id="score" class="text-4xl sm:text-6xl font-bold tabular-nums leading-none">0</div>
+      <div id="combo-meter" class="hidden absolute -top-3 left-0 sm:-top-4 px-3 py-1 rounded-full bg-pink-600 text-white text-base sm:text-xl font-extrabold border-[3px] border-black shadow-lg pointer-events-none">CHAIN ×2</div>
     </div>
-    <div>
-      <div class="text-xl sm:text-2xl font-bold uppercase tracking-wider">Best</div>
-      <div id="best" class="text-3xl sm:text-5xl font-bold tabular-nums leading-none text-gray-700">0</div>
+    <!-- 🎴 The Memory — best score as a mini editorial card. -->
+    <div class="ac-chrome-card flex-1 max-w-[170px]" data-arcana="hermit">
+      <span class="ac-chrome-card__numeral" aria-hidden="true">IX</span>
+      <span class="ac-chrome-card__name">Best</span>
+      <div id="best" class="text-3xl sm:text-4xl font-bold tabular-nums leading-none">0</div>
     </div>
-    <div id="message" class="text-2xl sm:text-4xl font-bold text-pink-700 min-h-[1.5em] text-right flex-1"></div>
+    <div id="message" class="self-end text-xl sm:text-3xl font-bold min-h-[1.5em] text-right flex-1" style="color: var(--ac-gold);"></div>
   </section>
 
   <div class="relative">
