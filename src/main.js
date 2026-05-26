@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bg',
+    items: [
+      '🧪 ROGUELIKE MODULE COVERAGE — new `tests/roguelike.test.js` exercises the pure utilities in `src/game/roguelike.js`: formatObjectiveHint across every objective kind, isMutatorSlot cadence (every 5th slot, never bosses, never zero/negative), pickRandomMutator determinism with a seeded RNG, getMutator/getRelic/getClass lookups, archetypeFor / archetypeCounts / synergyStacks build-synergy math, pickUpgradeChoices + pickRelicChoices (count, owned-exclusion, determinism), and getRoguelikeLevel\'s slot scaling + endless-mode handoff past slot 100. 30 new tests; 197 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bf',
     items: [
       '📔 OVERNIGHT RUN SUMMARY — PROJECT_PLAN.md now has a "Tonight\'s autonomous run" appendix listing every PR shipped between #289 and #312 (24 total). The recommended-next-moves list also got reordered: bundler / fonts / native packaging / telemetry-vendor pulled to the top, B6 dropped to follow-ups since the event-driven branches are done. Test count and B6 line refreshed to 167 / 43 migrations.',
