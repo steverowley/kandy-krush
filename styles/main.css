@@ -46,13 +46,148 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Apply the velvet palette as the default page surface. Tailwind
-   utility classes on specific elements (bg-amber-50 etc) still
-   win their local battles, but the underlying page reads as the
-   arcana ground. Component refresh per-Tailwind-button is design-2. */
+/* Apply the velvet palette as the default page surface. The Tailwind
+   candy class overrides below remap the saccharine palette to the
+   arcana tokens so every chip/button/modal reads in the new
+   language without rewriting individual class attributes. */
 body {
   background-color: var(--ac-velvet);
   color: var(--ac-bone);
+}
+
+/* 🎴 ARCANA PALETTE REMAP (design-2) — Tailwind utility classes have
+   specificity 0,1,0. To win the cascade reliably (Tailwind's CDN
+   injection timing can race our external stylesheet) every rule here
+   is prefixed with `body` so each selector is specificity 0,1,1 —
+   one rung higher than the Tailwind utility it overrides, no
+   !important needed.
+
+   Mapping intent:
+     - light pink/amber/rose grounds   → --ac-indigo  (cards-on-cloth)
+     - primary CTA pink/yellow grounds → --ac-gold    (antique gold)
+     - hot pink                         → --ac-ember
+     - danger / boss                    → --ac-oxblood
+     - dark-text-on-light text colors  → --ac-bone    (parchment)
+     - yellow accents                   → --ac-gold(-soft) */
+
+/* Backgrounds — light grounds → deep cards-on-cloth */
+body .bg-pink-50,
+body .bg-pink-100,
+body .bg-amber-50,
+body .bg-amber-100,
+body .bg-amber-200,
+body .bg-rose-50,
+body .bg-rose-100 {
+  background-color: var(--ac-indigo);
+}
+
+/* Backgrounds — primary CTA / accent */
+body .bg-pink-300,
+body .bg-pink-400,
+body .bg-pink-500,
+body .bg-yellow-300,
+body .bg-yellow-400,
+body .bg-yellow-500,
+body .bg-rose-400,
+body .bg-rose-500,
+body .bg-fuchsia-400,
+body .bg-fuchsia-500 {
+  background-color: var(--ac-gold);
+  color: var(--ac-obsidian);
+}
+
+/* Backgrounds — hot CTA */
+body .bg-pink-600,
+body .bg-rose-600,
+body .bg-fuchsia-600,
+body .bg-yellow-600 {
+  background-color: var(--ac-ember);
+  color: var(--ac-obsidian);
+}
+
+/* Backgrounds — danger / boss */
+body .bg-pink-700,
+body .bg-pink-800,
+body .bg-pink-900,
+body .bg-rose-700,
+body .bg-rose-800,
+body .bg-rose-900 {
+  background-color: var(--ac-oxblood);
+  color: var(--ac-bone);
+}
+
+/* Backgrounds — soft accents */
+body .bg-yellow-100,
+body .bg-yellow-200 {
+  background-color: var(--ac-gold-soft);
+  color: var(--ac-obsidian);
+}
+
+/* Text — "dark text on light" use-cases now sit on dark grounds, so
+   flip to bone for legibility. */
+body .text-pink-600,
+body .text-pink-700,
+body .text-pink-800,
+body .text-pink-900,
+body .text-rose-700,
+body .text-rose-800,
+body .text-rose-900,
+body .text-amber-700,
+body .text-amber-800,
+body .text-amber-900,
+body .text-fuchsia-700,
+body .text-fuchsia-800 {
+  color: var(--ac-bone);
+}
+
+/* Text — yellow accents → antique gold */
+body .text-yellow-200,
+body .text-yellow-300,
+body .text-yellow-400,
+body .text-yellow-500,
+body .text-yellow-600,
+body .text-yellow-700 {
+  color: var(--ac-gold);
+}
+
+/* Borders — candy borders → gold trim */
+body .border-pink-400,
+body .border-pink-500,
+body .border-pink-600,
+body .border-pink-700,
+body .border-yellow-400,
+body .border-yellow-500,
+body .border-rose-400,
+body .border-rose-500 {
+  border-color: var(--ac-gold);
+}
+
+/* The hard-coded thick-black borders read as "outlined chip" — keep
+   the aesthetic but swap to gold so the chrome matches. */
+body .border-black {
+  border-color: var(--ac-gold);
+}
+
+/* Body grays — the original used text-gray-900 on near-white grounds.
+   On the new dark grounds gray-900 is black-on-black. Flip to bone. */
+body .text-gray-700,
+body .text-gray-800,
+body .text-gray-900 {
+  color: var(--ac-bone);
+}
+
+/* White grounds (modal panels, install card) → indigo so overlays
+   stay in the velvet language. */
+body .bg-white {
+  background-color: var(--ac-indigo);
+  color: var(--ac-bone);
+}
+
+/* Mode-roguelike override — the run sits on the *deepest* ground so
+   it still feels distinct from the start menu (which sits on the
+   regular velvet). */
+body.mode-roguelike {
+  background-color: var(--ac-obsidian);
 }
 
 /* Display headers inherit the serif. The brand title (h1) leans
