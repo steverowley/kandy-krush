@@ -39,36 +39,112 @@ function ensureCanvasReady(cols, rows) {
 //   moon      → sage crescent        (was meadow green star)
 //   swords    → violet-steel blade   (was plum purple heart)
 export const CANDY_DEFS = [
-  { name: 'pentacles', color: '#D4A24C', shape: 'circle' },
-  { name: 'cups',      color: '#3F6E9C', shape: 'square' },
-  { name: 'star',      color: '#A85A78', shape: 'triangle' },
-  { name: 'wands',     color: '#C76528', shape: 'hexagon' },
-  { name: 'moon',      color: '#7A9275', shape: 'star' },
-  { name: 'swords',    color: '#7A5A9D', shape: 'heart' },
+  { name: 'pentacles', color: '#D4A24C', shape: 'pentacle' },
+  { name: 'cups',      color: '#3F6E9C', shape: 'chalice' },
+  { name: 'star',      color: '#A85A78', shape: 'heptagram' },
+  { name: 'wands',     color: '#C76528', shape: 'wand' },
+  { name: 'moon',      color: '#7A9275', shape: 'crescent' },
+  { name: 'swords',    color: '#7A5A9D', shape: 'sword' },
 ];
 
-// Gold-foil outline replaces the legacy heavy black stroke so each
-// tile reads as a card-on-cloth. The lighter stroke width keeps
-// gold from overwhelming the fill at small tile sizes.
-const STROKE = '#D4A24C';
-const SW = 6;
+// Ink-violet stroke (matches the design-4 --ac-ink token) — every
+// glyph is line-art on the cream tile face. Stroke kept thin so
+// inner detail (pentagram, chalice rim, sword crossguard, etc.)
+// still reads at small tile sizes.
+const STROKE = '#2D1B69';
+const SW = 4;
 
 function shapeMarkup(shape, fill) {
   switch (shape) {
+    // ☉ Pentacles — coin with inscribed pentagram. Outer disk
+    // filled with the suit color, pentagram drawn in ink-violet
+    // line work on top.
+    case 'pentacle':
+      return `
+        <circle cx="50" cy="50" r="34" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+        <circle cx="50" cy="50" r="29" fill="none" stroke="${STROKE}" stroke-width="${SW * 0.5}" opacity="0.55"/>
+        <polygon points="50,28 57,46 76,46 61,57 67,75 50,64 33,75 39,57 24,46 43,46"
+          fill="none" stroke="${STROKE}" stroke-width="${SW * 0.9}" stroke-linejoin="round"/>
+      `;
+
+    // 🜄 Cups — chalice silhouette: cup bowl on a stem with foot,
+    // a small "soul gem" in the bowl + a rim line for ornament.
+    case 'chalice':
+      return `
+        <path d="M 22 22 L 78 22 L 74 38 Q 70 60 50 64 Q 30 60 26 38 Z"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>
+        <line x1="22" y1="29" x2="78" y2="29" stroke="${STROKE}" stroke-width="${SW * 0.6}"/>
+        <circle cx="50" cy="44" r="4" fill="${STROKE}"/>
+        <rect x="46" y="64" width="8" height="12" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+        <ellipse cx="50" cy="80" rx="18" ry="4" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+      `;
+
+    // ★ Star — 7-point heptagram with center jewel + a vertical
+    // sparkle ray. Distinct from pentacles' inscribed 5-star.
+    case 'heptagram':
+      return `
+        <polygon points="50,12 80,26 87,58 67,84 33,84 13,58 20,26"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>
+        <polygon points="50,28 64,38 60,55 40,55 36,38"
+          fill="none" stroke="${STROKE}" stroke-width="${SW * 0.7}" stroke-linejoin="round"/>
+        <circle cx="50" cy="46" r="4" fill="${STROKE}"/>
+        <line x1="50" y1="64" x2="50" y2="74" stroke="${STROKE}" stroke-width="${SW * 0.6}" stroke-linecap="round"/>
+      `;
+
+    // 🜃 Wands — vertical staff with capped ends + grip wraps.
+    // Reads as a single bold vertical even at thumbnail sizes.
+    case 'wand':
+      return `
+        <rect x="44" y="22" width="12" height="56" rx="2"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>
+        <circle cx="50" cy="22" r="10"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+        <circle cx="50" cy="78" r="10"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+        <circle cx="50" cy="22" r="3.5" fill="${STROKE}"/>
+        <line x1="40" y1="40" x2="60" y2="40" stroke="${STROKE}" stroke-width="${SW * 0.6}"/>
+        <line x1="40" y1="60" x2="60" y2="60" stroke="${STROKE}" stroke-width="${SW * 0.6}"/>
+      `;
+
+    // ☽ Moon — waning crescent with a small face suggestion (eye
+    // + crescent smile) and three radiating ink-marks. Matches
+    // the image-3 ornate-occult tile vibe.
+    case 'crescent':
+      return `
+        <path d="M 72 50 A 32 32 0 1 1 38 18 A 26 26 0 1 0 72 50 Z"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>
+        <circle cx="40" cy="44" r="2.5" fill="${STROKE}"/>
+        <path d="M 34 54 Q 40 58 46 54" fill="none" stroke="${STROKE}" stroke-width="${SW * 0.6}" stroke-linecap="round"/>
+        <line x1="78" y1="34" x2="84" y2="28" stroke="${STROKE}" stroke-width="${SW * 0.5}" stroke-linecap="round"/>
+        <line x1="80" y1="50" x2="88" y2="50" stroke="${STROKE}" stroke-width="${SW * 0.5}" stroke-linecap="round"/>
+        <line x1="78" y1="66" x2="84" y2="72" stroke="${STROKE}" stroke-width="${SW * 0.5}" stroke-linecap="round"/>
+      `;
+
+    // ⚔ Swords — upright blade with crossguard + grip + pommel.
+    // Blade fill = suit color; metal accents = ink-violet.
+    case 'sword':
+      return `
+        <polygon points="50,10 58,28 58,62 42,62 42,28"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>
+        <line x1="50" y1="14" x2="50" y2="58" stroke="${STROKE}" stroke-width="${SW * 0.5}"/>
+        <rect x="28" y="62" width="44" height="7" rx="1.5"
+          fill="${STROKE}"/>
+        <rect x="46" y="69" width="8" height="14"
+          fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>
+        <circle cx="50" cy="86" r="5" fill="${STROKE}"/>
+      `;
+
+    // Legacy shape fallbacks — kept for the Pixi canvas-renderer
+    // path (still uses these names; gets its own design-5 follow-up).
+    // Renders the suit color as a simple disk so the board stays
+    // playable even if a legacy shape value sneaks through.
     case 'circle':
-      return `<circle cx="50" cy="50" r="36" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>`;
     case 'square':
-      return `<rect x="16" y="16" width="68" height="68" rx="8" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'triangle':
-      return `<polygon points="50,14 88,84 12,84" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'hexagon':
-      // Point-top hexagon, taller than wide. Reads as instantly different
-      // from the pink triangle even at small sizes.
-      return `<polygon points="50,6 88,28 88,72 50,94 12,72 12,28" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'star':
-      return `<polygon points="50,10 61,38 92,40 67,58 76,88 50,71 24,88 33,58 8,40 39,38" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
     case 'heart':
-      return `<path d="M50,86 C20,66 10,46 10,32 A20,20 0 0 1 50,22 A20,20 0 0 1 90,32 C90,46 80,66 50,86 Z" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}" stroke-linejoin="round"/>`;
+      return `<circle cx="50" cy="50" r="36" fill="${fill}" stroke="${STROKE}" stroke-width="${SW}"/>`;
   }
   return '';
 }

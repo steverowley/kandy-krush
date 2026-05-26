@@ -140,6 +140,18 @@ function drawCandyShape(ctx, def, size) {
   ctx.lineJoin = 'round';
   ctx.beginPath();
   switch (def.shape) {
+    // Design-5 ships the new tarot-suit shapes (pentacle / chalice /
+    // heptagram / wand / crescent / sword) in the SVG renderer
+    // (render.js). The Pixi/canvas path here still draws the legacy
+    // primitives; until canvas gets its own design-5 follow-up, any
+    // new shape name falls through to the default disk so the board
+    // stays playable in canvas mode.
+    case 'pentacle':
+    case 'chalice':
+    case 'heptagram':
+    case 'wand':
+    case 'crescent':
+    case 'sword':
     case 'circle':
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       break;
