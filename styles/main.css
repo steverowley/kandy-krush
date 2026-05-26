@@ -2691,6 +2691,154 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
   color: var(--ac-ink);
 }
 
+/* ──────────────────────────────────────────────────────────────
+   🎴 IN-GAME CHROME (design-11)
+   ──────────────────────────────────────────────────────────────
+   The in-game header, level-info, run-hud, and score display sit
+   on the black page ground while the player is reading. They need
+   a flat "card-stock chip" treatment — parchment ground + ink
+   border + serif type — that matches the editorial card system
+   without taking up modal space.
+
+   `.ac-panel` is the small companion to `.ac-card`: same palette,
+   same type, no banners / corners / name area. Use it on any
+   chrome panel that wants the editorial look in a compact form. */
+
+.ac-panel {
+  background-color: var(--ac-parchment);
+  color: var(--ac-ink);
+  border-radius: 6px;
+  padding: 10px 14px;
+  outline: 1px solid rgba(26, 26, 26, 0.6);
+  outline-offset: -1px;
+  box-shadow:
+    /* tiny stack-of-cards behind */
+    3px 4px 0 -1px rgba(244, 236, 220, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Header brand mark — "Arcana Cascada" in giant Playfair italic
+   so the title chip carries the editorial type identity. */
+header h1 {
+  font-family: var(--ac-font-serif) !important;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  color: var(--ac-parchment);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Header chip buttons — cream chips with ink border so they look
+   like little card-stock tokens against the black ground. */
+header button,
+#level-chip,
+#streak {
+  background-color: var(--ac-parchment) !important;
+  color: var(--ac-ink) !important;
+  border-color: var(--ac-ink) !important;
+}
+
+/* Streak chip italic for tarot-card-flavor. */
+#streak {
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-weight: 700;
+}
+
+/* The big SCORE display — gold Playfair italic so the most-watched
+   number on screen reads as a tarot numeral, not a counter. */
+#score {
+  font-family: var(--ac-font-serif);
+  font-weight: 900;
+  font-style: italic;
+  color: var(--ac-gold);
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+#best {
+  font-family: var(--ac-font-serif);
+  font-weight: 700;
+  font-style: italic;
+  color: var(--ac-bone);
+}
+
+/* "SCORE" + "BEST" labels — small uppercase Cinzel above each
+   number. */
+#score ~ .text-xl,
+section > div > div.text-xl {
+  font-family: var(--ac-font-display);
+  letter-spacing: 0.2em;
+  color: var(--ac-gold);
+  opacity: 0.85;
+}
+
+/* Combo meter chip when active — keep the pink-on-black drama but
+   shift the font to Playfair italic so it ties in. */
+#combo-meter {
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  background-color: var(--ac-arcana-death) !important;
+  border-color: var(--ac-parchment) !important;
+  color: var(--ac-parchment) !important;
+}
+
+/* Apply .ac-panel via attribute selector to the in-game panels so
+   we don't need to touch every HTML attribute. */
+section#level-info,
+section#run-hud {
+  background-color: var(--ac-parchment) !important;
+  color: var(--ac-ink) !important;
+  border-color: var(--ac-ink) !important;
+  border-radius: 8px !important;
+}
+
+/* Inside the level-info panel — level name + moves get Playfair
+   italic treatment. */
+#level-info #level-name {
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-weight: 900;
+  color: var(--ac-ink);
+}
+
+#moves,
+#objective-progress {
+  font-family: var(--ac-font-serif);
+  font-style: italic;
+  font-weight: 900;
+  color: var(--ac-ink);
+}
+
+#moves-label,
+#objective-text {
+  color: var(--ac-ink);
+}
+
+/* Lucky / objective bars — recolor to ink-violet gradient so the
+   chrome reads against the parchment panel. */
+#objective-fill {
+  background: var(--ac-gold) !important;
+}
+
+#lucky-fill {
+  background: linear-gradient(90deg, var(--ac-gold), var(--ac-arcana-death)) !important;
+}
+
+/* Bar tracks — ink-violet outline on a near-parchment ground. */
+#level-info .bg-gray-200 {
+  background-color: rgba(45, 27, 105, 0.12) !important;
+  border-color: var(--ac-ink) !important;
+}
+
+/* Run-HUD chips inside the panel — cream chips with ink labels. */
+#run-hud-class,
+#run-hud-builds,
+#run-hud-relics {
+  color: var(--ac-ink);
+}
+
 /* 🎴 Tarot card-back pattern (design-6) — apply .ac-card-back to
    any panel that should render as the BACK of a tarot card
    (loading screens, slot transitions, draws-not-yet-revealed).
@@ -2740,113 +2888,117 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
   }
 }
 
+/* Mode card — small editorial tarot card matching the design-10
+   anatomy: cream outer + bold colored inner panel + numeral top +
+   small serif name at bottom on cream. Drop shadow stacks behind. */
 .ac-mode-card {
   position: relative;
-  /* Tarot-card aspect ratio (matches a real card: 2:3 portrait). */
   aspect-ratio: 2 / 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 12px 6px;
   background-color: var(--ac-parchment);
   color: var(--ac-ink);
-  border: 2px solid var(--ac-ink);
-  border-radius: 10px;
+  border: 0;
+  outline: 1px solid rgba(26, 26, 26, 0.6);
+  outline-offset: -1px;
+  border-radius: 6px;
+  padding: 22px 6px 38px;
   cursor: pointer;
   font-family: var(--ac-font-body);
   transition: transform 140ms ease, box-shadow 140ms ease;
-  /* Inner double-line frame — same anatomy as the big .ac-card,
-     scaled down so the small card still reads as a card. */
   box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-ink),
+    /* small stack-of-cards shadow behind */
+    3px 4px 0 -1px rgba(244, 236, 220, 0.85),
+    4px 6px 0 -2px rgba(244, 236, 220, 0.6),
     0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Colored inner panel — per-suit fill via the suit data-attr. */
+.ac-mode-card::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 6px;
+  right: 6px;
+  bottom: 34px;
+  background-color: var(--ac-suit, var(--ac-arcana-default));
+  border-radius: 2px;
+}
+
+.ac-mode-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .ac-mode-card:hover,
 .ac-mode-card:focus-visible {
-  outline: none;
+  outline-color: var(--ac-gold);
   transform: translateY(-3px);
   box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-gold),
-    0 12px 24px rgba(0, 0, 0, 0.6);
+    3px 4px 0 -1px rgba(244, 236, 220, 0.85),
+    4px 6px 0 -2px rgba(244, 236, 220, 0.6),
+    0 12px 24px rgba(0, 0, 0, 0.7);
 }
 
 .ac-mode-card:active { transform: translateY(-1px); }
 
+/* Numeral at the very top of the cream border — Playfair italic to
+   match the big-card style. */
 .ac-mode-card__numeral {
-  font-family: var(--ac-font-display);
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--ac-font-serif);
   font-weight: 700;
+  font-style: italic;
   font-size: 0.85rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   color: var(--ac-ink);
-  border-bottom: 1px solid var(--ac-ink);
-  padding: 0 6px 1px;
+  padding: 0;
 }
 
+/* Suit icon sits inside the colored panel, centered. */
 .ac-mode-card__icon {
-  font-size: 2.4rem;
+  display: block;
+  margin: 6px auto;
+  font-size: 1.9rem;
   line-height: 1;
-  filter: drop-shadow(0 1px 0 rgba(45, 27, 105, 0.25));
+  color: var(--ac-parchment);
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35));
 }
 
 @media (min-width: 640px) {
-  .ac-mode-card__icon { font-size: 2.8rem; }
+  .ac-mode-card__icon { font-size: 2.4rem; }
 }
 
+/* Mini serif name at the bottom on the cream border — matches the
+   .ac-card__serif-name treatment but scaled way down. */
 .ac-mode-card__name {
-  font-family: var(--ac-font-display);
-  font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  position: absolute;
+  bottom: 8px;
+  left: 4px;
+  right: 4px;
+  font-family: var(--ac-font-serif);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 0.85rem;
+  line-height: 1;
   text-align: center;
-  line-height: 1.15;
   color: var(--ac-ink);
-  border-top: 1px solid var(--ac-ink);
-  padding: 4px 4px 0;
-  width: 100%;
+  letter-spacing: -0.01em;
+  padding: 0 2px;
 }
 
 @media (min-width: 640px) {
-  .ac-mode-card__name { font-size: 0.8rem; }
+  .ac-mode-card__name { font-size: 0.95rem; }
 }
 
-/* Per-suit accent — each mode card picks up a tiny color cue
-   from its suit as an inner glow at the top of the card. data-suit
-   on the button drives this; the four cards stay visually distinct
-   without overpowering the parchment palette. */
-.ac-mode-card[data-suit="swords"] {
-  box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-ink),
-    inset 0 10px 18px rgba(122, 90, 157, 0.22),
-    0 6px 16px rgba(0, 0, 0, 0.5);
-}
-.ac-mode-card[data-suit="moon"] {
-  box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-ink),
-    inset 0 10px 18px rgba(122, 146, 117, 0.22),
-    0 6px 16px rgba(0, 0, 0, 0.5);
-}
-.ac-mode-card[data-suit="pentacles"] {
-  box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-ink),
-    inset 0 10px 18px rgba(212, 162, 76, 0.26),
-    0 6px 16px rgba(0, 0, 0, 0.5);
-}
-.ac-mode-card[data-suit="cups"] {
-  box-shadow:
-    inset 0 0 0 3px var(--ac-parchment),
-    inset 0 0 0 4px var(--ac-ink),
-    inset 0 10px 18px rgba(63, 110, 156, 0.26),
-    0 6px 16px rgba(0, 0, 0, 0.5);
-}
+/* Per-suit accent — each mini card picks its inner-panel color.
+   Maps to the existing CANDY_DEFS colors (so the suit on the board
+   matches the suit on the start menu). */
+.ac-mode-card[data-suit="swords"]    { --ac-suit: #7A5A9D; }
+.ac-mode-card[data-suit="moon"]      { --ac-suit: #7A9275; }
+.ac-mode-card[data-suit="pentacles"] { --ac-suit: #D4A24C; }
+.ac-mode-card[data-suit="cups"]      { --ac-suit: #3F6E9C; }
 
 /* ──────────────────────────────────────────────────────────────
    🎴 BOSS — MAJOR ARCANA REVEAL (design-8)
@@ -2884,55 +3036,101 @@ body.mode-roguelike .lt-hint { color: #d4d4d4; }
   transform: rotateY(0deg);
 }
 
+/* Boss-card FRONT face — adopts the design-10 editorial card
+   anatomy: cream outer + bold colored inner panel + giant Playfair
+   name at the bottom. The colored panel pulls its color from
+   data-arcana on the flipper (set per-boss in showBossBanner). */
 .ac-boss-card__face--front {
-  /* Starts rotated 180; flips face-up when the flipper rotates
-     back to 0deg. */
   transform: rotateY(180deg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  gap: 8px;
-  padding: 36px 18px 28px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 44px 14px 96px;
   background-color: var(--ac-parchment);
   color: var(--ac-ink);
-  border: 2px solid var(--ac-ink);
+  outline: 1px solid rgba(26, 26, 26, 0.6);
+  outline-offset: -1px;
   box-shadow:
-    inset 0 0 0 4px var(--ac-parchment),
-    inset 0 0 0 5px var(--ac-ink),
-    0 0 0 1px rgba(212, 162, 76, 0.4),
+    6px 8px 0 -2px rgba(244, 236, 220, 0.85),
+    8px 12px 0 -4px rgba(244, 236, 220, 0.65),
     0 22px 60px rgba(0, 0, 0, 0.7);
-  background-image:
-    radial-gradient(circle at 50% 50%, rgba(212, 162, 76, 0.10) 0%, transparent 60%);
 }
 
-/* Boss banner text + icon — overrides the legacy gradient-card
-   colors so everything reads as ink on parchment. */
+/* Colored inner panel via pseudoelement, same shape as .ac-card.
+   Reads --ac-arcana from the flipper's data-arcana attribute. */
+.ac-boss-card__face--front::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 12px;
+  right: 12px;
+  bottom: 90px;
+  background-color: var(--ac-arcana, var(--ac-arcana-default));
+  border-radius: 4px;
+  z-index: 0;
+}
+
+.ac-boss-card__face--front > * { position: relative; z-index: 1; }
+
+/* Apply per-arcana colors to the flipper itself so the front face
+   inherits via var(--ac-arcana). Matches .ac-card[data-arcana=*]
+   so the same mappings work. */
+.ac-boss-card-flipper[data-arcana="fool"]        { --ac-arcana: var(--ac-arcana-fool); }
+.ac-boss-card-flipper[data-arcana="magician"]    { --ac-arcana: var(--ac-arcana-magician); }
+.ac-boss-card-flipper[data-arcana="priestess"]   { --ac-arcana: var(--ac-arcana-priestess); }
+.ac-boss-card-flipper[data-arcana="empress"]     { --ac-arcana: var(--ac-arcana-empress); }
+.ac-boss-card-flipper[data-arcana="emperor"]     { --ac-arcana: var(--ac-arcana-emperor); }
+.ac-boss-card-flipper[data-arcana="hierophant"]  { --ac-arcana: var(--ac-arcana-hierophant); }
+.ac-boss-card-flipper[data-arcana="lovers"]      { --ac-arcana: var(--ac-arcana-lovers); }
+.ac-boss-card-flipper[data-arcana="chariot"]     { --ac-arcana: var(--ac-arcana-chariot); }
+.ac-boss-card-flipper[data-arcana="strength"]    { --ac-arcana: var(--ac-arcana-strength); }
+.ac-boss-card-flipper[data-arcana="hermit"]      { --ac-arcana: var(--ac-arcana-hermit); }
+.ac-boss-card-flipper[data-arcana="wheel"]       { --ac-arcana: var(--ac-arcana-wheel); }
+.ac-boss-card-flipper[data-arcana="justice"]     { --ac-arcana: var(--ac-arcana-justice); }
+.ac-boss-card-flipper[data-arcana="hangedman"]   { --ac-arcana: var(--ac-arcana-hangedman); }
+.ac-boss-card-flipper[data-arcana="death"]       { --ac-arcana: var(--ac-arcana-death); }
+.ac-boss-card-flipper[data-arcana="temperance"]  { --ac-arcana: var(--ac-arcana-temperance); }
+.ac-boss-card-flipper[data-arcana="devil"]       { --ac-arcana: var(--ac-arcana-devil); }
+.ac-boss-card-flipper[data-arcana="tower"]       { --ac-arcana: var(--ac-arcana-tower); }
+.ac-boss-card-flipper[data-arcana="star"]        { --ac-arcana: var(--ac-arcana-star); }
+.ac-boss-card-flipper[data-arcana="moon"]        { --ac-arcana: var(--ac-arcana-moon); }
+.ac-boss-card-flipper[data-arcana="sun"]         { --ac-arcana: var(--ac-arcana-sun); }
+.ac-boss-card-flipper[data-arcana="judgement"]   { --ac-arcana: var(--ac-arcana-judgement); }
+.ac-boss-card-flipper[data-arcana="world"]       { --ac-arcana: var(--ac-arcana-world); }
+
 #boss-banner-tier {
   font-family: var(--ac-font-display);
-  color: var(--ac-ink-soft);
+  color: var(--ac-parchment);
   letter-spacing: 0.3em;
   font-weight: 700;
+  opacity: 0.85;
+  margin-top: 2px;
 }
 
 #boss-banner-name {
   font-family: var(--ac-font-display);
-  color: var(--ac-ink);
+  color: var(--ac-parchment);
   letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 #boss-banner-icon {
-  filter: drop-shadow(0 2px 0 rgba(45, 27, 105, 0.35));
+  color: var(--ac-parchment);
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.4));
+  margin: 6px 0;
 }
 
 #boss-banner-tip {
-  color: var(--ac-ink-soft);
+  color: var(--ac-parchment);
   font-style: italic;
+  opacity: 0.85;
 }
 
 #boss-banner-taunt {
-  color: var(--ac-ink);
-  background-color: rgba(212, 162, 76, 0.18);
-  border: 1px solid var(--ac-gold-soft);
+  color: var(--ac-parchment);
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(244, 236, 220, 0.4);
   border-radius: 4px;
 }
