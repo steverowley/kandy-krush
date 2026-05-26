@@ -143,6 +143,59 @@ export function registerRunEffects(state, helpers = {}) {
     flashMessage('💵 Big Money! +10 💎', 1300);
   }));
 
+  // 🍀 Lucky Day mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // Fills the Lucky bar to 100 + marks ready at slot start.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('lucky-day')) return;
+    state.luckyCharge = 100;
+    state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }));
+
+  // 🎁 Gift Slot mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +1 of every power-up at slot start (each respecting its own cap).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('gift-slot')) return;
+    const bank = powerupBank() || {};
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
+    }
+    setPowerupCounts(bank);
+  }));
+
+  // 🔨🌧 Hammer Storm mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +3 hammers at slot start (capped).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('hammer-storm')) return;
+    const bank = powerupBank() || {};
+    bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + 3);
+    setPowerupCounts(bank);
+  }));
+
+  // 💣💣 Bomb Cache mutator. Was inline in applyRunUpgradesOnSlotStart.
+  // +2 color bombs at slot start (capped).
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('bomb-cache')) return;
+    const bank = powerupBank() || {};
+    bank.colorBomb = Math.min(effectivePowerupCap('colorBomb'), (bank.colorBomb || 0) + 2);
+    setPowerupCounts(bank);
+  }));
+
+  // 🌬 Second Wind relic. Was inline in applyRunUpgradesOnSlotStart.
+  // If the player enters a slot at 1 life, bump to 2 + flash.
+  unsubs.push(bus.on('slot:start', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasRelic('second-wind')) return;
+    if (!state.roguelike) return;
+    if ((state.roguelike.livesRemaining || 0) !== 1) return;
+    state.roguelike.livesRemaining = 2;
+    flashMessage('🌬 Second Wind! +1 life', 1300);
+  }));
+
   // 🏔 Best-slot-score tracker. Was inline at the top of
   // advanceRoguelikeAfterWin; now a slot:complete subscriber. Bumps
   // state.runHighlights.bestSlotScore when the just-cleared slot's

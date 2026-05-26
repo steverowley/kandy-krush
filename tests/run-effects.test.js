@@ -209,6 +209,110 @@ test("Big Money grants +10 gems on slot start WITHOUT persist", () => {
   assert.equal(persistCalls, 0);
 });
 
+// --- 🍀 Lucky Day mutator (slot:start → fills Lucky bar to 100) ---
+
+test("Lucky Day fills Lucky bar at slot start", () => {
+  bus.clear();
+  const calls = [];
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'lucky-day',
+    setLuckyCharge: (c, r) => calls.push({ c, r }),
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+  assert.deepEqual(calls, [{ c: 100, r: true }]);
+});
+
+// --- 🎁 Gift Slot mutator (slot:start → +1 of each power-up) ---
+
+test("Gift Slot grants +1 of each power-up at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'gift-slot',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.deepEqual(bank, { hammer: 1, shuffle: 1, colorBomb: 1, plusMoves: 1 });
+});
+
+test("Gift Slot respects per-kind caps", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 5, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    hasMutator: () => true,
+    powerupBank: () => bank,
+    effectivePowerupCap: (k) => (k === 'hammer' ? 5 : 99),
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(bank.hammer, 5); // cap
+  assert.equal(bank.shuffle, 1);
+});
+
+// --- 🔨🌧 Hammer Storm mutator (slot:start → +3 hammers) ---
+
+test("Hammer Storm grants +3 hammers at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 1 };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'hammer-storm',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(bank.hammer, 4);
+});
+
+// --- 💣💣 Bomb Cache mutator (slot:start → +2 color bombs) ---
+
+test("Bomb Cache grants +2 color bombs at slot start", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { colorBomb: 1 };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'bomb-cache',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(bank.colorBomb, 3);
+});
+
+// --- 🌬 Second Wind relic (slot:start at 1 life → +1 life) ---
+
+test("Second Wind bumps lives to 2 if at 1", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { livesRemaining: 1 } };
+  registerRunEffects(s, { hasRelic: (id) => id === 'second-wind' });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.livesRemaining, 2);
+});
+
+test("Second Wind is a no-op at 2+ lives", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { livesRemaining: 2 } };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.livesRemaining, 2); // unchanged
+});
+
+test("Second Wind is a no-op at 0 lives (you've already lost)", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, roguelike: { livesRemaining: 0 } };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(s.roguelike.livesRemaining, 0); // doesn't revive
+});
+
 test("slot:start handler caps mutatorsSeen at 32", () => {
   state.runHighlights.mutatorsSeen = new Array(32).fill('old');
   state.slotMutator = 'overflow';
