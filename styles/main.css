@@ -25,6 +25,20 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 🐛 The user-agent stylesheet sets `color: ButtonText` (a system
+   color) on every `<button>` — it does NOT inherit from the parent.
+   On a dark-mode OS that resolves to WHITE, which means every
+   Tailwind-coloured button in the game (bright pink / yellow / blue /
+   purple HUD chips, modal buttons, etc.) rendered white text on a
+   bright background and became unreadable for dark-mode players.
+   Forcing inherit means buttons pick up the body's `text-gray-900`
+   chain (or the Tailwind text-* class on the button itself, which
+   wins because Tailwind has higher specificity than the universal
+   rule here). */
+button {
+  color: inherit;
+}
+
 body {
   --board-size: min(96vw, 720px);
 }
