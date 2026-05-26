@@ -1496,12 +1496,8 @@ function applyRunUpgradesOnSlotStart() {
   // 🚶 moves+2 / mover+3 upgrades + Slow Turtle / Quick Slot / Long
   // Lunch — all bundled into a single bus.on('slot:start', …)
   // subscriber in run-effects.js (PR #17ba).
-  // 🍀 Lucky Day mutator — fill the lucky bar immediately
-  if (hasMutator('lucky-day')) {
-    state.luckyCharge = 100;
-    state.luckyReady = true;
-    setLuckyCharge(state.luckyCharge, state.luckyReady);
-  }
+  // 🍀 Lucky Day — migrated to bus.on('slot:start', …) in
+  // run-effects.js (PR #17bb).
   // 💝 Surprise Life + 🎰 Bonus Round + 💵 Big Money — migrated to
   // bus.on('slot:start', …) subscribers in run-effects.js (PR #17az).
   // All three fire after this function via the post-#17ax order
@@ -1521,26 +1517,9 @@ function applyRunUpgradesOnSlotStart() {
     if (state.board) renderBoard(state.board, state);
     flashMessage('🗝 Lockpick: locks weakened!', 1300);
   }
-  // 🎁 Gift Slot mutator — +1 of every power-up at slot start
-  if (hasMutator('gift-slot')) {
-    const giftBank = powerupBank();
-    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
-      giftBank[key] = Math.min(effectivePowerupCap(key), (giftBank[key] || 0) + 1);
-    }
-    setPowerupCounts(giftBank);
-  }
-  // 🔨🌧 Hammer Storm mutator — +3 hammers at slot start.
-  if (hasMutator('hammer-storm')) {
-    const bank = powerupBank();
-    bank.hammer = Math.min(effectivePowerupCap('hammer'), (bank.hammer || 0) + 3);
-    setPowerupCounts(bank);
-  }
-  // 💣💣 Bomb Cache mutator — +2 color bombs at slot start.
-  if (hasMutator('bomb-cache')) {
-    const bank = powerupBank();
-    bank.colorBomb = Math.min(effectivePowerupCap('colorBomb'), (bank.colorBomb || 0) + 2);
-    setPowerupCounts(bank);
-  }
+  // 🎁 Gift Slot + 🔨🌧 Hammer Storm + 💣💣 Bomb Cache — all migrated
+  // to bus.on('slot:start', …) subscribers in run-effects.js
+  // (PR #17bb).
   // Reset eclipse parity each slot.
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
@@ -1551,11 +1530,8 @@ function applyRunUpgradesOnSlotStart() {
   state.freeBombsUsed = 0;
   // Reset Buttered Bread upgrade's per-slot emergency revive.
   state.butteredUsed = false;
-  // 🌬 Second Wind relic — start of slot with only 1 life → 2 lives.
-  if (hasRelic('second-wind') && (state.roguelike.livesRemaining || 0) === 1) {
-    state.roguelike.livesRemaining = 2;
-    flashMessage('🌬 Second Wind! +1 life', 1300);
-  }
+  // 🌬 Second Wind relic — migrated to bus.on('slot:start', …) in
+  // run-effects.js (PR #17bb).
   // 🎁 Generous starter — slot 1 of every run grants +1 of every power-up.
   // 💪 Powerful Start meta doubles it to +2.
   if (state.roguelike.currentSlot === 1) {
@@ -1931,6 +1907,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17bb',
+    items: [
+      '🍀🎁🔨💣🌬 FIVE MORE SLOT-INIT EFFECTS MIGRATED — Lucky Day (fills Lucky bar), Gift Slot (+1 of each power-up), Hammer Storm (+3 hammers), Bomb Cache (+2 color bombs), Second Wind (+1 life at 1 life) all moved from inline branches in applyRunUpgradesOnSlotStart to focused `bus.on(\'slot:start\', …)` subscribers in run-effects.js. applyRunUpgradesOnSlotStart shrinks toward "just the per-slot resets" — the role it should have had all along. 8 new tests; 158 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-17ba',
     items: [
