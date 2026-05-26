@@ -1502,21 +1502,8 @@ function applyRunUpgradesOnSlotStart() {
   // bus.on('slot:start', …) subscribers in run-effects.js (PR #17az).
   // All three fire after this function via the post-#17ax order
   // (applyRunUpgradesOnSlotStart → bus.emit('slot:start')).
-  // ✏️ Eraser mutator — clears 3 random tiles at slot start.
-  if (hasMutator('eraser')) {
-    state.deferredSlotFx.push(() => { if (state.board) fireMeteor(); });
-  }
-  // 🗝 Lockpick mutator — weaken every lock by 1 level.
-  if (hasMutator('lockpick') && state.lockMap && state.lockMap.size > 0) {
-    const toDelete = [];
-    for (const [k, v] of state.lockMap) {
-      if (v <= 1) toDelete.push(k);
-      else state.lockMap.set(k, v - 1);
-    }
-    for (const k of toDelete) state.lockMap.delete(k);
-    if (state.board) renderBoard(state.board, state);
-    flashMessage('🗝 Lockpick: locks weakened!', 1300);
-  }
+  // ✏️ Eraser + 🗝 Lockpick — migrated to bus.on('slot:start', …)
+  // subscribers in run-effects.js (PR #17bc).
   // 🎁 Gift Slot + 🔨🌧 Hammer Storm + 💣💣 Bomb Cache — all migrated
   // to bus.on('slot:start', …) subscribers in run-effects.js
   // (PR #17bb).
@@ -1907,6 +1894,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17bc',
+    items: [
+      '✏️🗝 ERASER + LOCKPICK MIGRATED — the last two slot-init mutator branches in applyRunUpgradesOnSlotStart moved to `bus.on(\'slot:start\', …)` subscribers in run-effects.js. Eraser queues a meteor onto `deferredSlotFx` so the visual fires after the intro card. Lockpick walks `state.lockMap` and decrements each entry by 1 (level-1 locks disappear). Helpers channel gains `fireMeteor` + `renderBoard`. applyRunUpgradesOnSlotStart is now ~25 lines of pure resets + the mutator roll — exactly what it should be. 6 new tests; 164 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-17bb',
     items: [
@@ -6364,6 +6357,8 @@ registerRunEffects(state, {
   preservingReshuffle,
   pickCrazyKind,
   refreshLevelUI,
+  fireMeteor,
+  renderBoard,
 });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp

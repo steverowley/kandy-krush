@@ -313,6 +313,89 @@ test("Second Wind is a no-op at 0 lives (you've already lost)", () => {
   assert.equal(s.roguelike.livesRemaining, 0); // doesn't revive
 });
 
+// --- ✏️ Eraser mutator (slot:start → queue a meteor on deferredSlotFx) ---
+
+test("Eraser queues a meteor onto state.deferredSlotFx at slot start", () => {
+  bus.clear();
+  let meteorCalls = 0;
+  const s = {
+    inRoguelikeRun: true,
+    deferredSlotFx: [],
+    board: { rows: 8, cols: 8 },
+  };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'eraser',
+    fireMeteor: () => meteorCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  // One callback queued — meteor hasn't fired yet.
+  assert.equal(s.deferredSlotFx.length, 1);
+  assert.equal(meteorCalls, 0);
+  // Player closes intro → deferredSlotFx is drained → meteor fires.
+  for (const fx of s.deferredSlotFx) fx();
+  assert.equal(meteorCalls, 1);
+});
+
+test("Eraser meteor is gated on state.board being present", () => {
+  bus.clear();
+  let meteorCalls = 0;
+  const s = { inRoguelikeRun: true, deferredSlotFx: [], board: null };
+  registerRunEffects(s, {
+    hasMutator: () => true,
+    fireMeteor: () => meteorCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  for (const fx of s.deferredSlotFx) fx();
+  assert.equal(meteorCalls, 0);
+});
+
+test("Eraser is a no-op if deferredSlotFx is missing", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, board: { rows: 8, cols: 8 } };
+  registerRunEffects(s, { hasMutator: () => true });
+  // Should not throw.
+  bus.emit('slot:start', { slot: 5 });
+});
+
+// --- 🗝 Lockpick mutator (slot:start → weaken every lock by 1 level) ---
+
+test("Lockpick decrements every lock by 1; locks at level 1 disappear", () => {
+  bus.clear();
+  const lockMap = new Map([['3,4', 1], ['5,6', 2], ['7,8', 3]]);
+  let renderCalls = 0;
+  const s = { inRoguelikeRun: true, lockMap, board: { rows: 8, cols: 8 } };
+  registerRunEffects(s, {
+    hasMutator: (id) => id === 'lockpick',
+    renderBoard: () => renderCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(lockMap.has('3,4'), false); // level 1 → removed
+  assert.equal(lockMap.get('5,6'), 1); // level 2 → 1
+  assert.equal(lockMap.get('7,8'), 2); // level 3 → 2
+  assert.equal(renderCalls, 1);
+});
+
+test("Lockpick is a no-op with an empty lockMap", () => {
+  bus.clear();
+  let renderCalls = 0;
+  const s = { inRoguelikeRun: true, lockMap: new Map(), board: { rows: 8, cols: 8 } };
+  registerRunEffects(s, {
+    hasMutator: () => true,
+    renderBoard: () => renderCalls++,
+  });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(renderCalls, 0); // no work, no re-render
+});
+
+test("Lockpick is a no-op without the mutator", () => {
+  bus.clear();
+  const lockMap = new Map([['3,4', 2]]);
+  const s = { inRoguelikeRun: true, lockMap, board: { rows: 8, cols: 8 } };
+  registerRunEffects(s, { hasMutator: () => false });
+  bus.emit('slot:start', { slot: 5 });
+  assert.equal(lockMap.get('3,4'), 2); // unchanged
+});
+
 test("slot:start handler caps mutatorsSeen at 32", () => {
   state.runHighlights.mutatorsSeen = new Array(32).fill('old');
   state.slotMutator = 'overflow';
