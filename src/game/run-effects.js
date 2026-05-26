@@ -252,6 +252,56 @@ export function registerRunEffects(state, helpers = {}) {
     persist();
   }));
 
+  // 🪅 Piñata relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 5 matches drops one random
+  // power-up (capped per-kind).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 5 !== 0) return;
+    if (!hasRelic('pinata')) return;
+    const bank = powerupBank() || {};
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
+      bank[pick] = (bank[pick] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🪅 Piñata! +1 ${pick}`, 1000);
+    }
+  }));
+
+  // 👜 Pixie Pouch relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 18 matches grant +1 of EVERY
+  // power-up kind (each respecting its cap).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 18 !== 0) return;
+    if (!hasRelic('pixie-pouch')) return;
+    const bank = powerupBank() || {};
+    for (const key of ['hammer', 'shuffle', 'colorBomb', 'plusMoves']) {
+      bank[key] = Math.min(effectivePowerupCap(key), (bank[key] || 0) + 1);
+    }
+    setPowerupCounts(bank);
+    flashMessage('👜 Pixie Pouch! +1 of each', 1200);
+  }));
+
+  // 🍨 Sundae Saturday relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 8 matches grant +1 plusMoves
+  // power-up (respecting its cap).
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 8 !== 0) return;
+    if (!hasRelic('sundae-saturday')) return;
+    const bank = powerupBank() || {};
+    if ((bank.plusMoves || 0) < effectivePowerupCap('plusMoves')) {
+      bank.plusMoves = (bank.plusMoves || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage('🍨 Sundae Saturday! +1 +3 Moves', 1000);
+    }
+  }));
+
   // 🍵 Bottomless Cup mutator. Was inline in processMatchRound under
   // the `cascadeLevel === 1` block. +20% Lucky bar per match (gated to
   // cascade level 1 so chains don't tick the bar more than once per

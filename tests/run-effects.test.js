@@ -388,6 +388,119 @@ test("Diamond Mine fires every 6th roguelike match", () => {
   assert.equal(s.roguelike.gems, 2); // no fire
 });
 
+// --- 🪅 Piñata relic (roguelike:match every 5th → +1 random power-up) ---
+
+test("Piñata drops one random power-up every 5th match (respects cap)", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0 };
+  let setCalls = 0;
+  const realRandom = Math.random;
+  Math.random = () => 0; // always picks 'hammer'
+  try {
+    registerRunEffects(s, {
+      hasRelic: (id) => id === 'pinata',
+      powerupBank: () => bank,
+      setPowerupCounts: () => setCalls++,
+      effectivePowerupCap: () => 99,
+    });
+    bus.emit('roguelike:match', { slotMatchCount: 4, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 0);
+    bus.emit('roguelike:match', { slotMatchCount: 5, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 1);
+    assert.equal(setCalls, 1);
+    bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 2);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Piñata respects the per-kind cap", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 5 };
+  const realRandom = Math.random;
+  Math.random = () => 0;
+  try {
+    registerRunEffects(s, {
+      hasRelic: (id) => id === 'pinata',
+      powerupBank: () => bank,
+      effectivePowerupCap: (k) => (k === 'hammer' ? 5 : 99),
+    });
+    bus.emit('roguelike:match', { slotMatchCount: 5, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 5); // already at cap, no bump
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+// --- 👜 Pixie Pouch relic (roguelike:match every 18th → +1 each power-up) ---
+
+test("Pixie Pouch grants +1 of every power-up every 18th match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'pixie-pouch',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 17, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(bank, { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 });
+  bus.emit('roguelike:match', { slotMatchCount: 18, cascadeLevel: 1, matchSize: 3 });
+  assert.deepEqual(bank, { hammer: 1, shuffle: 1, colorBomb: 1, plusMoves: 1 });
+});
+
+test("Pixie Pouch honors caps per-kind", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 5, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  registerRunEffects(s, {
+    hasRelic: () => true,
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: (k) => (k === 'hammer' ? 5 : 99),
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 18, cascadeLevel: 1, matchSize: 3 });
+  // Hammer at cap stays at 5; others +1.
+  assert.deepEqual(bank, { hammer: 5, shuffle: 1, colorBomb: 1, plusMoves: 1 });
+});
+
+// --- 🍨 Sundae Saturday relic (roguelike:match every 8th → +1 plusMoves) ---
+
+test("Sundae Saturday grants +1 plusMoves every 8th match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { plusMoves: 0 };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'sundae-saturday',
+    powerupBank: () => bank,
+    setPowerupCounts: () => {},
+    effectivePowerupCap: () => 99,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 7, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(bank.plusMoves, 0);
+  bus.emit('roguelike:match', { slotMatchCount: 8, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(bank.plusMoves, 1);
+  bus.emit('roguelike:match', { slotMatchCount: 16, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(bank.plusMoves, 2);
+});
+
+test("Sundae Saturday respects plusMoves cap", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { plusMoves: 3 };
+  registerRunEffects(s, {
+    hasRelic: () => true,
+    powerupBank: () => bank,
+    effectivePowerupCap: (k) => (k === 'plusMoves' ? 3 : 99),
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 8, cascadeLevel: 1, matchSize: 3 });
+  assert.equal(bank.plusMoves, 3); // capped
+});
+
 test("Both Coin Purse + Diamond Mine can stack on the same match", () => {
   bus.clear();
   const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };
