@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17an',
+    items: [
+      '🧁 CONFECTIONERY MIGRATED TO THE BUS — the relic\'s "+1 random power-up per special spawned" branch lived inline in processMatchRound under the specials block; now a `bus.on(\'match\', …)` subscriber in run-effects.js. Helpers channel gains `powerupBank`, `setPowerupCounts`, `effectivePowerupCap`. The `if (specialsCreated.length > 0)` block in processMatchRound is now empty of roguelike branches — pure cleanup of legacy code coming. 4 new tests; 102 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17am',
     items: [
       '💣🌈 BOMB MAKER + PRISM MAKER MIGRATED TO THE BUS — both probabilistic crazy-tile spawners that fire when a special is born (Bomb Maker: 50%×N roll per stack to spawn TNT; Prism Maker: single roll capped at 60% to spawn a Prism) moved from inline branches in processMatchRound to `bus.on(\'match\', …)` subscribers in run-effects.js. 5 new tests; 98 total now pass.',
@@ -5992,17 +5998,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // run-effects.js (PR #17ak). The `match` event carries
     // specialsCreated in its payload so the subscriber reads it once
     // per round, matching the original round-scoped behavior.
-    // 🧁 Confectionery relic — each special spawned also drops a random power-up.
-    if (hasRelic('confectionery')) {
-      const bank = powerupBank();
-      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
-      for (let i = 0; i < specialsCreated.length; i++) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
-        if ((bank[pick] || 0) < effectivePowerupCap(pick)) bank[pick] = (bank[pick] || 0) + 1;
-      }
-      setPowerupCounts(bank);
-      flashMessage(`🧁 Confectionery! +${specialsCreated.length} 🎁`, 1000);
-    }
+    // 🧁 Confectionery relic — migrated to bus.on('match', …)
+    // subscriber in run-effects.js (PR #17an).
   }
   // Trigger crazy-tile pops (after clear, before scoring so the
   // visual chain reads in the right order).
@@ -6426,7 +6423,17 @@ function init({ chime = false, announceLevel = true } = {}) {
 applyTheme(state.settings);
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
-registerRunEffects(state, { hasRelic, upgradeCount, setLuckyCharge, flashMessage, persist, spawnCrazyTile });
+registerRunEffects(state, {
+  hasRelic,
+  upgradeCount,
+  setLuckyCharge,
+  flashMessage,
+  persist,
+  spawnCrazyTile,
+  powerupBank,
+  setPowerupCounts,
+  effectivePowerupCap,
+});
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
 // down to the current effective cap so the UI doesn't show "9 hammers"

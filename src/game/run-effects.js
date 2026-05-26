@@ -45,6 +45,9 @@ export function registerRunEffects(state, helpers = {}) {
     flashMessage = () => {},
     persist = () => {},
     spawnCrazyTile = () => {},
+    powerupBank = () => ({}),
+    setPowerupCounts = () => {},
+    effectivePowerupCap = () => Infinity,
   } = helpers;
   const unsubs = [];
 
@@ -196,6 +199,26 @@ export function registerRunEffects(state, helpers = {}) {
     if (stacks <= 0) return;
     const chance = Math.min(0.6, 0.15 * stacks * n);
     if (Math.random() < chance) spawnCrazyTile('prism');
+  }));
+
+  // 🧁 Confectionery relic. Was inline in processMatchRound under
+  // `if (specialsCreated.length > 0)`. For each special born this
+  // round, picks a random power-up kind from the standard pool and
+  // bumps the bank by 1 (capped per kind via effectivePowerupCap).
+  // Round-scoped flashMessage with the total count.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    const n = ctx && ctx.specialsCreated ? ctx.specialsCreated.length : 0;
+    if (n === 0) return;
+    if (!hasRelic('confectionery')) return;
+    const bank = powerupBank() || {};
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    for (let i = 0; i < n; i++) {
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      if ((bank[pick] || 0) < effectivePowerupCap(pick)) bank[pick] = (bank[pick] || 0) + 1;
+    }
+    setPowerupCounts(bank);
+    flashMessage(`🧁 Confectionery! +${n} 🎁`, 1000);
   }));
 
   // 🌸 Cherry Wand relic. Was inline in processMatchRound under

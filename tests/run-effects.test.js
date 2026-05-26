@@ -338,6 +338,81 @@ test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
   assert.equal(s.luckyCharge, 0);
 });
 
+// --- 🧁 Confectionery relic (special spawned → random power-up per special) ---
+
+test("Confectionery drops one random power-up per special spawned", () => {
+  bus.clear();
+  const calls = { counts: [], flash: [] };
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0, shuffle: 0, colorBomb: 0, plusMoves: 0 };
+  const realRandom = Math.random;
+  // Force pick = pool[0] = 'hammer' every time.
+  Math.random = () => 0;
+  try {
+    registerRunEffects(s, {
+      hasRelic: (id) => id === 'confectionery',
+      powerupBank: () => bank,
+      setPowerupCounts: (b) => calls.counts.push({ ...b }),
+      effectivePowerupCap: () => 99,
+      flashMessage: (msg, ms) => calls.flash.push({ msg, ms }),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}, {}, {}] });
+    // 3 specials × hammer = +3 hammers.
+    assert.equal(bank.hammer, 3);
+    assert.equal(calls.counts.length, 1);
+    assert.equal(calls.counts[0].hammer, 3);
+    assert.equal(calls.flash.length, 1);
+    assert.match(calls.flash[0].msg, /Confectionery! \+3/);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Confectionery respects the per-kind cap", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 5 };
+  const realRandom = Math.random;
+  Math.random = () => 0; // always picks 'hammer'
+  try {
+    registerRunEffects(s, {
+      hasRelic: (id) => id === 'confectionery',
+      powerupBank: () => bank,
+      setPowerupCounts: (b) => {},
+      effectivePowerupCap: (kind) => (kind === 'hammer' ? 5 : 99),
+    });
+    bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}, {}] });
+    // Bank was already at cap (5), no bump even with 2 specials.
+    assert.equal(bank.hammer, 5);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Confectionery is a no-op without the relic", () => {
+  bus.clear();
+  const calls = { counts: 0 };
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    hasRelic: () => false,
+    setPowerupCounts: () => calls.counts++,
+  });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+  assert.equal(calls.counts, 0);
+});
+
+test("Confectionery is a no-op when no specials spawned", () => {
+  bus.clear();
+  const calls = { counts: 0 };
+  const s = { inRoguelikeRun: true };
+  registerRunEffects(s, {
+    hasRelic: () => true,
+    setPowerupCounts: () => calls.counts++,
+  });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.equal(calls.counts, 0);
+});
+
 // --- 🔥 Furnace upgrade (cascade ≥3 → 1 TNT crazy tile per stack) ---
 
 test("Furnace spawns 1 TNT crazy tile per stack on cascade ≥3", () => {
