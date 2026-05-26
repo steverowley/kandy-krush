@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bo',
+    items: [
+      '🧪 TELEMETRY MODULE COVERAGE — new `tests/telemetry.test.js` covers `src/telemetry.js`: init (default \'console\' provider, deviceId persistence across boots, regenerates when storage cleared, opts override), track (50-event buffer cap, timestamp stamping, sessionId/deviceId/appVersion stamps), setUserProps merging, beacon provider (POSTs via sendBeacon, no-op without endpoint, swallows throwing sendBeacon), noop provider, captureError (ships message+stack+recent_events with last 10 breadcrumbs, handles non-Error throws, does NOT add the error event itself to the buffer). 16 new tests; 320 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bn',
     items: [
       '🧪 SPEECH MODULE COVERAGE — new `tests/speech.test.js` covers `src/audio/speech.js`: enabled toggle (off by default, no-op when off, isSpeechEnabled reflects current state), queue + pump behavior (one-at-a-time speak, onend pumps next, onerror also pumps next, MAX_QUEUE=4 cap drops oldest pending past 5 active+queued), text coercion (empty/null/undefined ignored, numbers stringified), and flushSpeech (cancels + drops queue, post-flush onend doesn\'t pump more). 10 new tests; 304 total now pass.',
