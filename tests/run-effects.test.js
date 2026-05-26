@@ -565,6 +565,128 @@ test("Spark Strike no-op without the upgrade", () => {
   assert.equal(lightningCalls, 0);
 });
 
+// --- 🪞 Cracked Mirror relic (roguelike:match, matchSize ≥ 5 → +20% Lucky) ---
+
+test("Cracked Mirror fills Lucky bar +20% on 5+ matches at cascade 1", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasRelic: (id) => id === 'cracked-mirror' });
+  bus.emit('roguelike:match', { slotMatchCount: 1, cascadeLevel: 1, matchSize: 4 });
+  assert.equal(s.luckyCharge, 0); // < 5 size = no fire
+  bus.emit('roguelike:match', { slotMatchCount: 2, cascadeLevel: 1, matchSize: 5 });
+  assert.equal(s.luckyCharge, 20);
+  bus.emit('roguelike:match', { slotMatchCount: 3, cascadeLevel: 1, matchSize: 9 });
+  assert.equal(s.luckyCharge, 40);
+});
+
+test("Cracked Mirror marks luckyReady when crossing 100", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 90, luckyReady: false };
+  registerRunEffects(s, { hasRelic: () => true });
+  bus.emit('roguelike:match', { slotMatchCount: 1, cascadeLevel: 1, matchSize: 5 });
+  assert.equal(s.luckyCharge, 100);
+  assert.equal(s.luckyReady, true);
+});
+
+// --- 🪙 Coin Toss mutator (roguelike:match, 25% chance → random power-up) ---
+
+test("Coin Toss fires on a passing 25% roll", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0 };
+  const realRandom = Math.random;
+  // First call (gate): 0.10 < 0.25, fires.
+  // Second call (pick): 0 → pool[0] = 'hammer'.
+  const rng = [0.10, 0];
+  Math.random = () => rng.shift() ?? 0;
+  try {
+    registerRunEffects(s, {
+      hasMutator: (id) => id === 'coin-toss',
+      powerupBank: () => bank,
+      setPowerupCounts: () => {},
+      effectivePowerupCap: () => 99,
+    });
+    bus.emit('roguelike:match', { slotMatchCount: 1, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 1);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+test("Coin Toss no-op on failing roll", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0 };
+  const realRandom = Math.random;
+  Math.random = () => 0.99; // > 0.25
+  try {
+    registerRunEffects(s, {
+      hasMutator: () => true,
+      powerupBank: () => bank,
+      effectivePowerupCap: () => 99,
+    });
+    bus.emit('roguelike:match', { slotMatchCount: 1, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 0);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+// --- 🐞 Lucky Ladybug relic (roguelike:match every 11th → random power-up) ---
+
+test("Ladybug drops one random power-up every 11th match", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true };
+  let bank = { hammer: 0 };
+  const realRandom = Math.random;
+  Math.random = () => 0;
+  try {
+    registerRunEffects(s, {
+      hasRelic: (id) => id === 'ladybug',
+      powerupBank: () => bank,
+      setPowerupCounts: () => {},
+      effectivePowerupCap: () => 99,
+    });
+    bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 0);
+    bus.emit('roguelike:match', { slotMatchCount: 11, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 1);
+    bus.emit('roguelike:match', { slotMatchCount: 22, cascadeLevel: 1, matchSize: 3 });
+    assert.equal(bank.hammer, 2);
+  } finally {
+    Math.random = realRandom;
+  }
+});
+
+// --- 🌀 Whirlpool relic (roguelike:match every 10th → board reshuffle after 280ms) ---
+
+test("Whirlpool schedules a reshuffle every 10th match", async () => {
+  bus.clear();
+  let reshuffles = 0;
+  const s = { inRoguelikeRun: true, board: { rows: 8, cols: 8 } };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'whirlpool',
+    preservingReshuffle: () => reshuffles++,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+  // setTimeout delays — wait for it.
+  await new Promise((r) => setTimeout(r, 320));
+  assert.equal(reshuffles, 1);
+});
+
+test("Whirlpool reshuffle is gated on state.board being present", async () => {
+  bus.clear();
+  let reshuffles = 0;
+  const s = { inRoguelikeRun: true, board: null }; // no board → no call
+  registerRunEffects(s, {
+    hasRelic: () => true,
+    preservingReshuffle: () => reshuffles++,
+  });
+  bus.emit('roguelike:match', { slotMatchCount: 10, cascadeLevel: 1, matchSize: 3 });
+  await new Promise((r) => setTimeout(r, 320));
+  assert.equal(reshuffles, 0);
+});
+
 test("Both Coin Purse + Diamond Mine can stack on the same match", () => {
   bus.clear();
   const s = { inRoguelikeRun: true, roguelike: { gems: 0 } };

@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17au',
+    items: [
+      '🌀🪞🪙🐞 WHIRLPOOL + CRACKED MIRROR + COIN TOSS + LADYBUG MIGRATED — four more cascade-1 inline branches moved to `bus.on(\'roguelike:match\', …)` subscribers in run-effects.js. Whirlpool (% 10 → 280ms-delayed reshuffle), Cracked Mirror (matchSize ≥ 5 → +20% Lucky), Coin Toss (25% chance per match → random power-up), Lucky Ladybug (% 11 → random power-up). Helpers channel gains `preservingReshuffle`. 7 new tests; 133 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17at',
     items: [
       '🌶💥✨ SPICE BOX + SUGAR CRASH + SPARK STRIKE MIGRATED — three more per-Nth-match effects moved to `bus.on(\'roguelike:match\', …)` subscribers. Spice Box (% 12 → random crazy tile), Sugar Crash (% 14 → TNT), Spark Strike (% 12 → free Lightning). Helpers channel gains `fireLightning`. 4 new tests; 126 total now pass.',
@@ -6089,50 +6095,24 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
     // migrated to bus.on('match', …) subscribers in run-effects.js
     // (PR #17aq). Each gates on cascadeLevel === 1 from the match
     // event payload.
-    // 🌀 Whirlpool relic — every 10 matches reshuffle the board in place.
-    if (hasRelic('whirlpool') && state.slotMatchCount % 10 === 0) {
-      flashMessage('🌀 Whirlpool reshuffle!', 1100);
-      setTimeout(() => { if (state.board) preservingReshuffle(); }, 280);
-    }
+    // 🌀 Whirlpool relic — migrated to bus.on('roguelike:match', …)
+    // subscriber in run-effects.js (PR #17au).
     // 👛 Coin Purse + ⛏ Diamond Mine — migrated to
     // bus.on('roguelike:match', …) subscribers in run-effects.js
     // (PR #17ar).
     // 🪅 Piñata — migrated to bus.on('roguelike:match', …) in
     // run-effects.js (PR #17as).
-    // 🪞 Cracked Mirror relic — matches of 5+ tiles fill Lucky bar +20%.
-    if (hasRelic('cracked-mirror') && allCleared.size >= 5) {
-      state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
-      if (state.luckyCharge >= 100) state.luckyReady = true;
-      setLuckyCharge(state.luckyCharge, state.luckyReady);
-    }
-    // 🪙 Coin Toss mutator — 25% chance per match to grant +1 random powerup.
-    if (hasMutator('coin-toss') && Math.random() < 0.25) {
-      const bank = powerupBank();
-      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
-        bank[pick] = (bank[pick] || 0) + 1;
-        setPowerupCounts(bank);
-        flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
-      }
-    }
+    // 🪞 Cracked Mirror + 🪙 Coin Toss — migrated to
+    // bus.on('roguelike:match', …) subscribers in run-effects.js
+    // (PR #17au).
     // 🌶 Spice Box + 💥 Sugar Crash + ✨ Spark Strike — migrated to
     // bus.on('roguelike:match', …) subscribers in run-effects.js
     // (PR #17at).
     // 👜 Pixie Pouch + 🍨 Sundae Saturday — migrated to
     // bus.on('roguelike:match', …) subscribers in run-effects.js
     // (PR #17as).
-    // 🐞 Lucky Ladybug relic — every 11 matches drop a random power-up.
-    if (hasRelic('ladybug') && state.slotMatchCount % 11 === 0) {
-      const bank = powerupBank();
-      const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
-        bank[pick] = (bank[pick] || 0) + 1;
-        setPowerupCounts(bank);
-        flashMessage(`🐞 Ladybug! +1 ${pick}`, 1000);
-      }
-    }
+    // 🐞 Lucky Ladybug — migrated to bus.on('roguelike:match', …)
+    // subscriber in run-effects.js (PR #17au).
   }
   state.score += earned;
   setScore(state.score, { animate: true });
@@ -6411,6 +6391,7 @@ registerRunEffects(state, {
   setPowerupCounts,
   effectivePowerupCap,
   fireLightning,
+  preservingReshuffle,
 });
 refreshRunHud();
 // Old saves may have stockpiles above the new per-type caps. Clamp
