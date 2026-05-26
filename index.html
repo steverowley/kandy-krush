@@ -312,11 +312,12 @@
   <div id="class-mastery-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
   <div
     id="class-mastery-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="class-mastery-title"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">Mastery</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="class-mastery-title" class="text-2xl sm:text-3xl font-bold">🏅 Class Mastery</h2>
       <button id="class-mastery-close" type="button" class="text-xl font-bold bg-white hover:bg-amber-100 border-[3px] border-black rounded-2xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Done</button>
@@ -328,11 +329,12 @@
   <div id="run-history-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
   <div
     id="run-history-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[68] flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="run-history-title"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">Past Readings</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="run-history-title" class="text-2xl sm:text-3xl font-bold">📓 Run History</h2>
       <button id="run-history-close" type="button" class="text-xl font-bold bg-white hover:bg-amber-100 border-[3px] border-black rounded-2xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Done</button>
@@ -345,11 +347,12 @@
   <div id="skill-tree-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
   <div
     id="skill-tree-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[640px] z-[68] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[640px] z-[68] flex flex-col gap-3 max-h-[90vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="skill-tree-title"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">The Sigils</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="skill-tree-title" class="text-2xl sm:text-3xl font-bold">Skill Tree</h2>
       <div id="skill-tree-gems" class="text-lg sm:text-xl font-bold bg-yellow-300 border-2 border-black rounded-full px-3 py-1">0 💎</div>
@@ -366,13 +369,14 @@
   <div id="upgrade-overlay" class="hidden fixed inset-0 bg-black/60 z-[58]" aria-hidden="true"></div>
   <div
     id="upgrade-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[640px] z-[68] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-5 sm:p-7 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[640px] z-[68] flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="upgrade-title"
   >
-    <div id="upgrade-subtitle" class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700 text-center">Choose an upgrade</div>
-    <h2 id="upgrade-title" class="text-2xl sm:text-3xl font-bold text-center">Pick one to take into your next slot</h2>
+    <span class="ac-card__banner-top" aria-hidden="true">The Offering</span>
+    <div id="upgrade-subtitle" class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700 text-center">Choose a sigil</div>
+    <h2 id="upgrade-title" class="text-2xl sm:text-3xl font-bold text-center">Pick one to take into your next reading</h2>
     <div id="upgrade-choices" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
     <div id="upgrade-active-list" class="text-sm sm:text-base text-gray-700 text-center"></div>
   </div>
@@ -380,11 +384,12 @@
   <div id="changelog-overlay" class="hidden fixed inset-0 bg-black/55 z-[110]" aria-hidden="true"></div>
   <div
     id="changelog-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[115] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-3 max-h-[88vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[560px] z-[115] flex flex-col gap-3 max-h-[88vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="changelog-title"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">The Scrolls</span>
     <div class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700">What's new</div>
     <h2 id="changelog-title" class="text-2xl sm:text-3xl font-bold">Arcana Cascada update</h2>
     <ul id="changelog-list" class="text-lg sm:text-xl list-disc pl-6 flex flex-col gap-1.5"></ul>
@@ -495,14 +500,15 @@
   <div id="level-select-overlay" class="hidden fixed inset-0 bg-black/50 z-40" aria-hidden="true"></div>
   <div
     id="level-select-panel"
-    class="hidden fixed inset-x-3 top-16 sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[640px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[88vh] overflow-y-auto"
+    class="hidden ac-card fixed inset-x-3 top-16 sm:top-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[640px] z-50 flex flex-col gap-4 max-h-[88vh] overflow-y-auto"
     role="dialog"
     aria-modal="true"
     aria-labelledby="ls-title"
     aria-hidden="true"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">The Path</span>
     <div class="flex items-center justify-between gap-3">
-      <h2 id="ls-title" class="text-2xl sm:text-3xl font-bold">Choose a level</h2>
+      <h2 id="ls-title" class="text-2xl sm:text-3xl font-bold">Choose a card</h2>
       <button
         id="level-select-close"
         type="button"
@@ -516,12 +522,13 @@
   <div id="level-overlay" class="hidden fixed inset-0 bg-black/60 z-40" aria-hidden="true"></div>
   <div
     id="level-complete"
-    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col items-center gap-4 text-center"
+    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-50 flex flex-col items-center gap-4 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="lc-title"
   >
-    <h2 id="lc-title" class="text-3xl sm:text-4xl font-bold">Level complete!</h2>
+    <span class="ac-card__banner-top" aria-hidden="true">XIX · The Sun</span>
+    <h2 id="lc-title" class="text-3xl sm:text-4xl font-bold">Card cleared!</h2>
     <div id="lc-stars" class="text-6xl sm:text-7xl text-yellow-500 leading-none" aria-label="0 of 3 stars">☆☆☆</div>
     <div id="lc-score" class="text-2xl font-bold text-gray-800">Score: 0</div>
     <div class="flex flex-col sm:flex-row gap-3 w-full">
@@ -546,12 +553,13 @@
   <div id="settings-overlay" class="hidden fixed inset-0 bg-black/50 z-[110]" aria-hidden="true"></div>
   <div
     id="settings-panel"
-    class="hidden fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[115] bg-white border-[3px] border-black rounded-3xl shadow-2xl p-6 flex flex-col gap-5"
+    class="hidden ac-card fixed inset-x-4 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[115] flex flex-col gap-5"
     role="dialog"
     aria-modal="true"
     aria-labelledby="settings-title"
     aria-hidden="true"
   >
+    <span class="ac-card__banner-top" aria-hidden="true">Ritual Settings</span>
     <div class="flex items-center justify-between gap-3">
       <h2 id="settings-title" class="text-3xl font-bold">Settings</h2>
       <button
@@ -670,13 +678,14 @@
   <div id="pause-overlay" class="hidden fixed inset-0 bg-black/70 z-[78]" aria-hidden="true"></div>
   <div
     id="pause-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[420px] z-[80] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col items-center gap-3 text-center"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[420px] z-[80] flex flex-col items-center gap-3 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="pause-title"
   >
-    <h2 id="pause-title" class="text-3xl sm:text-4xl font-bold">⏸ Paused</h2>
-    <p class="text-base sm:text-lg text-gray-700">Your run is preserved.</p>
+    <span class="ac-card__banner-top" aria-hidden="true">The Pause</span>
+    <h2 id="pause-title" class="text-3xl sm:text-4xl font-bold">⏸ The Reading Pauses</h2>
+    <p class="text-base sm:text-lg text-gray-700">Your reading is preserved.</p>
     <button id="pause-resume" type="button" class="w-full mt-2 text-2xl font-bold bg-yellow-400 hover:bg-yellow-300 active:bg-yellow-500 text-black border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">▶ Resume</button>
     <button id="pause-settings" type="button" class="w-full text-lg font-bold bg-white hover:bg-gray-100 border-2 border-black rounded-xl px-4 py-2 focus:outline-none focus-visible:ring-4 focus-visible:ring-gray-500">⚙ Settings</button>
     <button id="pause-quit" type="button" class="w-full text-lg font-bold text-gray-800 hover:text-red-700 underline underline-offset-4 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-500 rounded px-2 py-1">🏠 Quit to start screen</button>
@@ -685,13 +694,14 @@
   <div id="reset-overlay" class="hidden fixed inset-0 bg-black/60 z-[80]" aria-hidden="true"></div>
   <div
     id="reset-panel"
-    class="hidden fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[90] bg-white border-[4px] border-black rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-4 text-center"
+    class="hidden ac-card fixed inset-x-3 top-1/2 -translate-y-1/2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-[480px] z-[90] flex flex-col gap-4 text-center"
     role="dialog"
     aria-modal="true"
     aria-labelledby="reset-title"
     aria-hidden="true"
   >
-    <h2 id="reset-title" class="text-2xl sm:text-3xl font-bold">Reset all progress?</h2>
+    <span class="ac-card__banner-top" aria-hidden="true">XIII · Death</span>
+    <h2 id="reset-title" class="text-2xl sm:text-3xl font-bold">Burn the deck?</h2>
     <p class="text-lg sm:text-xl">This erases your stars, level progress, high score, and streak. Settings like Sound and High Contrast stay the same.</p>
     <p class="text-base text-gray-900 font-semibold">There's no undo.</p>
     <div class="flex flex-col sm:flex-row gap-3 pt-2">
