@@ -125,6 +125,7 @@ import * as bus from './game/event-bus.js';
 import { registerRunEffects } from './game/run-effects.js';
 import { registerMode, setActiveMode } from './modes/index.js';
 import * as freePlayMode from './modes/free-play/index.js';
+import * as levelsMode from './modes/levels/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -6447,48 +6448,9 @@ function decrementJellyAt(positions) {
   return dec;
 }
 
-function startLevel(levelId, { announce = true } = {}) {
-  cancelHint();
-  hideLevelOverlay();
-  state.level = getLevel(levelId);
-  resetBoard();
-  applyLevelObstacles(state.level);
-  state.movesRemaining = state.level.moves;
-  refreshLevelUI();
-  renderBoard(state.board, state, { intro: true });
-  if (announce) {
-    const bestStars = state.levelProgress.stars[state.level.id] || 0;
-    const bestScore = (state.levelProgress.bestScores || {})[state.level.id] || 0;
-    let bestPhrase = '';
-    if (bestStars > 0 || bestScore > 0) {
-      const parts = [];
-      if (bestStars > 0) parts.push(`${bestStars} ${bestStars === 1 ? 'star' : 'stars'}`);
-      if (bestScore > 0) parts.push(`${bestScore.toLocaleString()} points`);
-      bestPhrase = ` Your best: ${parts.join(', ')}.`;
-    }
-    const tipPhrase = state.level.tip ? ` Tip: ${state.level.tip}` : '';
-    speech.speak(
-      `Level ${state.level.id}. ${state.level.name}. ${state.level.hint}. ${state.level.moves} moves.${bestPhrase}${tipPhrase}`
-    );
-    // Block input while intro is up; the intro resolves on tap or timeout.
-    state.busy = true;
-    const done = async () => {
-      // Safety net: eat any stale matches on the freshly-loaded board.
-      state.busy = true;
-      try {
-        await cascadePendingMatches();
-      } finally {
-        state.busy = false;
-      }
-      scheduleHint();
-    };
-    const p = showLevelIntro(state.level, LEVELS.length, { bestStars, bestScore });
-    if (p && typeof p.then === 'function') p.then(done);
-    else done();
-  } else {
-    cascadePendingMatches().then(() => scheduleHint());
-  }
-}
+// Levels start function — assigned at boot once levelsMode.register
+// returns its public API. See src/modes/levels/index.js.
+let startLevel;
 
 // Free Play start function — exported by the per-mode module so
 // internal callers (init, restart button, boot fallback) can invoke
@@ -6555,16 +6517,22 @@ registerMode({
   enter() { startDailySeedRun(); },
   exit() { _endRoguelikeRunSoft(); },
 });
-registerMode({
-  id: 'levels',
-  enter() { startLevel(state.levelProgress.currentLevel || 1); },
-  exit() {
-    // Cancel any in-flight cascade so a Levels match that's still
-    // animating can't keep mutating state after the player switches
-    // modes.
-    state.cascadeAbort = true;
-  },
-});
+({ start: startLevel } = levelsMode.register({
+  state,
+  sfx,
+  speech,
+  cancelHint,
+  hideLevelOverlay,
+  resetBoard,
+  refreshLevelUI,
+  renderBoard,
+  scheduleHint,
+  cascadePendingMatches,
+  showLevelIntro,
+  getLevel,
+  applyLevelObstacles,
+  LEVELS,
+}));
 // Free Play is now its own self-contained module — see
 // src/modes/free-play/index.js. register() returns the module's
 // public API ({ start }) which we expose to in-file callers via

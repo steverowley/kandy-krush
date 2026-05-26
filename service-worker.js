@@ -34,6 +34,7 @@ const SHELL = [
   './src/game/run-effects.js',
   './src/modes/index.js',
   './src/modes/free-play/index.js',
+  './src/modes/levels/index.js',
   './src/game/board.js',
   './src/game/cascade.js',
   './src/game/match.js',
