@@ -151,3 +151,88 @@ test('runUpgrades array rejects non-strings + caps length', () => {
     assert.ok(v.length <= 64);
   }
 });
+
+test('getSaveStatus reports the last save outcome', () => {
+  globalThis.localStorage.clear();
+  save.save({ settings: {}, levelProgress: {}, roguelike: {}, runUpgrades: [], runRelics: [] });
+  const status = save.getSaveStatus();
+  assert.equal(status.ok, true);
+  assert.equal(status.error, null);
+});
+
+test('getSaveStatus surfaces a QuotaExceededError', () => {
+  globalThis.localStorage.clear();
+  // Stub setItem to throw on next call.
+  const real = globalThis.localStorage.setItem.bind(globalThis.localStorage);
+  globalThis.localStorage.setItem = () => { throw new Error('QuotaExceededError'); };
+  try {
+    save.save({ settings: {}, levelProgress: {}, roguelike: {}, runUpgrades: [], runRelics: [] });
+    const status = save.getSaveStatus();
+    assert.equal(status.ok, false);
+    assert.match(status.error, /Quota/);
+  } finally {
+    globalThis.localStorage.setItem = real;
+  }
+});
+
+test('resetProgress preserves settings but wipes everything else', () => {
+  globalThis.localStorage.clear();
+  // Seed a "played a lot" save.
+  save.save({
+    highScore: 99999,
+    streak: 14,
+    settings: { sound: false, size: 'large', mode: 'roguelike' },
+    levelProgress: { currentLevel: 50, stars: {}, bestScores: {}, powerupBank: {} },
+    roguelike: { currentSlot: 80, gems: 500, runsCompleted: 5 },
+    inRoguelikeRun: true,
+    runUpgrades: ['snowball'],
+    runRelics: ['stardust'],
+  });
+  const current = save.load();
+  const fresh = save.resetProgress(current);
+  // Settings preserved
+  assert.equal(fresh.settings.sound, false);
+  assert.equal(fresh.settings.size, 'large');
+  // Everything else reset
+  assert.equal(fresh.highScore, 0);
+  assert.equal(fresh.streak, 0);
+  assert.equal(fresh.inRoguelikeRun, false);
+  assert.equal(fresh.roguelike.currentSlot, 1);
+  assert.equal(fresh.roguelike.gems, 0);
+});
+
+test('resetProgress with no current state still produces fresh defaults', () => {
+  globalThis.localStorage.clear();
+  const fresh = save.resetProgress(null);
+  assert.equal(fresh.highScore, 0);
+  assert.ok(fresh.settings, 'settings present');
+});
+
+test('bumpStreakForToday: same-day call is a no-op', () => {
+  const today = new Date().toISOString().slice(0, 10);
+  const before = { lastPlayedDate: today, streak: 5 };
+  const after = save.bumpStreakForToday(before);
+  // Same-day: returns the original object unchanged.
+  assert.equal(after, before);
+});
+
+test('bumpStreakForToday: yesterday increments the streak', () => {
+  const today = new Date();
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+    .toISOString().slice(0, 10);
+  const before = { lastPlayedDate: yesterday, streak: 5 };
+  const after = save.bumpStreakForToday(before);
+  assert.equal(after.streak, 6);
+  assert.equal(after.lastPlayedDate, today.toISOString().slice(0, 10));
+});
+
+test('bumpStreakForToday: gap >1 day resets streak to 1', () => {
+  const before = { lastPlayedDate: '2020-01-01', streak: 99 };
+  const after = save.bumpStreakForToday(before);
+  assert.equal(after.streak, 1);
+});
+
+test('bumpStreakForToday: missing lastPlayedDate starts streak at 1', () => {
+  const after = save.bumpStreakForToday({ streak: 0 });
+  assert.equal(after.streak, 1);
+});
