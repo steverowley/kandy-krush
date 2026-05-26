@@ -1493,14 +1493,9 @@ function applyRunUpgradesOnSlotStart() {
   } else {
     state.slotMutator = null;
   }
-  state.movesRemaining += upgradeCount('moves+2') * 2;
-  state.movesRemaining += upgradeCount('mover+3') * 3;
-  // 🐢 Slow Turtle relic — +5 moves at slot start.
-  if (hasRelic('slow-turtle')) state.movesRemaining += 5;
-  // 🌪 Quick Slot mutator — +5 moves
-  if (hasMutator('quick-slot')) state.movesRemaining += 5;
-  // 🥪 Long Lunch mutator — +10 moves
-  if (hasMutator('long-lunch')) state.movesRemaining += 10;
+  // 🚶 moves+2 / mover+3 upgrades + Slow Turtle / Quick Slot / Long
+  // Lunch — all bundled into a single bus.on('slot:start', …)
+  // subscriber in run-effects.js (PR #17ba).
   // 🍀 Lucky Day mutator — fill the lucky bar immediately
   if (hasMutator('lucky-day')) {
     state.luckyCharge = 100;
@@ -1936,6 +1931,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17ba',
+    items: [
+      '🚶 SLOT-START MOVES BUNDLE MIGRATED — five sources of "+N moves at slot start" (moves+2 upgrade × 2 per stack, mover+3 upgrade × 3 per stack, 🐢 Slow Turtle relic +5, 🌪 Quick Slot mutator +5, 🥪 Long Lunch mutator +10) all moved from inline branches in applyRunUpgradesOnSlotStart to a single bundled `bus.on(\'slot:start\', …)` subscriber in run-effects.js. Bundled because the shape is identical across sources and N-source subscribers would duplicate plumbing without separating concerns. 7 new tests; 150 total now pass.',
+    ],
+  },
   {
     id: '2026-05-26-17az',
     items: [
