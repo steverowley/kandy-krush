@@ -50,6 +50,7 @@ export function registerRunEffects(state, helpers = {}) {
     setPowerupCounts = () => {},
     effectivePowerupCap = () => Infinity,
     fireLightning = () => {},
+    preservingReshuffle = () => {},
   } = helpers;
   const unsubs = [];
 
@@ -336,6 +337,70 @@ export function registerRunEffects(state, helpers = {}) {
     if (upgradeCount('spark-strike') <= 0) return;
     flashMessage('✨ Spark Strike!', 900);
     fireLightning();
+  }));
+
+  // 🌀 Whirlpool relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 10 matches reshuffle the board
+  // in place. Delayed 280ms via setTimeout so the player sees the
+  // current match resolve first.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 10 !== 0) return;
+    if (!hasRelic('whirlpool')) return;
+    flashMessage('🌀 Whirlpool reshuffle!', 1100);
+    setTimeout(() => { if (state.board) preservingReshuffle(); }, 280);
+  }));
+
+  // 🪞 Cracked Mirror relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Big-match (5+) score on cascade 1
+  // fills Lucky bar +20%, clamped at 100, marks ready when crossed.
+  // Reads matchSize from the event payload.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.matchSize !== 'number') return;
+    if (ctx.matchSize < 5) return;
+    if (!hasRelic('cracked-mirror')) return;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 20);
+    if (state.luckyCharge >= 100) state.luckyReady = true;
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
+  }));
+
+  // 🪙 Coin Toss mutator. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. 25% chance per match (not gated on
+  // slotMatchCount) to grant +1 random power-up. Two RNG draws:
+  // one for the trigger, one for the kind.
+  unsubs.push(bus.on('roguelike:match', () => {
+    if (!state.inRoguelikeRun) return;
+    if (!hasMutator('coin-toss')) return;
+    if (Math.random() >= 0.25) return;
+    const bank = powerupBank() || {};
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
+      bank[pick] = (bank[pick] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🪙 Coin Toss! +1 ${pick}`, 800);
+    }
+  }));
+
+  // 🐞 Lucky Ladybug relic. Was inline in processMatchRound's
+  // `cascadeLevel === 1` block. Every 11 matches drops a random
+  // power-up (cap-respecting). Same shape as Piñata, different
+  // cadence + flash.
+  unsubs.push(bus.on('roguelike:match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    if (!ctx || typeof ctx.slotMatchCount !== 'number') return;
+    if (ctx.slotMatchCount % 11 !== 0) return;
+    if (!hasRelic('ladybug')) return;
+    const bank = powerupBank() || {};
+    const pool = ['hammer', 'shuffle', 'colorBomb', 'plusMoves'];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if ((bank[pick] || 0) < effectivePowerupCap(pick)) {
+      bank[pick] = (bank[pick] || 0) + 1;
+      setPowerupCounts(bank);
+      flashMessage(`🐞 Ladybug! +1 ${pick}`, 1000);
+    }
   }));
 
   // 🍵 Bottomless Cup mutator. Was inline in processMatchRound under
