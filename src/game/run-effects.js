@@ -40,6 +40,7 @@ import * as bus from './event-bus.js';
 export function registerRunEffects(state, helpers = {}) {
   const {
     hasRelic = () => false,
+    hasMutator = () => false,
     upgradeCount = () => 0,
     setLuckyCharge = () => {},
     flashMessage = () => {},
@@ -219,6 +220,20 @@ export function registerRunEffects(state, helpers = {}) {
     }
     setPowerupCounts(bank);
     flashMessage(`🧁 Confectionery! +${n} 🎁`, 1000);
+  }));
+
+  // 🛰 Echo Drone relic. Was inline in processMatchRound after the
+  // specials block. +10% Lucky bar per special spawned this round.
+  // No flash, no marking ready beyond the natural clamp — matches the
+  // pre-migration behavior exactly. Round-scoped, so subscribes to
+  // `match` and reads ctx.specialsCreated.length.
+  unsubs.push(bus.on('match', (ctx) => {
+    if (!state.inRoguelikeRun) return;
+    const n = ctx && ctx.specialsCreated ? ctx.specialsCreated.length : 0;
+    if (n === 0) return;
+    if (!hasRelic('echo-drone')) return;
+    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 10 * n);
+    setLuckyCharge(state.luckyCharge, state.luckyReady);
   }));
 
   // 🌸 Cherry Wand relic. Was inline in processMatchRound under

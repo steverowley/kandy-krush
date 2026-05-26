@@ -338,6 +338,47 @@ test("Cherry Wand tolerates missing specialsCreated in ctx", () => {
   assert.equal(s.luckyCharge, 0);
 });
 
+// --- 🛰 Echo Drone relic (special spawned → +10% Lucky bar per special) ---
+
+test("Echo Drone fills Lucky bar 10% per special spawned this round", () => {
+  bus.clear();
+  const calls = [];
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, {
+    hasRelic: (id) => id === 'echo-drone',
+    setLuckyCharge: (c, r) => calls.push({ c, r }),
+  });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+  assert.equal(s.luckyCharge, 10);
+  bus.emit('match', { cascadeLevel: 1, matchSize: 7, specialsCreated: [{}, {}, {}] });
+  assert.equal(s.luckyCharge, 40);
+  assert.equal(calls.length, 2);
+});
+
+test("Echo Drone clamps at 100", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 95, luckyReady: false };
+  registerRunEffects(s, { hasRelic: (id) => id === 'echo-drone' });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 9, specialsCreated: [{}, {}, {}] });
+  // 95 + 30 = 125 → clamps to 100. Note: Echo Drone does NOT set
+  // luckyReady (the inline branch never did) — that's intentional.
+  assert.equal(s.luckyCharge, 100);
+});
+
+test("Echo Drone is a no-op without the relic or specials", () => {
+  bus.clear();
+  const s = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  registerRunEffects(s, { hasRelic: () => false });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 5, specialsCreated: [{}] });
+  assert.equal(s.luckyCharge, 0);
+  // Same but with the relic, just no specials.
+  const s2 = { inRoguelikeRun: true, luckyCharge: 0, luckyReady: false };
+  bus.clear();
+  registerRunEffects(s2, { hasRelic: () => true });
+  bus.emit('match', { cascadeLevel: 1, matchSize: 3, specialsCreated: [] });
+  assert.equal(s2.luckyCharge, 0);
+});
+
 // --- 🧁 Confectionery relic (special spawned → random power-up per special) ---
 
 test("Confectionery drops one random power-up per special spawned", () => {
