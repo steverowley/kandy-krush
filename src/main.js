@@ -1475,39 +1475,30 @@ function runDeferredSlotEffects() {
 
 function applyRunUpgradesOnSlotStart() {
   if (!state.inRoguelikeRun) return;
-  // Reset per-slot relic counters.
+  // Per-slot counter resets.
   state.slotMatchCount = 0;
   state.relicSwapCount = 0;
-  // Queue for visual side-effects (Black Hole, Storm Caller, mutator
-  // banner, eraser meteor, grumblock spawn, etc.). These get drained
-  // by runDeferredSlotEffects() once the intro card is dismissed so
-  // they don't fire under the intro overlay.
+  // Queue for visual side-effects (mutator banner, eraser meteor,
+  // grumblock spawn, etc.). Drained by runDeferredSlotEffects() once
+  // the intro card is dismissed so they don't fire under the overlay.
   state.deferredSlotFx = [];
-  // Roll a fresh mutator only on mutator slots.
+  // Roll the slot mutator. The mutatorsSeen tracker reads this
+  // immediately after, via the bus.emit('slot:start') call lower
+  // in playRoguelikeSlot — PR #17ax ordered the apply-then-emit
+  // sequence so the value is set before the event fires.
   const slot = state.roguelike.currentSlot;
   if (isMutatorSlot(slot)) {
     state.slotMutator = pickRandomMutator(runRng()).id;
-    // 🌪 mutatorsSeen tracker migrated to a slot:start bus handler in
-    // src/game/run-effects.js (PR #17ac). The bus.emit('slot:start',...)
-    // call lower in playRoguelikeSlot drives the handler.
   } else {
     state.slotMutator = null;
   }
-  // 🚶 moves+2 / mover+3 upgrades + Slow Turtle / Quick Slot / Long
-  // Lunch — all bundled into a single bus.on('slot:start', …)
-  // subscriber in run-effects.js (PR #17ba).
-  // 🍀 Lucky Day — migrated to bus.on('slot:start', …) in
-  // run-effects.js (PR #17bb).
-  // 💝 Surprise Life + 🎰 Bonus Round + 💵 Big Money — migrated to
-  // bus.on('slot:start', …) subscribers in run-effects.js (PR #17az).
-  // All three fire after this function via the post-#17ax order
-  // (applyRunUpgradesOnSlotStart → bus.emit('slot:start')).
-  // ✏️ Eraser + 🗝 Lockpick — migrated to bus.on('slot:start', …)
-  // subscribers in run-effects.js (PR #17bc).
-  // 🎁 Gift Slot + 🔨🌧 Hammer Storm + 💣💣 Bomb Cache — all migrated
-  // to bus.on('slot:start', …) subscribers in run-effects.js
-  // (PR #17bb).
-  // Reset eclipse parity each slot.
+  // Every per-slot side-effect (moves bumps, gem/life bumps, Lucky-bar
+  // fill, power-up grants, lock weakening, deferred meteor, +1-life-
+  // at-1-life) now lives as a `bus.on('slot:start', …)` subscriber in
+  // src/game/run-effects.js. See PRs #17az/#17ba/#17bb/#17bc. This
+  // function only handles the resets + the mutator roll above; the
+  // bus subscribers fire immediately after when playRoguelikeSlot
+  // emits the slot:start event.
   state.eclipseTick = 0;
   // Reset Ironclad awakening's per-slot free hammer.
   state.ironcladHammerUsed = false;
@@ -1894,6 +1885,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-17bd',
+    items: [
+      '🧹 applyRunUpgradesOnSlotStart CLEANUP — collapsed 30 lines of per-PR migration breadcrumbs into one short summary block. The function is now what it always should have been: per-slot counter resets + mutator roll + per-slot flag resets. Every side effect lives as a `bus.on(\'slot:start\', …)` subscriber in run-effects.js. PROJECT_PLAN.md refreshed: B6 line now reflects 42 inline migrations across #283–#310; B12 test count 136 → 164. No behavioral change. 164 tests pass.',
+    ],
+  },
   {
     id: '2026-05-26-17bc',
     items: [
