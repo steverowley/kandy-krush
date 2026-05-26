@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bh',
+    items: [
+      '🧪 BOARD MODULE COVERAGE — new `tests/board.test.js` exercises `src/game/board.js`: idx (row-major), inBounds (rejects negatives + overflow), cell/at/typeAt/specialAt accessors (including the "ingredient cells read as null type" rule), set/setType writers, fillNoMatches (verifies no horizontal OR vertical 3-in-a-row at fill time across 10 trials), swap (symmetric), adjacent (4-way only, not diagonal), and clear (with empty-list no-op). 22 new tests; 219 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bg',
     items: [
       '🧪 ROGUELIKE MODULE COVERAGE — new `tests/roguelike.test.js` exercises the pure utilities in `src/game/roguelike.js`: formatObjectiveHint across every objective kind, isMutatorSlot cadence (every 5th slot, never bosses, never zero/negative), pickRandomMutator determinism with a seeded RNG, getMutator/getRelic/getClass lookups, archetypeFor / archetypeCounts / synergyStacks build-synergy math, pickUpgradeChoices + pickRelicChoices (count, owned-exclusion, determinism), and getRoguelikeLevel\'s slot scaling + endless-mode handoff past slot 100. 30 new tests; 197 total now pass.',

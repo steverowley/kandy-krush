@@ -18,7 +18,7 @@
 // asset so an offline cold-boot works even without a prior online
 // visit.
 
-const VERSION = 'sweet-match-v71';
+const VERSION = 'sweet-match-v72';
 const SHELL = [
   './',
   './index.html',
