@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bv',
+    items: [
+      '🛠 PACKAGE.JSON: TEST SCRIPT + TYPE: MODULE — `npm test` now runs `./tests/run.sh` (one-token DX). Added `"type": "module"` so Node stops printing the "MODULE_TYPELESS_PACKAGE_JSON" warning on every test run + every ES-module import doesn\'t need its own re-parse pass. Set `name` + `private: true` so npm doesn\'t look at this like a publishable package. 346 tests still pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bu',
     items: [
       '🧪 SAVE MODULE EXTRA COVERAGE — added 8 tests to `tests/save.test.js` filling gaps: getSaveStatus reports the last save outcome, getSaveStatus surfaces a QuotaExceededError, resetProgress preserves settings but wipes everything else, resetProgress with no current state still produces fresh defaults, bumpStreakForToday same-day no-op (returns original ref), bumpStreakForToday yesterday increments streak, bumpStreakForToday gap >1 day resets streak to 1, bumpStreakForToday with missing lastPlayedDate starts streak at 1. 346 total tests now pass.',
