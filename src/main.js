@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bu',
+    items: [
+      '🧪 SAVE MODULE EXTRA COVERAGE — added 8 tests to `tests/save.test.js` filling gaps: getSaveStatus reports the last save outcome, getSaveStatus surfaces a QuotaExceededError, resetProgress preserves settings but wipes everything else, resetProgress with no current state still produces fresh defaults, bumpStreakForToday same-day no-op (returns original ref), bumpStreakForToday yesterday increments streak, bumpStreakForToday gap >1 day resets streak to 1, bumpStreakForToday with missing lastPlayedDate starts streak at 1. 346 total tests now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bt',
     items: [
       '📔 OVERNIGHT RUN — END OF SHIFT. 38 PRs landed (#289–#326). 68 tests → 338 tests. 43 inline branches migrated to bus subscribers. 1 latent ordering bug found + fixed (slot:start). 12 new test files added (or extended). PROJECT_PLAN.md refreshed with the final count + the full test-coverage table. Closing the autonomous run in a clean state — main branch green, no open PRs, no follow-up work waiting on review.',
