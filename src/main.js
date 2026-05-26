@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bs',
+    items: [
+      '🧪 SW SHELL COMPLETENESS GUARD — `tests/sw-shell.test.js` already verified every SHELL entry exists on disk + no dupes. New test walks `src/` recursively and verifies EVERY `.js` file is precached by SHELL. Without this guard, adding a new module without updating service-worker.js would silently break offline cold-boot for that module. All 18 src/ JS files currently in SHELL. 338 total tests now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17br',
     items: [
       '🧪 I18N MODULE EXTRA COVERAGE — added 8 tests to `tests/i18n.test.js` filling gaps: setLocale return value (false on unknown, true on known), t() leaves unknown placeholders intact (dev visibility), t() walks dotted paths and returns the key when landing on a non-string, t() with empty-params behaves like no-params, formatNumber with options (currency format), formatNumber tolerates a bad currency code (graceful degrade), formatNumber on 0 + negative numbers, _getDict returns the active dictionary. 337 total tests now pass.',

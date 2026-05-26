@@ -1,11 +1,13 @@
 // Service worker SHELL hygiene tests.
 // Pulls the SHELL array out of service-worker.js and verifies every
-// path actually exists on disk + no duplicates slipped in.
+// path actually exists on disk + no duplicates slipped in + every
+// source-tree JS file is precached (so offline cold-boot stays
+// complete as new modules ship).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,4 +43,32 @@ test('SHELL has no duplicates', () => {
 test('SHELL includes index.html + main.js (sanity)', () => {
   assert.ok(SHELL.includes('./index.html'));
   assert.ok(SHELL.includes('./src/main.js'));
+});
+
+// Walk every .js file under src/ and verify the SHELL list precaches
+// it. If this fails after adding a new module, add the file to
+// SHELL in service-worker.js — otherwise an offline cold-boot will
+// fail when that module is import()ed.
+test('every src/ JS file is in SHELL', () => {
+  function walk(dir, out = []) {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const st = statSync(full);
+      if (st.isDirectory()) walk(full, out);
+      else if (entry.endsWith('.js')) out.push(full);
+    }
+    return out;
+  }
+  const srcDir = join(repoRoot, 'src');
+  const srcFiles = walk(srcDir).map((abs) => {
+    const rel = relative(repoRoot, abs).replaceAll('\\', '/');
+    return `./${rel}`;
+  });
+  const shellSet = new Set(SHELL);
+  const missing = srcFiles.filter((f) => !shellSet.has(f));
+  assert.deepEqual(
+    missing,
+    [],
+    `src/ files not precached by SHELL — add them to service-worker.js:\n${missing.join('\n')}`
+  );
 });
