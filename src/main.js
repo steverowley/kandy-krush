@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-25-17ag',
+    items: [
+      '♾ ENDLESS MODE LABELS READ RIGHT — Resume button used to show "Slot 137 / 100" past slot 100, which was nonsensical. Now it reads "Slot 137 ♾" when the player is past the standard cap. Run-summary modal title gets the same treatment: "You reached slot 137 (Endless)" instead of the cap-comparison.',
+    ],
+  },
+  {
     id: '2026-05-25-17af',
     items: [
       '♾ ENDLESS MODE STATE NO LONGER CLAMPED TO SLOT 100 — `sanitizeRoguelike` clamped `currentSlot` to 100 and `classStats[].bestSlot` to 100; same for `dailySeedBestSlot` and `runHistory[].slot`. With Endless Mode (#272) the player can legitimately reach slot 150+ — those clamps were silently losing the achievement on next reload. Bumped all four to 9999 as the defensive upper bound. 3 new tests; 68 total now pass.',

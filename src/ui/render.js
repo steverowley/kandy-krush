@@ -1033,7 +1033,9 @@ export function showRunSummary({ outcome, klass, slotReached, totalSlots, gemsEa
     : inProgress ? '📋 Run inventory' : 'Run over';
   if (title) title.textContent = isComplete
     ? 'You crowned the Candy Kraken!'
-    : inProgress ? `Slot ${slotReached}/${totalSlots}` : `You reached slot ${slotReached}`;
+    : inProgress
+      ? (slotReached > totalSlots ? `Slot ${slotReached} ♾` : `Slot ${slotReached}/${totalSlots}`)
+      : (slotReached > totalSlots ? `You reached slot ${slotReached} (Endless)` : `You reached slot ${slotReached}`);
   if (stats) {
     // 🏅 Extended end-of-run stats. Hide the section entirely when no
     // run is in progress / no data; otherwise render whatever fields
@@ -2039,8 +2041,12 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
   // normal "⚔ Roguelike Run" entry for a fresh start.
   if (btnResume && btnAbandon) {
     if (runInProgress) {
+      // Endless Mode (slot > totalSlots) reads weird as "Slot 137 / 100".
+      // Switch to "Slot 137 ♾" when the player is past the standard cap.
       const slotStr = runInProgress.slot && runInProgress.totalSlots
-        ? ` · Slot ${runInProgress.slot} / ${runInProgress.totalSlots}`
+        ? (runInProgress.slot > runInProgress.totalSlots
+            ? ` · Slot ${runInProgress.slot} ♾`
+            : ` · Slot ${runInProgress.slot} / ${runInProgress.totalSlots}`)
         : '';
       const classStr = runInProgress.classIcon
         ? `${runInProgress.classIcon} `
