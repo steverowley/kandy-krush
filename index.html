@@ -139,13 +139,24 @@
     </div>
   </div>
 
+  <!-- 🎴 Boss banner — design-8 reveals every boss slot as a drawn
+       Major Arcana card. The .ac-boss-card-flipper wraps two faces:
+       a card-back the banner starts on, and the revealed Major
+       Arcana card. The CSS class .revealed triggers the 600ms flip.
+       Roman numeral + arcana name in cartouche banners; the boss
+       icon + name + tip sit as the "illustration" between them. -->
   <div id="boss-banner" class="hidden fixed inset-0 z-[72] flex items-center justify-center pointer-events-none">
-    <div class="boss-banner-card flex flex-col items-center gap-2 px-8 py-6 sm:px-12 sm:py-8 bg-gradient-to-br from-pink-700 via-red-700 to-purple-800 text-white border-[5px] border-yellow-400 rounded-3xl shadow-2xl">
-      <div id="boss-banner-tier" class="text-base sm:text-xl font-bold uppercase tracking-[0.3em] text-yellow-300">Boss Battle</div>
-      <div id="boss-banner-icon" class="text-6xl sm:text-7xl">👑</div>
-      <div id="boss-banner-name" class="text-3xl sm:text-5xl font-extrabold text-center tracking-tight">Sweet King</div>
-      <div id="boss-banner-taunt" class="hidden text-base sm:text-lg font-semibold text-white text-center max-w-md bg-black/40 rounded px-3 py-1"></div>
-      <div id="boss-banner-tip" class="text-base sm:text-lg font-semibold text-yellow-200 text-center max-w-md"></div>
+    <div class="ac-boss-card-flipper boss-banner-card">
+      <div class="ac-boss-card__face ac-boss-card__face--back ac-card-back"></div>
+      <div class="ac-boss-card__face ac-boss-card__face--front">
+        <span id="boss-banner-numeral" class="ac-card__banner-top">XVI</span>
+        <div id="boss-banner-tier" class="text-sm uppercase tracking-[0.3em] mt-2">Major Arcana</div>
+        <div id="boss-banner-icon" class="text-6xl sm:text-7xl">👑</div>
+        <div id="boss-banner-name" class="text-3xl sm:text-4xl font-extrabold text-center tracking-tight">The Tower</div>
+        <div id="boss-banner-taunt" class="hidden text-sm sm:text-base italic text-center max-w-md px-3 py-1"></div>
+        <div id="boss-banner-tip" class="text-sm sm:text-base font-semibold text-center max-w-md"></div>
+        <span id="boss-banner-arcana-label" class="ac-card__banner-bottom">The Tower</span>
+      </div>
     </div>
   </div>
 
