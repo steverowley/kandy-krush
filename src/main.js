@@ -129,6 +129,7 @@ import * as levelsMode from './modes/levels/index.js';
 import * as roguelikeMode from './modes/roguelike/index.js';
 import * as dailyMode from './modes/daily/index.js';
 import * as homeMode from './modes/home/index.js';
+import * as telemetrySubscribers from './subscribers/telemetry.js';
 import {
   createRoguelikeRunStore,
   createRoguelikeProgressionStore,
@@ -453,7 +454,7 @@ function openStartMenu(subtitle = null) {
       const next = (ascLvl + 1) > ascUnlocked ? 0 : ascLvl + 1;
       state.ascensionLevel = next;
       persist();
-      telemetry.track('ascension_picked', { level: next });
+      bus.emit('ascension:picked', { level: next });
       flashMessage(`${ASCENSION_LEVELS[next].name} — ${ASCENSION_LEVELS[next].desc}`, 2400);
       openStartMenu(subtitle); // re-render with new label
     },
@@ -477,7 +478,10 @@ function openStartMenu(subtitle = null) {
     },
     onRoguelike: () => {
       sfx.unlockAudio();
-      telemetry.track('mode_picked', { mode: 'roguelike' });
+      // Mode-pick analytics is now a bus subscriber — see
+      // src/subscribers/telemetry.js. The handler only emits the
+      // semantic event; telemetry payload shape lives one place.
+      bus.emit('mode:picked', { mode: 'roguelike' });
       // Clear any prior daily-seed flag so a fresh "Roguelike Run"
       // doesn't inherit a seeded rng from the previous session.
       state.runRng = null;
@@ -488,21 +492,21 @@ function openStartMenu(subtitle = null) {
     },
     onDaily: () => {
       sfx.unlockAudio();
-      telemetry.track('mode_picked', { mode: 'daily' });
+      bus.emit('mode:picked', { mode: 'daily' });
       if (!switchToMode('roguelike')) return;
       playModeTransition('roguelike');
       setActiveMode('daily');
     },
     onLevels: () => {
       sfx.unlockAudio();
-      telemetry.track('mode_picked', { mode: 'levels' });
+      bus.emit('mode:picked', { mode: 'levels' });
       if (!switchToMode('levels')) return;
       playModeTransition('levels');
       setActiveMode('levels');
     },
     onFreePlay: () => {
       sfx.unlockAudio();
-      telemetry.track('mode_picked', { mode: 'free' });
+      bus.emit('mode:picked', { mode: 'free' });
       if (!switchToMode('free')) return;
       playModeTransition('free');
       setActiveMode('free');
@@ -1915,6 +1919,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-5-event-bus-subscribers',
+    items: [
+      '🚌 MODE SEPARATION — STEP 5: BUS SUBSCRIBERS. New `src/subscribers/` directory houses cross-cutting concerns as event-bus subscribers, not inline calls scattered across mode files. `telemetry.js` subscribes to four semantic events (`mode:picked`, `run:class_chosen`, `daily:start`, `ascension:picked`) and translates them into the analytics payloads we used to call inline. Per-mode files (`roguelike`, `daily`) no longer import or depend on `telemetry` at all — they emit semantic events on the bus, the subscriber handles the side effect. Pattern: each subscriber module exports `register({ bus, ...services })` returning an `off()` teardown. 6 new tests cover the event→payload contract + handler-throw isolation. Foundation for follow-ups: an `audio.js` subscriber catching `special:birth`, `cascade`, `infinite` to fire sound + a `haptics.js` subscriber for vibration. 374 tests pass.',
+    ],
+  },
   {
     id: '2026-05-26-design-3-tarot-tile-reskin',
     items: [
@@ -6367,6 +6377,14 @@ applyTheme(state.settings);
 // the next one. enter() still delegates to the existing startX()
 // for now; a future PR will move those bodies into per-mode files
 // under src/modes/<id>.js.
+// ── Cross-cutting subscribers (modes-5) — telemetry / audio /
+// haptics / achievements live as bus subscribers, not inline calls
+// scattered throughout the codebase. Each subscriber module
+// translates semantic bus events ('mode:picked', 'run:class_chosen',
+// 'daily:start') into its own side effect. Per-mode files no longer
+// need to know about telemetry.
+telemetrySubscribers.register({ bus, telemetry });
+
 // ── State stores (modes-4) — instantiated once and threaded into
 // each per-mode register block as a dep. Each store is a thin
 // selector/mutator wrapper around the legacy `state` object, so
@@ -6385,7 +6403,6 @@ homeMode.register({ sfx, openStartMenu, hideStartMenu });
   persist,
   sfx,
   speech,
-  telemetry,
   haptics,
   refreshRunHud,
   refreshLevelUI,
@@ -6417,7 +6434,7 @@ homeMode.register({ sfx, openStartMenu, hideStartMenu });
   RUN_LENGTH,
 }));
 ({ start: startDailySeedRun } = dailyMode.register({
-  telemetry,
+  bus,
   dailySeed,
   dailySeedStamp,
   createRng,

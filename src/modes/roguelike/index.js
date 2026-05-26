@@ -18,7 +18,6 @@ export function register(deps) {
     persist,
     sfx,
     speech,
-    telemetry,
     haptics,
     // ── state stores (modes-4) ──
     // Roguelike modes read/write their ephemeral run state through
@@ -118,11 +117,13 @@ export function register(deps) {
       showClassPicker(CLASSES, ARCHETYPES, (cls) => {
         state.roguelike.currentClass = cls.id;
         for (const id of (cls.start || [])) state.runUpgrades.push(id);
-        telemetry.track('run_start', {
+        // Class-chosen analytics is now a bus subscriber — see
+        // src/subscribers/telemetry.js.
+        bus.emit('run:class_chosen', {
           class: cls.id,
           archetype: cls.archetype,
-          starting_upgrades: (cls.start || []).slice(),
-          runs_completed_before: state.roguelike?.runsCompleted || 0,
+          startingUpgrades: (cls.start || []).slice(),
+          runsCompletedBefore: state.roguelike?.runsCompleted || 0,
         });
         flashMessage(`${cls.icon} ${cls.name} chosen!`, 1600);
         speech.speak(`${cls.name} chosen.`);

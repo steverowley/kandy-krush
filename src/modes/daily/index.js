@@ -13,7 +13,7 @@ import { registerMode } from '../index.js';
 
 export function register(deps) {
   const {
-    telemetry,
+    bus,
     dailySeed,
     dailySeedStamp,
     createRng,
@@ -30,7 +30,8 @@ export function register(deps) {
     runStore.setRng(createRng(seed));
     runStore.setDaily(true);
     runStore.setDailyStamp(dailySeedStamp());
-    telemetry.track('daily_seed_start', { stamp: runStore.dailyStamp() });
+    // Analytics is a bus subscriber — see src/subscribers/telemetry.js.
+    bus.emit('daily:start', { stamp: runStore.dailyStamp() });
     // Reset run state so a daily can't inherit upgrades from a previous run.
     runStore.setActive(false);
     progressionStore.setCurrentSlot(1);
