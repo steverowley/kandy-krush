@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17bq',
+    items: [
+      '🧪 PURCHASES MODULE EXTRA COVERAGE — added 9 tests to `tests/purchases.test.js` covering the gaps: purchase swallows a throwing provider (game must not break on bad SKUs), purchase coerces non-Error throws to a string, listCatalog forwards through + tolerates a throwing catalog (returns []), grantPowerup with + without handler, unlockSkipForLevel with + without handler, _state diagnostic across all four provider/handler combinations, isAvailable on a provider missing the isAvailable method. 329 total tests now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bp',
     items: [
       '📔 OVERNIGHT RUN — FINAL SUMMARY UPDATE. 34 PRs (#289–#322) landed since the night started: 43 inline branches migrated to bus subscribers across all event-driven side effects, one real bug found+fixed (slot:start ordering), test count 68 → 320 across 18 files. PROJECT_PLAN.md refreshed with the test-coverage push details. Closing out the autonomous shift.',
