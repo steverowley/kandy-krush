@@ -3,19 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#fffbeb" />
-  <title>Sweet Match</title>
+  <meta name="theme-color" content="#2A0F3A" />
+  <title>Arcana Cascada</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Sweet Match" />
-  <!-- Atkinson Hyperlegible is now loaded locally via the @font-face
-       declaration in styles/main.css; no Google Fonts dependency. If
-       the font files aren't dropped in yet, the CSS font-family
-       falls back to system-ui via the chain. See tools/fetch-fonts.sh
-       to populate assets/fonts/ from the Atkinson upstream repo. -->
+  <meta name="apple-mobile-web-app-title" content="Arcana Cascada" />
+  <!-- Atkinson Hyperlegible is loaded locally via the @font-face
+       declaration in styles/main.css; no Google Fonts dependency. -->
+  <!-- Display serif (Cinzel) for headers + brand. Body sans stays
+       Atkinson Hyperlegible — paired against the display so reading
+       chrome stays legible at small sizes. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css" />
   <!-- Pixi.js is only loaded when the player opts into the WebGL
@@ -36,10 +39,10 @@
     })();
   </script>
 </head>
-<body class="size-medium start-screen-active min-h-dvh bg-amber-50 text-gray-900 flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
+<body class="size-medium start-screen-active min-h-dvh flex flex-col items-center px-2 py-3 sm:p-6 gap-4 sm:gap-6">
   <header class="w-full max-w-3xl flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
     <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-      <h1 class="text-2xl sm:text-5xl font-bold tracking-tight">Sweet Match</h1>
+      <h1 class="text-2xl sm:text-5xl font-bold tracking-tight">Arcana Cascada</h1>
       <button id="level-chip" type="button" class="hidden text-sm sm:text-lg font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 text-black border-[3px] border-black rounded-full px-2 sm:px-3 py-1 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500" aria-label="Open level select" aria-haspopup="dialog" data-tip="Tap to choose a level" data-tip-pos="below">Level 1 / 8</button>
       <span id="streak" class="hidden text-sm sm:text-lg font-bold bg-pink-100 text-pink-800 border-2 border-pink-700 rounded-full px-2 sm:px-3 py-1">Day 1</span>
     </div>
@@ -163,7 +166,7 @@
       id="board"
       class="grid grid-cols-6 gap-2 sm:gap-3 bg-white p-3 sm:p-4 rounded-3xl border-[3px] border-black shadow-xl select-none touch-manipulation"
       role="grid"
-      aria-label="Sweet Match board"
+      aria-label="Arcana Cascada board"
     ></main>
     <svg id="match-trail-svg" class="pointer-events-none absolute inset-0 z-20" aria-hidden="true"></svg>
     <div id="cascade-banner" class="hidden pointer-events-none absolute inset-0 z-30 flex items-center justify-center" aria-hidden="true">
@@ -287,7 +290,7 @@
     aria-labelledby="install-title"
   >
     <div class="flex-1">
-      <div id="install-title" class="text-base sm:text-lg font-bold">Install Sweet Match</div>
+      <div id="install-title" class="text-base sm:text-lg font-bold">Install Arcana Cascada</div>
       <div id="install-body" class="text-base sm:text-lg text-gray-900">Get the game on your home screen for one-tap play.</div>
     </div>
     <button id="install-cta" type="button" class="text-base font-bold bg-yellow-300 hover:bg-yellow-200 border-[3px] border-black rounded-2xl px-4 py-3 focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">Install</button>
@@ -371,7 +374,7 @@
     aria-labelledby="changelog-title"
   >
     <div class="text-base sm:text-lg font-bold uppercase tracking-[0.2em] text-pink-700">What's new</div>
-    <h2 id="changelog-title" class="text-2xl sm:text-3xl font-bold">Sweet Match update</h2>
+    <h2 id="changelog-title" class="text-2xl sm:text-3xl font-bold">Arcana Cascada update</h2>
     <ul id="changelog-list" class="text-lg sm:text-xl list-disc pl-6 flex flex-col gap-1.5"></ul>
     <button
       id="changelog-dismiss"
@@ -391,7 +394,7 @@
   >
     <div class="w-full max-w-md flex flex-col items-center gap-4 text-center">
       <div id="start-screen-icon" class="text-7xl sm:text-8xl select-none" aria-hidden="true">🍬</div>
-      <h1 id="start-screen-title" class="text-5xl sm:text-6xl font-bold tracking-tight">Sweet Match</h1>
+      <h1 id="start-screen-title" class="text-5xl sm:text-6xl font-bold tracking-tight">Arcana Cascada</h1>
       <p class="text-lg sm:text-xl text-gray-700">Match candies. Pick your adventure.</p>
       <p id="start-screen-subtitle" class="text-base sm:text-lg text-pink-900 font-bold min-h-[1.5em]"></p>
       <div id="start-screen-stats" class="hidden flex-wrap items-center justify-center gap-2 text-sm sm:text-base text-gray-900"></div>
@@ -424,7 +427,7 @@
   >
     <div class="text-7xl sm:text-8xl mb-4" aria-hidden="true">👋</div>
     <h2 id="goodbye-title" class="text-4xl sm:text-5xl font-bold mb-2">Thanks for playing!</h2>
-    <p class="text-lg sm:text-xl text-gray-900 font-semibold mb-6">Sweet Match will be here whenever you're back. 🍬</p>
+    <p class="text-lg sm:text-xl text-gray-900 font-semibold mb-6">Arcana Cascada will be here whenever you're back. 🍬</p>
     <button id="goodbye-return" type="button" class="text-lg sm:text-xl font-bold bg-yellow-300 hover:bg-yellow-200 active:bg-yellow-400 border-[3px] border-black rounded-2xl px-6 py-3 shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-pink-500">↩ Back to start screen</button>
   </section>
 
@@ -436,7 +439,7 @@
     aria-modal="true"
     aria-labelledby="welcome-title"
   >
-    <h2 id="welcome-title" class="text-3xl sm:text-4xl font-bold">Welcome to Sweet Match!</h2>
+    <h2 id="welcome-title" class="text-3xl sm:text-4xl font-bold">Welcome to Arcana Cascada!</h2>
     <p class="text-xl sm:text-2xl">Tap two neighbors, or swipe a candy toward its neighbor to swap.</p>
     <p class="text-xl sm:text-2xl">Match 3 or more in a row to score points.</p>
     <p class="text-lg sm:text-xl text-gray-700">There's no timer and no losing — just play at your own pace.</p>

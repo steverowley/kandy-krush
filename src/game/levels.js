@@ -1367,7 +1367,7 @@ export const LEVELS = [
     moves: 60,
     objective: { kind: 'score', target: 12000 },
     hint: 'The final challenge: 12,000 points through EVERY obstacle, harder than Sweet Apocalypse.',
-    tip: 'If you reach this — you\'re a Sweet Match master.',
+    tip: 'If you reach this — you\'re an Arcana Cascada master.',
     obstacles: {
       ingredients: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],
       jelly: [
@@ -1497,7 +1497,7 @@ export const LEVELS = [
     moves: 75,
     objective: { kind: 'score', target: 25000 },
     hint: 'The final challenge: 25,000 score against every obstacle the game can throw.',
-    tip: 'Beat this and you have truly mastered Sweet Match.',
+    tip: 'Beat this and you have truly mastered Arcana Cascada.',
     obstacles: {
       ingredients: [[0, 0], [5, 0]],
       jelly: [

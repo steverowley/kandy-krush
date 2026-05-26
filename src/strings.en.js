@@ -8,21 +8,21 @@
 
 export default {
   start: {
-    title: 'Sweet Match',
-    tagline: 'Match candies. Pick your adventure.',
-    roguelike: '⚔ Roguelike Run',
-    levels: '🎯 Levels Mode',
+    title: 'Arcana Cascada',
+    tagline: 'Draw the cards. Read your fortune.',
+    roguelike: '⚔ Begin a Reading',
+    levels: '🎯 Levels',
     free: '🎨 Free Play',
-    resume: '▶ Resume {classIcon} Run · Slot {slot} / {total}',
-    abandon: '⨯ Abandon current run',
+    resume: '▶ Resume {classIcon} Reading · Card {slot} / {total}',
+    abandon: '⨯ Abandon current reading',
     settings: '⚙ Settings',
     whatsNew: '📖 What\'s New',
-    quit: '🚪 Quit Game',
+    quit: '🚪 Close the deck',
   },
   goodbye: {
-    title: 'Thanks for playing!',
-    body: 'Sweet Match will be here whenever you\'re back. 🍬',
-    back: '↩ Back to start screen',
+    title: 'Until the next reading.',
+    body: 'The cards will be here when you return.',
+    back: '↩ Back to the table',
   },
   run: {
     runComplete: '🏆 Run complete — pick where to go next.',

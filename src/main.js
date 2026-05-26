@@ -1911,6 +1911,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-design-1-arcana-cascada',
+    items: [
+      '🔮 REBRAND — ARCANA CASCADA. The game has a new name + design language to fit its roguelike soul. Sweet Match was a candy-colored match-3; Arcana Cascada is a tarot-flavored match-3 roguelike — every reading is a draw of cards, every match is a fortune read. New velvet-purple + antique-gold palette via CSS design tokens (`--ac-velvet`, `--ac-gold`, `--ac-bone`, etc.) so future theming is one-edit-here. Cinzel serif loaded for the brand mark + headers, paired against Atkinson Hyperlegible for body. UI strings re-flavored ("Begin a Reading" / "Resume Reading · Card N / total" / "Until the next reading"). Manifest + service-worker + page title + share copy + install prompts all carry the new name. The deeper visual refresh (per-component palette migration off Tailwind candy colors, tile sprite reskin to tarot suits, scene-specific backgrounds) lands in design-2+ PRs. Save data + localStorage keys keep the legacy prefix for back-compat so existing players don\'t lose progress.',
+    ],
+  },
+  {
     id: '2026-05-26-modes-3-per-mode-files',
     items: [
       '🧱 MODE SEPARATION — STEP 3: PER-MODE FILES. Every mode now lives in its own file under `src/modes/<id>/index.js` — Home, Roguelike, Daily, Levels, Free Play — each declaring its dependencies explicitly via `register(deps)`. No more implicit reach into main.js globals. Each module is now testable in isolation, movable between projects, and has a single grep-able list of every helper it touches. `main.js` lost ~450 lines of mode-specific logic (4400-line `playRoguelikeSlot` body, level intro flow, free play init, etc.). Internal callers keep their names (`startRoguelikeRun`, `playRoguelikeSlot`, `startLevel`, …) — they now resolve to the module\'s returned API instead of inline functions, so the refactor is mechanical at the call sites. Foundation for Modes 4 (per-mode state slices) and Modes 5 (screen router). 355 tests still pass.',
@@ -4252,11 +4258,11 @@ function showInstallToast(kind) {
   const cta = document.getElementById('install-cta');
   if (!toast || !title || !body || !cta) return;
   if (kind === 'ios') {
-    title.textContent = 'Add Sweet Match to your home screen';
+    title.textContent = 'Add Arcana Cascada to your home screen';
     body.textContent = "Tap the Share icon, then 'Add to Home Screen'.";
     cta.style.display = 'none';
   } else {
-    title.textContent = 'Install Sweet Match';
+    title.textContent = 'Install Arcana Cascada';
     body.textContent = 'Get the game on your home screen for one-tap play.';
     cta.style.display = '';
   }
