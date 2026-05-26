@@ -1,6 +1,10 @@
 node_modules/
-package.json
-package-lock.json
-audit*.mjs
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
 .DS_Store
-.sm-probe.mjs
+*.local
+.env
+.env.*
+!.env.example
