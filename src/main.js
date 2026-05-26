@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17br',
+    items: [
+      '🧪 I18N MODULE EXTRA COVERAGE — added 8 tests to `tests/i18n.test.js` filling gaps: setLocale return value (false on unknown, true on known), t() leaves unknown placeholders intact (dev visibility), t() walks dotted paths and returns the key when landing on a non-string, t() with empty-params behaves like no-params, formatNumber with options (currency format), formatNumber tolerates a bad currency code (graceful degrade), formatNumber on 0 + negative numbers, _getDict returns the active dictionary. 337 total tests now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17bq',
     items: [
       '🧪 PURCHASES MODULE EXTRA COVERAGE — added 9 tests to `tests/purchases.test.js` covering the gaps: purchase swallows a throwing provider (game must not break on bad SKUs), purchase coerces non-Error throws to a string, listCatalog forwards through + tolerates a throwing catalog (returns []), grantPowerup with + without handler, unlockSkipForLevel with + without handler, _state diagnostic across all four provider/handler combinations, isAvailable on a provider missing the isAvailable method. 329 total tests now pass.',
