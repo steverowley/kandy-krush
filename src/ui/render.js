@@ -2081,14 +2081,30 @@ export function showStartMenu({ onRoguelike, onDaily, onLevels, onFreePlay, onSe
   if (btnDaily) {
     // Daily-seed button: shows today's date label + a small badge if
     // the player already played today (so they know it'll show "best
-    // slot X" on completion, no double-rewards).
+    // slot X" on completion, no double-rewards). Always visible —
+    // hiding it during a non-daily run had the (correctly reported)
+    // failure mode of "I picked Roguelike Run this morning and now
+    // the daily is gone for the rest of the day." Clicking the daily
+    // while a NON-daily run is in progress prompts a confirmation
+    // before abandoning the existing run, so the player still can't
+    // accidentally lose mid-run progress.
     const stampStr = dailyStatus?.stamp ? ` · ${dailyStatus.stamp}` : '';
     const playedStr = dailyStatus?.playedToday
       ? ` ✓ Slot ${dailyStatus.bestSlot || 0}`
       : '';
     btnDaily.innerHTML = `🌅 Today's Daily Seed${stampStr}${playedStr}`;
-    btnDaily.classList.toggle('hidden', !!runInProgress);
-    replaceListener(btnDaily, 'click', wrap(onDaily), 'start-menu-daily');
+    btnDaily.classList.remove('hidden');
+    const dailyHandler = () => {
+      const inNonDailyRun = !!runInProgress && !dailyStatus?.playedToday;
+      if (inNonDailyRun) {
+        const ok = (typeof window !== 'undefined' && window.confirm)
+          ? window.confirm('Abandon your current run and start today\'s daily seed?')
+          : true;
+        if (!ok) return;
+      }
+      if (onDaily) onDaily();
+    };
+    replaceListener(btnDaily, 'click', wrap(dailyHandler), 'start-menu-daily');
   }
   replaceListener(btnLevels, 'click', wrap(onLevels), 'start-menu-levels');
   replaceListener(btnFree, 'click', wrap(onFreePlay), 'start-menu-free');

@@ -1877,6 +1877,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-fix-daily-vanishes',
+    items: [
+      '🐛 DAILY SEED NO LONGER VANISHES MID-DAY — the daily-seed button was hidden the moment any run was in progress, so a player who picked Roguelike Run in the morning lost access to the daily for the rest of the day (unless they abandoned). Daily is now always visible on the start screen. Clicking it while a non-daily run is in progress prompts a confirmation before abandoning the existing run, so mid-run progress is still protected from accidental loss.',
+    ],
+  },
+  {
     id: '2026-05-26-17bv',
     items: [
       '🛠 PACKAGE.JSON: TEST SCRIPT + TYPE: MODULE — `npm test` now runs `./tests/run.sh` (one-token DX). Added `"type": "module"` so Node stops printing the "MODULE_TYPELESS_PACKAGE_JSON" warning on every test run + every ES-module import doesn\'t need its own re-parse pass. Set `name` + `private: true` so npm doesn\'t look at this like a publishable package. 346 tests still pass.',

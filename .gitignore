@@ -3,3 +3,4 @@ package.json
 package-lock.json
 audit*.mjs
 .DS_Store
+.sm-probe.mjs
