@@ -1949,6 +1949,12 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ap',
+    items: [
+      '🛰 ECHO DRONE MIGRATED TO THE BUS — the relic\'s "+10% Lucky bar per special spawned" branch lived as the last roguelike inline in processMatchRound\'s specials region. Now a `bus.on(\'match\', …)` subscriber in run-effects.js. Helpers channel also gains `hasMutator` so the upcoming mutator-event migrations (Bottomless Cup, Diamond Mine, Sweet Tooth, ...) don\'t need to grow the channel each time. 3 new tests; 105 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17ao',
     items: [
       '🧹 ROADMAP + DEAD-COMMENT CLEANUP — PROJECT_PLAN.md now reflects the 13 inline-effect migrations completed in this run (B6 line + test count bumped from 52 → 102). processMatchRound\'s migrated-out branches lost their per-PR comment trail in favor of one short pointer per block to src/game/run-effects.js — the noise was useful while migrating, less useful now that the destination is established.',
@@ -6019,11 +6025,8 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   renderBoard(state.board, state);
   for (const s of specialsCreated) popNewSpecial(s.c, s.r);
   if (specialsCreated.length > 0) haptics.specialBirth();
-  // 🛰 Echo Drone relic — each special created adds +10% to Lucky bar.
-  if (state.inRoguelikeRun && hasRelic('echo-drone') && specialsCreated.length > 0) {
-    state.luckyCharge = Math.min(100, (state.luckyCharge || 0) + 10 * specialsCreated.length);
-    setLuckyCharge(state.luckyCharge, state.luckyReady);
-  }
+  // 🛰 Echo Drone relic — migrated to bus.on('match', …) subscriber
+  // in run-effects.js (PR #17ap).
 
   const earned = consumeLuckyIfReady(
     applyRunScoreMultiplier(
@@ -6418,6 +6421,7 @@ applyTheme(state.settings);
 // from the inline-branch maze in processMatchRound — see B6).
 registerRunEffects(state, {
   hasRelic,
+  hasMutator,
   upgradeCount,
   setLuckyCharge,
   flashMessage,
