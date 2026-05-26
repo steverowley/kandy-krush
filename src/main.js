@@ -1949,6 +1949,13 @@ function wildSpeedup() {
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
   {
+    id: '2026-05-26-17ar',
+    items: [
+      '🚌 NEW BUS EVENT: `roguelike:match` — fires immediately after slotMatchCount is incremented inside processMatchRound\'s cascade-level-1 block. Carries `{ slotMatchCount, cascadeLevel, matchSize }`. Unlocks migration of the entire family of per-Nth-match relics/upgrades (Coin Purse, Diamond Mine, Whirlpool, Piñata, Spice Box, Sugar Crash, Sundae Saturday, Pixie Pouch, Spark Strike) that couldn\'t use the canonical `match` event because that fires before the increment.',
+      '👛⛏ COIN PURSE + DIAMOND MINE MIGRATED — first two subscribers on the new event. Coin Purse (every 10 matches → +1 gem with persist) and Diamond Mine (every 6 matches → +1 gem) both moved out of the cascade-1 inline block to `bus.on(\'roguelike:match\', …)` in run-effects.js. 4 new tests; 116 total now pass.',
+    ],
+  },
+  {
     id: '2026-05-26-17aq',
     items: [
       '🍵🍀 BOTTOMLESS CUP + LUCKY MAGNET MIGRATED TO THE BUS — both per-swap (cascade level 1) Lucky-bar effects (Bottomless Cup mutator: +20%/match; Lucky Magnet upgrade: 5%/stack chance to instafill) moved from the `if (cascadeLevel === 1)` block in processMatchRound to `bus.on(\'match\', …)` subscribers in run-effects.js. Both gate on ctx.cascadeLevel === 1 from the match payload. 7 new tests; 112 total now pass.',
@@ -6045,6 +6052,18 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
   // triggers the bonus at most once per call.
   if (state.inRoguelikeRun && cascadeLevel === 1) {
     state.slotMatchCount = (state.slotMatchCount || 0) + 1;
+    // 🚌 Emit a roguelike-match event AFTER the slotMatchCount bump so
+    // subscribers can read the post-increment count from the payload.
+    // This is the natural home for per-Nth-match relics (Coin Purse,
+    // Diamond Mine, Whirlpool, Piñata, Spice Box, Sugar Crash, ...) —
+    // the canonical `match` event (which fires earlier in this
+    // function) doesn't carry slotMatchCount because at that point
+    // it hasn't been incremented yet.
+    bus.emit('roguelike:match', {
+      slotMatchCount: state.slotMatchCount,
+      cascadeLevel,
+      matchSize: allCleared.size,
+    });
     if (hasRelic('sugar-rush') && state.slotMatchCount === 3) {
       flashMessage('🍰 Sugar Rush spent', 900);
     }
@@ -6063,18 +6082,9 @@ async function processMatchRound(result, cascadeLevel, swapTarget) {
       flashMessage('🌀 Whirlpool reshuffle!', 1100);
       setTimeout(() => { if (state.board) preservingReshuffle(); }, 280);
     }
-    // 👛 Coin Purse relic — every 10 matches earns +1 gem.
-    if (hasRelic('coin-purse') && state.slotMatchCount % 10 === 0) {
-      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
-      flashMessage('👛 Coin Purse +1 💎', 900);
-      persist();
-    }
-    // ⛏ Diamond Mine mutator — every 6 matches earns +1 gem.
-    if (hasMutator('diamond-mine') && state.slotMatchCount % 6 === 0) {
-      state.roguelike.gems = (state.roguelike.gems || 0) + 1;
-      flashMessage('⛏ Diamond Mine +1 💎', 800);
-      persist();
-    }
+    // 👛 Coin Purse + ⛏ Diamond Mine — migrated to
+    // bus.on('roguelike:match', …) subscribers in run-effects.js
+    // (PR #17ar).
     // 🪅 Piñata relic — every 5 matches drop a random power-up.
     if (hasRelic('pinata') && state.slotMatchCount % 5 === 0) {
       const bank = powerupBank();
