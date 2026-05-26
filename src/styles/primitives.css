@@ -1,0 +1,141 @@
+/* Reusable editorial primitives. Used across screens to keep the
+   "book-page" rhythm consistent. */
+
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(var(--space-6), 4vw, var(--space-12)) clamp(var(--space-4), 5vw, var(--space-12));
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  view-transition-name: root;
+}
+
+.eyebrow {
+  font-family: var(--font-engraved);
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.numeral {
+  font-family: var(--font-engraved);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--gilt);
+}
+
+.rule {
+  height: 1px;
+  background: var(--gilt);
+  width: 100%;
+  margin: var(--space-6) 0;
+}
+
+.rule--double {
+  height: 5px;
+  background: linear-gradient(
+    to bottom,
+    var(--gilt) 0,
+    var(--gilt) 1px,
+    transparent 1px,
+    transparent 4px,
+    var(--gilt) 4px,
+    var(--gilt) 5px
+  );
+}
+
+.rule--soft {
+  background: var(--gilt-soft);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: 1px solid var(--ink-900);
+  background: var(--surface-bg);
+  color: var(--ink);
+  font-family: var(--font-engraved);
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: background 160ms var(--ease-card), color 160ms var(--ease-card),
+    transform 160ms var(--ease-card);
+}
+
+.btn:hover {
+  background: var(--ink-900);
+  color: var(--bone-50);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: var(--bone-50);
+  border-color: var(--accent);
+}
+
+.btn--primary:hover {
+  background: var(--oxblood-700);
+  color: var(--gilt-soft);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-soft);
+}
+
+.btn--ghost:hover {
+  color: var(--ink);
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-color: var(--gilt);
+  text-decoration-thickness: 1px;
+}
+
+/* A card-like surface in the editorial palette: bone ground, gold
+   hairline, ink rule at the head. */
+.leaf {
+  background: var(--surface-bg);
+  border: 1px solid var(--gilt);
+  padding: clamp(var(--space-6), 4vw, var(--space-8));
+  position: relative;
+}
+
+.leaf__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--hair);
+  margin-bottom: var(--space-6);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.stack > * + * {
+  margin-top: var(--gap, var(--space-4));
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap, var(--space-3));
+  align-items: center;
+}
