@@ -128,6 +128,7 @@ import * as freePlayMode from './modes/free-play/index.js';
 import * as levelsMode from './modes/levels/index.js';
 import * as roguelikeMode from './modes/roguelike/index.js';
 import * as dailyMode from './modes/daily/index.js';
+import * as homeMode from './modes/home/index.js';
 
 const COLS = 6;
 const ROWS = 6;
@@ -1909,6 +1910,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-3-per-mode-files',
+    items: [
+      '🧱 MODE SEPARATION — STEP 3: PER-MODE FILES. Every mode now lives in its own file under `src/modes/<id>/index.js` — Home, Roguelike, Daily, Levels, Free Play — each declaring its dependencies explicitly via `register(deps)`. No more implicit reach into main.js globals. Each module is now testable in isolation, movable between projects, and has a single grep-able list of every helper it touches. `main.js` lost ~450 lines of mode-specific logic (4400-line `playRoguelikeSlot` body, level intro flow, free play init, etc.). Internal callers keep their names (`startRoguelikeRun`, `playRoguelikeSlot`, `startLevel`, …) — they now resolve to the module\'s returned API instead of inline functions, so the refactor is mechanical at the call sites. Foundation for Modes 4 (per-mode state slices) and Modes 5 (screen router). 355 tests still pass.',
+    ],
+  },
   {
     id: '2026-05-26-modes-2-real-exit-and-home',
     items: [
@@ -6331,22 +6338,7 @@ applyTheme(state.settings);
 // the next one. enter() still delegates to the existing startX()
 // for now; a future PR will move those bodies into per-mode files
 // under src/modes/<id>.js.
-registerMode({
-  id: 'home',
-  // 🏠 Home is a first-class mode now. enter() swaps to the ambient
-  // home-screen music, force-clears the roguelike palette (without
-  // mutating state.settings.mode — that's the player's last *game*
-  // mode preference), and shows the start menu. exit() hides the
-  // menu so the next mode's UI isn't painted underneath it.
-  enter(opts) {
-    sfx.setMusicMode('home');
-    document.body.classList.remove('mode-roguelike');
-    openStartMenu(opts && opts.subtitle ? opts.subtitle : null);
-  },
-  exit() {
-    hideStartMenu();
-  },
-});
+homeMode.register({ sfx, openStartMenu, hideStartMenu });
 ({ start: startRoguelikeRun, playSlot: playRoguelikeSlot, endRunSoft: _endRoguelikeRunSoft } = roguelikeMode.register({
   state,
   bus,
