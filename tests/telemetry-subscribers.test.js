@@ -63,6 +63,23 @@ test("ascension:picked → ascension_picked with level", () => {
   assert.deepEqual(telemetry.calls[0].payload, { level: 2 });
 });
 
+test("infinite → infinite_combo with full context", () => {
+  const { telemetry } = setup();
+  bus.emit('infinite', {
+    nth_this_session: 2,
+    score: 27000,
+    mode: 'roguelike',
+    slot: 7,
+  });
+  assert.equal(telemetry.calls[0].name, 'infinite_combo');
+  assert.deepEqual(telemetry.calls[0].payload, {
+    nth_this_session: 2,
+    score: 27000,
+    mode: 'roguelike',
+    slot: 7,
+  });
+});
+
 test("off() tears down every subscriber so later emits are silent", () => {
   const { telemetry, sub } = setup();
   sub.off();
