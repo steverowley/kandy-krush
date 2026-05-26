@@ -372,24 +372,19 @@ function bumpClassStats(outcome, slotReached) {
 // Show the mode-picker start menu. Each button switches modes and
 // starts the appropriate flow. Called from app boot (when no run is
 // in progress) and from the run-summary close on game over.
-// 🎚 Single chokepoint for switching the active game mode. Updates the
-// persistent setting, swaps music style, re-applies the theme (which
-// toggles body.mode-roguelike → the dark roguelike palette), tears
-// down any in-progress roguelike run if the new mode isn't roguelike-
-// flavored, and persists. Every mode-picker handler should call this
-// exactly once.
+// 🎚 Single chokepoint for switching the active *game* mode. Confirms
+// before abandoning an in-progress roguelike run, updates the
+// persistent setting, swaps music style, re-applies the theme, and
+// persists. The actual roguelike teardown happens later in
+// roguelike.exit() when setActiveMode('levels') fires.
 //
 // Returns true if the switch went through, false if the player
 // cancelled the "abandon current run?" confirmation.
 function switchToMode(mode) {
   // If a roguelike run is in flight and the player is switching to a
-  // non-roguelike mode (Levels / Free Play), confirm first — without
-  // this guard, the Levels game starts while state.inRoguelikeRun is
-  // still true, so the run-HUD stays visible and every
-  // `if (state.inRoguelikeRun) …` path keeps firing on top of the new
-  // mode. Reported as "the game opened and then opened roguelike
-  // mode too." `daily` and `roguelike` share the same run state, so
-  // they don't trigger this prompt.
+  // non-roguelike mode (Levels / Free Play), confirm first. `daily`
+  // and `roguelike` share the same run state, so they don't trigger
+  // this prompt.
   const isRoguelikey = (m) => m === 'roguelike' || m === 'daily';
   if (state.inRoguelikeRun && !isRoguelikey(mode)) {
     const ok = (typeof window !== 'undefined' && window.confirm)
@@ -398,30 +393,10 @@ function switchToMode(mode) {
           ' will end it. Continue?')
       : true;
     if (!ok) return false;
-    // Soft-end: drop the run flag + clear ephemeral run state. We
-    // intentionally do NOT call endRoguelikeRun() — that records
-    // telemetry, run-history, and shows the run-summary modal,
-    // which would surprise the player who just wanted to switch
-    // modes. The persisted roguelike progress (currentSlot, gems,
-    // upgrades, relics) stays in `state.roguelike` so a future
-    // Roguelike Run can pick up from where they left off if we
-    // wire that path later.
-    state.inRoguelikeRun = false;
-    state.runRng = null;
-    state.runIsDaily = false;
-    state.runDailyStamp = null;
-    state.cascadeAbort = true;
-    refreshRunHud();
   }
   state.settings.mode = mode;
-  // sfx.setMusicMode internally normalizes the four modes to two
-  // music styles ('chip' for roguelike + 'normal' for everything
-  // else). Passing the player-facing mode string keeps the source
-  // of truth on this side.
   sfx.setMusicMode(mode);
   // Re-apply the theme so body.mode-roguelike is set/cleared.
-  // Without this, the roguelike dark palette stays on when the
-  // player switches to Levels / Free Play / Daily.
   applyTheme(state.settings);
   persist();
   return true;
@@ -554,7 +529,7 @@ function openStartMenu(subtitle = null) {
       }
       sfx.setMusicEnabled(false);
       persist();
-      showGoodbye(() => { openStartMenu(null); });
+      showGoodbye(() => { setActiveMode('home'); });
       try { window.close(); } catch { /* ignore */ }
     },
   });
@@ -588,7 +563,11 @@ function showEndOfRunSummary(outcome, slotReached, gemsEarnedThisRun) {
       setTimeout(() => startRoguelikeRun(), 100);
     },
     onClose: () => {
-      openStartMenu(outcome === 'complete' ? '🏆 Run complete — pick where to go next.' : 'Run over — pick where to go next.');
+      setActiveMode('home', {
+        subtitle: outcome === 'complete'
+          ? '🏆 Run complete — pick where to go next.'
+          : 'Run over — pick where to go next.',
+      });
     },
   });
 }
@@ -1926,6 +1905,12 @@ function wildSpeedup() {
 // "What's new" modal re-appear on every player's next visit. No
 // manual version bump needed for future releases.
 const CHANGELOG_ENTRIES = [
+  {
+    id: '2026-05-26-modes-2-real-exit-and-home',
+    items: [
+      '🎚 MODE SEPARATION — STEP 2: REAL TEARDOWN + HOME IS A MODE. Three changes that make modes behave "like a game": (1) Every mode\'s `exit()` lifecycle hook now actually tears down its own state — roguelike/daily clear the run flag, run-rng, daily-stamp, HUD; levels/free abort any in-flight cascade — so the next mode\'s `enter()` always starts on a clean slate. (2) The home screen is now a registered mode with its own enter/exit, instead of an ad-hoc `openStartMenu()` overlay painted on top of whatever was last running. All four "return to start menu" entry points (quit goodbye, run-summary close, settings → Home, header 🏠 button, boot fallback) now go through `setActiveMode(\'home\')` so the previous mode\'s exit() always fires. (3) The home screen has its OWN ambient music — chord pad only (no drums or bass), so it sounds distinct from in-game lo-fi the moment you land on the start menu. switchToMode\'s prompt-before-abandon stays in place; the soft-end logic moved into roguelike.exit() where it belongs. 355 tests still pass.',
+    ],
+  },
   {
     id: '2026-05-26-modes-1-scaffolding',
     items: [
@@ -6527,31 +6512,69 @@ function init({ chime = false, announceLevel = true } = {}) {
 }
 
 applyTheme(state.settings);
-// 🎚 Register every game mode against the mode runtime. Today each
-// mode's enter() just delegates to the existing start function in
-// this file and exit() is a no-op — scaffolding only, no behavior
-// change. Subsequent PRs will pull state ownership and explicit
-// teardown logic into per-mode files under src/modes/<id>.js so
-// the modes can't leak into each other the way they have been.
+// 🎚 Register every game mode against the mode runtime. Each mode's
+// exit() now actually tears down its own state so the next mode
+// starts with a clean slate — no roguelike HUD lingering over a
+// Levels game, no cascade timers from a previous run firing into
+// the next one. enter() still delegates to the existing startX()
+// for now; a future PR will move those bodies into per-mode files
+// under src/modes/<id>.js.
+function _endRoguelikeRunSoft() {
+  // Drop the run flag + ephemeral run state, refresh the HUD so it
+  // hides. We intentionally do NOT call endRoguelikeRun() — that
+  // records telemetry + run-history + shows the run-summary modal,
+  // which would surprise a player who just switched modes. The
+  // persisted roguelike progress (currentSlot, gems, upgrades,
+  // relics) stays in state.roguelike for a future Resume path.
+  state.inRoguelikeRun = false;
+  state.runRng = null;
+  state.runIsDaily = false;
+  state.runDailyStamp = null;
+  state.cascadeAbort = true;
+  refreshRunHud();
+}
+registerMode({
+  id: 'home',
+  // 🏠 Home is a first-class mode now. enter() swaps to the ambient
+  // home-screen music, force-clears the roguelike palette (without
+  // mutating state.settings.mode — that's the player's last *game*
+  // mode preference), and shows the start menu. exit() hides the
+  // menu so the next mode's UI isn't painted underneath it.
+  enter(opts) {
+    sfx.setMusicMode('home');
+    document.body.classList.remove('mode-roguelike');
+    openStartMenu(opts && opts.subtitle ? opts.subtitle : null);
+  },
+  exit() {
+    hideStartMenu();
+  },
+});
 registerMode({
   id: 'roguelike',
   enter() { startRoguelikeRun(); },
-  exit() { /* TODO: tear down roguelike-specific UI in a follow-up PR */ },
+  exit() { _endRoguelikeRunSoft(); },
 });
 registerMode({
   id: 'daily',
   enter() { startDailySeedRun(); },
-  exit() { /* TODO: see roguelike */ },
+  exit() { _endRoguelikeRunSoft(); },
 });
 registerMode({
   id: 'levels',
   enter() { startLevel(state.levelProgress.currentLevel || 1); },
-  exit() { /* TODO: hide level-intro overlay if open, etc. */ },
+  exit() {
+    // Cancel any in-flight cascade so a Levels match that's still
+    // animating can't keep mutating state after the player switches
+    // modes.
+    state.cascadeAbort = true;
+  },
 });
 registerMode({
   id: 'free',
   enter() { startFreePlay(); },
-  exit() { /* TODO: see roguelike */ },
+  exit() {
+    state.cascadeAbort = true;
+  },
 });
 // 🚌 Register event-bus subscribers for run effects (first migration
 // from the inline-branch maze in processMatchRound — see B6).
@@ -6654,7 +6677,7 @@ createSettingsUI({
     if (state.inRoguelikeRun) {
       endRoguelikeRun();
     } else {
-      openStartMenu(null);
+      setActiveMode('home');
     }
   },
 });
@@ -6744,10 +6767,10 @@ if (homeOpenBtn) {
     sfx.unlockAudio();
     if (state.inRoguelikeRun) {
       // endRoguelikeRun() shows the run summary; its onClose chains
-      // into openStartMenu, so we don't double-open.
+      // into setActiveMode('home'), so we don't double-open.
       endRoguelikeRun();
     } else {
-      openStartMenu(null);
+      setActiveMode('home');
     }
   });
 }
@@ -6967,7 +6990,7 @@ if (_bootAction === 'roguelike') {
   persist();
   startFreePlay();
 } else {
-  openStartMenu(null);
+  setActiveMode('home');
 }
 persist();
 
