@@ -10,9 +10,16 @@
   gap: var(--space-3);
 }
 
-.play__head > .eyebrow {
+.play__title {
   text-align: center;
-  white-space: nowrap;
+}
+
+.play__chapter {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--step-1);
+  color: var(--accent);
+  margin-top: var(--space-1);
 }
 
 .play__head > :first-child {
@@ -57,7 +64,39 @@
   background: var(--gilt);
 }
 
-.play__deadlock {
+.play__objective {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.play__objective-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.play__objective-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.play__objective-bar {
+  position: relative;
+  height: 6px;
+  background: var(--bone-200);
+  border: 1px solid var(--gilt);
+  overflow: hidden;
+}
+
+.play__objective-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transition: width 320ms var(--ease-card);
+}
+
+.play__notice {
   text-align: center;
   padding: var(--space-4);
   display: flex;
@@ -65,4 +104,66 @@
   align-items: center;
   gap: var(--space-3);
   border-top: 1px solid var(--gilt-soft);
+}
+
+.outcome {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 12, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+.outcome__card {
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  view-transition-name: outcome;
+}
+
+.outcome__title {
+  font-size: var(--step-3);
+}
+
+.outcome__sub {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.outcome__stars {
+  display: flex;
+  gap: var(--space-3);
+  font-size: var(--step-4);
+  color: var(--ink-300);
+  letter-spacing: 0.1em;
+  margin: var(--space-2) 0;
+}
+
+.outcome__star--lit {
+  color: var(--gilt);
+  text-shadow: 0 0 12px rgba(184, 146, 79, 0.4);
+}
+
+.outcome__score-num {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 700;
+  margin-left: var(--space-2);
+}
+
+.outcome__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
 }
