@@ -15,17 +15,20 @@ import { routes } from "./router";
 export function App() {
   return (
     <Router hook={useHashLocation}>
-      <Switch>
-        <Route path={routes.splash} component={Splash} />
-        <Route path={routes.home} component={Home} />
-        <Route path={routes.modes} component={Modes} />
-        <Route path={routes.spread} component={Spread} />
-        <Route path={routes.querent} component={Querent} />
-        <Route path={routes.play} component={Play} />
-        <Route path={routes.settings} component={Settings} />
-        <Route path={routes.about} component={About} />
-        <Route component={NotFound} />
-      </Switch>
+      <a class="skip-link" href="#main-content">Skip to main content</a>
+      <div id="main-content" tabIndex={-1}>
+        <Switch>
+          <Route path={routes.splash} component={Splash} />
+          <Route path={routes.home} component={Home} />
+          <Route path={routes.modes} component={Modes} />
+          <Route path={routes.spread} component={Spread} />
+          <Route path={routes.querent} component={Querent} />
+          <Route path={routes.play} component={Play} />
+          <Route path={routes.settings} component={Settings} />
+          <Route path={routes.about} component={About} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
     </Router>
   );
 }

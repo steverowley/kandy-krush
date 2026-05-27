@@ -1,11 +1,13 @@
+import { useEffect, useState } from "preact/hooks";
 import { useLocation } from "wouter-preact";
 import { routes } from "../router";
 import { useSettings } from "../state/settings";
+import { clear as clearTelemetry, recent as recentTelemetry, subscribe as subscribeTelemetry, type TelemetryEvent } from "../telemetry/bus";
 import "./Settings.css";
 
 export function Settings() {
   const [, navigate] = useLocation();
-  const { sound, haptics, reducedMotion, set } = useSettings();
+  const { sound, haptics, reducedMotion, telemetry, set } = useSettings();
 
   return (
     <main class="screen settings">
@@ -27,7 +29,7 @@ export function Settings() {
         <span aria-hidden="true" />
       </header>
 
-      <section class="settings__list">
+      <section class="settings__list" aria-label="Preferences">
         <Toggle
           label="Sound"
           hint="Soft chimes and reading-room ambience."
@@ -46,7 +48,15 @@ export function Settings() {
           checked={reducedMotion}
           onChange={(v) => set({ reducedMotion: v })}
         />
+        <Toggle
+          label="Telemetry"
+          hint="Local-only event log. Nothing leaves this device."
+          checked={telemetry}
+          onChange={(v) => set({ telemetry: v })}
+        />
       </section>
+
+      <TelemetryViewer />
     </main>
   );
 }
@@ -77,4 +87,65 @@ function Toggle({
       <span class="toggle__switch" aria-hidden="true" />
     </label>
   );
+}
+
+function TelemetryViewer() {
+  const [open, setOpen] = useState(false);
+  const [events, setEvents] = useState<TelemetryEvent[]>(() => recentTelemetry(20));
+
+  useEffect(() => {
+    const unsub = subscribeTelemetry((all) => setEvents(all.slice(-20)));
+    return unsub;
+  }, []);
+
+  return (
+    <section class="settings__telemetry" aria-label="Telemetry log">
+      <div class="settings__telemetry-head">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? "▾" : "▸"} Recent events ({events.length})
+        </button>
+        {open ? (
+          <button
+            type="button"
+            class="btn btn--ghost"
+            onClick={() => clearTelemetry()}
+          >
+            Clear
+          </button>
+        ) : null}
+      </div>
+      {open ? (
+        events.length === 0 ? (
+          <p class="settings__telemetry-empty">No events recorded yet.</p>
+        ) : (
+          <ul class="settings__telemetry-list">
+            {events.slice().reverse().map((ev, i) => (
+              <li key={`${ev.at}-${i}`} class="settings__telemetry-row">
+                <span class="settings__telemetry-name">{ev.name}</span>
+                <span class="settings__telemetry-time tabular">
+                  {new Date(ev.at).toLocaleTimeString()}
+                </span>
+                {ev.data ? (
+                  <span class="settings__telemetry-data tabular">
+                    {summarizeData(ev.data)}
+                  </span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
+    </section>
+  );
+}
+
+function summarizeData(data: Record<string, string | number | boolean>): string {
+  return Object.entries(data)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
 }
