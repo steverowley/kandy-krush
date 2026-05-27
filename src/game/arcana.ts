@@ -54,10 +54,17 @@ export function silenceSuitInStep(
 
 /** Identifier — stable across persistence. */
 export type ArcanaId =
+  | "fool"
   | "magician"
+  | "empress"
+  | "lovers"
+  | "chariot"
   | "strength"
-  | "sun"
+  | "hermit"
+  | "death"
+  | "tower"
   | "moon"
+  | "sun"
   | "world";
 
 export type ArcanaContext = {
@@ -74,6 +81,12 @@ export type ArcanaContext = {
   movesUsed: number;
   /** Total move budget for this chamber, if known. */
   totalMoves: number | null;
+  /** How many arcana the player currently holds (including this one).
+   *  Used by The Hermit which rewards a thin build. */
+  heldCount: number;
+  /** True when the current chamber is a Boss Blind. Used by The Tower
+   *  which doubles down on boss chambers. */
+  isBoss: boolean;
 };
 
 export type Arcana = {
@@ -94,6 +107,18 @@ export type Arcana = {
 
 export const MAJOR_ARCANA: readonly Arcana[] = [
   {
+    id: "fool",
+    numeral: "0",
+    name: "The Fool",
+    panelCaption: "el comienzo",
+    description: "First cascade step of every move scores chips × 3.",
+    subtitle: "el loco · the first leap is free",
+    panelColor: "var(--panel-pink)",
+    apply: (ctx) => {
+      if (ctx.depth === 1) ctx.chips *= 3;
+    },
+  },
+  {
     id: "magician",
     numeral: "I",
     name: "The Magician",
@@ -104,6 +129,46 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     apply: (ctx) => {
       const wands = countCells(ctx.step, "wands");
       ctx.chips += wands * 30;
+    },
+  },
+  {
+    id: "empress",
+    numeral: "III",
+    name: "The Empress",
+    panelCaption: "abundancia",
+    description: "+20 chips per Cup cell cleared this step.",
+    subtitle: "la emperatriz · the cup overflows",
+    panelColor: "var(--panel-emerald)",
+    apply: (ctx) => {
+      const cups = countCells(ctx.step, "cups");
+      ctx.chips += cups * 20;
+    },
+  },
+  {
+    id: "lovers",
+    numeral: "VI",
+    name: "The Lovers",
+    panelCaption: "unión",
+    description: "Cups and Wands matched in the same step: ×1.5 mult.",
+    subtitle: "los enamorados · two suits, one fortune",
+    panelColor: "var(--panel-pink)",
+    apply: (ctx) => {
+      const suits = new Set(ctx.step.matches.map((g) => g.suit));
+      if (suits.has("cups") && suits.has("wands")) {
+        ctx.mult = Math.round(ctx.mult * 1.5);
+      }
+    },
+  },
+  {
+    id: "chariot",
+    numeral: "VII",
+    name: "The Chariot",
+    panelCaption: "el avance",
+    description: "+3 mult for each cascade step (chains grow faster).",
+    subtitle: "el carro · momentum gathers",
+    panelColor: "var(--panel-amethyst)",
+    apply: (ctx) => {
+      ctx.mult += ctx.depth * 3;
     },
   },
   {
@@ -120,15 +185,43 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     },
   },
   {
-    id: "sun",
-    numeral: "XIX",
-    name: "The Sun",
-    panelCaption: "plenitud",
-    description: "+50 chips on the first cascade step; nothing on chains.",
-    subtitle: "el sol · noon, before the chain",
-    panelColor: "var(--panel-gold)",
+    id: "hermit",
+    numeral: "IX",
+    name: "The Hermit",
+    panelCaption: "soledad",
+    description: "×1.5 mult per empty Arcana slot — solitude rewarded.",
+    subtitle: "el ermitaño · few cards, sharp light",
+    panelColor: "var(--panel-cobalt)",
     apply: (ctx) => {
-      if (ctx.depth === 1) ctx.chips += 50;
+      const empty = Math.max(0, MAX_HELD_ARCANA - ctx.heldCount);
+      if (empty <= 0) return;
+      const factor = 1 + empty * 0.5;
+      ctx.mult = Math.round(ctx.mult * factor);
+    },
+  },
+  {
+    id: "death",
+    numeral: "XIII",
+    name: "Death",
+    panelCaption: "cambio",
+    description: "+1 mult per cell cleared in this step.",
+    subtitle: "la muerte · the cut multiplies",
+    panelColor: "var(--panel-amethyst)",
+    apply: (ctx) => {
+      const total = ctx.step.matches.reduce((a, g) => a + g.cells.length, 0);
+      ctx.mult += total;
+    },
+  },
+  {
+    id: "tower",
+    numeral: "XVI",
+    name: "The Tower",
+    panelCaption: "ruptura",
+    description: "×1.3 mult when facing a Boss Blind.",
+    subtitle: "la torre · the fall sharpens the strike",
+    panelColor: "var(--panel-coral)",
+    apply: (ctx) => {
+      if (ctx.isBoss) ctx.mult = Math.round(ctx.mult * 1.3);
     },
   },
   {
@@ -142,6 +235,18 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     apply: (ctx) => {
       const cupMatches = ctx.step.matches.filter((g) => g.suit === "cups").length;
       ctx.mult += cupMatches;
+    },
+  },
+  {
+    id: "sun",
+    numeral: "XIX",
+    name: "The Sun",
+    panelCaption: "plenitud",
+    description: "+50 chips on the first cascade step; nothing on chains.",
+    subtitle: "el sol · noon, before the chain",
+    panelColor: "var(--panel-gold)",
+    apply: (ctx) => {
+      if (ctx.depth === 1) ctx.chips += 50;
     },
   },
   {
@@ -183,6 +288,7 @@ export function applyArcanaToStep(
     movesUsed: number;
     totalMoves: number | null;
     halveArcana?: boolean;
+    isBoss?: boolean;
   },
 ): { chips: number; mult: number; scoreGained: number } {
   const baseChips = step.chips;
@@ -194,6 +300,8 @@ export function applyArcanaToStep(
     depth: meta.depth,
     movesUsed: meta.movesUsed,
     totalMoves: meta.totalMoves,
+    heldCount: held.length,
+    isBoss: meta.isBoss ?? false,
   };
   for (const a of held) a.apply(ctx);
   let finalChips = ctx.chips;

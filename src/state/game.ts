@@ -174,6 +174,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
             movesUsed: prev.moves,
             totalMoves: prev.totalMoves,
             halveArcana: restriction?.halveArcana ?? false,
+            isBoss: restriction !== null,
           });
           modTotalScore += modified.scoreGained;
           modTotalChips += modified.chips;
