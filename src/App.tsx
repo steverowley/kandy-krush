@@ -12,27 +12,30 @@ import { Codex } from "./screens/Codex";
 import { Settings } from "./screens/Settings";
 import { About } from "./screens/About";
 import { NotFound } from "./screens/NotFound";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { routes } from "./router";
 
 export function App() {
   return (
-    <Router hook={useHashLocation}>
-      <a class="skip-link" href="#main-content">Skip to main content</a>
-      <div id="main-content" tabIndex={-1}>
-        <Switch>
-          <Route path={routes.splash} component={Splash} />
-          <Route path={routes.home} component={Home} />
-          <Route path={routes.modes} component={Modes} />
-          <Route path={routes.spread} component={Spread} />
-          <Route path={routes.querent} component={Querent} />
-          <Route path={routes.play} component={Play} />
-          <Route path={routes.howto} component={HowToPlay} />
-          <Route path={routes.codex} component={Codex} />
-          <Route path={routes.settings} component={Settings} />
-          <Route path={routes.about} component={About} />
-          <Route component={NotFound} />
-        </Switch>
-      </div>
-    </Router>
+    <ErrorBoundary>
+      <Router hook={useHashLocation}>
+        <a class="skip-link" href="#main-content">Skip to main content</a>
+        <div id="main-content" tabIndex={-1}>
+          <Switch>
+            <Route path={routes.splash} component={Splash} />
+            <Route path={routes.home} component={Home} />
+            <Route path={routes.modes} component={Modes} />
+            <Route path={routes.spread} component={Spread} />
+            <Route path={routes.querent} component={Querent} />
+            <Route path={routes.play} component={Play} />
+            <Route path={routes.howto} component={HowToPlay} />
+            <Route path={routes.codex} component={Codex} />
+            <Route path={routes.settings} component={Settings} />
+            <Route path={routes.about} component={About} />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+      </Router>
+    </ErrorBoundary>
   );
 }
