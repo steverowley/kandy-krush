@@ -1,11 +1,15 @@
+import { useEffect, useState } from "preact/hooks";
 import { useLocation } from "wouter-preact";
 import { routes } from "../router";
 import { LEVELS } from "../game/levels";
 import { CHAMBER_COUNT, CHAMBERS, CLASSES } from "../game/querent";
+import { buildShareText } from "../game/share";
 import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
 import { useQuerent } from "../state/querent";
 import "./Codex.css";
+
+type ShareStatus = "idle" | "copied" | "error";
 
 /**
  * The Codex — a single screen that aggregates the player's progress
@@ -28,6 +32,32 @@ export function Codex() {
     .sort((a, b) => (a.key < b.key ? 1 : -1));
   const dailyTotalScore = dailyHistory.reduce((a, b) => a + b.finalScore, 0);
 
+  const [shareStatus, setShareStatus] = useState<ShareStatus>("idle");
+
+  useEffect(() => {
+    if (shareStatus === "idle") return;
+    const t = setTimeout(() => setShareStatus("idle"), 2500);
+    return () => clearTimeout(t);
+  }, [shareStatus]);
+
+  async function copyShareText() {
+    const text = buildShareText({
+      spreadStars,
+      querentMeta,
+      dailyRuns: Object.values(dailyRuns),
+    });
+    if (!navigator.clipboard?.writeText) {
+      setShareStatus("error");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareStatus("copied");
+    } catch {
+      setShareStatus("error");
+    }
+  }
+
   return (
     <main class="screen codex">
       <header class="codex__head">
@@ -45,7 +75,28 @@ export function Codex() {
           </h1>
           <p class="script codex__sub">what you have seen so far</p>
         </div>
-        <span aria-hidden="true" />
+        <div class="codex__share">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            onClick={copyShareText}
+            aria-describedby="codex-share-status"
+          >
+            Share ↗
+          </button>
+          <span
+            id="codex-share-status"
+            class={`codex__share-status codex__share-status--${shareStatus}`}
+            role="status"
+            aria-live="polite"
+          >
+            {shareStatus === "copied"
+              ? "Copied to clipboard"
+              : shareStatus === "error"
+                ? "Copy unavailable"
+                : ""}
+          </span>
+        </div>
       </header>
 
       <div class="rule rule--double" aria-hidden="true" />

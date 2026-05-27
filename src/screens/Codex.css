@@ -33,6 +33,32 @@
   justify-self: end;
 }
 
+.codex__share {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.codex__share-status {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.8rem;
+  min-height: 1em;
+  opacity: 0;
+  transition: opacity 180ms var(--ease);
+}
+
+.codex__share-status--copied {
+  color: var(--panel-gold);
+  opacity: 1;
+}
+
+.codex__share-status--error {
+  color: var(--panel-coral);
+  opacity: 1;
+}
+
 .codex__row {
   display: flex;
   flex-direction: column;
