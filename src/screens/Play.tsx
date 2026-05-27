@@ -18,6 +18,15 @@ import {
   dailySeed,
   todayKey,
 } from "../game/daily";
+import { useQuerent } from "../state/querent";
+import {
+  CHAMBER_COUNT,
+  chamberByIndex,
+  chamberMovesFor,
+  classById,
+  type Chamber,
+  type QuerentClass,
+} from "../game/querent";
 import { routes } from "../router";
 import "./Play.css";
 
@@ -29,10 +38,14 @@ function modeFromQuery(search: string): GameMode {
 }
 
 function levelFromQuery(search: string): number | null {
+  return numFromQuery(search, "level");
+}
+
+function numFromQuery(search: string, key: string): number | null {
   const params = new URLSearchParams(search);
-  const id = params.get("level");
-  if (!id) return null;
-  const n = Number.parseInt(id, 10);
+  const raw = params.get(key);
+  if (!raw) return null;
+  const n = Number.parseInt(raw, 10);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -48,6 +61,7 @@ export function Play() {
   const search = useSearch();
   const mode = modeFromQuery(search);
   const levelIdParam = levelFromQuery(search);
+  const chamberParam = numFromQuery(search, "chamber");
   const level = useMemo(
     () => (mode === "spread" && levelIdParam ? levelById(levelIdParam) ?? null : null),
     [mode, levelIdParam],
@@ -60,6 +74,19 @@ export function Play() {
   const dailyRun = useDaily((s) => s.runs[today]);
   const saveDailySnapshot = useDaily((s) => s.saveSnapshot);
   const finishDailyRun = useDaily((s) => s.finishRun);
+
+  const querentRun = useQuerent((s) => s.run);
+  const passChamber = useQuerent((s) => s.passChamber);
+  const failRun = useQuerent((s) => s.failRun);
+  const finishRun = useQuerent((s) => s.finishRun);
+  const querentClass: QuerentClass | null = useMemo(
+    () => (querentRun ? classById(querentRun.classId) ?? null : null),
+    [querentRun?.classId],
+  );
+  const chamber: Chamber | null = useMemo(
+    () => (mode === "querent" && chamberParam ? chamberByIndex(chamberParam) ?? null : null),
+    [mode, chamberParam],
+  );
 
   const [outcomeSeen, setOutcomeSeen] = useState<{
     kind: "win" | "loss";
@@ -76,7 +103,6 @@ export function Play() {
     if (mode === "daily") {
       const run = useDaily.getState().getRun(today);
       if (run?.outcome === "won" || run?.outcome === "lost") {
-        // Already played today — flash the result, no live board.
         setOutcomeSeen({
           kind: run.outcome === "won" ? "win" : "loss",
           stars: 0,
@@ -96,16 +122,41 @@ export function Play() {
       return;
     }
 
-    start(mode, level ? { levelId: level.id } : undefined);
-  }, [mode, level?.id, today]);
+    if (mode === "querent") {
+      if (!querentRun || !chamber || !querentClass) {
+        navigate(routes.querent);
+        return;
+      }
+      start("querent", {
+        scoreMultiplier: querentClass.scoreMultiplier,
+      });
+      return;
+    }
 
-  const progress = level ? objectiveProgress(level.objective, score, cleared) : null;
+    start(mode, level ? { levelId: level.id } : undefined);
+  }, [mode, level?.id, today, chamberParam]);
+
+  const effectiveObjective = level
+    ? level.objective
+    : chamber
+      ? chamber.objective
+      : null;
+
+  const chamberMoves =
+    chamber && querentClass ? chamberMovesFor(chamber, querentClass) : null;
+
+  const progress = effectiveObjective
+    ? objectiveProgress(effectiveObjective, score, cleared)
+    : null;
+
   const movesLeft =
     level
       ? Math.max(0, level.moves - moves)
       : mode === "daily"
         ? Math.max(0, DAILY_MOVE_BUDGET - moves)
-        : null;
+        : chamberMoves !== null
+          ? Math.max(0, chamberMoves - moves)
+          : null;
 
   // Auto-snapshot the daily run after every settled move (busy === false
   // signals "the cascade has resolved").
@@ -121,7 +172,9 @@ export function Play() {
   // Resolve outcomes.
   useEffect(() => {
     if (outcomeSeen || busy) return;
+    if (useGame.getState().board.rows === 0) return;
 
+    // Spread: per-chapter objective + move budget.
     if (level && progress) {
       if (progress.met) {
         const stars = starCount(level, score, true);
@@ -133,14 +186,46 @@ export function Play() {
       return;
     }
 
-    if (mode === "daily" && movesLeft === 0 && useGame.getState().board.rows > 0) {
-      // The Daily Draw resolves on budget exhaustion. Any final score
-      // counts as a "win" in the sense of completing the reading — the
-      // outcome modal celebrates a score regardless.
+    // Querent: chamber objective + chamber budget.
+    if (mode === "querent" && chamber && querentRun && progress) {
+      if (progress.met) {
+        passChamber(score);
+        const nextIdx = querentRun.chamberIndex + 1;
+        if (nextIdx > CHAMBER_COUNT) {
+          finishRun();
+          setOutcomeSeen({ kind: "win", stars: 3, finalScore: score });
+        } else {
+          setOutcomeSeen({ kind: "win", stars: chamber.boss ? 3 : 1, finalScore: score });
+        }
+      } else if (movesLeft === 0) {
+        failRun();
+        setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
+      }
+      return;
+    }
+
+    // Daily.
+    if (mode === "daily" && movesLeft === 0) {
       finishDailyRun(today, "won", score);
       setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
     }
-  }, [level, progress?.met, movesLeft, outcomeSeen, busy, score, mode, today, finishDailyRun, recordSpread]);
+  }, [
+    level,
+    chamber,
+    querentRun?.chamberIndex,
+    progress?.met,
+    movesLeft,
+    outcomeSeen,
+    busy,
+    score,
+    mode,
+    today,
+    finishDailyRun,
+    recordSpread,
+    passChamber,
+    failRun,
+    finishRun,
+  ]);
 
   const isDailyRecap = mode === "daily" && (dailyRun?.outcome === "won" || dailyRun?.outcome === "lost");
 
@@ -151,7 +236,15 @@ export function Play() {
           type="button"
           class="btn btn--ghost"
           aria-label="Leave the reading"
-          onClick={() => navigate(level ? routes.spread : routes.home)}
+          onClick={() =>
+            navigate(
+              level
+                ? routes.spread
+                : mode === "querent"
+                  ? routes.querent
+                  : routes.home,
+            )
+          }
         >
           ← Leave
         </button>
@@ -160,6 +253,10 @@ export function Play() {
           {level ? (
             <p class="play__chapter">
               <span class="numeral">{level.numeral}</span> · {level.name}
+            </p>
+          ) : chamber ? (
+            <p class="play__chapter">
+              <span class="numeral">{chamber.numeral}</span> · {chamber.name}
             </p>
           ) : mode === "daily" ? (
             <p class="play__chapter"><span class="numeral">·</span> {today}</p>
@@ -208,7 +305,7 @@ export function Play() {
         </div>
       </section>
 
-      {level && progress ? (
+      {progress ? (
         <section class="play__objective" aria-label="Objective">
           <header class="play__objective-head">
             <span class="eyebrow">{progress.label}</span>
@@ -239,16 +336,28 @@ export function Play() {
         <div class="play__notice" role="status">
           <p class="eyebrow">The Deck Has Frozen</p>
           <p>No legal swap remains.</p>
-          <button type="button" class="btn btn--primary" onClick={() => {
-            // Daily mode shouldn't reshuffle (would change seed); resolve as won.
-            if (mode === "daily") {
-              finishDailyRun(today, "won", score);
-              setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
-              return;
-            }
-            reset();
-          }}>
-            {mode === "daily" ? "Finalize the reading" : "Reshuffle the deck"}
+          <button
+            type="button"
+            class="btn btn--primary"
+            onClick={() => {
+              if (mode === "daily") {
+                finishDailyRun(today, "won", score);
+                setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
+                return;
+              }
+              if (mode === "querent") {
+                failRun();
+                setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
+                return;
+              }
+              reset();
+            }}
+          >
+            {mode === "daily"
+              ? "Finalize the reading"
+              : mode === "querent"
+                ? "Yield the chamber"
+                : "Reshuffle the deck"}
           </button>
         </div>
       ) : null}
@@ -258,12 +367,32 @@ export function Play() {
           mode={mode}
           outcome={outcomeSeen}
           level={level}
+          chamber={chamber}
+          finalChamber={
+            mode === "querent" &&
+            chamber !== null &&
+            outcomeSeen.kind === "win" &&
+            chamber.index === CHAMBER_COUNT
+          }
           alreadyRecap={isDailyRecap}
-          onRetry={() => {
+          onAdvance={() => {
+            if (mode === "querent" && chamber && outcomeSeen.kind === "win") {
+              const next = chamber.index + 1;
+              if (next > CHAMBER_COUNT) {
+                navigate(routes.querent);
+              } else {
+                navigate(`${routes.play}?mode=querent&chamber=${next}`);
+              }
+              return;
+            }
             setOutcomeSeen(null);
             reset();
           }}
-          onLeave={() => navigate(level ? routes.spread : routes.home)}
+          onLeave={() => {
+            if (level) navigate(routes.spread);
+            else if (mode === "querent") navigate(routes.querent);
+            else navigate(routes.home);
+          }}
         />
       ) : null}
     </main>
@@ -274,38 +403,57 @@ function Outcome({
   mode,
   outcome,
   level,
+  chamber,
+  finalChamber,
   alreadyRecap,
-  onRetry,
+  onAdvance,
   onLeave,
 }: {
   mode: GameMode;
   outcome: { kind: "win" | "loss"; stars: 0 | 1 | 2 | 3; finalScore: number };
   level: Level | null;
+  chamber: Chamber | null;
+  finalChamber: boolean;
   alreadyRecap: boolean;
-  onRetry: () => void;
+  onAdvance: () => void;
   onLeave: () => void;
 }) {
   const isWin = outcome.kind === "win";
   const isDaily = mode === "daily";
+  const isQuerent = mode === "querent";
 
   const panelName = isDaily
     ? alreadyRecap ? "Settled" : "Reading"
-    : isWin ? "Resolved" : "Broken";
+    : isQuerent
+      ? isWin
+        ? finalChamber ? "The Path" : "Cleared"
+        : "Broken"
+      : isWin ? "Resolved" : "Broken";
   const headline = isDaily
     ? "The Day"
-    : isWin
-      ? "The Spread"
-      : "The Querent";
+    : isQuerent
+      ? isWin
+        ? finalChamber ? "Resolved" : "Onward"
+        : "The Path Ends"
+      : isWin
+        ? "The Spread"
+        : "The Querent";
   const script = isWin ? "fortune" : "ruin";
   const subtitle = isDaily
     ? "la jornada · return tomorrow"
-    : isWin
+    : isQuerent
+      ? isWin
+        ? finalChamber
+          ? "el final · nine chambers walked"
+          : "un paso más · one step deeper"
+        : "el cierre · cards remembered"
+      : isWin
       ? "la fortuna · stars settle"
       : "el cierre · readings spent";
   const panelColor = isWin
     ? "var(--panel-gold)"
     : "var(--panel-amethyst)";
-  const numeral = level?.numeral ?? (isDaily ? "·" : "·");
+  const numeral = level?.numeral ?? chamber?.numeral ?? (isDaily ? "·" : "·");
 
   return (
     <div class="outcome" role="dialog" aria-modal="true" aria-labelledby="outcome-title">
@@ -336,15 +484,27 @@ function Outcome({
               ) : null}
               <div class="outcome__actions">
                 <button type="button" class="btn btn--on-card" onClick={onLeave}>
-                  {level ? "Back to the Spread" : "Leave"}
+                  {level
+                    ? "Back to the Spread"
+                    : isQuerent
+                      ? "Back to the Path"
+                      : "Leave"}
                 </button>
                 {!isDaily ? (
                   <button
                     type="button"
                     class="btn btn--on-card btn--primary"
-                    onClick={onRetry}
+                    onClick={onAdvance}
                   >
-                    {isWin ? "Read again" : "Reshuffle"}
+                    {isQuerent
+                      ? isWin
+                        ? finalChamber
+                          ? "Close the path"
+                          : "Next chamber"
+                        : "Begin again"
+                      : isWin
+                        ? "Read again"
+                        : "Reshuffle"}
                   </button>
                 ) : null}
               </div>

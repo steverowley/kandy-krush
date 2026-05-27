@@ -7,6 +7,7 @@ export const routes = {
   home: "/home",
   modes: "/modes",
   spread: "/spread",
+  querent: "/querent",
   play: "/play",
   settings: "/settings",
   about: "/about",
