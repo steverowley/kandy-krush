@@ -33,6 +33,7 @@ import {
   type Chamber,
   type QuerentClass,
 } from "../game/querent";
+import { stakeById } from "../game/stakes";
 import { routes } from "../router";
 import "./Play.css";
 
@@ -109,6 +110,10 @@ export function Play() {
     () => (mode === "querent" && chamberParam ? chamberByIndex(chamberParam) ?? null : null),
     [mode, chamberParam],
   );
+  const activeStake = useMemo(
+    () => (querentRun ? stakeById(querentRun.stakeId) ?? null : null),
+    [querentRun?.stakeId],
+  );
 
   const [outcomeSeen, setOutcomeSeenRaw] = useState<{
     kind: "win" | "loss";
@@ -168,7 +173,7 @@ export function Play() {
       }
       start("querent", {
         scoreMultiplier: querentClass.scoreMultiplier,
-        totalMoves: chamberMovesFor(chamber, querentClass),
+        totalMoves: chamberMovesFor(chamber, querentClass, activeStake),
         restriction: chamber.restriction ?? null,
       });
       return;
@@ -189,16 +194,18 @@ export function Play() {
   }, [mode, level?.id, today, chamberParam]);
 
   // Bosses can multiply the objective target — chamberEffectiveObjective
-  // applies the restriction so progress + win-check both see the
-  // adjusted threshold.
+  // applies the restriction AND the active stake so progress + win-check
+  // both see the adjusted threshold.
   const effectiveObjective = level
     ? level.objective
     : chamber
-      ? chamberEffectiveObjective(chamber)
+      ? chamberEffectiveObjective(chamber, activeStake)
       : null;
 
   const chamberMoves =
-    chamber && querentClass ? chamberMovesFor(chamber, querentClass) : null;
+    chamber && querentClass
+      ? chamberMovesFor(chamber, querentClass, activeStake)
+      : null;
 
   const progress = effectiveObjective
     ? objectiveProgress(effectiveObjective, score, cleared)

@@ -75,6 +75,8 @@ describe("useQuerent meta progression", () => {
         bestDepth: 0,
         insight: 0,
         unlocked: ["seer"],
+        maxStakeId: "white",
+        currentStakeId: "white",
       },
     });
   });
