@@ -19,6 +19,7 @@ import {
   todayKey,
 } from "../game/daily";
 import { useQuerent } from "../state/querent";
+import { outcome as outcomeAudio } from "../subscribers/audio";
 import {
   CHAMBER_COUNT,
   chamberByIndex,
@@ -88,11 +89,22 @@ export function Play() {
     [mode, chamberParam],
   );
 
-  const [outcomeSeen, setOutcomeSeen] = useState<{
+  const [outcomeSeen, setOutcomeSeenRaw] = useState<{
     kind: "win" | "loss";
     stars: 0 | 1 | 2 | 3;
     finalScore: number;
   } | null>(null);
+
+  // Fires the win/loss flourish exactly once on outcome resolution.
+  function setOutcomeSeen(
+    o: { kind: "win" | "loss"; stars: 0 | 1 | 2 | 3; finalScore: number } | null,
+  ) {
+    if (o && !outcomeSeen) {
+      if (o.kind === "win") outcomeAudio.win();
+      else outcomeAudio.loss();
+    }
+    setOutcomeSeenRaw(o);
+  }
 
   // Initial mount: bootstrap whichever mode is active. Daily restores
   // from snapshot if there's an unfinished run today; otherwise starts
