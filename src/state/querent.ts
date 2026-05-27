@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { QuerentClass } from "../game/querent";
+import { useArcana } from "./arcana";
 
 export type QuerentRun = {
   classId: QuerentClass["id"];
@@ -47,6 +48,8 @@ export const useQuerent = create<State>()(
       meta: DEFAULT_META,
 
       beginRun: (classId) => {
+        // Fresh run gets a fresh Arcana deck.
+        useArcana.getState().reset();
         set({
           run: {
             classId,
@@ -77,6 +80,7 @@ export const useQuerent = create<State>()(
       failRun: () => {
         const r = get().run;
         const meta = get().meta;
+        useArcana.getState().reset();
         if (!r) {
           set({ run: null });
           return;
@@ -92,6 +96,7 @@ export const useQuerent = create<State>()(
       finishRun: () => {
         const r = get().run;
         const meta = get().meta;
+        useArcana.getState().reset();
         if (!r) {
           set({ run: null });
           return;
@@ -107,7 +112,10 @@ export const useQuerent = create<State>()(
         set({ run: null, meta: nextMeta });
       },
 
-      abandonRun: () => set({ run: null }),
+      abandonRun: () => {
+        useArcana.getState().reset();
+        set({ run: null });
+      },
 
       isUnlocked: (id) => get().meta.unlocked.includes(id),
     }),

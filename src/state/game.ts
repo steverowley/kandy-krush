@@ -3,6 +3,8 @@ import { newGame, tryMove, isDeadlocked } from "../game/engine/engine";
 import { reserveTileIds } from "../game/engine/board";
 import { createRng, type SeededRng } from "../game/engine/rng";
 import type { Board, Cell, Suit, Tile } from "../game/engine/types";
+import { applyArcanaToStep } from "../game/arcana";
+import { useArcana } from "./arcana";
 
 export type GameMode = "free" | "spread" | "daily" | "querent";
 
@@ -40,6 +42,9 @@ type GameState = {
   /** Score multiplier applied to every cascade gain (Querent classes
    *  use this; other modes leave it at 1). */
   scoreMultiplier: number;
+  /** Total move budget for the current blind, if known. Used by arcana
+   *  whose effects depend on chamber pacing (e.g. The World). */
+  totalMoves: number | null;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -53,6 +58,7 @@ export type StartOpts = {
   cols?: number;
   levelId?: number;
   scoreMultiplier?: number;
+  totalMoves?: number;
 };
 
 /** Serializable snapshot of an in-progress run. The rng is captured as
@@ -93,6 +99,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   moves: 0,
   cleared: { ...ZERO_CLEARED },
   scoreMultiplier: 1,
+  totalMoves: null,
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -114,6 +121,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       moves: 0,
       cleared: { ...ZERO_CLEARED },
       scoreMultiplier: opts?.scoreMultiplier ?? 1,
+      totalMoves: opts?.totalMoves ?? null,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -141,15 +149,33 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     set({ busy: true });
     window.setTimeout(() => {
       set((prev) => {
-        const scored = Math.round(result.scoreGained * prev.scoreMultiplier);
+        // Apply held Arcana effects per cascade step. The engine emits
+        // base chips/mult; arcana mutate those left-to-right before the
+        // final product is summed. Read the live arcana state — it may
+        // have changed between move and resolve.
+        const held = useArcana.getState().held();
+        let modTotalScore = 0;
+        let modTotalChips = 0;
+        let modPeakMult = 0;
+        for (const step of result.cascades) {
+          const modified = applyArcanaToStep(step, held, {
+            depth: step.depth,
+            movesUsed: prev.moves,
+            totalMoves: prev.totalMoves,
+          });
+          modTotalScore += modified.scoreGained;
+          modTotalChips += modified.chips;
+          if (modified.mult > modPeakMult) modPeakMult = modified.mult;
+        }
+        const scored = Math.round(modTotalScore * prev.scoreMultiplier);
         return {
           board: result.board,
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
           lastMove: {
-            chips: result.totalChips,
-            mult: result.peakMult,
+            chips: modTotalChips,
+            mult: modPeakMult,
             score: scored,
             tick: prev.lastMove.tick + 1,
           },

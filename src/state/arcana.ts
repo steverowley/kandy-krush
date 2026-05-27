@@ -1,0 +1,95 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  MAJOR_ARCANA,
+  MAX_HELD_ARCANA,
+  arcanaById,
+  rollDraw,
+  type Arcana,
+  type ArcanaId,
+} from "../game/arcana";
+import { createRng } from "../game/engine/rng";
+
+/**
+ * Active Arcana state for the current run. Only persists `heldIds` and
+ * `offeredIds` (strings) — the `Arcana` instances themselves are looked
+ * up at read time so adding new effects to MAJOR_ARCANA is safe across
+ * upgrades.
+ *
+ * Lives outside the engine: useGame.attemptSwap reads
+ * `useArcana.getState().held()` at scoring time and applies effects to
+ * each cascade step.
+ */
+type State = {
+  heldIds: ArcanaId[];
+  offeredIds: ArcanaId[];
+  /** Last-resolved draw seed — used so the offer survives a navigation
+   *  away and back without re-rolling into something different. */
+  drawSeed: number;
+  reset: () => void;
+  /** Roll 3 fresh offers, replacing any prior. */
+  rollOffer: (seed?: number) => void;
+  /** Accept an offered arcana into a slot, then clear the offer. */
+  acceptOffer: (id: ArcanaId) => void;
+  /** Skip the offer entirely. */
+  skipOffer: () => void;
+  /** Convenience: hydrated readers. */
+  held: () => Arcana[];
+  offered: () => Arcana[];
+  isFull: () => boolean;
+};
+
+export const useArcana = create<State>()(
+  persist(
+    (set, get) => ({
+      heldIds: [],
+      offeredIds: [],
+      drawSeed: 0,
+
+      reset: () => set({ heldIds: [], offeredIds: [], drawSeed: 0 }),
+
+      rollOffer: (seed) => {
+        const useSeed = seed ?? Math.floor(Math.random() * 2 ** 31);
+        const rng = createRng(useSeed);
+        const held = get().held();
+        const picks = rollDraw(MAJOR_ARCANA, held, rng, 3);
+        set({ offeredIds: picks.map((a) => a.id), drawSeed: useSeed });
+      },
+
+      acceptOffer: (id) => {
+        const { heldIds } = get();
+        if (heldIds.length >= MAX_HELD_ARCANA) {
+          set({ offeredIds: [] });
+          return;
+        }
+        if (heldIds.includes(id)) {
+          set({ offeredIds: [] });
+          return;
+        }
+        set({ heldIds: [...heldIds, id], offeredIds: [] });
+      },
+
+      skipOffer: () => set({ offeredIds: [] }),
+
+      held: () =>
+        get()
+          .heldIds.map((id) => arcanaById(id))
+          .filter((a): a is Arcana => !!a),
+
+      offered: () =>
+        get()
+          .offeredIds.map((id) => arcanaById(id))
+          .filter((a): a is Arcana => !!a),
+
+      isFull: () => get().heldIds.length >= MAX_HELD_ARCANA,
+    }),
+    {
+      name: "arcana.deck.v1",
+      partialize: (s) => ({
+        heldIds: s.heldIds,
+        offeredIds: s.offeredIds,
+        drawSeed: s.drawSeed,
+      }),
+    },
+  ),
+);

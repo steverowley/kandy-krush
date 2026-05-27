@@ -5,6 +5,7 @@ import { TarotCard } from "../components/TarotCard";
 import { useGame, type GameMode } from "../state/game";
 import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
+import { useArcana } from "../state/arcana";
 import {
   levelById,
   objectiveProgress,
@@ -150,6 +151,7 @@ export function Play() {
       }
       start("querent", {
         scoreMultiplier: querentClass.scoreMultiplier,
+        totalMoves: chamberMovesFor(chamber, querentClass),
       });
       return;
     }
@@ -161,11 +163,11 @@ export function Play() {
         restore(saved);
         return;
       }
-      start(mode, { levelId: level.id });
+      start(mode, { levelId: level.id, totalMoves: level.moves });
       return;
     }
 
-    start(mode, level ? { levelId: level.id } : undefined);
+    start(mode, level ? { levelId: level.id, totalMoves: level.moves } : undefined);
   }, [mode, level?.id, today, chamberParam]);
 
   const effectiveObjective = level
@@ -350,6 +352,8 @@ export function Play() {
         )}
       </header>
 
+      {mode === "querent" ? <ArcanaStrip /> : null}
+
       <section class="play__ledger" aria-label="Run status" aria-live="polite">
         <div class="ledger-cell">
           <span class="eyebrow">Fortune</span>
@@ -454,7 +458,8 @@ export function Play() {
               if (next > CHAMBER_COUNT) {
                 navigate(routes.querent);
               } else {
-                navigate(`${routes.play}?mode=querent&chamber=${next}`);
+                // Insert the Arcana Draw between chambers — pick 1 of 3.
+                navigate(`${routes.draw}?next=${next}`);
               }
               return;
             }
@@ -469,6 +474,39 @@ export function Play() {
         />
       ) : null}
     </main>
+  );
+}
+
+/** Compact strip of held Arcana — sits above the Fortune ledger in
+ *  Querent mode. Each badge shows the Roman numeral and a tooltip name
+ *  on hover/focus. Empty state renders a small "no arcana yet" hint. */
+function ArcanaStrip() {
+  const held = useArcana((s) => s.held());
+  if (held.length === 0) {
+    return (
+      <section class="arcana-strip arcana-strip--empty" aria-label="Held arcana">
+        <p class="eyebrow">Arcana</p>
+        <p class="arcana-strip__empty script">no card yet — finish a chamber to draw</p>
+      </section>
+    );
+  }
+  return (
+    <section class="arcana-strip" aria-label="Held arcana">
+      <p class="eyebrow">Arcana</p>
+      <ul class="arcana-strip__list">
+        {held.map((a) => (
+          <li
+            key={a.id}
+            class="arcana-strip__badge"
+            style={{ "--card-panel": a.panelColor }}
+            title={`${a.name} — ${a.description}`}
+          >
+            <span class="arcana-strip__numeral numeral">{a.numeral}</span>
+            <span class="arcana-strip__name">{a.name}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

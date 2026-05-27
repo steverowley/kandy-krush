@@ -1,0 +1,186 @@
+/**
+ * Major Arcana — Balatro-style "Jokers" for Arcana Cascada.
+ *
+ * Each Arcana modifies the Chips × Mult scoring formula via a single
+ * `apply(ctx)` function that mutates a per-step scoring context. Effects
+ * fire **left-to-right** in the order the player drafted them, so deck
+ * order matters (just like Balatro joker order).
+ *
+ * This first batch of five lays the foundation. More arcana can be added
+ * to MAJOR_ARCANA without touching the application code.
+ */
+
+import type { CascadeStep } from "./engine/types";
+import type { Suit } from "./engine/types";
+
+/** Identifier — stable across persistence. */
+export type ArcanaId =
+  | "magician"
+  | "strength"
+  | "sun"
+  | "moon"
+  | "world";
+
+export type ArcanaContext = {
+  /** Cascade step currently being scored. */
+  step: CascadeStep;
+  /** Running chips for this step (modifiable). */
+  chips: number;
+  /** Running mult for this step (modifiable). */
+  mult: number;
+  /** 1-based depth of the cascade step. */
+  depth: number;
+  /** How many moves into the current chamber the player is (0-based on
+   *  the move that's currently being scored — pre-increment). */
+  movesUsed: number;
+  /** Total move budget for this chamber, if known. */
+  totalMoves: number | null;
+};
+
+export type Arcana = {
+  id: ArcanaId;
+  numeral: string;
+  name: string;
+  /** Italic Spanish caption shown on the card panel. */
+  panelCaption: string;
+  /** Plain-English effect description shown in the Draw + Play UI. */
+  description: string;
+  /** Multilingual subtitle for the card foot. */
+  subtitle: string;
+  /** Card panel accent color. Reuses an existing `--panel-*` token. */
+  panelColor: string;
+  /** Modifies the per-step scoring context in place. */
+  apply: (ctx: ArcanaContext) => void;
+};
+
+export const MAJOR_ARCANA: readonly Arcana[] = [
+  {
+    id: "magician",
+    numeral: "I",
+    name: "The Magician",
+    panelCaption: "intención",
+    description: "+30 chips per Wand cell cleared this step.",
+    subtitle: "el mago · intent shapes the flame",
+    panelColor: "var(--panel-coral)",
+    apply: (ctx) => {
+      const wands = countCells(ctx.step, "wands");
+      ctx.chips += wands * 30;
+    },
+  },
+  {
+    id: "strength",
+    numeral: "VIII",
+    name: "Strength",
+    panelCaption: "fuerza",
+    description: "+2 mult for every match of size 4 or larger.",
+    subtitle: "la fuerza · the long task held",
+    panelColor: "var(--panel-saffron)",
+    apply: (ctx) => {
+      const big = ctx.step.matches.filter((g) => g.cells.length >= 4).length;
+      ctx.mult += big * 2;
+    },
+  },
+  {
+    id: "sun",
+    numeral: "XIX",
+    name: "The Sun",
+    panelCaption: "plenitud",
+    description: "+50 chips on the first cascade step; nothing on chains.",
+    subtitle: "el sol · noon, before the chain",
+    panelColor: "var(--panel-gold)",
+    apply: (ctx) => {
+      if (ctx.depth === 1) ctx.chips += 50;
+    },
+  },
+  {
+    id: "moon",
+    numeral: "XVIII",
+    name: "The Moon",
+    panelCaption: "marea",
+    description: "+1 mult per Cup match in the step.",
+    subtitle: "la luna · the tide remembers",
+    panelColor: "var(--panel-cobalt)",
+    apply: (ctx) => {
+      const cupMatches = ctx.step.matches.filter((g) => g.suit === "cups").length;
+      ctx.mult += cupMatches;
+    },
+  },
+  {
+    id: "world",
+    numeral: "XXI",
+    name: "The World",
+    panelCaption: "el círculo",
+    description: "×1.25 mult once the chamber's move budget is half spent.",
+    subtitle: "el mundo · the circle closing",
+    panelColor: "var(--panel-emerald)",
+    apply: (ctx) => {
+      if (ctx.totalMoves === null) return;
+      const halfway = ctx.movesUsed * 2 >= ctx.totalMoves;
+      if (halfway) ctx.mult = Math.round(ctx.mult * 1.25);
+    },
+  },
+];
+
+export function arcanaById(id: ArcanaId): Arcana | undefined {
+  return MAJOR_ARCANA.find((a) => a.id === id);
+}
+
+/** Maximum simultaneously-held arcana per the brief (§4.3). */
+export const MAX_HELD_ARCANA = 5;
+
+/**
+ * Apply a sequence of arcana to one cascade step. Effects fire in the
+ * held order — left to right — so drafting order matters.
+ */
+export function applyArcanaToStep(
+  step: CascadeStep,
+  held: readonly Arcana[],
+  meta: { depth: number; movesUsed: number; totalMoves: number | null },
+): { chips: number; mult: number; scoreGained: number } {
+  const ctx: ArcanaContext = {
+    step,
+    chips: step.chips,
+    mult: step.mult,
+    depth: meta.depth,
+    movesUsed: meta.movesUsed,
+    totalMoves: meta.totalMoves,
+  };
+  for (const a of held) a.apply(ctx);
+  return {
+    chips: ctx.chips,
+    mult: ctx.mult,
+    scoreGained: ctx.chips * ctx.mult,
+  };
+}
+
+function countCells(step: CascadeStep, suit: Suit): number {
+  let n = 0;
+  for (const g of step.matches) {
+    if (g.suit === suit) n += g.cells.length;
+  }
+  return n;
+}
+
+/**
+ * Draw 3 random Arcana from the pool, excluding any already held. Uses
+ * the supplied PRNG so draws can be made deterministic when seeded.
+ */
+export function rollDraw(
+  pool: readonly Arcana[],
+  held: readonly Arcana[],
+  rng: () => number,
+  count = 3,
+): Arcana[] {
+  const heldIds = new Set(held.map((a) => a.id));
+  const available = pool.filter((a) => !heldIds.has(a.id));
+  // If we don't have enough unique arcana, fall back to allowing dupes.
+  const source = available.length >= count ? available : pool.slice();
+  const picks: Arcana[] = [];
+  const indices = source.map((_, i) => i);
+  for (let i = 0; i < count && indices.length > 0; i++) {
+    const j = Math.floor(rng() * indices.length);
+    const idx = indices.splice(j, 1)[0]!;
+    picks.push(source[idx]!);
+  }
+  return picks;
+}
