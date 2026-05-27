@@ -19,6 +19,7 @@ import {
   todayKey,
 } from "../game/daily";
 import { useQuerent } from "../state/querent";
+import { useResume, spreadKey, querentKey } from "../state/resume";
 import { outcome as outcomeAudio } from "../subscribers/audio";
 import {
   CHAMBER_COUNT,
@@ -80,6 +81,8 @@ export function Play() {
   const passChamber = useQuerent((s) => s.passChamber);
   const failRun = useQuerent((s) => s.failRun);
   const finishRun = useQuerent((s) => s.finishRun);
+  const saveResume = useResume((s) => s.saveSnapshot);
+  const clearResume = useResume((s) => s.clearSnapshot);
   const querentClass: QuerentClass | null = useMemo(
     () => (querentRun ? classById(querentRun.classId) ?? null : null),
     [querentRun?.classId],
@@ -139,9 +142,26 @@ export function Play() {
         navigate(routes.querent);
         return;
       }
+      const key = querentKey(chamber.index);
+      const saved = useResume.getState().getSnapshot(key);
+      if (saved) {
+        restore(saved);
+        return;
+      }
       start("querent", {
         scoreMultiplier: querentClass.scoreMultiplier,
       });
+      return;
+    }
+
+    if (mode === "spread" && level) {
+      const key = spreadKey(level.id);
+      const saved = useResume.getState().getSnapshot(key);
+      if (saved) {
+        restore(saved);
+        return;
+      }
+      start(mode, { levelId: level.id });
       return;
     }
 
@@ -176,10 +196,30 @@ export function Play() {
     if (mode !== "daily") return;
     if (busy) return;
     if (outcomeSeen) return;
-    // Don't snapshot the empty pre-start state.
     if (useGame.getState().board.rows === 0) return;
     saveDailySnapshot(today, snapshot());
   }, [mode, busy, moves, score, today, outcomeSeen, saveDailySnapshot, snapshot]);
+
+  // Auto-snapshot Spread + Querent mid-run.
+  useEffect(() => {
+    if (busy || outcomeSeen) return;
+    if (useGame.getState().board.rows === 0) return;
+    if (mode === "spread" && level) {
+      saveResume(spreadKey(level.id), snapshot());
+    } else if (mode === "querent" && chamber) {
+      saveResume(querentKey(chamber.index), snapshot());
+    }
+  }, [
+    mode,
+    busy,
+    moves,
+    score,
+    outcomeSeen,
+    level?.id,
+    chamber?.index,
+    saveResume,
+    snapshot,
+  ]);
 
   // Resolve outcomes.
   useEffect(() => {
@@ -191,8 +231,10 @@ export function Play() {
       if (progress.met) {
         const stars = starCount(level, score, true);
         recordSpread(level.id, stars);
+        clearResume(spreadKey(level.id));
         setOutcomeSeen({ kind: "win", stars, finalScore: score });
       } else if (movesLeft === 0) {
+        clearResume(spreadKey(level.id));
         setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
       }
       return;
@@ -202,6 +244,7 @@ export function Play() {
     if (mode === "querent" && chamber && querentRun && progress) {
       if (progress.met) {
         passChamber(score);
+        clearResume(querentKey(chamber.index));
         const nextIdx = querentRun.chamberIndex + 1;
         if (nextIdx > CHAMBER_COUNT) {
           finishRun();
@@ -211,6 +254,9 @@ export function Play() {
         }
       } else if (movesLeft === 0) {
         failRun();
+        // Failing a chamber ends the whole run — wipe every chamber's
+        // pending save so a re-roll doesn't inherit stale state.
+        useResume.getState().clearAllForMode("querent");
         setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
       }
       return;
@@ -292,6 +338,7 @@ export function Play() {
             class="btn btn--ghost"
             aria-label="Restart this chapter"
             onClick={() => {
+              clearResume(spreadKey(level.id));
               setOutcomeSeen(null);
               reset();
             }}
