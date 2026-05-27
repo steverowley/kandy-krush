@@ -1,10 +1,45 @@
-import { newTile } from "./board";
+import { inBounds, newTile } from "./board";
 import { findMatches } from "./match";
 import { rngPick } from "./rng";
-import { SUITS, type Board, type CascadeStep, type Cell, type MatchGroup, type Tile } from "./types";
+import {
+  SUITS,
+  type Board,
+  type CascadeStep,
+  type Cell,
+  type MatchGroup,
+  type ResolveResult,
+  type Tile,
+} from "./types";
 
 function indexOf(board: Board, cell: Cell): number {
   return cell.row * board.cols + cell.col;
+}
+
+/**
+ * Settle a board with possibly-null cells: drop tiles per column, then
+ * mint fresh tiles for any remaining empties at the top. Used both by
+ * the normal match-and-refill loop and by imperative destroy effects.
+ */
+function collapseAndRefill(board: Board, rng: () => number): Board {
+  const tiles = board.tiles.slice();
+  for (let col = 0; col < board.cols; col++) {
+    let writeRow = board.rows - 1;
+    for (let row = board.rows - 1; row >= 0; row--) {
+      const idx = row * board.cols + col;
+      const t = tiles[idx];
+      if (t) {
+        if (writeRow !== row) {
+          tiles[writeRow * board.cols + col] = t;
+          tiles[idx] = null;
+        }
+        writeRow--;
+      }
+    }
+    for (let row = writeRow; row >= 0; row--) {
+      tiles[row * board.cols + col] = newTile(rngPick(rng, SUITS));
+    }
+  }
+  return { ...board, tiles };
 }
 
 /** Chips added per cell cleared. Will eventually be modified by per-suit
@@ -133,28 +168,10 @@ export function clearAndRefillOnce(
   // Apply spark promotions.
   for (const p of sparkPlants) tiles[p.idx] = p.tile;
 
-  // Collapse per column.
-  for (let col = 0; col < board.cols; col++) {
-    let writeRow = board.rows - 1;
-    for (let row = board.rows - 1; row >= 0; row--) {
-      const idx = row * board.cols + col;
-      const t = tiles[idx];
-      if (t) {
-        if (writeRow !== row) {
-          tiles[writeRow * board.cols + col] = t;
-          tiles[idx] = null;
-        }
-        writeRow--;
-      }
-    }
-    // Refill empties with fresh normal tiles.
-    for (let row = writeRow; row >= 0; row--) {
-      tiles[row * board.cols + col] = newTile(rngPick(rng, SUITS));
-    }
-  }
+  const settled = collapseAndRefill({ ...board, tiles }, rng);
 
   return {
-    board: { ...board, tiles },
+    board: settled,
     chips,
     mult,
     scoreGained,
@@ -201,6 +218,30 @@ export function resolveCascades(
   }
 
   return { board: cur, cascades, scoreGained: totalScore, totalChips, peakMult };
+}
+
+/**
+ * Destroy the listed cells, collapse, refill, and resolve any cascade
+ * matches that emerge from the refill. The destruction itself does not
+ * trigger spark blasts and does not score — only the post-destroy
+ * cascade contributes to `scoreGained`. Out-of-bounds or already-null
+ * cells are skipped silently.
+ *
+ * Used by board-modifying arcana (Death, Hanged Man Minor, etc.) to
+ * surgically remove tiles and let the resulting board do the rest.
+ */
+export function destroyCells(
+  board: Board,
+  rng: () => number,
+  cells: readonly Cell[],
+): ResolveResult {
+  const tiles = board.tiles.slice();
+  for (const cell of cells) {
+    if (!inBounds(board, cell)) continue;
+    tiles[indexOf(board, cell)] = null;
+  }
+  const settled = collapseAndRefill({ ...board, tiles }, rng);
+  return resolveCascades(settled, rng);
 }
 
 export function hasLegalMove(board: Board): boolean {

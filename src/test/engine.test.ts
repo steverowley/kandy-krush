@@ -2,14 +2,20 @@ import { describe, expect, it } from "vitest";
 import { createRng, rngInt } from "../game/engine/rng";
 import {
   areAdjacent,
+  convertSuit,
   generateBoard,
+  plantTile,
   swapped,
   tileAt,
 } from "../game/engine/board";
 import { findMatches, swapMakesMatch } from "../game/engine/match";
-import { resolveCascades, hasLegalMove } from "../game/engine/cascade";
+import {
+  destroyCells,
+  resolveCascades,
+  hasLegalMove,
+} from "../game/engine/cascade";
 import { isDeadlocked, newGame, tryMove } from "../game/engine/engine";
-import type { Board, Cell, Suit } from "../game/engine/types";
+import type { Board, Cell, Suit, Tile } from "../game/engine/types";
 
 describe("rng", () => {
   it("is deterministic for a given seed", () => {
@@ -260,5 +266,129 @@ describe("immutable swap helpers", () => {
     expect(tileAt(board, b)!.suit).toBe("pentacles");
     expect(tileAt(out, a)!.suit).toBe("pentacles");
     expect(tileAt(out, b)!.suit).toBe("cups");
+  });
+});
+
+describe("destroyCells", () => {
+  it("removes the listed cell, collapses, and refills", () => {
+    const board = makeBoard([
+      "cpsw",
+      "wpsw",
+      "spwc",
+      "cwps",
+    ]);
+    const idsBefore = board.tiles.map((t) => t!.id);
+    const rng = createRng(1);
+    const { board: out } = destroyCells(board, rng, [{ row: 2, col: 1 }]);
+    // Same dimensions, no nulls.
+    expect(out.tiles).toHaveLength(board.tiles.length);
+    for (const t of out.tiles) expect(t).not.toBeNull();
+    // The original tile is no longer present in the board.
+    const idsAfter = new Set(out.tiles.map((t) => t!.id));
+    const destroyedId = idsBefore[2 * 4 + 1]!;
+    expect(idsAfter.has(destroyedId)).toBe(false);
+    // Final board is settled (no immediate matches).
+    expect(findMatches(out)).toEqual([]);
+  });
+
+  it("resolves any cascade matches created by the refill", () => {
+    // Boards where pulling out one cell guarantees a column-3 match are
+    // brittle to construct deterministically (refill is random). Use a
+    // crafted setup: two adjacent verticals of cups that need one drop
+    // to align into a match. Easier sanity: just verify destroyCells
+    // returns a settled board with zero matches even when destruction
+    // triggers a chain.
+    const board = makeBoard([
+      "pcps",
+      "ccpw",
+      "cpcw",
+      "pcps",
+    ]);
+    const rng = createRng(7);
+    const result = destroyCells(board, rng, [{ row: 1, col: 1 }]);
+    expect(findMatches(result.board)).toEqual([]);
+  });
+
+  it("skips out-of-bounds cells silently", () => {
+    const board = makeBoard(["cp", "ws"]);
+    const rng = createRng(1);
+    const before = board.tiles.length;
+    const { board: out } = destroyCells(board, rng, [
+      { row: -1, col: 0 },
+      { row: 9, col: 9 },
+    ]);
+    expect(out.tiles).toHaveLength(before);
+  });
+
+  it("does not mutate the input board", () => {
+    const board = makeBoard(["cpsw", "wpsw", "spwc", "cwps"]);
+    const snapshot = board.tiles.slice();
+    const rng = createRng(2);
+    destroyCells(board, rng, [{ row: 0, col: 0 }]);
+    expect(board.tiles).toEqual(snapshot);
+  });
+});
+
+describe("convertSuit", () => {
+  it("rewrites every plain tile of `from` to `to`", () => {
+    const board = makeBoard(["cpsw", "wpsw"]);
+    const wandsBefore = board.tiles.filter((t) => t!.suit === "wands").length;
+    const swordsBefore = board.tiles.filter((t) => t!.suit === "swords").length;
+    const out = convertSuit(board, "swords", "wands");
+    for (const t of out.tiles) {
+      expect(t!.suit).not.toBe("swords");
+    }
+    expect(out.tiles.filter((t) => t!.suit === "wands").length).toBe(
+      wandsBefore + swordsBefore,
+    );
+  });
+
+  it("preserves tile ids so the view animates in place", () => {
+    const board = makeBoard(["cpsw"]);
+    const before = board.tiles.map((t) => ({ id: t!.id, suit: t!.suit }));
+    const out = convertSuit(board, "swords", "wands");
+    for (let i = 0; i < before.length; i++) {
+      expect(out.tiles[i]!.id).toBe(before[i]!.id);
+    }
+    // The swords cell at col 2 is now a wand with the same id.
+    expect(out.tiles[2]!.suit).toBe("wands");
+    expect(out.tiles[2]!.id).toBe(before[2]!.id);
+  });
+
+  it("skips sparks and wilds so specials keep their meaning", () => {
+    const board = makeBoard(["sscp"]);
+    // Promote one sword to a wild and another to a spark.
+    board.tiles[0] = { id: 100, suit: "swords", kind: "wild" };
+    board.tiles[1] = { id: 101, suit: "swords", kind: "spark" };
+    const out = convertSuit(board, "swords", "wands");
+    expect(out.tiles[0]!.suit).toBe("swords");
+    expect(out.tiles[0]!.kind).toBe("wild");
+    expect(out.tiles[1]!.suit).toBe("swords");
+    expect(out.tiles[1]!.kind).toBe("spark");
+  });
+
+  it("is a no-op when from === to", () => {
+    const board = makeBoard(["cpsw"]);
+    const out = convertSuit(board, "swords", "swords");
+    expect(out).toBe(board);
+  });
+});
+
+describe("plantTile", () => {
+  it("replaces the cell with the given tile", () => {
+    const board = makeBoard(["cp", "ws"]);
+    const newTile: Tile = { id: 9999, suit: "wands", kind: "wild" };
+    const out = plantTile(board, { row: 0, col: 0 }, newTile);
+    expect(tileAt(out, { row: 0, col: 0 })!.id).toBe(9999);
+    expect(tileAt(out, { row: 0, col: 0 })!.kind).toBe("wild");
+    // Input unchanged.
+    expect(tileAt(board, { row: 0, col: 0 })!.suit).toBe("cups");
+  });
+
+  it("returns the input unchanged for out-of-bounds cells", () => {
+    const board = makeBoard(["cp", "ws"]);
+    const newTile: Tile = { id: 9999, suit: "wands" };
+    const out = plantTile(board, { row: 10, col: 10 }, newTile);
+    expect(out).toBe(board);
   });
 });

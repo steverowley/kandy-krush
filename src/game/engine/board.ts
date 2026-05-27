@@ -42,6 +42,30 @@ export function withTile(board: Board, cell: Cell, tile: Tile | null): Board {
   return { ...board, tiles };
 }
 
+/**
+ * Replace the tile at `cell` with `tile`. Out-of-bounds is a silent
+ * no-op. Used by spectral/voucher arcana effects that mint a tile at a
+ * specific spot — e.g. planting a wild.
+ */
+export function plantTile(board: Board, cell: Cell, tile: Tile): Board {
+  if (!inBounds(board, cell)) return board;
+  return withTile(board, cell, tile);
+}
+
+/**
+ * Convert every plain tile of suit `from` to suit `to`, preserving the
+ * tile id so the view animates the suit change in place rather than
+ * popping the whole tile. Sparks and wilds keep their suit — converting
+ * a special would muddle its visual meaning.
+ */
+export function convertSuit(board: Board, from: Suit, to: Suit): Board {
+  if (from === to) return board;
+  const tiles = board.tiles.map((t) =>
+    t && !t.kind && t.suit === from ? { ...t, suit: to } : t,
+  );
+  return { ...board, tiles };
+}
+
 export function swapped(board: Board, a: Cell, b: Cell): Board {
   const tiles = board.tiles.slice();
   const ia = indexOf(board, a);
