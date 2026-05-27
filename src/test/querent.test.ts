@@ -34,9 +34,11 @@ describe("CLASSES", () => {
 });
 
 describe("CHAMBERS", () => {
-  it("has nine chambers indexed 1..9", () => {
-    expect(CHAMBER_COUNT).toBe(9);
-    expect(CHAMBERS.map((c) => c.index)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  it("has thirteen chambers indexed 1..13", () => {
+    expect(CHAMBER_COUNT).toBe(13);
+    expect(CHAMBERS.map((c) => c.index)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+    ]);
   });
 
   it("marks boss chambers", () => {

@@ -16,12 +16,14 @@ const ZERO_CLEARED: Record<Suit, number> = {
 };
 
 describe("LEVELS data", () => {
-  it("has eight chapters", () => {
-    expect(LEVELS).toHaveLength(8);
+  it("has twelve chapters", () => {
+    expect(LEVELS).toHaveLength(12);
   });
 
-  it("uses sequential ids 1..8", () => {
-    expect(LEVELS.map((l) => l.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  it("uses sequential ids 1..12", () => {
+    expect(LEVELS.map((l) => l.id)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    ]);
   });
 
   it("uses ascending star thresholds within each level", () => {
@@ -53,6 +55,7 @@ describe("levelById", () => {
   it("finds known levels", () => {
     expect(levelById(1)?.name).toBe("The Magician");
     expect(levelById(8)?.name).toBe("Strength");
+    expect(levelById(12)?.name).toBe("The Hanged Man");
   });
   it("returns undefined for unknown ids", () => {
     expect(levelById(99)).toBeUndefined();

@@ -9,9 +9,9 @@ Modern poster-art tarot: vivid jewel-tone color blocks, bold flat figures, multi
 | | Mode | What it is |
 |---|---|---|
 | I | **Free Reading** | Endless practice. No budget, no objective. The cloth, unlimited. |
-| II | **The Spread** | Eight Major-Arcana chapters (I–VIII) with score / suit-clear objectives, fixed move budgets, and up to three stars per chapter. Progress persists; chapters unlock as you earn stars. |
+| II | **The Spread** | Twelve Major-Arcana chapters (I–XII) with score / suit-clear objectives, fixed move budgets, and up to three stars per chapter. Progress persists; chapters unlock as you earn stars. |
 | III | **Daily Draw** | One fixed seed every UTC day. Same deck worldwide. Mid-day save so you can pause and resume across devices. |
-| IV | **The Querent's Path** | Roguelike. Pick a class, walk nine chambers (Major Arcana IX–XVII) in order. Boss chambers every third step. Permanent loss on failure; class unlocks across runs. |
+| IV | **The Querent's Path** | Roguelike. Pick a class, walk thirteen chambers (Major Arcana IX–XXI) in order. Boss chambers punctuate the walk; The World is the final read. Permanent loss on failure; class unlocks across runs. The Spread and the Path share the same Major Arcana — same cards, different reading. |
 
 ## Stack
 
