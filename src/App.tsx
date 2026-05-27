@@ -3,7 +3,6 @@ import { useHashLocation } from "wouter-preact/use-hash-location";
 
 import { Splash } from "./screens/Splash";
 import { Home } from "./screens/Home";
-import { Modes } from "./screens/Modes";
 import { Spread } from "./screens/Spread";
 import { Querent } from "./screens/Querent";
 import { Play } from "./screens/Play";
@@ -24,7 +23,6 @@ export function App() {
           <Switch>
             <Route path={routes.splash} component={Splash} />
             <Route path={routes.home} component={Home} />
-            <Route path={routes.modes} component={Modes} />
             <Route path={routes.spread} component={Spread} />
             <Route path={routes.querent} component={Querent} />
             <Route path={routes.play} component={Play} />
