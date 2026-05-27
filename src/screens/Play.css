@@ -191,18 +191,45 @@
 }
 
 /* Held-arcana strip — sits above the Fortune ledger in Querent mode.
- * Each badge takes the card's accent as a thin top stripe. */
+ * Each badge takes the card's accent as a thin top stripe. The strip
+ * head shows the section label on the left and a coin chip on the right. */
 .arcana-strip {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-2);
+  width: 100%;
 }
 
-.arcana-strip--empty .arcana-strip__empty {
+.arcana-strip__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.arcana-strip__coins {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 0.15em 0.7em;
+  border: 1px solid var(--accent-gold);
+  border-radius: 999px;
+  background: rgba(212, 162, 76, 0.1);
+  margin: 0;
+}
+
+.arcana-strip__coins-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.arcana-strip__empty {
   font-family: var(--font-script);
   font-size: 1.1rem;
   color: var(--ink-dim);
+  text-align: center;
 }
 
 .arcana-strip__list {
@@ -213,6 +240,7 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   justify-content: center;
+  width: 100%;
 }
 
 .arcana-strip__badge {

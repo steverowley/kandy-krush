@@ -7,7 +7,9 @@ import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
 import { useArcana } from "../state/arcana";
 import { useMinorArcana } from "../state/minor-arcana";
+import { useCoins } from "../state/coins";
 import type { MinorArcana } from "../game/minor-arcana";
+import { coinsForChamber, isParlourChamber } from "../game/parlour";
 import {
   levelById,
   objectiveProgress,
@@ -280,6 +282,8 @@ export function Play() {
         if (chamber.boss) {
           useMinorArcana.getState().grantRandom();
         }
+        // Coin payout — every chamber win pays a base; bosses pay extra.
+        useCoins.getState().grant(coinsForChamber({ isBoss: chamber.boss }));
         const nextIdx = querentRun.chamberIndex + 1;
         if (nextIdx > CHAMBER_COUNT) {
           finishRun();
@@ -518,6 +522,10 @@ export function Play() {
               const next = chamber.index + 1;
               if (next > CHAMBER_COUNT) {
                 navigate(routes.querent);
+              } else if (isParlourChamber(chamber.index)) {
+                // Every third chamber routes to the Parlour shop
+                // instead of the standard Arcana Draw.
+                navigate(`${routes.parlour}?next=${next}`);
               } else {
                 // Insert the Arcana Draw between chambers — pick 1 of 3.
                 navigate(`${routes.draw}?next=${next}`);
@@ -540,33 +548,39 @@ export function Play() {
 
 /** Compact strip of held Arcana — sits above the Fortune ledger in
  *  Querent mode. Each badge shows the Roman numeral and a tooltip name
- *  on hover/focus. Empty state renders a small "no arcana yet" hint. */
+ *  on hover/focus. Empty state renders a small "no arcana yet" hint.
+ *  A coin chip at the right tracks Parlour earnings. */
 function ArcanaStrip() {
   const held = useArcana((s) => s.held());
-  if (held.length === 0) {
-    return (
-      <section class="arcana-strip arcana-strip--empty" aria-label="Held arcana">
-        <p class="eyebrow">Arcana</p>
-        <p class="arcana-strip__empty script">no card yet — finish a chamber to draw</p>
-      </section>
-    );
-  }
+  const coins = useCoins((s) => s.balance);
   return (
     <section class="arcana-strip" aria-label="Held arcana">
-      <p class="eyebrow">Arcana</p>
-      <ul class="arcana-strip__list">
-        {held.map((a) => (
-          <li
-            key={a.id}
-            class="arcana-strip__badge"
-            style={{ "--card-panel": a.panelColor }}
-            title={`${a.name} — ${a.description}`}
-          >
-            <span class="arcana-strip__numeral numeral">{a.numeral}</span>
-            <span class="arcana-strip__name">{a.name}</span>
-          </li>
-        ))}
-      </ul>
+      <div class="arcana-strip__head">
+        <p class="eyebrow">Arcana</p>
+        <p class="arcana-strip__coins" aria-label={`${coins} coins in your purse`}>
+          <span class="eyebrow">Coins</span>
+          <span class="arcana-strip__coins-value tabular">{coins}</span>
+        </p>
+      </div>
+      {held.length === 0 ? (
+        <p class="arcana-strip__empty script">
+          no card yet — finish a chamber to draw
+        </p>
+      ) : (
+        <ul class="arcana-strip__list">
+          {held.map((a) => (
+            <li
+              key={a.id}
+              class="arcana-strip__badge"
+              style={{ "--card-panel": a.panelColor }}
+              title={`${a.name} — ${a.description}`}
+            >
+              <span class="arcana-strip__numeral numeral">{a.numeral}</span>
+              <span class="arcana-strip__name">{a.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

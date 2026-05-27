@@ -7,6 +7,7 @@ import { Spread } from "./screens/Spread";
 import { Querent } from "./screens/Querent";
 import { Play } from "./screens/Play";
 import { Draw } from "./screens/Draw";
+import { Parlour } from "./screens/Parlour";
 import { HowToPlay } from "./screens/HowToPlay";
 import { Codex } from "./screens/Codex";
 import { Settings } from "./screens/Settings";
@@ -28,6 +29,7 @@ export function App() {
             <Route path={routes.querent} component={Querent} />
             <Route path={routes.play} component={Play} />
             <Route path={routes.draw} component={Draw} />
+            <Route path={routes.parlour} component={Parlour} />
             <Route path={routes.howto} component={HowToPlay} />
             <Route path={routes.codex} component={Codex} />
             <Route path={routes.settings} component={Settings} />
