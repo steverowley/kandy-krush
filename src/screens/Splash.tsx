@@ -23,7 +23,7 @@ export function Splash() {
         >
           Begin the Reading
         </button>
-        <p class="eyebrow splash__footnote">A match-three in three suits</p>
+        <p class="eyebrow splash__footnote">A match-three in four suits</p>
       </div>
     </main>
   );

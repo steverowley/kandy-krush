@@ -15,12 +15,12 @@ type Mode = {
 const modes: Mode[] = [
   {
     numeral: "I",
-    name: "Daily Draw",
-    tagline: "One reading. One day.",
-    body: "A single fixed spread for every querent today. Compare your fate against the world.",
-    cta: "Draw today",
-    to: routes.play,
-    status: "New today",
+    name: "Free Reading",
+    tagline: "No limits. No ledger.",
+    body: "Play loose. Practice the suits. Watch the patterns settle.",
+    cta: "Open the cloth",
+    to: `${routes.play}?mode=free`,
+    status: "Playable",
   },
   {
     numeral: "II",
@@ -28,23 +28,23 @@ const modes: Mode[] = [
     tagline: "A measured progression.",
     body: "Eight chapters of escalating omens. Master each before the next page turns.",
     cta: "Open the book",
-    to: routes.play,
+    to: `${routes.play}?mode=spread`,
   },
   {
     numeral: "III",
+    name: "Daily Draw",
+    tagline: "One reading. One day.",
+    body: "A single fixed spread for every querent today. Compare your fate against the world.",
+    cta: "Draw today",
+    to: `${routes.play}?mode=daily`,
+  },
+  {
+    numeral: "IV",
     name: "The Querent's Path",
     tagline: "Choose your class. Walk the line.",
     body: "A roguelike journey through nine cards. Permanent loss; permanent insight.",
     cta: "Walk the path",
-    to: routes.play,
-  },
-  {
-    numeral: "IV",
-    name: "Free Reading",
-    tagline: "No limits. No ledger.",
-    body: "Play loose. Practice the suits. Watch the patterns settle.",
-    cta: "Open the cloth",
-    to: routes.play,
+    to: `${routes.play}?mode=querent`,
   },
 ];
 
