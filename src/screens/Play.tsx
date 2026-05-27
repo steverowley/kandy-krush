@@ -177,6 +177,7 @@ export function Play() {
         scoreMultiplier: querentClass.scoreMultiplier,
         totalMoves: chamberMovesFor(chamber, querentClass, activeStake),
         restriction: chamber.restriction ?? null,
+        stakeRule: activeStake?.rule ?? null,
       });
       return;
     }
@@ -278,12 +279,19 @@ export function Play() {
         passChamber(score);
         clearResume(querentKey(chamber.index));
         // Boss reward: a random Minor Arcana consumable (if the player
-        // has room in their consumables tray). High-stakes risk pays.
-        if (chamber.boss) {
+        // has room in their consumables tray). Blue stake rule disables
+        // this — bosses still pay coins but no consumable drops.
+        if (chamber.boss && (activeStake?.rule?.bossMinorReward ?? true)) {
           useMinorArcana.getState().grantRandom();
         }
         // Coin payout — every chamber win pays a base; bosses pay extra.
-        useCoins.getState().grant(coinsForChamber({ isBoss: chamber.boss }));
+        // Orange stake halves payouts.
+        useCoins.getState().grant(
+          coinsForChamber({
+            isBoss: chamber.boss,
+            multiplier: activeStake?.rule?.coinMultiplier,
+          }),
+        );
         const nextIdx = querentRun.chamberIndex + 1;
         if (nextIdx > CHAMBER_COUNT) {
           finishRun();

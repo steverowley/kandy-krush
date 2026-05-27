@@ -28,9 +28,15 @@ export function isParlourChamber(chamberIndex: number): boolean {
   return PARLOUR_CHAMBERS.includes(chamberIndex);
 }
 
-/** Coin reward for a chamber win. */
-export function coinsForChamber(opts: { isBoss: boolean }): number {
-  return COINS_PER_CHAMBER + (opts.isBoss ? COINS_PER_BOSS : 0);
+/** Coin reward for a chamber win. `multiplier` lets stake rules scale
+ *  payouts (e.g. Orange halves them). Result is rounded so the wallet
+ *  stays in whole coins. */
+export function coinsForChamber(opts: {
+  isBoss: boolean;
+  multiplier?: number;
+}): number {
+  const base = COINS_PER_CHAMBER + (opts.isBoss ? COINS_PER_BOSS : 0);
+  return Math.round(base * (opts.multiplier ?? 1));
 }
 
 /**

@@ -21,6 +21,30 @@ export type StakeId =
   | "orange"
   | "gold";
 
+/**
+ * Qualitative twists layered on top of the numerical screws. Each field
+ * is independent; an unset field means "use the engine default." Higher
+ * tiers stack their rule on top of the base modifiers AND inherit none
+ * of the lower tiers' rules — each tier just adds its own twist.
+ */
+export type StakeRule = {
+  /** Override the default Arcana Draw offer count (default 3). */
+  arcanaDrawCount?: number;
+  /** Override the default Parlour offer count (default 3). */
+  parlourOfferCount?: number;
+  /** Override MAX_HELD_ARCANA (default 5). Capped at this value when
+   *  accepting new cards; Hermit empty-slot math respects it too. */
+  maxHand?: number;
+  /** Whether clearing a Boss chamber grants a Minor Arcana. Default true. */
+  bossMinorReward?: boolean;
+  /** Multiplier applied to coin grants for chamber wins. Default 1. */
+  coinMultiplier?: number;
+  /** When true, the first cascade step of every move scores 0 — the
+   *  "warmup tax." The board still cleared those cells, only scoring
+   *  is suppressed. */
+  silenceFirstMatch?: boolean;
+};
+
 export type Stake = {
   id: StakeId;
   /** 0-based tier index. White = 0, Gold = 7. */
@@ -35,6 +59,8 @@ export type Stake = {
   moveDelta: number;
   /** CSS color token used for the chip accent on the lobby. */
   panelColor: string;
+  /** Optional qualitative rule layered on top of the numerical screws. */
+  rule?: StakeRule;
 };
 
 export const STAKES: readonly Stake[] = [
@@ -64,6 +90,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 1.2,
     moveDelta: -2,
     panelColor: "var(--panel-emerald)",
+    rule: { arcanaDrawCount: 2 },
   },
   {
     id: "black",
@@ -73,6 +100,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 1.35,
     moveDelta: -2,
     panelColor: "var(--ink-strong)",
+    rule: { maxHand: 4 },
   },
   {
     id: "blue",
@@ -82,6 +110,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 1.5,
     moveDelta: -3,
     panelColor: "var(--panel-cobalt)",
+    rule: { bossMinorReward: false },
   },
   {
     id: "purple",
@@ -91,6 +120,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 1.65,
     moveDelta: -3,
     panelColor: "var(--panel-amethyst)",
+    rule: { parlourOfferCount: 2 },
   },
   {
     id: "orange",
@@ -100,6 +130,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 1.85,
     moveDelta: -4,
     panelColor: "var(--panel-saffron)",
+    rule: { coinMultiplier: 0.5 },
   },
   {
     id: "gold",
@@ -109,6 +140,7 @@ export const STAKES: readonly Stake[] = [
     targetMultiplier: 2.1,
     moveDelta: -4,
     panelColor: "var(--accent-gold)",
+    rule: { silenceFirstMatch: true },
   },
 ];
 
@@ -129,4 +161,31 @@ export function nextStakeAfter(current: StakeId): Stake | null {
   const cur = stakeById(current);
   if (!cur) return null;
   return stakeByTier(cur.tier + 1) ?? null;
+}
+
+/** Plain-English summary of a stake's qualitative rule, suitable for
+ *  the lobby chip tooltip. Returns null when the stake has no rule. */
+export function formatStakeRule(stake: Stake): string | null {
+  const r = stake.rule;
+  if (!r) return null;
+  const parts: string[] = [];
+  if (r.arcanaDrawCount !== undefined) {
+    parts.push(`Arcana Draw offers ${r.arcanaDrawCount}`);
+  }
+  if (r.parlourOfferCount !== undefined) {
+    parts.push(`Parlour offers ${r.parlourOfferCount}`);
+  }
+  if (r.maxHand !== undefined) {
+    parts.push(`Hand cap ${r.maxHand}`);
+  }
+  if (r.bossMinorReward === false) {
+    parts.push("Bosses grant no Minor Arcana");
+  }
+  if (r.coinMultiplier !== undefined && r.coinMultiplier !== 1) {
+    parts.push(`Coins ×${r.coinMultiplier}`);
+  }
+  if (r.silenceFirstMatch) {
+    parts.push("First match of every move scores 0");
+  }
+  return parts.length > 0 ? parts.join(" · ") : null;
 }

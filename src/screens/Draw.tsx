@@ -1,10 +1,11 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { useLocation, useSearch } from "wouter-preact";
 import { TarotCard } from "../components/TarotCard";
 import { useArcana } from "../state/arcana";
 import { useQuerent } from "../state/querent";
 import { routes } from "../router";
 import type { Arcana } from "../game/arcana";
+import { stakeById } from "../game/stakes";
 import "./Draw.css";
 
 /**
@@ -21,9 +22,16 @@ export function Draw() {
   const nextChamber = nextChamberFromQuery(search);
   const querentRun = useQuerent((s) => s.run);
 
+  const stakeRule = useMemo(
+    () => (querentRun ? stakeById(querentRun.stakeId)?.rule ?? null : null),
+    [querentRun?.stakeId],
+  );
+  const drawCount = stakeRule?.arcanaDrawCount ?? 3;
+  const handCap = stakeRule?.maxHand;
+
   const offered = useArcana((s) => s.offered());
   const held = useArcana((s) => s.held());
-  const isFull = useArcana((s) => s.isFull());
+  const isFull = useArcana((s) => s.isFull(handCap));
   const rollOffer = useArcana((s) => s.rollOffer);
   const acceptOffer = useArcana((s) => s.acceptOffer);
   const skipOffer = useArcana((s) => s.skipOffer);
@@ -32,7 +40,7 @@ export function Draw() {
   // chamber-transition. Re-mounts via back-button reuse the existing
   // offerings (drawSeed survives in the store).
   useEffect(() => {
-    if (offered.length === 0 && !isFull) rollOffer();
+    if (offered.length === 0 && !isFull) rollOffer(undefined, drawCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -47,7 +55,7 @@ export function Draw() {
   }
 
   function pick(arcana: Arcana) {
-    acceptOffer(arcana.id);
+    acceptOffer(arcana.id, handCap);
     advance();
   }
 
