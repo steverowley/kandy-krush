@@ -10,11 +10,14 @@ function indexOf(board: Board, cell: Cell): number {
 /**
  * Resolve one match wave: figure out the clear set (expanding via any
  * sparks caught in the original match cells), promote any match-4+
- * groups into a spark survivor, null out the rest, collapse and refill.
+ * groups into a spark or wild survivor, null out the rest, collapse and
+ * refill.
  *
- * Returns the post-step board + score gained.
+ * Returns the post-step board + score gained. Exported so tests can
+ * exercise the promotion logic on a single pass without dealing with
+ * downstream cascades.
  */
-function clearAndRefillOnce(
+export function clearAndRefillOnce(
   board: Board,
   matches: MatchGroup[],
   rng: () => number,
@@ -58,9 +61,11 @@ function clearAndRefillOnce(
     frontier = nextFrontier;
   }
 
-  // Promote one cell per match-4+ group to a fresh spark. Pick the
+  // Promote one cell per match-4+ group to a special tile. Pick the
   // middle cell of the group — deterministic and visually central.
   // The promoted cell is rescued from the clear set.
+  //   match-4    → spark (clears row+col when later cleared)
+  //   match-5+   → wild  (counts as any suit, no special clear effect)
   const sparkPlants: Array<{ idx: number; tile: Tile }> = [];
   let sparkPromotions = 0;
   for (const group of matches) {
@@ -69,8 +74,11 @@ function clearAndRefillOnce(
     const idx = indexOf(board, middle);
     const oldTile = tiles[idx];
     if (!oldTile) continue;
-    // Spark inherits the suit but becomes the special kind.
-    sparkPlants.push({ idx, tile: { ...oldTile, kind: "spark" } });
+    const kind: Tile["kind"] = group.cells.length >= 5 ? "wild" : "spark";
+    sparkPlants.push({
+      idx,
+      tile: { id: oldTile.id, suit: group.suit, kind },
+    });
     clearSet.delete(idx);
     sparkPromotions++;
   }

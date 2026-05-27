@@ -96,6 +96,45 @@
   animation: none;
 }
 
+/* Wild — match-5+ tile, matches any suit. Inked outline + multi-tone
+   panel wash so it reads as "every suit at once". */
+.tile-card--wild {
+  outline: 2px dashed var(--bone-100);
+  outline-offset: -4px;
+  border-radius: 14px;
+}
+
+.tile-card--wild .tile-card__panel {
+  background:
+    conic-gradient(
+      from 45deg,
+      var(--panel-amethyst) 0deg 90deg,
+      var(--panel-coral) 90deg 180deg,
+      var(--panel-gold) 180deg 270deg,
+      var(--panel-emerald) 270deg 360deg
+    );
+}
+
+.tile-card--wild .tile-card__glyph {
+  color: var(--ink-strong);
+  animation: wild-twirl 4.8s linear infinite;
+}
+
+@keyframes wild-twirl {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-card--wild .tile-card__glyph {
+    animation: none;
+  }
+}
+
+:where(.reduced-motion) .tile-card--wild .tile-card__glyph {
+  animation: none;
+}
+
 .tile-card:focus-visible {
   outline: 2px solid var(--panel-gold);
   outline-offset: 2px;
