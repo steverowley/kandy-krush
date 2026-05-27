@@ -26,6 +26,10 @@ const CHAPTER_FIGURES = [
   ChapterLovers,
   ChapterChariot,
   ChapterStrength,
+  ChapterHermit,
+  ChapterWheel,
+  ChapterJustice,
+  ChapterHangedMan,
 ];
 
 export function Spread() {
@@ -48,7 +52,7 @@ export function Spread() {
           <h1>
             The <em>Spread</em>
           </h1>
-          <p class="script spread__sub">eight chapters of escalating omens</p>
+          <p class="script spread__sub">twelve chapters of escalating omens</p>
         </div>
         <span aria-hidden="true" />
       </header>
@@ -264,6 +268,72 @@ function ChapterStrength() {
         stroke-width="4"
         fill="none"
       />
+    </svg>
+  );
+}
+
+function ChapterHermit() {
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Lantern hung from a staff */}
+      <rect x="50" y="40" width="20" height="40" />
+      <rect x="44" y="34" width="32" height="8" />
+      <rect x="48" y="80" width="24" height="6" />
+      <rect x="58" y="18" width="4" height="20" />
+      <circle cx="60" cy="14" r="6" />
+      <rect x="58" y="86" width="4" height="36" />
+      <circle cx="60" cy="60" r="4" fill="var(--card-panel, transparent)" />
+    </svg>
+  );
+}
+
+function ChapterWheel() {
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Spoked wheel */}
+      <circle cx="60" cy="70" r="30" />
+      <circle cx="60" cy="70" r="20" fill="var(--card-panel, transparent)" />
+      <circle cx="60" cy="70" r="4" />
+      {Array.from({ length: 8 }).map((_, i) => {
+        const a = (i * 45 * Math.PI) / 180;
+        return (
+          <line
+            key={i}
+            x1={60 + Math.cos(a) * 6}
+            y1={70 + Math.sin(a) * 6}
+            x2={60 + Math.cos(a) * 28}
+            y2={70 + Math.sin(a) * 28}
+            stroke="currentColor"
+            stroke-width="3"
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+function ChapterJustice() {
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Balance scales */}
+      <rect x="58" y="20" width="4" height="80" />
+      <path d="M20 50h80" stroke="currentColor" stroke-width="3" fill="none" />
+      <path d="M30 50l-8 16h16z" />
+      <path d="M90 50l-8 16h16z" />
+      <rect x="40" y="100" width="40" height="6" />
+    </svg>
+  );
+}
+
+function ChapterHangedMan() {
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Inverted figure on a beam */}
+      <rect x="34" y="14" width="52" height="4" />
+      <rect x="58" y="14" width="4" height="20" />
+      <circle cx="60" cy="40" r="8" />
+      <rect x="56" y="48" width="8" height="32" />
+      <path d="M52 80l-12 24m20-24l12 24" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" />
     </svg>
   );
 }

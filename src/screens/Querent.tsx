@@ -365,6 +365,61 @@ function ChamberFigure({ index }: { index: number }): ComponentChildren {
           ))}
         </svg>
       );
+    case 10: // Moon — crescent with two pillars
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          <path d="M70 28a32 32 0 1 0 0 64a26 26 0 1 1 0-64z" />
+          <rect x="24" y="80" width="10" height="36" />
+          <rect x="86" y="80" width="10" height="36" />
+          <path d="M40 110h40v6H40z" />
+        </svg>
+      );
+    case 11: // Sun — radiant disc
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          <circle cx="60" cy="70" r="20" />
+          {Array.from({ length: 12 }).map((_, i) => {
+            const a = (i * 30 * Math.PI) / 180;
+            return (
+              <line
+                key={i}
+                x1={60 + Math.cos(a) * 26}
+                y1={70 + Math.sin(a) * 26}
+                x2={60 + Math.cos(a) * 38}
+                y2={70 + Math.sin(a) * 38}
+                stroke="currentColor"
+                stroke-width="4"
+                stroke-linecap="round"
+              />
+            );
+          })}
+        </svg>
+      );
+    case 12: // Judgement — horn over a circle
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          <path d="M20 30l60 18-60 18z" />
+          <circle cx="86" cy="48" r="6" fill="var(--card-panel, transparent)" />
+          <rect x="40" y="78" width="40" height="40" />
+          <path d="M30 100l60 0" stroke="var(--card-panel, transparent)" stroke-width="3" fill="none" />
+        </svg>
+      );
+    case 13: // World — laurel ring around an orb
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          <circle cx="60" cy="70" r="34" />
+          <circle cx="60" cy="70" r="22" fill="var(--card-panel, transparent)" />
+          <circle cx="60" cy="70" r="10" />
+          {[
+            [60, 28],
+            [60, 112],
+            [22, 70],
+            [98, 70],
+          ].map(([x, y]) => (
+            <circle key={`${x}-${y}`} cx={x} cy={y} r="4" />
+          ))}
+        </svg>
+      );
     default:
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">

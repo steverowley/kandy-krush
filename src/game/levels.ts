@@ -89,6 +89,42 @@ export const LEVELS: readonly Level[] = [
     moves: 28,
     stars: { one: 2400, two: 3500, three: 4800 },
   },
+  {
+    id: 9,
+    numeral: "IX",
+    name: "The Hermit",
+    epigraph: "One lantern, one step.",
+    objective: { type: "score", target: 3800 },
+    moves: 24,
+    stars: { one: 3800, two: 5000, three: 6500 },
+  },
+  {
+    id: 10,
+    numeral: "X",
+    name: "Wheel of Fortune",
+    epigraph: "The cloth turns under your hand.",
+    objective: { type: "suit", target: 24, suit: "cups" },
+    moves: 26,
+    stars: { one: 2800, two: 4000, three: 5500 },
+  },
+  {
+    id: 11,
+    numeral: "XI",
+    name: "Justice",
+    epigraph: "Weigh each card honestly.",
+    objective: { type: "suit", target: 24, suit: "pentacles" },
+    moves: 24,
+    stars: { one: 3000, two: 4400, three: 6000 },
+  },
+  {
+    id: 12,
+    numeral: "XII",
+    name: "The Hanged Man",
+    epigraph: "Look once more, from below.",
+    objective: { type: "score", target: 5500 },
+    moves: 26,
+    stars: { one: 5500, two: 7500, three: 10000 },
+  },
 ];
 
 export function levelById(id: number): Level | undefined {
