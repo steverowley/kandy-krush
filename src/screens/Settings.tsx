@@ -2,12 +2,19 @@ import { useEffect, useState } from "preact/hooks";
 import { useLocation } from "wouter-preact";
 import { routes } from "../router";
 import { useSettings } from "../state/settings";
+import { useTutorial } from "../state/tutorial";
 import { clear as clearTelemetry, recent as recentTelemetry, subscribe as subscribeTelemetry, type TelemetryEvent } from "../telemetry/bus";
 import "./Settings.css";
 
 export function Settings() {
   const [, navigate] = useLocation();
   const { sound, haptics, reducedMotion, telemetry, set } = useSettings();
+  const resetTutorial = useTutorial((s) => s.reset);
+
+  function replayTutorial() {
+    resetTutorial();
+    navigate(routes.howto);
+  }
 
   return (
     <main class="screen settings">
@@ -54,6 +61,20 @@ export function Settings() {
           checked={telemetry}
           onChange={(v) => set({ telemetry: v })}
         />
+      </section>
+
+      <section class="settings__list" aria-label="Tutorial">
+        <div class="settings__action">
+          <div class="settings__action-text">
+            <span class="settings__action-label">Replay tutorial</span>
+            <span class="settings__action-hint">
+              Step through the four-card walkthrough again.
+            </span>
+          </div>
+          <button type="button" class="btn" onClick={replayTutorial}>
+            Replay
+          </button>
+        </div>
       </section>
 
       <TelemetryViewer />
