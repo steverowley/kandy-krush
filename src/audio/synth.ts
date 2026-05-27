@@ -125,6 +125,45 @@ export function arpeggio(
 }
 
 /**
+ * Score ramp — an ascending arpeggio whose length and apex track the
+ * magnitude of a Chips × Mult result. Small wins → 2 short notes;
+ * big wins → a long climb that lingers. Logarithmic so a 6-figure
+ * score doesn't fire 100 notes.
+ */
+export function scoreRamp(scoreMagnitude: number) {
+  if (!_enabled || scoreMagnitude <= 0) return;
+  const ctx = ensureCtx();
+  if (!ctx || !_master) return;
+
+  // Tier from log10: every 10× larger score adds a step.
+  const tier = Math.max(1, Math.min(8, Math.floor(Math.log10(scoreMagnitude) + 1)));
+  const baseFreq = 392.0; // G4
+  for (let i = 0; i < tier; i++) {
+    // Semitone climb, slightly faster the higher we go to feel breathless.
+    const freq = baseFreq * Math.pow(2, i / 12 * 1.6);
+    const delay = i * 0.05;
+    const gain = 0.5 - i * 0.02;
+    tone(freq, {
+      type: "sine",
+      gain: Math.max(0.15, gain),
+      duration: 0.08,
+      release: 0.14,
+      delay,
+    });
+  }
+  // Final flourish — a small upper-octave shimmer when the ramp was tall.
+  if (tier >= 4) {
+    tone(baseFreq * 2, {
+      type: "triangle",
+      gain: 0.4,
+      duration: 0.18,
+      release: 0.32,
+      delay: tier * 0.05 + 0.02,
+    });
+  }
+}
+
+/**
  * Sub-bass thud — used for illegal-swap nudge. Short, low, percussive.
  */
 export function thud(freq = 110, gain = 0.6) {

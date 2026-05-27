@@ -44,10 +44,29 @@ export type MatchGroup = {
 export type ResolveResult = {
   board: Board;
   cascades: CascadeStep[];
+  /** Sum of every cascade step's score — chips × mult per step, then
+   *  totalled. Already includes cascade-depth bonuses. */
   scoreGained: number;
+  /** Sum of chip contributions across cascades — for HUD readout. */
+  totalChips: number;
+  /** Highest mult reached on any single cascade step — for HUD readout. */
+  peakMult: number;
 };
 
+/** Per-wave breakdown of how a cascade step earned its score.
+ *  Balatro-style: chips and mult are tracked separately, then multiplied
+ *  at the end of the step. The product is what's added to the run total.
+ */
 export type CascadeStep = {
   matches: MatchGroup[];
+  /** Cascade depth this step represents (1 = first wave). */
+  depth: number;
+  /** Base chips earned this step (sum of cleared cells' chip values plus
+   *  spark blast bonuses). */
+  chips: number;
+  /** Mult applied to this step — sum of match-size bonuses plus a
+   *  cascade-depth bonus (+1 per chain beyond the first). */
+  mult: number;
+  /** chips × mult, rounded — what gets added to the run total. */
   scoreGained: number;
 };

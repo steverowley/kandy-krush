@@ -1,5 +1,5 @@
 import type { Suit } from "../game/engine/types";
-import { arpeggio, thud, tone } from "./synth";
+import { arpeggio, scoreRamp as _scoreRamp, thud, tone } from "./synth";
 
 /**
  * Named sound vocabulary. Suits live on a pentatonic scale so cascades
@@ -80,4 +80,9 @@ export function lossFlourish() {
 export function deadlock() {
   tone(196, { type: "triangle", gain: 0.6, duration: 0.55, release: 0.6 });
   tone(146.83, { type: "triangle", gain: 0.4, duration: 0.55, release: 0.7, delay: 0.04 });
+}
+
+/** Re-export the score ramp under the named-vocabulary namespace. */
+export function scoreRamp(magnitude: number) {
+  _scoreRamp(magnitude);
 }

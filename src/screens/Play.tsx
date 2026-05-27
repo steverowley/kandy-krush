@@ -70,7 +70,7 @@ export function Play() {
   );
   const today = useMemo(() => todayKey(), []);
 
-  const { score, moves, deadlocked, cleared, busy, start, reset, snapshot, restore } =
+  const { score, moves, deadlocked, cleared, busy, lastMove, start, reset, snapshot, restore } =
     useGame();
   const recordSpread = useSpread((s) => s.recordResult);
   const dailyRun = useDaily((s) => s.runs[today]);
@@ -353,7 +353,9 @@ export function Play() {
       <section class="play__ledger" aria-label="Run status" aria-live="polite">
         <div class="ledger-cell">
           <span class="eyebrow">Fortune</span>
-          <span class="ledger-value tabular">{score.toLocaleString()}</span>
+          <span class="ledger-value tabular">
+            <RollingNumber value={score} />
+          </span>
         </div>
         <div class="ledger-rule" aria-hidden="true" />
         <div class="ledger-cell">
@@ -362,6 +364,14 @@ export function Play() {
             {movesLeft !== null ? movesLeft : moves}
           </span>
         </div>
+        {lastMove.tick > 0 ? (
+          <ScoreBurst
+            key={lastMove.tick}
+            chips={lastMove.chips}
+            mult={lastMove.mult}
+            score={lastMove.score}
+          />
+        ) : null}
       </section>
 
       {progress ? (
@@ -459,6 +469,68 @@ export function Play() {
         />
       ) : null}
     </main>
+  );
+}
+
+/** Smoothly counts from the previously-displayed number up to `value`
+ *  over ~600ms using easeOutQuint. Skips the animation when the OS or
+ *  user has asked for reduced motion. */
+function RollingNumber({ value, duration = 620 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  const toRef = useRef(value);
+
+  useEffect(() => {
+    if (value === toRef.current) return;
+    const reduced =
+      document.documentElement.classList.contains("reduced-motion") ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      fromRef.current = value;
+      toRef.current = value;
+      setDisplay(value);
+      return;
+    }
+    fromRef.current = display;
+    toRef.current = value;
+    const startTime = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - t, 5);
+      const cur = Math.round(fromRef.current + (toRef.current - fromRef.current) * eased);
+      setDisplay(cur);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, duration]);
+
+  return <>{display.toLocaleString()}</>;
+}
+
+/** Transient Chips × Mult = +Score readout that pops in above the
+ *  Fortune ledger when a move resolves, then fades out. Keyed on the
+ *  move tick so each new move re-mounts and re-animates. */
+function ScoreBurst({
+  chips,
+  mult,
+  score,
+}: {
+  chips: number;
+  mult: number;
+  score: number;
+}) {
+  if (score <= 0) return null;
+  return (
+    <div class="score-burst" aria-hidden="true">
+      <span class="score-burst__chips tabular">{chips.toLocaleString()}</span>
+      <span class="score-burst__op">×</span>
+      <span class="score-burst__mult tabular">{mult}</span>
+      <span class="score-burst__eq">=</span>
+      <span class="score-burst__total tabular">+{score.toLocaleString()}</span>
+    </div>
   );
 }
 

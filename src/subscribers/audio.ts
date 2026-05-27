@@ -59,6 +59,11 @@ export function registerAudioSubscribers() {
         // call count clean.
         setTimeout(() => sounds.cascadeStep(i), i * 90);
       }
+      // Chips × Mult flourish — the apex sound that punctuates the move.
+      // Fires after the per-suit chime so it stacks on top musically.
+      if (next.lastMove.score > 0) {
+        setTimeout(() => sounds.scoreRamp(next.lastMove.score), 120);
+      }
       haptics.bump();
     }
 

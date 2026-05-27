@@ -15,6 +15,19 @@ const ZERO_CLEARED: ClearCounts = {
   wands: 0,
 };
 
+/** Most-recent settled-move scoring breakdown for the HUD. Reset to all
+ *  zeros at run start; updated atomically with `score` on every resolve.
+ *  `tick` increments each time so HUD effects can re-trigger even on
+ *  identical chip/mult totals. */
+export type LastMoveScore = {
+  chips: number;
+  mult: number;
+  score: number;
+  tick: number;
+};
+
+const ZERO_LAST_MOVE: LastMoveScore = { chips: 0, mult: 0, score: 0, tick: 0 };
+
 type GameState = {
   mode: GameMode;
   levelId: number | null;
@@ -27,6 +40,7 @@ type GameState = {
   /** Score multiplier applied to every cascade gain (Querent classes
    *  use this; other modes leave it at 1). */
   scoreMultiplier: number;
+  lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
   deadlocked: boolean;
@@ -79,6 +93,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   moves: 0,
   cleared: { ...ZERO_CLEARED },
   scoreMultiplier: 1,
+  lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
   deadlocked: false,
@@ -99,6 +114,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       moves: 0,
       cleared: { ...ZERO_CLEARED },
       scoreMultiplier: opts?.scoreMultiplier ?? 1,
+      lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
       deadlocked: isDeadlocked(board),
@@ -124,15 +140,24 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     }
     set({ busy: true });
     window.setTimeout(() => {
-      set((prev) => ({
-        board: result.board,
-        score: prev.score + Math.round(result.scoreGained * prev.scoreMultiplier),
-        moves: prev.moves + 1,
-        cleared,
-        selected: null,
-        busy: false,
-        deadlocked: isDeadlocked(result.board),
-      }));
+      set((prev) => {
+        const scored = Math.round(result.scoreGained * prev.scoreMultiplier);
+        return {
+          board: result.board,
+          score: prev.score + scored,
+          moves: prev.moves + 1,
+          cleared,
+          lastMove: {
+            chips: result.totalChips,
+            mult: result.peakMult,
+            score: scored,
+            tick: prev.lastMove.tick + 1,
+          },
+          selected: null,
+          busy: false,
+          deadlocked: isDeadlocked(result.board),
+        };
+      });
     }, 240);
   },
 
@@ -177,6 +202,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       score: snap.score,
       moves: snap.moves,
       cleared: { ...snap.cleared },
+      lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
       deadlocked: isDeadlocked(board),
