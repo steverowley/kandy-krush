@@ -24,6 +24,9 @@ type GameState = {
   score: number;
   moves: number;
   cleared: ClearCounts;
+  /** Score multiplier applied to every cascade gain (Querent classes
+   *  use this; other modes leave it at 1). */
+  scoreMultiplier: number;
   selected: Cell | null;
   busy: boolean;
   deadlocked: boolean;
@@ -35,6 +38,7 @@ export type StartOpts = {
   rows?: number;
   cols?: number;
   levelId?: number;
+  scoreMultiplier?: number;
 };
 
 /** Serializable snapshot of an in-progress run. The rng is captured as
@@ -74,6 +78,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   score: 0,
   moves: 0,
   cleared: { ...ZERO_CLEARED },
+  scoreMultiplier: 1,
   selected: null,
   busy: false,
   deadlocked: false,
@@ -93,6 +98,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       score: 0,
       moves: 0,
       cleared: { ...ZERO_CLEARED },
+      scoreMultiplier: opts?.scoreMultiplier ?? 1,
       selected: null,
       busy: false,
       deadlocked: isDeadlocked(board),
@@ -120,7 +126,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     window.setTimeout(() => {
       set((prev) => ({
         board: result.board,
-        score: prev.score + result.scoreGained,
+        score: prev.score + Math.round(result.scoreGained * prev.scoreMultiplier),
         moves: prev.moves + 1,
         cleared,
         selected: null,
