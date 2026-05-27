@@ -3,6 +3,9 @@ import type { ComponentChildren } from "preact";
 import { TarotCard } from "../components/TarotCard";
 import { routes } from "../router";
 import { useTutorial } from "../state/tutorial";
+import { useQuerent } from "../state/querent";
+import { useDaily } from "../state/daily";
+import { todayKey } from "../game/daily";
 import "./Home.css";
 
 type Mode = {
@@ -77,6 +80,37 @@ const modes: Mode[] = [
 export function Home() {
   const [, navigate] = useLocation();
   const tutorialSeen = useTutorial((s) => s.seen);
+  const querentRun = useQuerent((s) => s.run);
+  const today = todayKey();
+  const dailyToday = useDaily((s) => s.runs[today]);
+
+  // Reflect live progression in the mode-card copy.
+  const liveModes = modes.map((m) => {
+    if (m.headline === "The Path" && querentRun) {
+      return {
+        ...m,
+        cta: "Return to the path",
+        subtitle: `chamber ${querentRun.chamberIndex} of 9 · ${querentRun.totalScore.toLocaleString()} fortune`,
+      };
+    }
+    if (m.headline === "Today") {
+      if (dailyToday?.outcome === "won" || dailyToday?.outcome === "lost") {
+        return {
+          ...m,
+          cta: "View today's reading",
+          subtitle: `today's reading · ${dailyToday.finalScore.toLocaleString()} fortune`,
+        };
+      }
+      if (dailyToday?.snapshot) {
+        return {
+          ...m,
+          cta: "Resume today",
+          subtitle: "in progress · pick up where you left off",
+        };
+      }
+    }
+    return m;
+  });
 
   return (
     <main class="screen home">
@@ -105,7 +139,7 @@ export function Home() {
       ) : null}
 
       <section class="home__deck" aria-label="Modes">
-        {modes.map((mode) => (
+        {liveModes.map((mode) => (
           <TarotCard
             key={mode.headline}
             numeral={mode.numeral}

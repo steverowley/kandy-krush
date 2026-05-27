@@ -5,7 +5,6 @@
 export const routes = {
   splash: "/",
   home: "/home",
-  modes: "/modes",
   spread: "/spread",
   querent: "/querent",
   play: "/play",
