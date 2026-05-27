@@ -12,25 +12,31 @@
 }
 
 .home__eyebrow {
-  color: var(--panel-gold);
+  color: var(--accent-gold-2);
 }
 
 .home__title {
   font-size: clamp(2.5rem, 9vw, var(--step-7));
-  letter-spacing: -0.025em;
-  font-style: italic;
-  font-weight: 900;
+  letter-spacing: 0.06em;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .home__title em {
   font-style: italic;
-  font-weight: 900;
-  color: var(--panel-coral);
+  font-weight: 500;
+  color: var(--accent-gold);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-family: var(--font-body);
 }
 
 .home__subtitle {
-  font-size: 1.6rem;
-  color: var(--panel-pink);
+  font-size: 1.8rem;
+  color: var(--accent-gold-2);
+  font-family: var(--font-script);
+  margin-top: var(--space-2);
 }
 
 .home__deck {
@@ -67,7 +73,7 @@
 }
 
 .home__foot-sep {
-  color: var(--panel-gold);
+  color: var(--accent-gold);
 }
 
 .home__nudge {
@@ -77,7 +83,7 @@
   gap: var(--space-2);
   padding: var(--space-4) var(--space-6);
   background: rgba(245, 239, 220, 0.06);
-  border: 1px solid var(--panel-gold);
+  border: 1px solid var(--accent-gold);
   border-radius: 14px;
   text-align: center;
   max-width: 480px;
@@ -86,7 +92,7 @@
 
 .home__nudge-body {
   font-size: 1.4rem;
-  color: var(--panel-pink);
+  color: var(--accent-gold-2);
 }
 
 .home__nudge-cta {

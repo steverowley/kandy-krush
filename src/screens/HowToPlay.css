@@ -17,13 +17,13 @@
 }
 
 .howto__title h1 em {
-  color: var(--panel-coral);
+  color: var(--accent-gold);
   font-style: italic;
 }
 
 .howto__sub {
   font-size: 1.4rem;
-  color: var(--panel-gold);
+  color: var(--accent-gold);
 }
 
 .howto__head > :first-child {
@@ -41,7 +41,7 @@
 
 .howto__body {
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-style: italic;
   color: var(--ink-soft);
   font-size: 1rem;
@@ -80,5 +80,5 @@
 }
 
 .howto__pip--active {
-  background: var(--panel-gold);
+  background: var(--accent-gold);
 }

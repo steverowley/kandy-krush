@@ -15,24 +15,27 @@ body,
 html {
   background: var(--page-bg);
   color: var(--ink-cream);
-  font-family: var(--font-sans);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 17px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* Page: deep forest green, layered with a subtle gold radial wash and
+ * a darker emerald bottom for depth. Mimics a vellum poster lit by
+ * candlelight without being noisy. */
 body {
   background:
     radial-gradient(
       ellipse at top,
-      rgba(142, 122, 201, 0.08),
-      transparent 60%
+      rgba(212, 162, 76, 0.10),
+      transparent 65%
     ),
     radial-gradient(
       ellipse at bottom,
-      rgba(226, 91, 91, 0.05),
-      transparent 65%
+      rgba(11, 25, 19, 0.55),
+      transparent 70%
     ),
     var(--page-bg);
   min-height: 100dvh;
@@ -48,25 +51,29 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 700;
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--ink-cream);
 }
 
 h1 {
   font-size: var(--step-7);
-  line-height: 0.95;
+  line-height: 1;
+  letter-spacing: 0.06em;
 }
 
 h2 {
   font-size: var(--step-5);
   line-height: 1.05;
+  letter-spacing: 0.08em;
 }
 
 h3 {
   font-size: var(--step-3);
   line-height: 1.1;
+  letter-spacing: 0.08em;
 }
 
 p {
@@ -83,7 +90,7 @@ button {
 }
 
 button:focus-visible {
-  outline: 2px solid var(--panel-gold);
+  outline: 2px solid var(--accent-gold-2);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -94,7 +101,7 @@ a {
 }
 
 ::selection {
-  background: var(--panel-gold);
+  background: var(--accent-gold);
   color: var(--ink-strong);
 }
 
@@ -124,11 +131,11 @@ a {
   left: 8px;
   top: -100px;
   z-index: 100;
-  background: var(--panel-gold);
+  background: var(--accent-gold);
   color: var(--ink-strong);
   padding: var(--space-2) var(--space-4);
   border-radius: 8px;
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
