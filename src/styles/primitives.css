@@ -1,127 +1,356 @@
-/* Reusable editorial primitives. Used across screens to keep the
-   "book-page" rhythm consistent. */
+/* Reusable building blocks for the tarot-poster UI. */
 
 .screen {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: clamp(var(--space-6), 4vw, var(--space-12)) clamp(var(--space-4), 5vw, var(--space-12));
-  max-width: 720px;
+  padding: clamp(var(--space-6), 4vw, var(--space-12))
+    clamp(var(--space-4), 5vw, var(--space-8));
+  max-width: 1120px;
   width: 100%;
   margin: 0 auto;
   view-transition-name: root;
 }
 
-.eyebrow {
-  font-family: var(--font-engraved);
-  font-weight: 500;
+/* Tiny serif label, used for "a." / "b." callouts and corner glyphs. */
+.tick {
+  font-family: var(--font-display);
+  font-style: italic;
   font-size: 0.78rem;
-  letter-spacing: 0.32em;
+  color: var(--ink);
+}
+
+/* Tracked uppercase sans label — small, dense, used on panels and chrome. */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--ink-dim);
+}
+
+.eyebrow--on-panel {
+  color: var(--ink-cream);
+  opacity: 0.9;
 }
 
 .numeral {
-  font-family: var(--font-engraved);
+  font-family: var(--font-display);
   font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+
+.numeral--on-panel {
+  color: var(--ink-cream);
+}
+
+.script {
+  font-family: var(--font-script);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* The Card — a tarot-style frame with an inner colored panel. */
+.card {
+  position: relative;
+  background: var(--bone-100);
+  border: var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  box-shadow:
+    var(--stack-2-x) var(--stack-2-y) 0 -2px var(--bone-200),
+    var(--stack-2-x) var(--stack-2-y) 0 -1px var(--ink),
+    var(--stack-1-x) var(--stack-1-y) 0 -2px var(--bone-50),
+    var(--stack-1-x) var(--stack-1-y) 0 -1px var(--ink);
+}
+
+.card__corners {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.card__numeral {
+  text-align: center;
+  font-size: 1rem;
+}
+
+.card__corner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+}
+
+.card__corner svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Inner panel — the saturated color block where the figure sits. */
+.card__panel {
+  position: relative;
+  background: var(--card-panel, var(--panel-amethyst));
+  border-radius: var(--card-radius-inner);
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
+  color: var(--ink-cream);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+.card__figure {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 160px;
+  z-index: 1;
+}
+
+.card__figure-svg {
+  width: clamp(120px, 60%, 220px);
+  height: auto;
+  fill: var(--ink);
+  color: var(--ink);
+}
+
+/* Cursive flourish overlay drawn behind the figure. */
+.card__script {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-script);
+  font-size: clamp(3.5rem, 12vw, 7rem);
+  color: var(--ink);
+  opacity: 0.18;
+  pointer-events: none;
+  text-align: center;
+  line-height: 1;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  z-index: 0;
+}
+
+.card__panel-name {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: clamp(1rem, 2.6vw, 1.25rem);
   letter-spacing: 0.18em;
-  color: var(--gilt);
+  text-transform: uppercase;
+  text-align: center;
 }
 
-.rule {
-  height: 1px;
-  background: var(--gilt);
+.card__panel-caption {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.95rem;
+  text-align: center;
+  opacity: 0.92;
+}
+
+.card__panel-caption::before,
+.card__panel-caption::after {
+  content: " / ";
+  opacity: 0.7;
+}
+
+/* Foot of the card — heavy serif headline + cursive echo + tiny caption. */
+.card__foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-3);
+  position: relative;
+}
+
+.card__headline {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink-strong);
+  text-align: center;
+}
+
+.card__echo {
+  font-family: var(--font-script);
+  font-size: clamp(1.4rem, 4.5vw, 2.4rem);
+  color: var(--ink);
+  opacity: 0.45;
+  margin-top: -0.4em;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.card__subtitle {
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* Compact card — same vocabulary, less chrome. Used for game tiles. */
+.tile-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bone-100);
+  border: 1.25px solid var(--ink);
+  border-radius: 10px;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  transition: transform 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+
+.tile-card__panel {
+  position: absolute;
+  inset: 6%;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tile-color, var(--panel-amethyst));
+}
+
+.tile-card__glyph {
+  width: 64%;
+  height: 64%;
+  color: var(--ink);
+}
+
+.tile-card__glyph svg {
+  display: block;
   width: 100%;
-  margin: var(--space-6) 0;
+  height: 100%;
+  fill: currentColor;
 }
 
-.rule--double {
-  height: 5px;
-  background: linear-gradient(
-    to bottom,
-    var(--gilt) 0,
-    var(--gilt) 1px,
-    transparent 1px,
-    transparent 4px,
-    var(--gilt) 4px,
-    var(--gilt) 5px
-  );
-}
-
-.rule--soft {
-  background: var(--gilt-soft);
-}
-
+/* Button system — feels like part of the tarot deck. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border: 1px solid var(--ink-900);
-  background: var(--surface-bg);
-  color: var(--ink);
-  font-family: var(--font-engraved);
-  font-weight: 500;
-  font-size: 0.95rem;
-  letter-spacing: 0.2em;
+  padding: 0.7em 1.4em;
+  border: 1.5px solid var(--ink-cream);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-cream);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  transition: background 160ms var(--ease-card), color 160ms var(--ease-card),
-    transform 160ms var(--ease-card);
+  transition: background 160ms var(--ease), color 160ms var(--ease),
+    transform 120ms var(--ease);
 }
 
 .btn:hover {
-  background: var(--ink-900);
-  color: var(--bone-50);
+  background: var(--ink-cream);
+  color: var(--ink-strong);
 }
 
 .btn:active {
   transform: translateY(1px);
 }
 
+.btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .btn--primary {
-  background: var(--accent);
-  color: var(--bone-50);
-  border-color: var(--accent);
+  background: var(--panel-coral);
+  border-color: var(--panel-coral);
+  color: var(--ink-strong);
 }
 
 .btn--primary:hover {
-  background: var(--oxblood-700);
-  color: var(--gilt-soft);
+  background: var(--panel-saffron);
+  border-color: var(--panel-saffron);
+  color: var(--ink-strong);
 }
 
 .btn--ghost {
-  background: transparent;
   border-color: transparent;
-  color: var(--ink-soft);
+  color: var(--ink-dim);
+  padding: 0.4em 0.6em;
+  letter-spacing: 0.14em;
 }
 
 .btn--ghost:hover {
-  color: var(--ink);
   background: transparent;
+  color: var(--ink-cream);
   text-decoration: underline;
   text-underline-offset: 6px;
-  text-decoration-color: var(--gilt);
-  text-decoration-thickness: 1px;
+  text-decoration-color: var(--panel-gold);
 }
 
-/* A card-like surface in the editorial palette: bone ground, gold
-   hairline, ink rule at the head. */
-.leaf {
-  background: var(--surface-bg);
-  border: 1px solid var(--gilt);
-  padding: clamp(var(--space-6), 4vw, var(--space-8));
-  position: relative;
+.btn--on-card {
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
-.leaf__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-3);
-  border-bottom: var(--hair);
-  margin-bottom: var(--space-6);
+.btn--on-card:hover {
+  background: var(--ink);
+  color: var(--ink-cream);
+}
+
+.btn--on-card.btn--primary {
+  background: var(--ink-strong);
+  color: var(--ink-cream);
+  border-color: var(--ink-strong);
+}
+
+.btn--on-card.btn--primary:hover {
+  background: var(--panel-coral);
+  color: var(--ink-strong);
+  border-color: var(--panel-coral);
+}
+
+.rule {
+  height: 1px;
+  background: var(--ink-cream);
+  opacity: 0.18;
+  width: 100%;
+  margin: var(--space-4) 0;
+}
+
+.rule--double {
+  height: 4px;
+  background: linear-gradient(
+    to bottom,
+    var(--ink-cream) 0,
+    var(--ink-cream) 1px,
+    transparent 1px,
+    transparent 3px,
+    var(--ink-cream) 3px,
+    var(--ink-cream) 4px
+  );
+  opacity: 0.25;
+  background-color: transparent;
 }
 
 .stack {
@@ -138,4 +367,8 @@
   flex-wrap: wrap;
   gap: var(--gap, var(--space-3));
   align-items: center;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }

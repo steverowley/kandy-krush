@@ -1,71 +1,59 @@
 .home {
-  gap: var(--space-6);
+  gap: var(--space-8);
+  padding-top: clamp(var(--space-4), 3vh, var(--space-8));
 }
 
 .home__masthead {
+  text-align: center;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   align-items: center;
-  text-align: center;
-  padding-top: var(--space-4);
+}
+
+.home__eyebrow {
+  color: var(--panel-gold);
 }
 
 .home__title {
-  font-size: clamp(2.5rem, 9vw, var(--step-6));
-  letter-spacing: -0.02em;
-  line-height: 1;
+  font-size: clamp(2.5rem, 9vw, var(--step-7));
+  letter-spacing: -0.025em;
+  font-style: italic;
+  font-weight: 900;
+}
+
+.home__title em {
+  font-style: italic;
+  font-weight: 900;
+  color: var(--panel-coral);
 }
 
 .home__subtitle {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--ink-soft);
-  font-size: var(--step-1);
+  font-size: 1.6rem;
+  color: var(--panel-pink);
 }
 
-.home__modes {
+.home__deck {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-6);
+  gap: clamp(var(--space-6), 3vw, var(--space-8));
+  margin-top: var(--space-6);
 }
 
-@media (min-width: 640px) {
-  .home__modes {
-    grid-template-columns: 1fr 1fr;
+@media (min-width: 720px) {
+  .home__deck {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.mode {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+@media (min-width: 1100px) {
+  .home__deck {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
-.mode__numeral {
-  font-size: 1.1rem;
-}
-
-.mode__name {
-  font-size: var(--step-3);
-  margin: 0;
-}
-
-.mode__tagline {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--accent);
-  font-size: var(--step-1);
-}
-
-.mode__body {
-  color: var(--ink-soft);
-  flex: 1;
-}
-
-.mode__cta {
-  align-self: flex-start;
-  margin-top: var(--space-4);
+.home__cta {
+  margin-top: var(--space-3);
 }
 
 .home__foot {
@@ -73,10 +61,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  color: var(--ink-soft);
-  margin-top: var(--space-6);
+  color: var(--ink-dim);
+  margin-top: var(--space-8);
 }
 
 .home__foot-sep {
-  color: var(--gilt);
+  color: var(--panel-gold);
 }

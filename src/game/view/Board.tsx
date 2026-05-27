@@ -1,27 +1,20 @@
-import { useEffect, useMemo } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { useGame } from "../../state/game";
 import { areAdjacent } from "../engine/board";
 import type { Cell, Suit } from "../engine/types";
-import { SuitGlyph } from "./suit-glyphs";
+import { SuitGlyph, SUIT_COLORS } from "./suit-glyphs";
 import "./Board.css";
 
 export function Board() {
   const { board, selected, busy, nudge, select, attemptSwap } = useGame();
 
-  const cellSize = useMemo(() => {
-    // Card grid fits within --board-size via CSS; nothing dynamic needed.
-    return undefined;
-  }, []);
-  void cellSize;
-
   useEffect(() => {
-    // Trigger a small shake on the selected cell when nudge increments.
     if (nudge === 0) return;
-    const el = document.querySelector<HTMLElement>(".board__cell--just-nudged");
+    const el = document.querySelector<HTMLElement>(".tile-card--just-nudged");
     if (!el) return;
-    el.classList.remove("board__cell--just-nudged");
+    el.classList.remove("tile-card--just-nudged");
     void el.offsetWidth;
-    el.classList.add("board__cell--just-nudged");
+    el.classList.add("tile-card--just-nudged");
   }, [nudge]);
 
   function onCellClick(cell: Cell) {
@@ -38,7 +31,6 @@ export function Board() {
       attemptSwap(selected, cell);
       return;
     }
-    // Non-adjacent: re-select instead of swap-fail.
     select(cell);
   }
 
@@ -60,22 +52,25 @@ export function Board() {
         const here: Cell = { row, col };
         const isSelected =
           !!selected && selected.row === row && selected.col === col;
-        const isBusy = busy;
         return (
           <button
             type="button"
             key={tile?.id ?? `e-${idx}`}
-            class={`board__cell board__cell--${tile?.suit ?? "empty"}${
-              isSelected ? " board__cell--selected" : ""
-            }${isBusy ? " board__cell--busy" : ""}`}
-            data-suit={tile?.suit}
+            class={`tile-card${isSelected ? " tile-card--selected" : ""}${
+              busy ? " tile-card--busy" : ""
+            }`}
+            style={{
+              "--tile-color": tile ? SUIT_COLORS[tile.suit] : "var(--bone-200)",
+            }}
             aria-label={`${suitLabel(tile?.suit)} at row ${row + 1}, column ${col + 1}`}
             aria-pressed={isSelected}
             onClick={() => onCellClick(here)}
           >
-            <span class="board__cell-frame" aria-hidden="true" />
+            <span class="tile-card__panel" aria-hidden="true" />
             {tile ? (
-              <SuitGlyph suit={tile.suit} class="board__cell-glyph" />
+              <span class="tile-card__glyph">
+                <SuitGlyph suit={tile.suit} />
+              </span>
             ) : null}
           </button>
         );

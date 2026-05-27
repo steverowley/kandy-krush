@@ -14,16 +14,27 @@ body,
 
 html {
   background: var(--page-bg);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: 17px;
+  color: var(--ink-cream);
+  font-family: var(--font-sans);
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--page-bg);
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(142, 122, 201, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at bottom,
+      rgba(226, 91, 91, 0.05),
+      transparent 65%
+    ),
+    var(--page-bg);
   min-height: 100dvh;
 }
 
@@ -35,27 +46,27 @@ body {
 
 h1,
 h2,
-h3,
-h4 {
+h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--ink);
+  font-weight: 900;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  color: var(--ink-cream);
 }
 
 h1 {
-  font-size: var(--step-6);
-  line-height: 1.05;
+  font-size: var(--step-7);
+  line-height: 0.95;
 }
 
 h2 {
-  font-size: var(--step-4);
-  line-height: 1.15;
+  font-size: var(--step-5);
+  line-height: 1.05;
 }
 
 h3 {
-  font-size: var(--step-2);
+  font-size: var(--step-3);
+  line-height: 1.1;
 }
 
 p {
@@ -72,8 +83,9 @@ button {
 }
 
 button:focus-visible {
-  outline: 2px solid var(--gilt);
+  outline: 2px solid var(--panel-gold);
   outline-offset: 3px;
+  border-radius: 4px;
 }
 
 a {
@@ -82,17 +94,14 @@ a {
 }
 
 ::selection {
-  background: var(--gilt);
-  color: var(--ink-900);
+  background: var(--panel-gold);
+  color: var(--ink-strong);
 }
 
-/* Screen-level page transitions via View Transitions API.
-   Each screen sets view-transition-name on its root so the browser
-   crossfades pages when the router swaps them. */
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 320ms;
+    animation-duration: 280ms;
     animation-timing-function: var(--ease-page);
   }
 }

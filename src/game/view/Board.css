@@ -1,111 +1,72 @@
 .board {
-  --board-cells: var(--board-cols, 7);
   display: grid;
-  grid-template-columns: repeat(var(--board-cells), 1fr);
+  grid-template-columns: repeat(var(--board-cols, 7), 1fr);
   grid-template-rows: repeat(var(--board-rows, 7), 1fr);
-  gap: clamp(4px, 1vw, 8px);
+  gap: clamp(6px, 1vw, 10px);
   width: min(100%, 560px);
   aspect-ratio: 1 / 1;
-  padding: clamp(6px, 1.5vw, 12px);
-  background: var(--surface-bg);
-  border: 1px solid var(--gilt);
-  position: relative;
+  padding: clamp(8px, 1.5vw, 12px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.18)),
+    var(--page-ink);
+  border-radius: 18px;
+  border: 1.5px solid rgba(245, 239, 220, 0.18);
+  margin: 0 auto;
+  box-shadow: 0 14px 40px -12px rgba(0, 0, 0, 0.6);
 }
 
-.board::before {
-  /* Inner hairline — gives the "frame within a frame" look of a tarot
-     reading cloth laid inside a wooden tray. */
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border: 1px solid var(--gilt-soft);
-  pointer-events: none;
+.tile-card {
+  border: 1.5px solid var(--ink-strong);
+  border-radius: 12px;
 }
 
-.board__cell {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: var(--bone-50);
-  border: 1px solid var(--ink-700);
-  color: var(--ink);
-  cursor: pointer;
-  transition: transform 160ms var(--ease-card), background 160ms var(--ease-card),
-    border-color 160ms var(--ease-card);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.board__cell:focus-visible {
-  outline: 2px solid var(--gilt);
+.tile-card:focus-visible {
+  outline: 2px solid var(--panel-gold);
   outline-offset: 2px;
 }
 
-.board__cell-frame {
-  position: absolute;
-  inset: 3px;
-  border: 1px solid var(--gilt);
-  pointer-events: none;
-  opacity: 0.55;
+.tile-card__glyph {
+  position: relative;
+  z-index: 1;
+  width: 60%;
+  height: 60%;
+  color: var(--ink-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.board__cell-glyph {
-  width: 64%;
-  height: 64%;
-  pointer-events: none;
+.tile-card__glyph svg {
+  width: 100%;
+  height: 100%;
 }
 
-/* Per-suit color tinting. Each suit gets its own ink color but every
-   cell stays on the same bone ground — keeps the "deck of cards" feel
-   without becoming bright candy crush. */
-.board__cell--cups {
-  color: #2f5d8a; /* deep ink-blue */
+.tile-card--selected {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 2px var(--bone-100),
+    0 0 0 4px var(--ink-strong),
+    0 10px 20px -6px rgba(0, 0, 0, 0.5);
 }
 
-.board__cell--pentacles {
-  color: #6b5b1a; /* old gold ink */
-}
-
-.board__cell--swords {
-  color: #4a4a4a; /* steel-ink */
-}
-
-.board__cell--wands {
-  color: var(--oxblood-500); /* oxblood */
-}
-
-.board__cell--selected {
-  background: var(--ink-900);
-  border-color: var(--gilt);
-  color: var(--bone-50);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 0 -1px var(--gilt-soft);
-}
-
-.board__cell--selected .board__cell-frame {
-  border-color: var(--gilt);
-  opacity: 1;
-}
-
-.board__cell--busy {
+.tile-card--busy {
   cursor: progress;
   pointer-events: none;
 }
 
-@keyframes board-nudge {
+@keyframes tile-card-nudge {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
-.board__cell--just-nudged {
-  animation: board-nudge 220ms var(--ease-card);
+.tile-card--just-nudged {
+  animation: tile-card-nudge 220ms var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .board__cell,
-  .board__cell--just-nudged {
+  .tile-card,
+  .tile-card--just-nudged {
     transition: none;
     animation: none;
   }

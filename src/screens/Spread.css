@@ -1,12 +1,34 @@
+.spread {
+  gap: var(--space-8);
+  padding-top: clamp(var(--space-4), 3vh, var(--space-8));
+}
+
 .spread__head {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.spread__head > div {
+.spread__title {
   text-align: center;
+}
+
+.spread__title h1 {
+  font-style: italic;
+  font-weight: 900;
+}
+
+.spread__title h1 em {
+  color: var(--panel-amethyst);
+  font-style: italic;
+  font-weight: 900;
+}
+
+.spread__sub {
+  font-size: 1.5rem;
+  color: var(--panel-pink);
 }
 
 .spread__head > :first-child {
@@ -17,78 +39,36 @@
   justify-self: end;
 }
 
-.spread__intro {
-  text-align: center;
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--ink-soft);
-  max-width: 44ch;
-  margin: 0 auto;
-}
-
-.spread__levels {
+.spread__deck {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
+  gap: clamp(var(--space-6), 3vw, var(--space-8));
 }
 
 @media (min-width: 640px) {
-  .spread__levels {
-    grid-template-columns: 1fr 1fr;
+  .spread__deck {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-.chapter {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+@media (min-width: 1100px) {
+  .spread__deck {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
-.chapter__numeral {
-  font-size: 1.1rem;
-}
-
-.chapter__name {
-  font-size: var(--step-2);
-  margin: 0;
-}
-
-.chapter__epigraph {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--accent);
-}
-
-.chapter__objective {
-  color: var(--ink-soft);
-}
-
-.chapter__moves {
-  color: var(--ink-300);
-}
-
-.chapter--locked {
-  opacity: 0.5;
-}
-
-.chapter--locked .btn[disabled] {
-  border-color: var(--ink-300);
-  color: var(--ink-300);
-  cursor: not-allowed;
+.card--disabled {
+  opacity: 0.45;
 }
 
 .stars {
   display: inline-flex;
-  gap: 2px;
+  gap: 4px;
   font-size: 1rem;
-  color: var(--ink-300);
-  letter-spacing: 0.05em;
-}
-
-.stars__pip {
-  font-family: var(--font-engraved);
+  color: var(--ink-dim);
+  letter-spacing: 0.06em;
 }
 
 .stars__pip--lit {
-  color: var(--gilt);
+  color: var(--panel-gold);
 }
