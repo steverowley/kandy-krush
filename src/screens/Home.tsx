@@ -141,6 +141,14 @@ export function Home() {
         <button
           type="button"
           class="btn btn--ghost"
+          onClick={() => navigate(routes.codex)}
+        >
+          Codex
+        </button>
+        <span aria-hidden="true" class="home__foot-sep">·</span>
+        <button
+          type="button"
+          class="btn btn--ghost"
           onClick={() => navigate(routes.settings)}
         >
           Settings
