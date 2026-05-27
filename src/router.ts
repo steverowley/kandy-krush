@@ -9,6 +9,7 @@ export const routes = {
   spread: "/spread",
   querent: "/querent",
   play: "/play",
+  howto: "/how-to-play",
   settings: "/settings",
   about: "/about",
 } as const;

@@ -2,6 +2,7 @@ import { useLocation } from "wouter-preact";
 import type { ComponentChildren } from "preact";
 import { TarotCard } from "../components/TarotCard";
 import { routes } from "../router";
+import { useTutorial } from "../state/tutorial";
 import "./Home.css";
 
 type Mode = {
@@ -75,6 +76,7 @@ const modes: Mode[] = [
 
 export function Home() {
   const [, navigate] = useLocation();
+  const tutorialSeen = useTutorial((s) => s.seen);
 
   return (
     <main class="screen home">
@@ -85,6 +87,22 @@ export function Home() {
         </h1>
         <p class="home__subtitle script">choose your spread</p>
       </header>
+
+      {!tutorialSeen ? (
+        <aside class="home__nudge" role="note">
+          <p class="eyebrow">First reading?</p>
+          <p class="home__nudge-body script">
+            new to the cloth — read the four steps first
+          </p>
+          <button
+            type="button"
+            class="btn btn--primary home__nudge-cta"
+            onClick={() => navigate(routes.howto)}
+          >
+            How to play
+          </button>
+        </aside>
+      ) : null}
 
       <section class="home__deck" aria-label="Modes">
         {modes.map((mode) => (
@@ -112,6 +130,14 @@ export function Home() {
       </section>
 
       <footer class="home__foot">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          onClick={() => navigate(routes.howto)}
+        >
+          How to play
+        </button>
+        <span aria-hidden="true" class="home__foot-sep">·</span>
         <button
           type="button"
           class="btn btn--ghost"

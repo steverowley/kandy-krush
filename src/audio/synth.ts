@@ -30,6 +30,22 @@ function ensureCtx(): Ctx {
   }
 }
 
+/**
+ * Resume a suspended AudioContext. iOS Safari and locked Chrome both
+ * require a user gesture before audio plays — call this from a click /
+ * keydown listener wired up at app start.
+ */
+export function resumeOnGesture(): Promise<void> {
+  const ctx = ensureCtx();
+  if (!ctx) return Promise.resolve();
+  if (ctx.state === "suspended") {
+    return ctx.resume().catch(() => {
+      /* ignore; will retry on next gesture */
+    });
+  }
+  return Promise.resolve();
+}
+
 export function setEnabled(on: boolean) {
   _enabled = on;
 }

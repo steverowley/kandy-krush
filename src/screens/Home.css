@@ -63,8 +63,32 @@
   gap: var(--space-2);
   color: var(--ink-dim);
   margin-top: var(--space-8);
+  flex-wrap: wrap;
 }
 
 .home__foot-sep {
   color: var(--panel-gold);
+}
+
+.home__nudge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  background: rgba(245, 239, 220, 0.06);
+  border: 1px solid var(--panel-gold);
+  border-radius: 14px;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.home__nudge-body {
+  font-size: 1.4rem;
+  color: var(--panel-pink);
+}
+
+.home__nudge-cta {
+  margin-top: var(--space-1);
 }
