@@ -57,11 +57,16 @@ export type ArcanaId =
   | "fool"
   | "magician"
   | "empress"
+  | "hierophant"
   | "lovers"
   | "chariot"
   | "strength"
   | "hermit"
+  | "justice"
+  | "hanged-man"
   | "death"
+  | "temperance"
+  | "devil"
   | "tower"
   | "moon"
   | "sun"
@@ -89,6 +94,9 @@ export type ArcanaContext = {
    *  Hermit's empty-slot bonus reads this so a smaller cap means fewer
    *  "empty" slots to reward. */
   maxHand: number;
+  /** How many Minor Arcana the player is currently holding. The Devil
+   *  scales with this. */
+  minorHeldCount: number;
   /** True when the current chamber is a Boss Blind. Used by The Tower
    *  which doubles down on boss chambers. */
   isBoss: boolean;
@@ -155,6 +163,19 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     },
   },
   {
+    id: "hierophant",
+    numeral: "V",
+    name: "The Hierophant",
+    panelCaption: "doctrina",
+    description: "Pentacle matches multiply your mult by ×1.25.",
+    subtitle: "el hierofante · the rite is written",
+    panelColor: "var(--panel-gold)",
+    apply: (ctx) => {
+      const hasPentacles = ctx.step.matches.some((g) => g.suit === "pentacles");
+      if (hasPentacles) ctx.mult = Math.round(ctx.mult * 1.25);
+    },
+  },
+  {
     id: "lovers",
     numeral: "VI",
     name: "The Lovers",
@@ -210,6 +231,34 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     },
   },
   {
+    id: "justice",
+    numeral: "XI",
+    name: "Justice",
+    panelCaption: "balanza",
+    description:
+      "When chips ÷ 10 equals mult exactly, mult is multiplied by ×1.5.",
+    subtitle: "la justicia · the scales settle",
+    panelColor: "var(--panel-cobalt)",
+    apply: (ctx) => {
+      if (ctx.mult <= 0) return;
+      if (Math.round(ctx.chips / 10) === ctx.mult) {
+        ctx.mult = Math.round(ctx.mult * 1.5);
+      }
+    },
+  },
+  {
+    id: "hanged-man",
+    numeral: "XII",
+    name: "The Hanged Man",
+    panelCaption: "pausa",
+    description: "+10 chips per reading already taken in this chamber.",
+    subtitle: "el colgado · the wait pays out",
+    panelColor: "var(--panel-cobalt)",
+    apply: (ctx) => {
+      ctx.chips += ctx.movesUsed * 10;
+    },
+  },
+  {
     id: "death",
     numeral: "XIII",
     name: "Death",
@@ -227,6 +276,40 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
       const row = Math.floor(rng() * board.rows);
       const col = Math.floor(rng() * board.cols);
       return [{ row, col }];
+    },
+  },
+  {
+    id: "temperance",
+    numeral: "XIV",
+    name: "Temperance",
+    panelCaption: "templanza",
+    description: "First Cup match and first Wand match each score twice.",
+    subtitle: "la templanza · the pour is doubled",
+    panelColor: "var(--panel-emerald)",
+    apply: (ctx) => {
+      const firstCup = ctx.step.matches.find((g) => g.suit === "cups");
+      const firstWand = ctx.step.matches.find((g) => g.suit === "wands");
+      if (firstCup) {
+        ctx.chips += firstCup.cells.length * CHIPS_PER_CELL;
+        ctx.mult += matchSizeBonus(firstCup.cells.length);
+      }
+      if (firstWand) {
+        ctx.chips += firstWand.cells.length * CHIPS_PER_CELL;
+        ctx.mult += matchSizeBonus(firstWand.cells.length);
+      }
+    },
+  },
+  {
+    id: "devil",
+    numeral: "XV",
+    name: "The Devil",
+    panelCaption: "deseo",
+    description: "+50% mult per Minor Arcana held (each minor sharpens the bargain).",
+    subtitle: "el diablo · the bargain compounds",
+    panelColor: "var(--panel-amethyst)",
+    apply: (ctx) => {
+      if (ctx.minorHeldCount <= 0) return;
+      ctx.mult = Math.round(ctx.mult * (1 + 0.5 * ctx.minorHeldCount));
     },
   },
   {
@@ -307,6 +390,7 @@ export function applyArcanaToStep(
     halveArcana?: boolean;
     isBoss?: boolean;
     maxHand?: number;
+    minorHeldCount?: number;
   },
 ): { chips: number; mult: number; scoreGained: number } {
   const baseChips = step.chips;
@@ -320,6 +404,7 @@ export function applyArcanaToStep(
     totalMoves: meta.totalMoves,
     heldCount: held.length,
     maxHand: meta.maxHand ?? MAX_HELD_ARCANA,
+    minorHeldCount: meta.minorHeldCount ?? 0,
     isBoss: meta.isBoss ?? false,
   };
   for (const a of held) a.apply(ctx);

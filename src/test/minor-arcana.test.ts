@@ -40,9 +40,44 @@ describe("MINOR_ARCANA data", () => {
     expect(m.effect).toEqual({ kind: "add-score", amount: 1500 });
   });
 
-  it("Page of Wands arms the double-next-move buff", () => {
+  it("Page of Wands arms a 2x next-move score", () => {
     const m = minorById("page-wands")!;
-    expect(m.effect).toEqual({ kind: "double-next-move" });
+    expect(m.effect).toEqual({ kind: "next-move-score-mul", multiplier: 2 });
+  });
+
+  it("Knight of Cups adds +2 readings", () => {
+    expect(minorById("knight-cups")!.effect).toEqual({
+      kind: "add-moves",
+      amount: 2,
+    });
+  });
+
+  it("Knight of Pentacles adds +3000 fortune", () => {
+    expect(minorById("knight-pentacles")!.effect).toEqual({
+      kind: "add-score",
+      amount: 3000,
+    });
+  });
+
+  it("Knight of Wands arms a 3x next-move score", () => {
+    expect(minorById("knight-wands")!.effect).toEqual({
+      kind: "next-move-score-mul",
+      multiplier: 3,
+    });
+  });
+
+  it("Queen of Wands arms a 3x next-move mult", () => {
+    expect(minorById("queen-wands")!.effect).toEqual({
+      kind: "next-move-mult-mul",
+      multiplier: 3,
+    });
+  });
+
+  it("King of Pentacles adds +5 chips per cell next move", () => {
+    expect(minorById("king-pentacles")!.effect).toEqual({
+      kind: "next-move-chips-per-cell",
+      perCell: 5,
+    });
   });
 });
 
