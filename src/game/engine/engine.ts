@@ -1,7 +1,7 @@
 import { areAdjacent, generateBoard, swapped } from "./board";
 import { resolveCascades, hasLegalMove } from "./cascade";
 import { swapMakesMatch } from "./match";
-import { createRng } from "./rng";
+import { createRng, type SeededRng } from "./rng";
 import type { Board, Cell, ResolveResult } from "./types";
 
 export type EngineConfig = {
@@ -10,7 +10,7 @@ export type EngineConfig = {
   seed: number;
 };
 
-export function newGame(config: EngineConfig): { board: Board; rng: () => number } {
+export function newGame(config: EngineConfig): { board: Board; rng: SeededRng } {
   const rng = createRng(config.seed);
   let board = generateBoard(config.rows, config.cols, rng);
   // Defensive: settle any unlucky spawn-time matches even though we
