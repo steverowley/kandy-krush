@@ -1,29 +1,43 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useGame } from "../../state/game";
-import { areAdjacent } from "../engine/board";
+import { areAdjacent, inBounds } from "../engine/board";
 import type { Cell, Suit, Tile } from "../engine/types";
 import { SuitGlyph, SUIT_COLORS } from "./suit-glyphs";
 import "./Board.css";
 
 /**
  * The Board renders each tile as an absolutely-positioned card keyed by
- * its stable `tile.id`. Because the engine carries ids across cascades,
- * Preact's reconciler keeps the DOM node for a surviving tile across
- * renders, and CSS transitions on `transform` make it slide visibly
- * between grid positions. New tiles fade in from above; dying tiles
- * unmount instantly (the next pass shows the refill).
+ * its stable `tile.id`. Two input affordances:
+ *
+ *   - Tap a tile, then tap an adjacent neighbour, to swap.
+ *   - Press and drag a tile in one of the four cardinal directions; if
+ *     the displacement clears the swap threshold, the tile trades with
+ *     the neighbour in that direction.
+ *
+ * Drag wins when the pointer movement exceeds DRAG_THRESHOLD px;
+ * otherwise the gesture is treated as a click and the tap flow runs.
  */
+
+const DRAG_THRESHOLD = 18;
+
+type Drag = {
+  cell: Cell;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  dx: number;
+  dy: number;
+};
+
 export function Board() {
   const { board, selected, busy, nudge, select, attemptSwap } = useGame();
   const [focus, setFocus] = useState<Cell>({ row: 0, col: 0 });
+  const [drag, setDrag] = useState<Drag | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const prevPositionsRef = useRef<Map<number, { row: number; col: number }>>(
     new Map(),
   );
 
-  // Capture each tile's previous (row, col) so a fresh entry can be
-  // distinguished from a survivor. Survivors get transitions; entrants
-  // get an entrance animation from one cell above their landing slot.
   const positions = new Map<number, { row: number; col: number }>();
   board.tiles.forEach((tile, idx) => {
     if (!tile) return;
@@ -57,7 +71,7 @@ export function Board() {
     }
   }, [focus.row, focus.col, board.rows, board.cols]);
 
-  function onCellClick(cell: Cell) {
+  function tapClick(cell: Cell) {
     setFocus(cell);
     if (busy) return;
     if (!selected) {
@@ -73,6 +87,61 @@ export function Board() {
       return;
     }
     select(cell);
+  }
+
+  function onPointerDown(e: PointerEvent, cell: Cell) {
+    if (busy) return;
+    // Only respond to primary pointer.
+    if (e.button !== undefined && e.button !== 0) return;
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    setDrag({
+      cell,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      dx: 0,
+      dy: 0,
+    });
+  }
+
+  function onPointerMove(e: PointerEvent) {
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    setDrag({ ...drag, dx, dy });
+  }
+
+  function onPointerUp(e: PointerEvent, cell: Cell) {
+    if (!drag || drag.pointerId !== e.pointerId) {
+      tapClick(cell);
+      return;
+    }
+    const { dx, dy } = drag;
+    const settled = drag.cell;
+    setDrag(null);
+
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (Math.max(absX, absY) < DRAG_THRESHOLD) {
+      tapClick(settled);
+      return;
+    }
+
+    let target: Cell;
+    if (absX > absY) {
+      target = { row: settled.row, col: settled.col + (dx > 0 ? 1 : -1) };
+    } else {
+      target = { row: settled.row + (dy > 0 ? 1 : -1), col: settled.col };
+    }
+    if (!inBounds(board, target)) {
+      tapClick(settled);
+      return;
+    }
+    attemptSwap(settled, target);
+  }
+
+  function onPointerCancel() {
+    setDrag(null);
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -94,7 +163,7 @@ export function Board() {
       case "Enter":
       case " ":
         e.preventDefault();
-        onCellClick(focus);
+        tapClick(focus);
         return;
       case "Escape":
         select(null);
@@ -108,12 +177,24 @@ export function Board() {
 
   if (board.rows === 0) return null;
 
+  // Compute the constrained drag offset for visual feedback — only
+  // the dominant axis carries, so the card reads as snapping to a
+  // direction rather than sliding diagonally.
+  let dragDx = 0;
+  let dragDy = 0;
+  if (drag) {
+    const absX = Math.abs(drag.dx);
+    const absY = Math.abs(drag.dy);
+    if (absX > absY) dragDx = Math.max(-60, Math.min(60, drag.dx));
+    else dragDy = Math.max(-60, Math.min(60, drag.dy));
+  }
+
   return (
     <div
       ref={wrapRef}
       class="board"
       role="grid"
-      aria-label="Match-three board. Arrow keys move, Enter swaps with the selected card."
+      aria-label="Match-three board. Arrow keys move, Enter swaps with the selected card. Drag a card in any direction to swap with its neighbour."
       onKeyDown={onKeyDown}
       style={{
         "--board-rows": board.rows,
@@ -130,6 +211,8 @@ export function Board() {
         const isFocused = focus.row === row && focus.col === col;
         const prev = prevPositionsRef.current.get(tile.id);
         const isNew = !prev;
+        const isDragging =
+          drag !== null && drag.cell.row === row && drag.cell.col === col;
         return (
           <TileButton
             key={tile.id}
@@ -139,8 +222,14 @@ export function Board() {
             isNew={isNew}
             isSelected={isSelected}
             isFocused={isFocused}
+            isDragging={isDragging}
+            dragDx={isDragging ? dragDx : 0}
+            dragDy={isDragging ? dragDy : 0}
             busy={busy}
-            onClick={() => onCellClick(here)}
+            onPointerDown={(e) => onPointerDown(e, here)}
+            onPointerMove={onPointerMove}
+            onPointerUp={(e) => onPointerUp(e, here)}
+            onPointerCancel={onPointerCancel}
             onFocus={() => setFocus(here)}
           />
         );
@@ -156,8 +245,14 @@ function TileButton({
   isNew,
   isSelected,
   isFocused,
+  isDragging,
+  dragDx,
+  dragDy,
   busy,
-  onClick,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onPointerCancel,
   onFocus,
 }: {
   tile: Tile;
@@ -166,8 +261,14 @@ function TileButton({
   isNew: boolean;
   isSelected: boolean;
   isFocused: boolean;
+  isDragging: boolean;
+  dragDx: number;
+  dragDy: number;
   busy: boolean;
-  onClick: () => void;
+  onPointerDown: (e: PointerEvent) => void;
+  onPointerMove: (e: PointerEvent) => void;
+  onPointerUp: (e: PointerEvent) => void;
+  onPointerCancel: (e: PointerEvent) => void;
   onFocus: () => void;
 }) {
   return (
@@ -175,17 +276,22 @@ function TileButton({
       type="button"
       class={`tile-card${isSelected ? " tile-card--selected" : ""}${
         busy ? " tile-card--busy" : ""
-      }${isNew ? " tile-card--entering" : ""}`}
+      }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}`}
       role="gridcell"
       style={{
         "--tile-color": SUIT_COLORS[tile.suit],
         "--row": row,
         "--col": col,
+        "--drag-x": `${dragDx}px`,
+        "--drag-y": `${dragDy}px`,
       }}
       aria-label={`${suitLabel(tile.suit)} at row ${row + 1}, column ${col + 1}`}
       aria-pressed={isSelected}
       tabIndex={isFocused ? 0 : -1}
-      onClick={onClick}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
       onFocus={onFocus}
     >
       <span class="tile-card__panel" aria-hidden="true" />
