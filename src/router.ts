@@ -8,6 +8,7 @@ export const routes = {
   spread: "/spread",
   querent: "/querent",
   play: "/play",
+  draw: "/draw",
   howto: "/how-to-play",
   codex: "/codex",
   settings: "/settings",
