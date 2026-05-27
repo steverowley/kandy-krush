@@ -24,8 +24,8 @@
   width: var(--cell-size);
   height: var(--cell-size);
   transform: translate(
-    calc(var(--col) * (var(--cell-size) + var(--gap))),
-    calc(var(--row) * (var(--cell-size) + var(--gap)))
+    calc(var(--col) * (var(--cell-size) + var(--gap)) + var(--drag-x, 0px)),
+    calc(var(--row) * (var(--cell-size) + var(--gap)) + var(--drag-y, 0px))
   );
   border: 1.5px solid var(--ink-strong);
   border-radius: 12px;
@@ -38,8 +38,22 @@
   cursor: pointer;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
   transition: transform 280ms var(--ease), box-shadow 160ms var(--ease),
     background 160ms var(--ease);
+}
+
+/* Active drag — disable the transform transition so the tile tracks
+   the finger instantly, and lift the shadow so the card reads as
+   "picked up." */
+.tile-card--dragging {
+  transition: box-shadow 120ms var(--ease);
+  box-shadow:
+    0 0 0 2px var(--bone-100),
+    0 0 0 4px var(--ink-strong),
+    0 14px 30px -6px rgba(0, 0, 0, 0.65);
+  z-index: 2;
 }
 
 .tile-card:focus-visible {
@@ -74,8 +88,8 @@
 /* Selected — lifted card. */
 .tile-card--selected {
   transform: translate(
-      calc(var(--col) * (var(--cell-size) + var(--gap))),
-      calc(var(--row) * (var(--cell-size) + var(--gap)))
+      calc(var(--col) * (var(--cell-size) + var(--gap)) + var(--drag-x, 0px)),
+      calc(var(--row) * (var(--cell-size) + var(--gap)) + var(--drag-y, 0px))
     )
     translateY(-3px);
   box-shadow:
