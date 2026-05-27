@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useLocation, useSearch } from "wouter-preact";
 import { Board } from "../game/view/Board";
 import { TarotCard } from "../components/TarotCard";
@@ -303,7 +303,7 @@ export function Play() {
         )}
       </header>
 
-      <section class="play__ledger" aria-label="Run status">
+      <section class="play__ledger" aria-label="Run status" aria-live="polite">
         <div class="ledger-cell">
           <span class="eyebrow">Fortune</span>
           <span class="ledger-value tabular">{score.toLocaleString()}</span>
@@ -467,6 +467,19 @@ function Outcome({
     : "var(--panel-amethyst)";
   const numeral = level?.numeral ?? chamber?.numeral ?? (isDaily ? "·" : "·");
 
+  // When the modal opens, move keyboard focus to the primary action so
+  // Enter / Tab work without hunting.
+  const firstActionRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    firstActionRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onLeave();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div class="outcome" role="dialog" aria-modal="true" aria-labelledby="outcome-title">
       <div class="outcome__card-wrap">
@@ -495,7 +508,12 @@ function Outcome({
                 </div>
               ) : null}
               <div class="outcome__actions">
-                <button type="button" class="btn btn--on-card" onClick={onLeave}>
+                <button
+                  type="button"
+                  class="btn btn--on-card"
+                  onClick={onLeave}
+                  ref={isDaily ? firstActionRef : undefined}
+                >
                   {level
                     ? "Back to the Spread"
                     : isQuerent
@@ -507,6 +525,7 @@ function Outcome({
                     type="button"
                     class="btn btn--on-card btn--primary"
                     onClick={onAdvance}
+                    ref={firstActionRef}
                   >
                     {isQuerent
                       ? isWin
