@@ -121,10 +121,12 @@ export function SuitGlyph({ suit, ...rest }: { suit: Suit } & GlyphProps) {
   }
 }
 
-/** Each suit's signature panel color. */
+/** Each suit's signature glyph color — muted, Arts-and-Crafts palette
+ *  per the design brief. Used by Board to tint the suit illustration
+ *  inside the cream tile-card panel. */
 export const SUIT_COLORS: Record<Suit, string> = {
-  cups: "var(--panel-cobalt)",
-  pentacles: "var(--panel-gold)",
-  swords: "var(--panel-amethyst)",
-  wands: "var(--panel-coral)",
+  cups: "var(--suit-cups)",
+  pentacles: "var(--suit-pentacles)",
+  swords: "var(--suit-swords)",
+  wands: "var(--suit-wands)",
 };

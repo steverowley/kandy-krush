@@ -15,7 +15,7 @@
 }
 
 .about__title h1 em {
-  color: var(--panel-coral);
+  color: var(--accent-gold);
   font-style: italic;
 }
 
@@ -42,7 +42,7 @@
 }
 
 .about__lede {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 1.4rem;
   color: var(--ink-cream);
@@ -59,9 +59,9 @@
 
 .about__credit .script {
   font-size: 1.6rem;
-  color: var(--panel-gold);
+  color: var(--accent-gold);
 }
 
 .about__dot {
-  color: var(--panel-gold);
+  color: var(--accent-gold);
 }

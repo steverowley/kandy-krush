@@ -16,19 +16,22 @@
 }
 
 .spread__title h1 {
-  font-style: italic;
-  font-weight: 900;
+  font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
 .spread__title h1 em {
-  color: var(--panel-amethyst);
+  color: var(--accent-gold);
   font-style: italic;
-  font-weight: 900;
+  font-weight: 500;
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: 0.04em;
 }
 
 .spread__sub {
   font-size: 1.5rem;
-  color: var(--panel-pink);
+  color: var(--accent-gold-2);
 }
 
 .spread__head > :first-child {
@@ -70,5 +73,5 @@
 }
 
 .stars__pip--lit {
-  color: var(--panel-gold);
+  color: var(--accent-gold);
 }

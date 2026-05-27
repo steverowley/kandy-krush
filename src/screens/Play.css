@@ -49,10 +49,10 @@
 }
 
 .play__chapter {
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-style: italic;
   font-size: 1.1rem;
-  color: var(--panel-coral);
+  color: var(--accent-gold-2);
   margin-top: var(--space-1);
 }
 
@@ -94,11 +94,11 @@
 }
 
 .score-burst__chips {
-  color: var(--panel-cobalt);
+  color: var(--suit-cups);
 }
 
 .score-burst__mult {
-  color: var(--panel-coral);
+  color: var(--suit-wands);
   font-size: 1.18rem;
 }
 
@@ -110,9 +110,9 @@
 }
 
 .score-burst__total {
-  color: var(--panel-gold);
+  color: var(--accent-gold);
   font-size: 1.18rem;
-  text-shadow: 0 0 12px rgba(229, 181, 71, 0.35);
+  text-shadow: 0 0 12px rgba(212, 162, 76, 0.45);
 }
 
 @keyframes score-burst {
@@ -202,7 +202,7 @@
 .play__objective-fill {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, var(--panel-coral), var(--panel-saffron));
+  background: linear-gradient(90deg, var(--accent-gold-3), var(--accent-gold));
   transition: width 320ms var(--ease);
 }
 
@@ -225,8 +225,8 @@
   background:
     radial-gradient(
       ellipse at center,
-      rgba(142, 122, 201, 0.18),
-      rgba(14, 12, 24, 0.92) 70%
+      rgba(212, 162, 76, 0.18),
+      rgba(11, 25, 19, 0.94) 70%
     );
   display: flex;
   align-items: center;
@@ -264,8 +264,8 @@
 }
 
 .outcome__star--lit {
-  color: var(--panel-gold);
-  filter: drop-shadow(0 0 8px rgba(229, 181, 71, 0.5));
+  color: var(--accent-gold);
+  filter: drop-shadow(0 0 8px rgba(212, 162, 76, 0.6));
 }
 
 .outcome__actions {
