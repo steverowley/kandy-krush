@@ -77,6 +77,7 @@ describe("useQuerent meta progression", () => {
         unlocked: ["seer"],
         maxStakeId: "white",
         currentStakeId: "white",
+        records: {},
       },
     });
   });
@@ -137,5 +138,78 @@ describe("useQuerent meta progression", () => {
     useQuerent.getState().abandonRun();
     expect(useQuerent.getState().run).toBeNull();
     expect(useQuerent.getState().meta.insight).toBe(before);
+  });
+});
+
+describe("per-stake records", () => {
+  beforeEach(() => {
+    useQuerent.setState({
+      run: null,
+      meta: {
+        runsCompleted: 0,
+        bestDepth: 0,
+        insight: 0,
+        unlocked: ["seer", "maker", "walker"],
+        maxStakeId: "green",
+        currentStakeId: "red",
+        records: {},
+      },
+    });
+  });
+
+  it("passChamber updates the active stake's bestDepth", () => {
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(100);
+    useQuerent.getState().passChamber(100);
+    const rec = useQuerent.getState().meta.records.red;
+    expect(rec).toBeDefined();
+    expect(rec!.bestDepth).toBe(2);
+  });
+
+  it("failRun records the run's totalScore as bestScore for that stake", () => {
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(500);
+    useQuerent.getState().passChamber(700);
+    useQuerent.getState().failRun();
+    const rec = useQuerent.getState().meta.records.red;
+    expect(rec!.bestScore).toBe(1200);
+    expect(rec!.cleared).toBe(false);
+  });
+
+  it("finishRun flips cleared + bumps runsCompleted for that stake", () => {
+    useQuerent.getState().beginRun("seer");
+    for (let i = 0; i < 9; i++) useQuerent.getState().passChamber(100);
+    useQuerent.getState().finishRun();
+    const rec = useQuerent.getState().meta.records.red;
+    expect(rec!.cleared).toBe(true);
+    expect(rec!.runsCompleted).toBe(1);
+    expect(rec!.bestScore).toBe(900);
+  });
+
+  it("bestScore is the max across runs at the same stake", () => {
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(1000);
+    useQuerent.getState().failRun();
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(400); // worse run
+    useQuerent.getState().failRun();
+    const rec = useQuerent.getState().meta.records.red;
+    expect(rec!.bestScore).toBe(1000);
+  });
+
+  it("records are independent per stake", () => {
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(800);
+    useQuerent.getState().failRun();
+    // Switch stakes, run again.
+    useQuerent.setState({
+      meta: { ...useQuerent.getState().meta, currentStakeId: "green" },
+    });
+    useQuerent.getState().beginRun("seer");
+    useQuerent.getState().passChamber(200);
+    useQuerent.getState().failRun();
+    const records = useQuerent.getState().meta.records;
+    expect(records.red!.bestScore).toBe(800);
+    expect(records.green!.bestScore).toBe(200);
   });
 });

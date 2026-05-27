@@ -78,6 +78,7 @@ export function Querent() {
           {STAKES.map((s) => {
             const unlocked = s.tier <= maxStake.tier;
             const selected = s.id === currentStake.id;
+            const rec = meta.records[s.id];
             return (
               <li key={s.id}>
                 <button
@@ -92,7 +93,9 @@ export function Querent() {
                   aria-label={`${s.name} stake${unlocked ? "" : " (sealed)"}`}
                   title={
                     unlocked
-                      ? `${s.name} — ${formatStakeEffect(s)}`
+                      ? rec && rec.bestScore > 0
+                        ? `${s.name} — ${formatStakeEffect(s)} · Best ${rec.bestScore.toLocaleString()} · ${rec.runsCompleted} ${rec.runsCompleted === 1 ? "clear" : "clears"}`
+                        : `${s.name} — ${formatStakeEffect(s)}`
                       : "Sealed — clear a run at the prior stake to unlock"
                   }
                 >
