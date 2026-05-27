@@ -16,15 +16,20 @@ export type Level = {
   stars: { one: number; two: number; three: number };
 };
 
+// Score thresholds tuned for the Chips × Mult engine (PR #376). Average
+// play scores ~2.5× a single-3-match floor under the new math, so every
+// score-typed target and star threshold has been multiplied by ~2.5
+// (rounded to the nearest hundred). Suit-clear targets carry over —
+// those are cleared-cell counts, unchanged by the scoring refactor.
 export const LEVELS: readonly Level[] = [
   {
     id: 1,
     numeral: "I",
     name: "The Magician",
     epigraph: "Begin with a single intent.",
-    objective: { type: "score", target: 800 },
+    objective: { type: "score", target: 2000 },
     moves: 20,
-    stars: { one: 800, two: 1200, three: 1800 },
+    stars: { one: 2000, two: 3000, three: 4500 },
   },
   {
     id: 2,
@@ -33,16 +38,16 @@ export const LEVELS: readonly Level[] = [
     epigraph: "Listen for the water.",
     objective: { type: "suit", target: 14, suit: "cups" },
     moves: 22,
-    stars: { one: 1000, two: 1500, three: 2200 },
+    stars: { one: 2500, two: 3800, three: 5500 },
   },
   {
     id: 3,
     numeral: "III",
     name: "The Empress",
     epigraph: "Abundance asks for nothing.",
-    objective: { type: "score", target: 1500 },
+    objective: { type: "score", target: 3800 },
     moves: 22,
-    stars: { one: 1500, two: 2200, three: 3000 },
+    stars: { one: 3800, two: 5500, three: 7500 },
   },
   {
     id: 4,
@@ -51,16 +56,16 @@ export const LEVELS: readonly Level[] = [
     epigraph: "Order before sentiment.",
     objective: { type: "suit", target: 14, suit: "swords" },
     moves: 20,
-    stars: { one: 1400, two: 2100, three: 3000 },
+    stars: { one: 3500, two: 5300, three: 7500 },
   },
   {
     id: 5,
     numeral: "V",
     name: "The Hierophant",
     epigraph: "The same wisdom, told twice.",
-    objective: { type: "score", target: 2200 },
+    objective: { type: "score", target: 5500 },
     moves: 22,
-    stars: { one: 2200, two: 3000, three: 4000 },
+    stars: { one: 5500, two: 7500, three: 10000 },
   },
   {
     id: 6,
@@ -69,16 +74,16 @@ export const LEVELS: readonly Level[] = [
     epigraph: "Two suits, one decision.",
     objective: { type: "suit", target: 18, suit: "pentacles" },
     moves: 24,
-    stars: { one: 1800, two: 2700, three: 3600 },
+    stars: { one: 4500, two: 6800, three: 9000 },
   },
   {
     id: 7,
     numeral: "VII",
     name: "The Chariot",
     epigraph: "Press the advantage.",
-    objective: { type: "score", target: 3200 },
+    objective: { type: "score", target: 8000 },
     moves: 20,
-    stars: { one: 3200, two: 4200, three: 5500 },
+    stars: { one: 8000, two: 10500, three: 13800 },
   },
   {
     id: 8,
@@ -87,16 +92,16 @@ export const LEVELS: readonly Level[] = [
     epigraph: "Pace the long task.",
     objective: { type: "suit", target: 22, suit: "wands" },
     moves: 28,
-    stars: { one: 2400, two: 3500, three: 4800 },
+    stars: { one: 6000, two: 8800, three: 12000 },
   },
   {
     id: 9,
     numeral: "IX",
     name: "The Hermit",
     epigraph: "One lantern, one step.",
-    objective: { type: "score", target: 3800 },
+    objective: { type: "score", target: 9500 },
     moves: 24,
-    stars: { one: 3800, two: 5000, three: 6500 },
+    stars: { one: 9500, two: 12500, three: 16300 },
   },
   {
     id: 10,
@@ -105,7 +110,7 @@ export const LEVELS: readonly Level[] = [
     epigraph: "The cloth turns under your hand.",
     objective: { type: "suit", target: 24, suit: "cups" },
     moves: 26,
-    stars: { one: 2800, two: 4000, three: 5500 },
+    stars: { one: 7000, two: 10000, three: 13800 },
   },
   {
     id: 11,
@@ -114,16 +119,16 @@ export const LEVELS: readonly Level[] = [
     epigraph: "Weigh each card honestly.",
     objective: { type: "suit", target: 24, suit: "pentacles" },
     moves: 24,
-    stars: { one: 3000, two: 4400, three: 6000 },
+    stars: { one: 7500, two: 11000, three: 15000 },
   },
   {
     id: 12,
     numeral: "XII",
     name: "The Hanged Man",
     epigraph: "Look once more, from below.",
-    objective: { type: "score", target: 5500 },
+    objective: { type: "score", target: 13800 },
     moves: 26,
-    stars: { one: 5500, two: 7500, three: 10000 },
+    stars: { one: 13800, two: 18800, three: 25000 },
   },
 ];
 
