@@ -6,6 +6,8 @@ import { useGame, type GameMode } from "../state/game";
 import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
 import { useArcana } from "../state/arcana";
+import { useMinorArcana } from "../state/minor-arcana";
+import type { MinorArcana } from "../game/minor-arcana";
 import {
   levelById,
   objectiveProgress,
@@ -72,8 +74,22 @@ export function Play() {
   );
   const today = useMemo(() => todayKey(), []);
 
-  const { score, moves, deadlocked, cleared, busy, lastMove, start, reset, snapshot, restore } =
-    useGame();
+  const {
+    score,
+    moves,
+    deadlocked,
+    cleared,
+    busy,
+    lastMove,
+    nextMoveScoreMul,
+    start,
+    reset,
+    snapshot,
+    restore,
+    grantMoves,
+    grantScore,
+    armNextMoveMul,
+  } = useGame();
   const recordSpread = useSpread((s) => s.recordResult);
   const dailyRun = useDaily((s) => s.runs[today]);
   const saveDailySnapshot = useDaily((s) => s.saveSnapshot);
@@ -252,6 +268,11 @@ export function Play() {
       if (progress.met) {
         passChamber(score);
         clearResume(querentKey(chamber.index));
+        // Boss reward: a random Minor Arcana consumable (if the player
+        // has room in their consumables tray). High-stakes risk pays.
+        if (chamber.boss) {
+          useMinorArcana.getState().grantRandom();
+        }
         const nextIdx = querentRun.chamberIndex + 1;
         if (nextIdx > CHAMBER_COUNT) {
           finishRun();
@@ -358,6 +379,26 @@ export function Play() {
       </header>
 
       {mode === "querent" ? <ArcanaStrip /> : null}
+
+      {mode === "querent" ? (
+        <MinorTray
+          onUse={(minor) => {
+            switch (minor.effect.kind) {
+              case "add-moves":
+                grantMoves(minor.effect.amount);
+                break;
+              case "add-score":
+                grantScore(minor.effect.amount);
+                break;
+              case "double-next-move":
+                armNextMoveMul(2);
+                break;
+            }
+            useMinorArcana.getState().consume(minor.id);
+          }}
+          armed={nextMoveScoreMul > 1}
+        />
+      ) : null}
 
       {chamber?.restriction ? (
         <aside class="boss-banner" role="note">
@@ -519,6 +560,46 @@ function ArcanaStrip() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Minor Arcana consumables tray. Each held Minor renders as a tappable
+ *  badge. When the next-move-mul is "armed" (after using Page of Wands),
+ *  a small notice marks the next move as charged. */
+function MinorTray({
+  onUse,
+  armed,
+}: {
+  onUse: (m: MinorArcana) => void;
+  armed: boolean;
+}) {
+  const held = useMinorArcana((s) => s.held());
+  if (held.length === 0 && !armed) return null;
+  return (
+    <section class="minor-tray" aria-label="Consumables">
+      <p class="eyebrow">Consumables</p>
+      {armed ? (
+        <p class="minor-tray__armed script">next move doubled</p>
+      ) : null}
+      {held.length > 0 ? (
+        <ul class="minor-tray__list">
+          {held.map((m, i) => (
+            <li key={`${m.id}-${i}`}>
+              <button
+                type="button"
+                class="minor-tray__badge"
+                style={{ "--card-panel": m.panelColor }}
+                onClick={() => onUse(m)}
+                title={`${m.name} — ${m.description}`}
+              >
+                <span class="minor-tray__numeral numeral">{m.numeral}</span>
+                <span class="minor-tray__name">{m.name.replace(/^The /, "")}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
