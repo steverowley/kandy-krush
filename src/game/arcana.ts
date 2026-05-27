@@ -10,8 +10,47 @@
  * to MAJOR_ARCANA without touching the application code.
  */
 
-import type { CascadeStep } from "./engine/types";
+import type { CascadeStep, MatchGroup } from "./engine/types";
 import type { Suit } from "./engine/types";
+
+/** Per-cell chip value — must match cascade.ts CHIPS_PER_CELL. */
+const CHIPS_PER_CELL = 10;
+
+function matchSizeBonus(n: number): number {
+  if (n >= 6) return 20;
+  if (n >= 5) return 8;
+  if (n >= 4) return 4;
+  return 2;
+}
+
+/**
+ * Return a copy of `step` with all matches of `silencedSuit` removed
+ * and chips/mult adjusted so that suit contributes nothing. The board
+ * still cleared those cells (engine already collapsed them) — the
+ * change is purely in scoring.
+ */
+export function silenceSuitInStep(
+  step: CascadeStep,
+  silencedSuit: Suit,
+): CascadeStep {
+  let chipsRemoved = 0;
+  let multRemoved = 0;
+  const kept: MatchGroup[] = [];
+  for (const g of step.matches) {
+    if (g.suit === silencedSuit) {
+      chipsRemoved += g.cells.length * CHIPS_PER_CELL;
+      multRemoved += matchSizeBonus(g.cells.length);
+    } else {
+      kept.push(g);
+    }
+  }
+  return {
+    ...step,
+    matches: kept,
+    chips: Math.max(0, step.chips - chipsRemoved),
+    mult: Math.max(0, step.mult - multRemoved),
+  };
+}
 
 /** Identifier — stable across persistence. */
 export type ArcanaId =
@@ -131,25 +170,44 @@ export const MAX_HELD_ARCANA = 5;
 /**
  * Apply a sequence of arcana to one cascade step. Effects fire in the
  * held order — left to right — so drafting order matters.
+ *
+ * If `halveArcana` is set (Boss Blind effect), the *delta* contributed
+ * by arcana — i.e. the chips/mult added on top of the engine-emitted
+ * base — is reduced by 50%.
  */
 export function applyArcanaToStep(
   step: CascadeStep,
   held: readonly Arcana[],
-  meta: { depth: number; movesUsed: number; totalMoves: number | null },
+  meta: {
+    depth: number;
+    movesUsed: number;
+    totalMoves: number | null;
+    halveArcana?: boolean;
+  },
 ): { chips: number; mult: number; scoreGained: number } {
+  const baseChips = step.chips;
+  const baseMult = step.mult;
   const ctx: ArcanaContext = {
     step,
-    chips: step.chips,
-    mult: step.mult,
+    chips: baseChips,
+    mult: baseMult,
     depth: meta.depth,
     movesUsed: meta.movesUsed,
     totalMoves: meta.totalMoves,
   };
   for (const a of held) a.apply(ctx);
+  let finalChips = ctx.chips;
+  let finalMult = ctx.mult;
+  if (meta.halveArcana) {
+    const chipsDelta = finalChips - baseChips;
+    const multDelta = finalMult - baseMult;
+    finalChips = baseChips + Math.round(chipsDelta * 0.5);
+    finalMult = baseMult + Math.round(multDelta * 0.5);
+  }
   return {
-    chips: ctx.chips,
-    mult: ctx.mult,
-    scoreGained: ctx.chips * ctx.mult,
+    chips: finalChips,
+    mult: finalMult,
+    scoreGained: finalChips * finalMult,
   };
 }
 
