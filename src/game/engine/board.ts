@@ -1,0 +1,88 @@
+import { rngPick } from "./rng";
+import { SUITS, type Board, type Cell, type Suit, type Tile } from "./types";
+
+let nextTileId = 1;
+function mintTile(suit: Suit): Tile {
+  return { id: nextTileId++, suit };
+}
+
+export function indexOf(board: Board, cell: Cell): number {
+  return cell.row * board.cols + cell.col;
+}
+
+export function tileAt(board: Board, cell: Cell): Tile | null {
+  if (!inBounds(board, cell)) return null;
+  return board.tiles[indexOf(board, cell)] ?? null;
+}
+
+export function inBounds(board: Board, cell: Cell): boolean {
+  return (
+    cell.row >= 0 &&
+    cell.row < board.rows &&
+    cell.col >= 0 &&
+    cell.col < board.cols
+  );
+}
+
+export function areAdjacent(a: Cell, b: Cell): boolean {
+  const dr = Math.abs(a.row - b.row);
+  const dc = Math.abs(a.col - b.col);
+  return (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+}
+
+export function withTile(board: Board, cell: Cell, tile: Tile | null): Board {
+  const tiles = board.tiles.slice();
+  tiles[indexOf(board, cell)] = tile;
+  return { ...board, tiles };
+}
+
+export function swapped(board: Board, a: Cell, b: Cell): Board {
+  const tiles = board.tiles.slice();
+  const ia = indexOf(board, a);
+  const ib = indexOf(board, b);
+  const tmp = tiles[ia] ?? null;
+  tiles[ia] = tiles[ib] ?? null;
+  tiles[ib] = tmp;
+  return { ...board, tiles };
+}
+
+/**
+ * Generate a board where no triples-on-spawn exist. We pick each cell's
+ * suit while disallowing suits that would form an immediate match.
+ */
+export function generateBoard(
+  rows: number,
+  cols: number,
+  rng: () => number,
+): Board {
+  const tiles: (Tile | null)[] = new Array(rows * cols).fill(null);
+  const board: Board = { rows, cols, tiles };
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const forbidden = new Set<Suit>();
+      // Disallow horizontal triple: same suit at (row, col-1) and (row, col-2).
+      if (col >= 2) {
+        const a = tiles[row * cols + (col - 1)];
+        const b = tiles[row * cols + (col - 2)];
+        if (a && b && a.suit === b.suit) forbidden.add(a.suit);
+      }
+      // Disallow vertical triple.
+      if (row >= 2) {
+        const a = tiles[(row - 1) * cols + col];
+        const b = tiles[(row - 2) * cols + col];
+        if (a && b && a.suit === b.suit) forbidden.add(a.suit);
+      }
+      const choices = SUITS.filter((s) => !forbidden.has(s));
+      const suit = rngPick(rng, choices);
+      tiles[row * cols + col] = mintTile(suit);
+    }
+  }
+
+  return board;
+}
+
+/** Mint a fresh tile for refill cascades. */
+export function newTile(suit: Suit): Tile {
+  return mintTile(suit);
+}
