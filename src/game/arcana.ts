@@ -10,7 +10,7 @@
  * to MAJOR_ARCANA without touching the application code.
  */
 
-import type { CascadeStep, MatchGroup } from "./engine/types";
+import type { Board, CascadeStep, Cell, MatchGroup } from "./engine/types";
 import type { Suit } from "./engine/types";
 
 /** Per-cell chip value — must match cascade.ts CHIPS_PER_CELL. */
@@ -103,6 +103,11 @@ export type Arcana = {
   panelColor: string;
   /** Modifies the per-step scoring context in place. */
   apply: (ctx: ArcanaContext) => void;
+  /** Optional imperative board hook that fires once per move, after the
+   *  swap's cascade has settled and scored. Return cells to destroy via
+   *  the engine's `destroyCells`; the resulting refill-cascade is folded
+   *  into the same move's scoring. */
+  postMove?: (board: Board, rng: () => number) => Cell[];
 };
 
 export const MAJOR_ARCANA: readonly Arcana[] = [
@@ -204,12 +209,19 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     numeral: "XIII",
     name: "Death",
     panelCaption: "cambio",
-    description: "+1 mult per cell cleared in this step.",
+    description: "Destroy 1 random tile per move; +1 mult per cell cleared each step.",
     subtitle: "la muerte · the cut multiplies",
     panelColor: "var(--panel-amethyst)",
     apply: (ctx) => {
       const total = ctx.step.matches.reduce((a, g) => a + g.cells.length, 0);
       ctx.mult += total;
+    },
+    postMove: (board, rng) => {
+      // Pick any occupied cell uniformly. The board is always full at
+      // rest, so we just hash the rng to a (row, col).
+      const row = Math.floor(rng() * board.rows);
+      const col = Math.floor(rng() * board.cols);
+      return [{ row, col }];
     },
   },
   {

@@ -1,9 +1,14 @@
 import { create } from "zustand";
 import { newGame, tryMove, isDeadlocked } from "../game/engine/engine";
 import { reserveTileIds } from "../game/engine/board";
+import { destroyCells } from "../game/engine/cascade";
 import { createRng, type SeededRng } from "../game/engine/rng";
-import type { Board, Cell, Suit, Tile } from "../game/engine/types";
-import { applyArcanaToStep, silenceSuitInStep } from "../game/arcana";
+import type { Board, CascadeStep, Cell, Suit, Tile } from "../game/engine/types";
+import {
+  applyArcanaToStep,
+  silenceSuitInStep,
+  type Arcana,
+} from "../game/arcana";
 import { useArcana } from "./arcana";
 import type { ChamberRestriction } from "../game/querent";
 
@@ -156,12 +161,6 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       set({ nudge: s.nudge + 1, selected: null });
       return;
     }
-    const cleared: ClearCounts = { ...s.cleared };
-    for (const step of result.cascades) {
-      for (const group of step.matches) {
-        cleared[group.suit] += group.cells.length;
-      }
-    }
     set({ busy: true });
     window.setTimeout(() => {
       set((prev) => {
@@ -172,43 +171,76 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         // it can scale only the arcana delta, not the engine base.
         const held = useArcana.getState().held();
         const restriction = prev.restriction;
-        let modTotalScore = 0;
-        let modTotalChips = 0;
-        let modPeakMult = 0;
-        for (const rawStep of result.cascades) {
-          const step = restriction?.silenceSuit
-            ? silenceSuitInStep(rawStep, restriction.silenceSuit)
-            : rawStep;
-          const modified = applyArcanaToStep(step, held, {
-            depth: step.depth,
-            movesUsed: prev.moves,
-            totalMoves: prev.totalMoves,
-            halveArcana: restriction?.halveArcana ?? false,
-            isBoss: restriction !== null,
-          });
-          modTotalScore += modified.scoreGained;
-          modTotalChips += modified.chips;
-          if (modified.mult > modPeakMult) modPeakMult = modified.mult;
+
+        const scoreSteps = (
+          steps: readonly CascadeStep[],
+          acc: { score: number; chips: number; peakMult: number },
+        ) => {
+          for (const rawStep of steps) {
+            const step = restriction?.silenceSuit
+              ? silenceSuitInStep(rawStep, restriction.silenceSuit)
+              : rawStep;
+            const modified = applyArcanaToStep(step, held, {
+              depth: step.depth,
+              movesUsed: prev.moves,
+              totalMoves: prev.totalMoves,
+              halveArcana: restriction?.halveArcana ?? false,
+              isBoss: restriction !== null,
+            });
+            acc.score += modified.scoreGained;
+            acc.chips += modified.chips;
+            if (modified.mult > acc.peakMult) acc.peakMult = modified.mult;
+          }
+        };
+
+        const totals = { score: 0, chips: 0, peakMult: 0 };
+        scoreSteps(result.cascades, totals);
+
+        const cleared: ClearCounts = { ...prev.cleared };
+        for (const step of result.cascades) {
+          for (const group of step.matches) {
+            cleared[group.suit] += group.cells.length;
+          }
         }
+
+        // Imperative board-modifying arcana fire once per move, after
+        // the swap's cascade has settled. Each hook's resulting refill-
+        // cascade is folded into the same move's score and cleared
+        // counts — so Death's destruction stacks on top of the swap.
+        let board = result.board;
+        for (const arcana of held as readonly Arcana[]) {
+          if (!arcana.postMove) continue;
+          const cells = arcana.postMove(board, prev.rng);
+          if (cells.length === 0) continue;
+          const destroyed = destroyCells(board, prev.rng, cells);
+          board = destroyed.board;
+          scoreSteps(destroyed.cascades, totals);
+          for (const step of destroyed.cascades) {
+            for (const group of step.matches) {
+              cleared[group.suit] += group.cells.length;
+            }
+          }
+        }
+
         const scored = Math.round(
-          modTotalScore * prev.scoreMultiplier * prev.nextMoveScoreMul,
+          totals.score * prev.scoreMultiplier * prev.nextMoveScoreMul,
         );
         return {
-          board: result.board,
+          board,
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
           // The per-move minor-arcana buff fires exactly once and clears.
           nextMoveScoreMul: 1,
           lastMove: {
-            chips: modTotalChips,
-            mult: modPeakMult,
+            chips: totals.chips,
+            mult: totals.peakMult,
             score: scored,
             tick: prev.lastMove.tick + 1,
           },
           selected: null,
           busy: false,
-          deadlocked: isDeadlocked(result.board),
+          deadlocked: isDeadlocked(board),
         };
       });
     }, 240);

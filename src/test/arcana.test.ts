@@ -256,6 +256,57 @@ describe("applyArcanaToStep — Death", () => {
   });
 });
 
+describe("Death.postMove — board-modifying wiring", () => {
+  const death = arcanaById("death")!;
+
+  function makeBoard(rows: string[]) {
+    const cols = rows[0]!.length;
+    const charToSuit = (ch: string): Suit => {
+      switch (ch) {
+        case "c": return "cups";
+        case "p": return "pentacles";
+        case "s": return "swords";
+        case "w": return "wands";
+        default: throw new Error(`bad suit ${ch}`);
+      }
+    };
+    const tiles = rows.flatMap((r, ri) =>
+      r.split("").map((ch, ci) => ({
+        id: ri * cols + ci + 1,
+        suit: charToSuit(ch),
+      })),
+    );
+    return { rows: rows.length, cols, tiles };
+  }
+
+  it("returns a single in-bounds cell each call", () => {
+    const board = makeBoard(["cpsw", "wpsw", "spwc"]);
+    const rng = createRng(3);
+    for (let i = 0; i < 20; i++) {
+      const cells = death.postMove!(board, rng);
+      expect(cells).toHaveLength(1);
+      const c = cells[0]!;
+      expect(c.row).toBeGreaterThanOrEqual(0);
+      expect(c.row).toBeLessThan(board.rows);
+      expect(c.col).toBeGreaterThanOrEqual(0);
+      expect(c.col).toBeLessThan(board.cols);
+    }
+  });
+
+  it("removes the picked tile when fed through destroyCells", async () => {
+    const { destroyCells } = await import("../game/engine/cascade");
+    const board = makeBoard(["cpsw", "wpsw", "spwc", "cwps"]);
+    const idsBefore = new Set(board.tiles.map((t) => t.id));
+    const rng = createRng(11);
+    const cells = death.postMove!(board, rng);
+    const targetId = board.tiles[cells[0]!.row * board.cols + cells[0]!.col]!.id;
+    const { board: out } = destroyCells(board, rng, cells);
+    const idsAfter = new Set(out.tiles.map((t) => t!.id));
+    expect(idsBefore.has(targetId)).toBe(true);
+    expect(idsAfter.has(targetId)).toBe(false);
+  });
+});
+
 describe("applyArcanaToStep — The Tower", () => {
   const tower = arcanaById("tower")!;
   it("multiplies mult by 1.3 on a boss chamber", () => {
