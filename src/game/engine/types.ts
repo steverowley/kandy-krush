@@ -3,10 +3,16 @@ export type Suit = "cups" | "pentacles" | "swords" | "wands";
 
 export const SUITS: readonly Suit[] = ["cups", "pentacles", "swords", "wands"];
 
+/** Special-tile kinds. A bare tile is normal; "spark" is created when
+ *  a match of 4+ resolves, and on its subsequent clearing it also
+ *  sweeps its row + column. */
+export type TileKind = "spark";
+
 /** A single tile occupying one cell of the board. */
 export type Tile = {
   id: number;
   suit: Suit;
+  kind?: TileKind;
 };
 
 /** A 2D position on the board. */

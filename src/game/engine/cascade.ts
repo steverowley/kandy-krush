@@ -1,32 +1,96 @@
 import { newTile } from "./board";
 import { findMatches } from "./match";
 import { rngPick } from "./rng";
-import { SUITS, type Board, type CascadeStep, type Cell, type MatchGroup } from "./types";
+import { SUITS, type Board, type CascadeStep, type Cell, type MatchGroup, type Tile } from "./types";
+
+function indexOf(board: Board, cell: Cell): number {
+  return cell.row * board.cols + cell.col;
+}
 
 /**
- * Remove matched tiles, drop survivors, refill from above with the rng.
- * Returns the new board, the matches that were cleared, and the score
- * gained from this single step.
+ * Resolve one match wave: figure out the clear set (expanding via any
+ * sparks caught in the original match cells), promote any match-4+
+ * groups into a spark survivor, null out the rest, collapse and refill.
+ *
+ * Returns the post-step board + score gained.
  */
 function clearAndRefillOnce(
   board: Board,
   matches: MatchGroup[],
   rng: () => number,
-): { board: Board; scoreGained: number } {
-  // Mark cleared cells.
+): { board: Board; scoreGained: number; sparkPromotions: number; sparkBlasts: number } {
   const tiles = board.tiles.slice();
-  let cleared = 0;
-  const isCleared = new Set<number>();
+  const clearSet = new Set<number>();
+
   for (const group of matches) {
-    for (const cell of group.cells) {
-      const idx = cell.row * board.cols + cell.col;
-      if (!isCleared.has(idx)) {
-        isCleared.add(idx);
-        cleared++;
+    for (const cell of group.cells) clearSet.add(indexOf(board, cell));
+  }
+
+  // Spark cascade: any spark caught in the clear set sweeps its entire
+  // row + column. Repeat until the set is stable so chains of sparks
+  // fire properly.
+  let sparkBlasts = 0;
+  let frontier = Array.from(clearSet);
+  while (frontier.length > 0) {
+    const nextFrontier: number[] = [];
+    for (const idx of frontier) {
+      const t = tiles[idx];
+      if (t && t.kind === "spark") {
+        sparkBlasts++;
+        const row = Math.floor(idx / board.cols);
+        const col = idx % board.cols;
+        for (let c = 0; c < board.cols; c++) {
+          const i = row * board.cols + c;
+          if (!clearSet.has(i)) {
+            clearSet.add(i);
+            nextFrontier.push(i);
+          }
+        }
+        for (let r = 0; r < board.rows; r++) {
+          const i = r * board.cols + col;
+          if (!clearSet.has(i)) {
+            clearSet.add(i);
+            nextFrontier.push(i);
+          }
+        }
       }
     }
+    frontier = nextFrontier;
   }
-  for (const idx of isCleared) tiles[idx] = null;
+
+  // Promote one cell per match-4+ group to a fresh spark. Pick the
+  // middle cell of the group — deterministic and visually central.
+  // The promoted cell is rescued from the clear set.
+  const sparkPlants: Array<{ idx: number; tile: Tile }> = [];
+  let sparkPromotions = 0;
+  for (const group of matches) {
+    if (group.cells.length < 4) continue;
+    const middle = group.cells[Math.floor(group.cells.length / 2)]!;
+    const idx = indexOf(board, middle);
+    const oldTile = tiles[idx];
+    if (!oldTile) continue;
+    // Spark inherits the suit but becomes the special kind.
+    sparkPlants.push({ idx, tile: { ...oldTile, kind: "spark" } });
+    clearSet.delete(idx);
+    sparkPromotions++;
+  }
+
+  // Score: 10 per cleared cell, +5 per cell past 3 in the original
+  // matches. Spark blasts add 30 each as a "fortune boon."
+  let scoreGained = 0;
+  for (const group of matches) {
+    const n = group.cells.length;
+    scoreGained += n * 10 + Math.max(0, n - 3) * 5;
+  }
+  scoreGained += sparkBlasts * 30;
+  // Bonus for the spark blast's collateral clears.
+  // (Already implicit: more cleared cells from the next-wave refill.)
+
+  // Null cleared cells.
+  for (const idx of clearSet) tiles[idx] = null;
+
+  // Apply spark promotions.
+  for (const p of sparkPlants) tiles[p.idx] = p.tile;
 
   // Collapse per column.
   for (let col = 0; col < board.cols; col++) {
@@ -42,28 +106,23 @@ function clearAndRefillOnce(
         writeRow--;
       }
     }
-    // Refill the empties at the top with new tiles.
+    // Refill empties with fresh normal tiles.
     for (let row = writeRow; row >= 0; row--) {
       tiles[row * board.cols + col] = newTile(rngPick(rng, SUITS));
     }
   }
 
-  // Score: standard match-3 — base 10 per tile, +5 bonus for each cell
-  // past the third within a group. Cascades multiply elsewhere.
-  let scoreGained = 0;
-  for (const group of matches) {
-    const n = group.cells.length;
-    scoreGained += n * 10 + Math.max(0, n - 3) * 5;
-  }
-  void cleared;
-
-  return { board: { ...board, tiles }, scoreGained };
+  return {
+    board: { ...board, tiles },
+    scoreGained,
+    sparkPromotions,
+    sparkBlasts,
+  };
 }
 
 /**
- * Resolve the board to a stable state by repeatedly clearing matches +
- * cascading until no more matches exist. Each cascade level multiplies
- * its base score by the chain depth (1×, 2×, 3×, …).
+ * Drive the board to a stable state by repeatedly clearing matches +
+ * cascading. Cascade depth multiplies the per-step score.
  */
 export function resolveCascades(
   board: Board,
@@ -83,13 +142,12 @@ export function resolveCascades(
     totalScore += stepScore;
     cur = next;
     depth++;
-    if (depth > 50) break; // hard guard against runaway
+    if (depth > 50) break;
   }
 
   return { board: cur, cascades, scoreGained: totalScore };
 }
 
-/** True if at least one swap would produce a match. */
 export function hasLegalMove(board: Board): boolean {
   for (let row = 0; row < board.rows; row++) {
     for (let col = 0; col < board.cols; col++) {

@@ -276,7 +276,9 @@ function TileButton({
       type="button"
       class={`tile-card${isSelected ? " tile-card--selected" : ""}${
         busy ? " tile-card--busy" : ""
-      }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}`}
+      }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}${
+        tile.kind === "spark" ? " tile-card--spark" : ""
+      }`}
       role="gridcell"
       style={{
         "--tile-color": SUIT_COLORS[tile.suit],
@@ -285,7 +287,7 @@ function TileButton({
         "--drag-x": `${dragDx}px`,
         "--drag-y": `${dragDy}px`,
       }}
-      aria-label={`${suitLabel(tile.suit)} at row ${row + 1}, column ${col + 1}`}
+      aria-label={`${tile.kind === "spark" ? "Spark of " : ""}${suitLabel(tile.suit)} at row ${row + 1}, column ${col + 1}`}
       aria-pressed={isSelected}
       tabIndex={isFocused ? 0 : -1}
       onPointerDown={onPointerDown}
@@ -298,6 +300,13 @@ function TileButton({
       <span class="tile-card__glyph" aria-hidden="true">
         <SuitGlyph suit={tile.suit} />
       </span>
+      {tile.kind === "spark" ? (
+        <span class="tile-card__spark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.4 6.6L21 9l-5 4.3L17.6 20 12 16.8 6.4 20 8 13.3 3 9l6.6-.4z" />
+          </svg>
+        </span>
+      ) : null}
     </button>
   );
 }
