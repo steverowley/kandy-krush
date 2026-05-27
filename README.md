@@ -63,6 +63,14 @@ Screen-routed: every screen lives in `src/screens/*.tsx` and registers a route i
 - `cascade.ts` — `resolveCascades` clears, expands via spark blasts, promotes match-4 into sparks and match-5+ into wilds, collapses, refills, chains
 - `engine.ts` — `newGame`, `tryMove`, `isDeadlocked` orchestrators
 
+**Scoring (Balatro-style Chips × Mult).** Each cascade step earns
+chips (10 per cleared cell, +30 per spark blast) and mult (sum of
+match-size bonuses: 3 → +2, 4 → +4, 5 → +8, 6+ → +20). Each cascade
+beyond the first adds +1 to its step's mult. Step score = chips × mult;
+move score = sum of step scores. The Play HUD flashes the breakdown on
+every resolved move and ramps a pentatonic arpeggio whose length
+tracks the magnitude — the apex moment is the audible product reveal.
+
 **Special tiles**
 
 - **Spark** — a match-4 plants a spark at the middle of the run. When the spark is later cleared as part of any match, it sweeps its row + column.

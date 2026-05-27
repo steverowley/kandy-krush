@@ -7,21 +7,49 @@ function indexOf(board: Board, cell: Cell): number {
   return cell.row * board.cols + cell.col;
 }
 
+/** Chips added per cell cleared. Will eventually be modified by per-suit
+ *  level (Planet-card analog); for now every suit has level 1. */
+const CHIPS_PER_CELL = 10;
+
+/** Chips contributed by a single spark blast (in addition to whatever
+ *  cells the blast clears, which score normally). */
+const CHIPS_PER_SPARK = 30;
+
+/** Mult bonus by match size. Per the design brief:
+ *  3 → +2, 4 → +4, 5 → +8, 6+ → +20. */
+function multForMatchSize(n: number): number {
+  if (n >= 6) return 20;
+  if (n >= 5) return 8;
+  if (n >= 4) return 4;
+  return 2;
+}
+
 /**
  * Resolve one match wave: figure out the clear set (expanding via any
  * sparks caught in the original match cells), promote any match-4+
  * groups into a spark or wild survivor, null out the rest, collapse and
  * refill.
  *
- * Returns the post-step board + score gained. Exported so tests can
- * exercise the promotion logic on a single pass without dealing with
- * downstream cascades.
+ * Returns the post-step board plus a Balatro-style breakdown — chips
+ * (sum of cell + spark contributions) and mult (sum of match-size
+ * bonuses). The caller multiplies these to get the step's score, and
+ * may layer a cascade-depth bonus onto the mult first.
+ *
+ * Exported so tests can exercise the promotion logic on a single pass
+ * without dealing with downstream cascades.
  */
 export function clearAndRefillOnce(
   board: Board,
   matches: MatchGroup[],
   rng: () => number,
-): { board: Board; scoreGained: number; sparkPromotions: number; sparkBlasts: number } {
+): {
+  board: Board;
+  chips: number;
+  mult: number;
+  scoreGained: number;
+  sparkPromotions: number;
+  sparkBlasts: number;
+} {
   const tiles = board.tiles.slice();
   const clearSet = new Set<number>();
 
@@ -83,16 +111,21 @@ export function clearAndRefillOnce(
     sparkPromotions++;
   }
 
-  // Score: 10 per cleared cell, +5 per cell past 3 in the original
-  // matches. Spark blasts add 30 each as a "fortune boon."
-  let scoreGained = 0;
+  // Balatro-style scoring: chips × mult.
+  //
+  //   chips = (cells actually cleared this wave) × CHIPS_PER_CELL
+  //         + sparkBlasts × CHIPS_PER_SPARK
+  //   mult  = sum of match-size bonuses across the original groups
+  //
+  // The total clearSet (after spark expansion, minus rescued promotions)
+  // is what scored — that way spark blasts naturally reward bigger
+  // collateral via the increased chip count.
+  let mult = 0;
   for (const group of matches) {
-    const n = group.cells.length;
-    scoreGained += n * 10 + Math.max(0, n - 3) * 5;
+    mult += multForMatchSize(group.cells.length);
   }
-  scoreGained += sparkBlasts * 30;
-  // Bonus for the spark blast's collateral clears.
-  // (Already implicit: more cleared cells from the next-wave refill.)
+  const chips = clearSet.size * CHIPS_PER_CELL + sparkBlasts * CHIPS_PER_SPARK;
+  const scoreGained = chips * mult;
 
   // Null cleared cells.
   for (const idx of clearSet) tiles[idx] = null;
@@ -122,6 +155,8 @@ export function clearAndRefillOnce(
 
   return {
     board: { ...board, tiles },
+    chips,
+    mult,
     scoreGained,
     sparkPromotions,
     sparkBlasts,
@@ -130,30 +165,42 @@ export function clearAndRefillOnce(
 
 /**
  * Drive the board to a stable state by repeatedly clearing matches +
- * cascading. Cascade depth multiplies the per-step score.
+ * cascading. Each cascade beyond the first adds +1 to its step's mult
+ * — so chains snowball Balatro-style without runaway exponents.
  */
 export function resolveCascades(
   board: Board,
   rng: () => number,
-): { board: Board; cascades: CascadeStep[]; scoreGained: number } {
+): {
+  board: Board;
+  cascades: CascadeStep[];
+  scoreGained: number;
+  totalChips: number;
+  peakMult: number;
+} {
   const cascades: CascadeStep[] = [];
   let totalScore = 0;
+  let totalChips = 0;
+  let peakMult = 0;
   let depth = 1;
   let cur = board;
 
   while (true) {
     const matches = findMatches(cur);
     if (matches.length === 0) break;
-    const { board: next, scoreGained } = clearAndRefillOnce(cur, matches, rng);
-    const stepScore = scoreGained * depth;
-    cascades.push({ matches, scoreGained: stepScore });
+    const { board: next, chips, mult } = clearAndRefillOnce(cur, matches, rng);
+    const stepMult = mult + (depth - 1);
+    const stepScore = chips * stepMult;
+    cascades.push({ matches, depth, chips, mult: stepMult, scoreGained: stepScore });
     totalScore += stepScore;
+    totalChips += chips;
+    if (stepMult > peakMult) peakMult = stepMult;
     cur = next;
     depth++;
     if (depth > 50) break;
   }
 
-  return { board: cur, cascades, scoreGained: totalScore };
+  return { board: cur, cascades, scoreGained: totalScore, totalChips, peakMult };
 }
 
 export function hasLegalMove(board: Board): boolean {
