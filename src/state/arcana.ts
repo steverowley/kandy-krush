@@ -33,6 +33,10 @@ type State = {
   acceptOffer: (id: ArcanaId) => void;
   /** Skip the offer entirely. */
   skipOffer: () => void;
+  /** Move the held arcana at `from` index to `to` index. Out-of-range
+   *  indices or no-op moves return without mutating. Order is the firing
+   *  order, so reordering is a meaningful strategic action. */
+  reorder: (from: number, to: number) => void;
   /** Convenience: hydrated readers. */
   held: () => Arcana[];
   offered: () => Arcana[];
@@ -70,6 +74,18 @@ export const useArcana = create<State>()(
       },
 
       skipOffer: () => set({ offeredIds: [] }),
+
+      reorder: (from, to) => {
+        const ids = get().heldIds;
+        if (from === to) return;
+        if (from < 0 || from >= ids.length) return;
+        if (to < 0 || to >= ids.length) return;
+        const next = ids.slice();
+        const [moved] = next.splice(from, 1);
+        if (!moved) return;
+        next.splice(to, 0, moved);
+        set({ heldIds: next });
+      },
 
       held: () =>
         get()

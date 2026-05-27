@@ -11,6 +11,34 @@ import {
   type StakeId,
 } from "../game/stakes";
 
+/** A single-stake leaderboard: did the player ever clear at this tier,
+ *  what was their peak score, what was their deepest chamber, and how
+ *  many full clears do they have. Updated by passChamber / failRun /
+ *  finishRun. */
+export type StakeRecord = {
+  cleared: boolean;
+  bestScore: number;
+  bestDepth: number;
+  runsCompleted: number;
+};
+
+function emptyRecord(): StakeRecord {
+  return { cleared: false, bestScore: 0, bestDepth: 0, runsCompleted: 0 };
+}
+
+function updatedRecord(
+  prev: StakeRecord | undefined,
+  patch: Partial<StakeRecord>,
+): StakeRecord {
+  const base = prev ?? emptyRecord();
+  return {
+    cleared: patch.cleared ?? base.cleared,
+    bestScore: Math.max(base.bestScore, patch.bestScore ?? 0),
+    bestDepth: Math.max(base.bestDepth, patch.bestDepth ?? 0),
+    runsCompleted: base.runsCompleted + (patch.runsCompleted ?? 0),
+  };
+}
+
 export type QuerentRun = {
   classId: QuerentClass["id"];
   chamberIndex: number;
@@ -32,6 +60,9 @@ export type QuerentMeta = {
   /** Stake the lobby is currently primed at. Defaults to whatever the
    *  player last picked; clamped to maxStakeId on read. */
   currentStakeId: StakeId;
+  /** Per-stake bests, accumulated across runs. Stakes the player has
+   *  never started are absent from the map. */
+  records: Partial<Record<StakeId, StakeRecord>>;
 };
 
 type State = {
@@ -53,6 +84,7 @@ const DEFAULT_META: QuerentMeta = {
   unlocked: ["seer"],
   maxStakeId: DEFAULT_STAKE,
   currentStakeId: DEFAULT_STAKE,
+  records: {},
 };
 
 function ensureUnlocked(meta: QuerentMeta, id: QuerentClass["id"]): QuerentMeta {
@@ -89,6 +121,12 @@ export const useQuerent = create<State>()(
         if (!r) return;
         const meta = get().meta;
         const newDepth = Math.max(meta.bestDepth, r.chamberIndex);
+        const records = {
+          ...meta.records,
+          [r.stakeId]: updatedRecord(meta.records[r.stakeId], {
+            bestDepth: r.chamberIndex,
+          }),
+        };
         set({
           run: {
             ...r,
@@ -96,7 +134,7 @@ export const useQuerent = create<State>()(
             totalScore: r.totalScore + gained,
             cleared: r.cleared + 1,
           },
-          meta: { ...meta, bestDepth: newDepth },
+          meta: { ...meta, bestDepth: newDepth, records },
         });
       },
 
@@ -110,9 +148,16 @@ export const useQuerent = create<State>()(
           set({ run: null });
           return;
         }
+        const records = {
+          ...meta.records,
+          [r.stakeId]: updatedRecord(meta.records[r.stakeId], {
+            bestScore: r.totalScore,
+          }),
+        };
         let nextMeta: QuerentMeta = {
           ...meta,
           insight: meta.insight + r.totalScore,
+          records,
         };
         nextMeta = ensureUnlocked(nextMeta, "maker");
         set({ run: null, meta: nextMeta });
@@ -128,11 +173,21 @@ export const useQuerent = create<State>()(
           set({ run: null });
           return;
         }
+        const records = {
+          ...meta.records,
+          [r.stakeId]: updatedRecord(meta.records[r.stakeId], {
+            cleared: true,
+            bestScore: r.totalScore,
+            bestDepth: r.chamberIndex,
+            runsCompleted: 1,
+          }),
+        };
         let nextMeta: QuerentMeta = {
           ...meta,
           runsCompleted: meta.runsCompleted + 1,
           insight: meta.insight + r.totalScore,
           bestDepth: Math.max(meta.bestDepth, r.chamberIndex),
+          records,
         };
         nextMeta = ensureUnlocked(nextMeta, "maker");
         nextMeta = ensureUnlocked(nextMeta, "walker");
@@ -170,17 +225,34 @@ export const useQuerent = create<State>()(
     }),
     {
       name: "arcana.querent.v1",
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
-        // v1 → v2 introduces stake unlocks. Inject the defaults if
-        // they're missing so existing players don't load broken state.
         const state = persisted as { meta?: Partial<QuerentMeta> } | undefined;
         if (state?.meta && version < 2) {
+          // v1 → v2 introduces stake unlocks. Inject the defaults if
+          // they're missing so existing players don't load broken state.
           state.meta = {
             ...DEFAULT_META,
             ...state.meta,
             maxStakeId: state.meta.maxStakeId ?? DEFAULT_STAKE,
             currentStakeId: state.meta.currentStakeId ?? DEFAULT_STAKE,
+          };
+        }
+        if (state?.meta && version < 3) {
+          // v2 → v3 introduces per-stake records. Seed `white` from the
+          // existing aggregate stats so prior progress shows up under
+          // the only stake older saves could possibly have played.
+          const m = state.meta;
+          state.meta = {
+            ...m,
+            records: m.records ?? {
+              white: {
+                cleared: (m.runsCompleted ?? 0) > 0,
+                bestScore: 0,
+                bestDepth: m.bestDepth ?? 0,
+                runsCompleted: m.runsCompleted ?? 0,
+              },
+            },
           };
         }
         return persisted as never;

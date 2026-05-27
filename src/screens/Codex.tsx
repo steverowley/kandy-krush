@@ -3,6 +3,7 @@ import { useLocation } from "wouter-preact";
 import { routes } from "../router";
 import { LEVELS } from "../game/levels";
 import { CHAMBER_COUNT, CHAMBERS, CLASSES } from "../game/querent";
+import { STAKES, stakeById } from "../game/stakes";
 import { buildShareText } from "../game/share";
 import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
@@ -31,6 +32,7 @@ export function Codex() {
     .filter((r) => r.outcome !== "in-progress")
     .sort((a, b) => (a.key < b.key ? 1 : -1));
   const dailyTotalScore = dailyHistory.reduce((a, b) => a + b.finalScore, 0);
+  const maxStakeTier = stakeById(querentMeta.maxStakeId)?.tier ?? 0;
 
   const [shareStatus, setShareStatus] = useState<ShareStatus>("idle");
 
@@ -192,6 +194,56 @@ export function Codex() {
             </ul>
           </div>
         </div>
+      </section>
+
+      <section class="codex__row" aria-labelledby="codex-stakes">
+        <header class="codex__row-head">
+          <p class="eyebrow">Book Three · Stakes</p>
+          <h2 id="codex-stakes">Per-stake bests</h2>
+          <p class="codex__row-stat tabular">
+            {maxStakeTier + 1} / {STAKES.length} unlocked
+          </p>
+        </header>
+        <ul class="codex__stakes-grid" role="list">
+          {STAKES.map((s) => {
+            const unlocked = s.tier <= maxStakeTier;
+            const rec = querentMeta.records[s.id];
+            return (
+              <li
+                key={s.id}
+                class={`codex__stake${unlocked ? "" : " codex__stake--locked"}${
+                  rec?.cleared ? " codex__stake--cleared" : ""
+                }`}
+                style={{ "--card-panel": s.panelColor }}
+                aria-label={`${s.name} stake${unlocked ? "" : " (sealed)"}`}
+              >
+                <p class="codex__stake-name">{s.name}</p>
+                {unlocked ? (
+                  <dl class="codex__stake-stats">
+                    <div>
+                      <dt class="eyebrow">Best</dt>
+                      <dd class="tabular">
+                        {(rec?.bestScore ?? 0).toLocaleString()}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="eyebrow">Depth</dt>
+                      <dd class="tabular">
+                        {rec?.bestDepth ?? 0} / {CHAMBER_COUNT}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt class="eyebrow">Clears</dt>
+                      <dd class="tabular">{rec?.runsCompleted ?? 0}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p class="codex__stake-sealed eyebrow">Sealed</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section class="codex__row" aria-labelledby="codex-daily">

@@ -122,6 +122,7 @@ describe("useQuerent stake state", () => {
         unlocked: ["seer"],
         maxStakeId: DEFAULT_STAKE,
         currentStakeId: DEFAULT_STAKE,
+        records: {},
       },
     });
   });

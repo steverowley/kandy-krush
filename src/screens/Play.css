@@ -248,7 +248,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0.35em 0.9em 0.35em 0.7em;
+  padding: 0.35em 0.5em;
   border: 1px solid var(--accent-gold-3);
   border-radius: 999px;
   background: rgba(245, 239, 220, 0.06);
@@ -256,6 +256,54 @@
   font-family: var(--font-body);
   font-style: italic;
   font-size: 0.92rem;
+  touch-action: none;
+  cursor: grab;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.arcana-strip__badge--dragging {
+  cursor: grabbing;
+  transform: scale(1.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+:where(.reduced-motion) .arcana-strip__badge,
+:where(.reduced-motion) .arcana-strip__badge--dragging {
+  transition: none;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcana-strip__badge,
+  .arcana-strip__badge--dragging {
+    transition: none;
+    transform: none;
+  }
+}
+
+.arcana-strip__nudge {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--accent-gold-2);
+  padding: 0 0.15em;
+  font-size: 0.9rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 120ms ease;
+}
+
+.arcana-strip__nudge:hover:not(:disabled),
+.arcana-strip__nudge:focus-visible {
+  opacity: 1;
+}
+
+.arcana-strip__nudge:disabled {
+  opacity: 0.2;
+  cursor: default;
 }
 
 .arcana-strip__badge::before {

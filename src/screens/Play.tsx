@@ -549,10 +549,39 @@ export function Play() {
 /** Compact strip of held Arcana — sits above the Fortune ledger in
  *  Querent mode. Each badge shows the Roman numeral and a tooltip name
  *  on hover/focus. Empty state renders a small "no arcana yet" hint.
- *  A coin chip at the right tracks Parlour earnings. */
+ *  Players can drag a badge to reorder firing order, or use the ◂ ▸
+ *  buttons for keyboard / no-pointer access. A coin chip at the right
+ *  tracks Parlour earnings. */
 function ArcanaStrip() {
   const held = useArcana((s) => s.held());
+  const reorder = useArcana((s) => s.reorder);
   const coins = useCoins((s) => s.balance);
+
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+
+  function onPointerDown(e: PointerEvent, idx: number) {
+    if (held.length < 2) return;
+    const target = e.currentTarget as HTMLLIElement;
+    target.setPointerCapture?.(e.pointerId);
+    setDraggingIdx(idx);
+  }
+
+  function onPointerMove(e: PointerEvent) {
+    if (draggingIdx === null) return;
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const sibling = under?.closest<HTMLLIElement>("[data-arcana-idx]");
+    if (!sibling) return;
+    const overIdx = Number(sibling.dataset.arcanaIdx);
+    if (Number.isFinite(overIdx) && overIdx !== draggingIdx) {
+      reorder(draggingIdx, overIdx);
+      setDraggingIdx(overIdx);
+    }
+  }
+
+  function onPointerEnd() {
+    if (draggingIdx !== null) setDraggingIdx(null);
+  }
+
   return (
     <section class="arcana-strip" aria-label="Held arcana">
       <div class="arcana-strip__head">
@@ -568,15 +597,46 @@ function ArcanaStrip() {
         </p>
       ) : (
         <ul class="arcana-strip__list">
-          {held.map((a) => (
+          {held.map((a, i) => (
             <li
               key={a.id}
-              class="arcana-strip__badge"
+              data-arcana-idx={i}
+              class={`arcana-strip__badge${
+                draggingIdx === i ? " arcana-strip__badge--dragging" : ""
+              }`}
               style={{ "--card-panel": a.panelColor }}
               title={`${a.name} — ${a.description}`}
+              onPointerDown={(e) => onPointerDown(e, i)}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerEnd}
+              onPointerCancel={onPointerEnd}
             >
+              {held.length > 1 ? (
+                <button
+                  type="button"
+                  class="arcana-strip__nudge"
+                  aria-label={`Move ${a.name} left`}
+                  disabled={i === 0}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => reorder(i, i - 1)}
+                >
+                  ◂
+                </button>
+              ) : null}
               <span class="arcana-strip__numeral numeral">{a.numeral}</span>
               <span class="arcana-strip__name">{a.name}</span>
+              {held.length > 1 ? (
+                <button
+                  type="button"
+                  class="arcana-strip__nudge"
+                  aria-label={`Move ${a.name} right`}
+                  disabled={i === held.length - 1}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => reorder(i, i + 1)}
+                >
+                  ▸
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

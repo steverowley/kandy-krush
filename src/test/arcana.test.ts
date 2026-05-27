@@ -392,4 +392,55 @@ describe("useArcana store", () => {
     useArcana.setState({ heldIds: ["magician", "not-real" as never] });
     expect(useArcana.getState().held().map((a) => a.id)).toEqual(["magician"]);
   });
+
+  it("reorder moves a card from one index to another", () => {
+    useArcana.setState({ heldIds: ["magician", "empress", "chariot"] });
+    useArcana.getState().reorder(0, 2);
+    expect(useArcana.getState().heldIds).toEqual([
+      "empress",
+      "chariot",
+      "magician",
+    ]);
+  });
+
+  it("reorder is a no-op for out-of-range or identical indices", () => {
+    useArcana.setState({ heldIds: ["magician", "empress"] });
+    useArcana.getState().reorder(0, 0);
+    useArcana.getState().reorder(-1, 5);
+    expect(useArcana.getState().heldIds).toEqual(["magician", "empress"]);
+  });
+
+  it("re-scoring after reorder produces the new order's result", () => {
+    // Strength then World → World multiplies the boosted mult (=8).
+    // World then Strength → Strength bumps after World's ×1.25, so the
+    // step is base mult 4 → 4*1.25=5 → +2 → 7.
+    const strength = arcanaById("strength")!;
+    const world = arcanaById("world")!;
+    const stepS = {
+      matches: [
+        {
+          suit: "wands" as Suit,
+          cells: Array.from({ length: 4 }, (_, i) => ({ row: 0, col: i })),
+        },
+      ],
+      depth: 1,
+      chips: 40,
+      mult: 4,
+      scoreGained: 0,
+    };
+    const meta = { depth: 1, movesUsed: 6, totalMoves: 12 };
+    useArcana.setState({ heldIds: ["strength", "world"] });
+    const ordered1 = applyArcanaToStep(stepS, useArcana.getState().held(), meta);
+    expect(ordered1.mult).toBe(8);
+    useArcana.getState().reorder(0, 1);
+    expect(useArcana.getState().heldIds).toEqual(["world", "strength"]);
+    const ordered2 = applyArcanaToStep(stepS, useArcana.getState().held(), meta);
+    // World ×1.25 on 4 = 5, then Strength +2 = 7.
+    expect(ordered2.mult).toBe(7);
+    // Sanity: order matters → result differs.
+    expect(ordered2.mult).not.toBe(ordered1.mult);
+    // Touch unused imports to satisfy linter.
+    void strength;
+    void world;
+  });
 });
