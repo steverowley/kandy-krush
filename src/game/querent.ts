@@ -70,6 +70,10 @@ export type Chamber = {
   boss: boolean;
 };
 
+// Score-typed targets recalibrated for the Chips × Mult engine (PR #376):
+// multiplied by ~2.5× to match average per-move score scaling under the
+// new math. Suit-typed targets carry over — cleared-cell counts are
+// unaffected by the scoring refactor.
 export const CHAMBERS: readonly Chamber[] = [
   {
     index: 1,
@@ -77,7 +81,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The Hermit",
     epigraph: "una vela",
     subtitle: "el ermitaño · light a single candle",
-    objective: { type: "score", target: 600 },
+    objective: { type: "score", target: 1500 },
     baseMoves: 12,
     panelColor: "var(--panel-cobalt)",
     boss: false,
@@ -88,7 +92,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "Wheel of Fortune",
     epigraph: "la rueda gira",
     subtitle: "la rueda · the cycle turns either way",
-    objective: { type: "score", target: 900 },
+    objective: { type: "score", target: 2300 },
     baseMoves: 12,
     panelColor: "var(--panel-saffron)",
     boss: false,
@@ -110,7 +114,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The Hanged Man",
     epigraph: "rendición",
     subtitle: "el colgado · surrender, then resolve",
-    objective: { type: "score", target: 1800 },
+    objective: { type: "score", target: 4500 },
     baseMoves: 18,
     panelColor: "var(--panel-amethyst)",
     boss: true,
@@ -132,7 +136,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "Temperance",
     epigraph: "una mezcla",
     subtitle: "la templanza · a measured pour",
-    objective: { type: "score", target: 2000 },
+    objective: { type: "score", target: 5000 },
     baseMoves: 16,
     panelColor: "var(--panel-emerald)",
     boss: false,
@@ -143,7 +147,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The Devil",
     epigraph: "un pequeño pacto",
     subtitle: "el diablo · a small bargain made plain",
-    objective: { type: "score", target: 3000 },
+    objective: { type: "score", target: 7500 },
     baseMoves: 20,
     panelColor: "var(--panel-pink)",
     boss: true,
@@ -165,7 +169,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The Star",
     epigraph: "luz quieta",
     subtitle: "la estrella · quiet light after the wreck",
-    objective: { type: "score", target: 4500 },
+    objective: { type: "score", target: 11300 },
     baseMoves: 22,
     panelColor: "var(--panel-cobalt)",
     boss: true,
@@ -187,7 +191,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The Sun",
     epigraph: "todo visible",
     subtitle: "el sol · everything plain at noon",
-    objective: { type: "score", target: 4000 },
+    objective: { type: "score", target: 10000 },
     baseMoves: 20,
     panelColor: "var(--panel-saffron)",
     boss: false,
@@ -209,7 +213,7 @@ export const CHAMBERS: readonly Chamber[] = [
     name: "The World",
     epigraph: "el círculo se cierra",
     subtitle: "el mundo · the circle, complete",
-    objective: { type: "score", target: 6500 },
+    objective: { type: "score", target: 16300 },
     baseMoves: 24,
     panelColor: "var(--panel-emerald)",
     boss: true,
