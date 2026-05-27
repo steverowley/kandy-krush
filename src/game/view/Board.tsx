@@ -1,14 +1,42 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { useGame } from "../../state/game";
 import { areAdjacent } from "../engine/board";
-import type { Cell, Suit } from "../engine/types";
+import type { Cell, Suit, Tile } from "../engine/types";
 import { SuitGlyph, SUIT_COLORS } from "./suit-glyphs";
 import "./Board.css";
 
+/**
+ * The Board renders each tile as an absolutely-positioned card keyed by
+ * its stable `tile.id`. Because the engine carries ids across cascades,
+ * Preact's reconciler keeps the DOM node for a surviving tile across
+ * renders, and CSS transitions on `transform` make it slide visibly
+ * between grid positions. New tiles fade in from above; dying tiles
+ * unmount instantly (the next pass shows the refill).
+ */
 export function Board() {
   const { board, selected, busy, nudge, select, attemptSwap } = useGame();
   const [focus, setFocus] = useState<Cell>({ row: 0, col: 0 });
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const prevPositionsRef = useRef<Map<number, { row: number; col: number }>>(
+    new Map(),
+  );
+
+  // Capture each tile's previous (row, col) so a fresh entry can be
+  // distinguished from a survivor. Survivors get transitions; entrants
+  // get an entrance animation from one cell above their landing slot.
+  const positions = new Map<number, { row: number; col: number }>();
+  board.tiles.forEach((tile, idx) => {
+    if (!tile) return;
+    positions.set(tile.id, {
+      row: Math.floor(idx / board.cols),
+      col: idx % board.cols,
+    });
+  });
+
+  useEffect(() => {
+    prevPositionsRef.current = positions;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board]);
 
   useEffect(() => {
     if (nudge === 0) return;
@@ -19,14 +47,11 @@ export function Board() {
     el.classList.add("tile-card--just-nudged");
   }, [nudge]);
 
-  // Move DOM focus to the currently-focused cell so keyboard users see
-  // where they are.
   useEffect(() => {
     if (board.rows === 0 || !wrapRef.current) return;
     const idx = focus.row * board.cols + focus.col;
-    const cell = wrapRef.current.querySelectorAll<HTMLElement>(
-      ".tile-card",
-    )[idx];
+    const cells = wrapRef.current.querySelectorAll<HTMLElement>(".tile-card");
+    const cell = cells[idx];
     if (cell && document.activeElement?.closest(".board")) {
       cell.focus();
     }
@@ -67,11 +92,10 @@ export function Board() {
         col = Math.min(board.cols - 1, col + 1);
         break;
       case "Enter":
-      case " ": {
+      case " ":
         e.preventDefault();
         onCellClick(focus);
         return;
-      }
       case "Escape":
         select(null);
         return;
@@ -97,43 +121,81 @@ export function Board() {
       }}
     >
       {board.tiles.map((tile, idx) => {
+        if (!tile) return null;
         const row = Math.floor(idx / board.cols);
         const col = idx % board.cols;
         const here: Cell = { row, col };
         const isSelected =
           !!selected && selected.row === row && selected.col === col;
         const isFocused = focus.row === row && focus.col === col;
+        const prev = prevPositionsRef.current.get(tile.id);
+        const isNew = !prev;
         return (
-          <button
-            type="button"
-            key={tile?.id ?? `e-${idx}`}
-            class={`tile-card${isSelected ? " tile-card--selected" : ""}${
-              busy ? " tile-card--busy" : ""
-            }`}
-            role="gridcell"
-            style={{
-              "--tile-color": tile ? SUIT_COLORS[tile.suit] : "var(--bone-200)",
-            }}
-            aria-label={`${suitLabel(tile?.suit)} at row ${row + 1}, column ${col + 1}`}
-            aria-pressed={isSelected}
-            tabIndex={isFocused ? 0 : -1}
+          <TileButton
+            key={tile.id}
+            tile={tile}
+            row={row}
+            col={col}
+            isNew={isNew}
+            isSelected={isSelected}
+            isFocused={isFocused}
+            busy={busy}
             onClick={() => onCellClick(here)}
             onFocus={() => setFocus(here)}
-          >
-            <span class="tile-card__panel" aria-hidden="true" />
-            {tile ? (
-              <span class="tile-card__glyph" aria-hidden="true">
-                <SuitGlyph suit={tile.suit} />
-              </span>
-            ) : null}
-          </button>
+          />
         );
       })}
     </div>
   );
 }
 
-function suitLabel(suit: Suit | undefined): string {
-  if (!suit) return "empty cell";
+function TileButton({
+  tile,
+  row,
+  col,
+  isNew,
+  isSelected,
+  isFocused,
+  busy,
+  onClick,
+  onFocus,
+}: {
+  tile: Tile;
+  row: number;
+  col: number;
+  isNew: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  busy: boolean;
+  onClick: () => void;
+  onFocus: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      class={`tile-card${isSelected ? " tile-card--selected" : ""}${
+        busy ? " tile-card--busy" : ""
+      }${isNew ? " tile-card--entering" : ""}`}
+      role="gridcell"
+      style={{
+        "--tile-color": SUIT_COLORS[tile.suit],
+        "--row": row,
+        "--col": col,
+      }}
+      aria-label={`${suitLabel(tile.suit)} at row ${row + 1}, column ${col + 1}`}
+      aria-pressed={isSelected}
+      tabIndex={isFocused ? 0 : -1}
+      onClick={onClick}
+      onFocus={onFocus}
+    >
+      <span class="tile-card__panel" aria-hidden="true" />
+      <span class="tile-card__glyph" aria-hidden="true">
+        <SuitGlyph suit={tile.suit} />
+      </span>
+    </button>
+  );
+}
+
+function suitLabel(suit: Suit): string {
   return suit.charAt(0).toUpperCase() + suit.slice(1);
 }
