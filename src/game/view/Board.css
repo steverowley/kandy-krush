@@ -56,6 +56,46 @@
   z-index: 2;
 }
 
+/* Spark — special tile created by match-4+. Gold star overlay + a soft
+   pulse so it reads as charged. */
+.tile-card--spark {
+  outline: 2px solid var(--panel-gold);
+  outline-offset: -4px;
+  border-radius: 14px;
+}
+
+.tile-card__spark {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  width: 30%;
+  height: 30%;
+  color: var(--panel-gold);
+  z-index: 2;
+  filter: drop-shadow(0 0 4px rgba(229, 181, 71, 0.6));
+  animation: spark-pulse 1.6s var(--ease) infinite;
+}
+
+.tile-card__spark svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes spark-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.18) rotate(8deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-card__spark {
+    animation: none;
+  }
+}
+
+:where(.reduced-motion) .tile-card__spark {
+  animation: none;
+}
+
 .tile-card:focus-visible {
   outline: 2px solid var(--panel-gold);
   outline-offset: 2px;
