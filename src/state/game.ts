@@ -48,6 +48,10 @@ type GameState = {
   totalMoves: number | null;
   /** Active Boss Blind restriction, if this blind is a boss. */
   restriction: ChamberRestriction | null;
+  /** Per-move score multiplier set by Minor Arcana consumables (e.g.
+   *  Page of Wands). Defaults to 1; resets back to 1 after the next
+   *  scored move applies it. */
+  nextMoveScoreMul: number;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -89,6 +93,10 @@ type GameActions = {
   reset: () => void;
   snapshot: () => GameSnapshot;
   restore: (snap: GameSnapshot) => void;
+  /** Imperative side-effect from a Minor Arcana consumable. */
+  grantMoves: (n: number) => void;
+  grantScore: (n: number) => void;
+  armNextMoveMul: (mul: number) => void;
 };
 
 const PLACEHOLDER_RNG = createRng(0);
@@ -105,6 +113,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   scoreMultiplier: 1,
   totalMoves: null,
   restriction: null,
+  nextMoveScoreMul: 1,
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -128,6 +137,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       scoreMultiplier: opts?.scoreMultiplier ?? 1,
       totalMoves: opts?.totalMoves ?? null,
       restriction: opts?.restriction ?? null,
+      nextMoveScoreMul: 1,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -180,12 +190,16 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           modTotalChips += modified.chips;
           if (modified.mult > modPeakMult) modPeakMult = modified.mult;
         }
-        const scored = Math.round(modTotalScore * prev.scoreMultiplier);
+        const scored = Math.round(
+          modTotalScore * prev.scoreMultiplier * prev.nextMoveScoreMul,
+        );
         return {
           board: result.board,
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
+          // The per-move minor-arcana buff fires exactly once and clears.
+          nextMoveScoreMul: 1,
           lastMove: {
             chips: modTotalChips,
             mult: modPeakMult,
@@ -204,6 +218,17 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     const s = get();
     s.start(s.mode, s.levelId ? { levelId: s.levelId } : undefined);
   },
+
+  grantMoves: (n) => {
+    const s = get();
+    if (s.totalMoves === null) return;
+    set({ totalMoves: s.totalMoves + n });
+  },
+
+  grantScore: (n) =>
+    set((s) => ({ score: s.score + Math.max(0, Math.round(n)) })),
+
+  armNextMoveMul: (mul) => set({ nextMoveScoreMul: Math.max(1, mul) }),
 
   snapshot: () => {
     const s = get();
@@ -241,6 +266,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       score: snap.score,
       moves: snap.moves,
       cleared: { ...snap.cleared },
+      nextMoveScoreMul: 1,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,

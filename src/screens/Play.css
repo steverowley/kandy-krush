@@ -64,6 +64,82 @@
   justify-self: end;
 }
 
+/* Minor Arcana consumables tray — tap-to-use buttons sitting above the
+ * Fortune ledger. Each badge has a colored top stripe from its panel
+ * accent and animates a soft pulse when armed. */
+.minor-tray {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.minor-tray__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.minor-tray__badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5em 0.9em 0.5em 0.7em;
+  border: 1.5px solid var(--accent-gold);
+  border-radius: 999px;
+  background: rgba(212, 162, 76, 0.1);
+  color: var(--ink-cream);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 160ms var(--ease), transform 120ms var(--ease);
+}
+
+.minor-tray__badge:hover {
+  background: rgba(212, 162, 76, 0.22);
+  transform: translateY(-1px);
+}
+
+.minor-tray__badge:active {
+  transform: translateY(1px);
+}
+
+.minor-tray__badge::before {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: -2px;
+  height: 2px;
+  background: var(--card-panel, var(--accent-gold));
+  border-radius: 1px;
+  opacity: 0.95;
+}
+
+.minor-tray__numeral {
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  color: var(--accent-gold-2);
+  letter-spacing: 0.1em;
+}
+
+.minor-tray__name {
+  font-style: italic;
+}
+
+.minor-tray__armed {
+  font-family: var(--font-script);
+  font-size: 1.05rem;
+  color: var(--accent-gold);
+  letter-spacing: 0.04em;
+}
+
 /* Boss Blind restriction banner — sits above the Fortune ledger when
  * the chamber's `restriction` is set. Treats the warning with weight:
  * dark forest-green-on-cream stripe with a gold rule. */
