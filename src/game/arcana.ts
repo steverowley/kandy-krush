@@ -84,6 +84,11 @@ export type ArcanaContext = {
   /** How many arcana the player currently holds (including this one).
    *  Used by The Hermit which rewards a thin build. */
   heldCount: number;
+  /** Effective hand cap for this run — equal to MAX_HELD_ARCANA on most
+   *  stakes, but stake rules can shrink it (e.g. Black caps at 4). The
+   *  Hermit's empty-slot bonus reads this so a smaller cap means fewer
+   *  "empty" slots to reward. */
+  maxHand: number;
   /** True when the current chamber is a Boss Blind. Used by The Tower
    *  which doubles down on boss chambers. */
   isBoss: boolean;
@@ -198,7 +203,7 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     subtitle: "el ermitaño · few cards, sharp light",
     panelColor: "var(--panel-cobalt)",
     apply: (ctx) => {
-      const empty = Math.max(0, MAX_HELD_ARCANA - ctx.heldCount);
+      const empty = Math.max(0, ctx.maxHand - ctx.heldCount);
       if (empty <= 0) return;
       const factor = 1 + empty * 0.5;
       ctx.mult = Math.round(ctx.mult * factor);
@@ -301,6 +306,7 @@ export function applyArcanaToStep(
     totalMoves: number | null;
     halveArcana?: boolean;
     isBoss?: boolean;
+    maxHand?: number;
   },
 ): { chips: number; mult: number; scoreGained: number } {
   const baseChips = step.chips;
@@ -313,6 +319,7 @@ export function applyArcanaToStep(
     movesUsed: meta.movesUsed,
     totalMoves: meta.totalMoves,
     heldCount: held.length,
+    maxHand: meta.maxHand ?? MAX_HELD_ARCANA,
     isBoss: meta.isBoss ?? false,
   };
   for (const a of held) a.apply(ctx);

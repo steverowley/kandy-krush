@@ -14,7 +14,7 @@ import {
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
 import { useResume } from "../state/resume";
-import { STAKES, stakeById } from "../game/stakes";
+import { STAKES, formatStakeRule, stakeById, type Stake } from "../game/stakes";
 import "./Querent.css";
 
 export function Querent() {
@@ -91,13 +91,7 @@ export function Querent() {
                   onClick={() => setStake(s.id)}
                   aria-pressed={selected}
                   aria-label={`${s.name} stake${unlocked ? "" : " (sealed)"}`}
-                  title={
-                    unlocked
-                      ? rec && rec.bestScore > 0
-                        ? `${s.name} — ${formatStakeEffect(s)} · Best ${rec.bestScore.toLocaleString()} · ${rec.runsCompleted} ${rec.runsCompleted === 1 ? "clear" : "clears"}`
-                        : `${s.name} — ${formatStakeEffect(s)}`
-                      : "Sealed — clear a run at the prior stake to unlock"
-                  }
+                  title={composeStakeTooltip(s, unlocked, rec)}
                 >
                   <span class="querent__stake-numeral numeral">{toRoman(s.tier + 1)}</span>
                   <span class="querent__stake-name">{s.name}</span>
@@ -264,6 +258,24 @@ function formatStakeEffect(stake: { targetMultiplier: number; moveDelta: number 
     parts.push(`${stake.moveDelta > 0 ? "+" : ""}${stake.moveDelta} readings`);
   }
   return parts.join(" · ");
+}
+
+function composeStakeTooltip(
+  stake: Stake,
+  unlocked: boolean,
+  rec: { bestScore: number; runsCompleted: number } | undefined,
+): string {
+  if (!unlocked) return "Sealed — clear a run at the prior stake to unlock";
+  const lines: string[] = [`${stake.name} — ${formatStakeEffect(stake)}`];
+  const ruleText = formatStakeRule(stake);
+  if (ruleText) lines.push(ruleText);
+  if (rec && rec.bestScore > 0) {
+    const clearWord = rec.runsCompleted === 1 ? "clear" : "clears";
+    lines.push(
+      `Best ${rec.bestScore.toLocaleString()} · ${rec.runsCompleted} ${clearWord}`,
+    );
+  }
+  return lines.join(" · ");
 }
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"] as const;

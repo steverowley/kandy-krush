@@ -27,10 +27,12 @@ type State = {
    *  away and back without re-rolling into something different. */
   drawSeed: number;
   reset: () => void;
-  /** Roll 3 fresh offers, replacing any prior. */
-  rollOffer: (seed?: number) => void;
-  /** Accept an offered arcana into a slot, then clear the offer. */
-  acceptOffer: (id: ArcanaId) => void;
+  /** Roll fresh offers, replacing any prior. `count` defaults to 3;
+   *  stake rules can shrink it. */
+  rollOffer: (seed?: number, count?: number) => void;
+  /** Accept an offered arcana into a slot, then clear the offer. `cap`
+   *  overrides MAX_HELD_ARCANA — stake rules can shrink the hand. */
+  acceptOffer: (id: ArcanaId, cap?: number) => void;
   /** Skip the offer entirely. */
   skipOffer: () => void;
   /** Move the held arcana at `from` index to `to` index. Out-of-range
@@ -40,7 +42,7 @@ type State = {
   /** Convenience: hydrated readers. */
   held: () => Arcana[];
   offered: () => Arcana[];
-  isFull: () => boolean;
+  isFull: (cap?: number) => boolean;
 };
 
 export const useArcana = create<State>()(
@@ -52,17 +54,18 @@ export const useArcana = create<State>()(
 
       reset: () => set({ heldIds: [], offeredIds: [], drawSeed: 0 }),
 
-      rollOffer: (seed) => {
+      rollOffer: (seed, count) => {
         const useSeed = seed ?? Math.floor(Math.random() * 2 ** 31);
         const rng = createRng(useSeed);
         const held = get().held();
-        const picks = rollDraw(MAJOR_ARCANA, held, rng, 3);
+        const picks = rollDraw(MAJOR_ARCANA, held, rng, count ?? 3);
         set({ offeredIds: picks.map((a) => a.id), drawSeed: useSeed });
       },
 
-      acceptOffer: (id) => {
+      acceptOffer: (id, cap) => {
         const { heldIds } = get();
-        if (heldIds.length >= MAX_HELD_ARCANA) {
+        const limit = cap ?? MAX_HELD_ARCANA;
+        if (heldIds.length >= limit) {
           set({ offeredIds: [] });
           return;
         }
@@ -97,7 +100,7 @@ export const useArcana = create<State>()(
           .offeredIds.map((id) => arcanaById(id))
           .filter((a): a is Arcana => !!a),
 
-      isFull: () => get().heldIds.length >= MAX_HELD_ARCANA,
+      isFull: (cap) => get().heldIds.length >= (cap ?? MAX_HELD_ARCANA),
     }),
     {
       name: "arcana.deck.v1",

@@ -3,6 +3,7 @@ import {
   DEFAULT_STAKE,
   STAKES,
   STAKE_COUNT,
+  formatStakeRule,
   nextStakeAfter,
   stakeById,
   stakeByTier,
@@ -13,6 +14,10 @@ import {
   chamberMovesFor,
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
+import { useArcana } from "../state/arcana";
+import { applyArcanaToStep, arcanaById } from "../game/arcana";
+import { coinsForChamber } from "../game/parlour";
+import type { CascadeStep, Suit } from "../game/engine/types";
 
 describe("STAKES data", () => {
   it("has eight tiers", () => {
@@ -223,5 +228,127 @@ describe("useQuerent stake state", () => {
     });
     expect(() => useQuerent.getState().finishRun()).not.toThrow();
     expect(useQuerent.getState().meta.maxStakeId).toBe("gold");
+  });
+});
+
+describe("Stake qualitative rules", () => {
+  it("White, Red have no rule (numerical only)", () => {
+    expect(stakeById("white")!.rule).toBeUndefined();
+    expect(stakeById("red")!.rule).toBeUndefined();
+  });
+
+  it("every tier ≥ Green declares at least one rule field", () => {
+    for (const id of ["green", "black", "blue", "purple", "orange", "gold"] as const) {
+      const stake = stakeById(id)!;
+      expect(stake.rule).toBeDefined();
+      expect(Object.keys(stake.rule!).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("Green shrinks Arcana Draw to 2 cards", () => {
+    expect(stakeById("green")!.rule!.arcanaDrawCount).toBe(2);
+  });
+
+  it("Black caps the hand at 4", () => {
+    expect(stakeById("black")!.rule!.maxHand).toBe(4);
+  });
+
+  it("Blue disables boss Minor Arcana rewards", () => {
+    expect(stakeById("blue")!.rule!.bossMinorReward).toBe(false);
+  });
+
+  it("Purple shrinks Parlour offers to 2", () => {
+    expect(stakeById("purple")!.rule!.parlourOfferCount).toBe(2);
+  });
+
+  it("Orange halves coin payouts", () => {
+    expect(stakeById("orange")!.rule!.coinMultiplier).toBe(0.5);
+  });
+
+  it("Gold silences the first match of every move", () => {
+    expect(stakeById("gold")!.rule!.silenceFirstMatch).toBe(true);
+  });
+
+  it("formatStakeRule emits null for stakes without a rule", () => {
+    expect(formatStakeRule(stakeById("white")!)).toBeNull();
+    expect(formatStakeRule(stakeById("red")!)).toBeNull();
+  });
+
+  it("formatStakeRule returns plain English for each rule shape", () => {
+    expect(formatStakeRule(stakeById("green")!)).toMatch(/Arcana Draw offers 2/);
+    expect(formatStakeRule(stakeById("black")!)).toMatch(/Hand cap 4/);
+    expect(formatStakeRule(stakeById("blue")!)).toMatch(/no Minor Arcana/);
+    expect(formatStakeRule(stakeById("purple")!)).toMatch(/Parlour offers 2/);
+    expect(formatStakeRule(stakeById("orange")!)).toMatch(/Coins ×0\.5/);
+    expect(formatStakeRule(stakeById("gold")!)).toMatch(/First match/);
+  });
+});
+
+describe("Stake rule wiring", () => {
+  beforeEach(() => {
+    useArcana.setState({ heldIds: [], offeredIds: [], drawSeed: 0 });
+  });
+
+  it("rollOffer respects the count argument", () => {
+    useArcana.getState().rollOffer(42, 2);
+    expect(useArcana.getState().offeredIds).toHaveLength(2);
+  });
+
+  it("acceptOffer enforces a stake-shrunk hand cap", () => {
+    const ids = ["magician", "empress", "lovers", "chariot"] as const;
+    useArcana.setState({ heldIds: ids.slice(0, 3) as never[] });
+    useArcana.getState().acceptOffer(ids[3], 4);
+    expect(useArcana.getState().heldIds).toHaveLength(4);
+    // One more push would now be rejected.
+    useArcana.setState({ offeredIds: ["sun"] });
+    useArcana.getState().acceptOffer("sun", 4);
+    expect(useArcana.getState().heldIds).toHaveLength(4);
+    expect(useArcana.getState().heldIds).not.toContain("sun");
+  });
+
+  it("isFull(cap) is true at the stake-shrunk cap", () => {
+    useArcana.setState({
+      heldIds: ["magician", "empress", "lovers", "chariot"] as never[],
+    });
+    expect(useArcana.getState().isFull(4)).toBe(true);
+    expect(useArcana.getState().isFull(5)).toBe(false);
+  });
+
+  it("Hermit's empty-slot math uses the effective maxHand", () => {
+    const hermit = arcanaById("hermit")!;
+    const step: CascadeStep = {
+      matches: [
+        {
+          suit: "cups" as Suit,
+          cells: [{ row: 0, col: 0 }, { row: 0, col: 1 }, { row: 0, col: 2 }],
+        },
+      ],
+      depth: 1,
+      chips: 30,
+      mult: 2,
+      scoreGained: 0,
+    };
+    // Default cap 5 → 1 held → 4 empty → mult * (1 + 4*0.5) = mult * 3 = 6.
+    const out5 = applyArcanaToStep(step, [hermit], {
+      depth: 1,
+      movesUsed: 0,
+      totalMoves: 12,
+    });
+    expect(out5.mult).toBe(6);
+    // Black-cap 4 → 1 held → 3 empty → mult * (1 + 3*0.5) = mult * 2.5 = 5.
+    const out4 = applyArcanaToStep(step, [hermit], {
+      depth: 1,
+      movesUsed: 0,
+      totalMoves: 12,
+      maxHand: 4,
+    });
+    expect(out4.mult).toBe(5);
+  });
+
+  it("coinsForChamber respects a multiplier (Orange halves)", () => {
+    expect(coinsForChamber({ isBoss: false })).toBe(5);
+    expect(coinsForChamber({ isBoss: false, multiplier: 0.5 })).toBe(3); // round(2.5)
+    expect(coinsForChamber({ isBoss: true })).toBe(15);
+    expect(coinsForChamber({ isBoss: true, multiplier: 0.5 })).toBe(8); // round(7.5)
   });
 });

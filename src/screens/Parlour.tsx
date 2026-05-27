@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 import { useLocation, useSearch } from "wouter-preact";
 import { TarotCard } from "../components/TarotCard";
 import { useArcana } from "../state/arcana";
@@ -6,6 +6,7 @@ import { useCoins } from "../state/coins";
 import { useQuerent } from "../state/querent";
 import { ARCANA_PRICE, rollParlourOffers } from "../game/parlour";
 import { MAX_HELD_ARCANA, type Arcana } from "../game/arcana";
+import { stakeById } from "../game/stakes";
 import { createRng } from "../game/engine/rng";
 import { routes } from "../router";
 import "./Parlour.css";
@@ -26,8 +27,15 @@ export function Parlour() {
   const balance = useCoins((s) => s.balance);
   const spend = useCoins((s) => s.spend);
 
+  const stakeRule = useMemo(
+    () => (querentRun ? stakeById(querentRun.stakeId)?.rule ?? null : null),
+    [querentRun?.stakeId],
+  );
+  const offerCount = stakeRule?.parlourOfferCount ?? 3;
+  const handCap = stakeRule?.maxHand;
+
   const held = useArcana((s) => s.held());
-  const isFull = useArcana((s) => s.isFull());
+  const isFull = useArcana((s) => s.isFull(handCap));
   const acceptOffer = useArcana((s) => s.acceptOffer);
 
   const [offers, setOffers] = useState<Arcana[]>([]);
@@ -39,7 +47,7 @@ export function Parlour() {
   useEffect(() => {
     const seed = Math.floor(Math.random() * 2 ** 31);
     const rng = createRng(seed);
-    setOffers(rollParlourOffers(held, rng));
+    setOffers(rollParlourOffers(held, rng, offerCount));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -47,7 +55,7 @@ export function Parlour() {
     if (purchased.has(arcana.id)) return;
     if (isFull) return;
     if (!spend(ARCANA_PRICE)) return;
-    acceptOffer(arcana.id);
+    acceptOffer(arcana.id, handCap);
     setPurchased((prev) => {
       const next = new Set(prev);
       next.add(arcana.id);

@@ -6,11 +6,13 @@ import { createRng, type SeededRng } from "../game/engine/rng";
 import type { Board, CascadeStep, Cell, Suit, Tile } from "../game/engine/types";
 import {
   applyArcanaToStep,
+  MAX_HELD_ARCANA,
   silenceSuitInStep,
   type Arcana,
 } from "../game/arcana";
 import { useArcana } from "./arcana";
 import type { ChamberRestriction } from "../game/querent";
+import type { StakeRule } from "../game/stakes";
 
 export type GameMode = "free" | "spread" | "daily" | "querent";
 
@@ -53,6 +55,8 @@ type GameState = {
   totalMoves: number | null;
   /** Active Boss Blind restriction, if this blind is a boss. */
   restriction: ChamberRestriction | null;
+  /** Active stake's qualitative rule, if any. */
+  stakeRule: StakeRule | null;
   /** Per-move score multiplier set by Minor Arcana consumables (e.g.
    *  Page of Wands). Defaults to 1; resets back to 1 after the next
    *  scored move applies it. */
@@ -72,6 +76,7 @@ export type StartOpts = {
   scoreMultiplier?: number;
   totalMoves?: number;
   restriction?: ChamberRestriction | null;
+  stakeRule?: StakeRule | null;
 };
 
 /** Serializable snapshot of an in-progress run. The rng is captured as
@@ -118,6 +123,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   scoreMultiplier: 1,
   totalMoves: null,
   restriction: null,
+  stakeRule: null,
   nextMoveScoreMul: 1,
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
@@ -142,6 +148,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       scoreMultiplier: opts?.scoreMultiplier ?? 1,
       totalMoves: opts?.totalMoves ?? null,
       restriction: opts?.restriction ?? null,
+      stakeRule: opts?.stakeRule ?? null,
       nextMoveScoreMul: 1,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
@@ -171,12 +178,24 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         // it can scale only the arcana delta, not the engine base.
         const held = useArcana.getState().held();
         const restriction = prev.restriction;
+        const stakeRule = prev.stakeRule;
+        const maxHand = stakeRule?.maxHand ?? MAX_HELD_ARCANA;
+
+        // The "warmup tax" — Gold stake silences the first scoring step
+        // of every move. The first call to scoreSteps marks the first
+        // step as silenced; later calls (e.g. Death's post-move cascade)
+        // never trigger the silence since the silence flag is per-move.
+        let firstStepSilenced = false;
 
         const scoreSteps = (
           steps: readonly CascadeStep[],
           acc: { score: number; chips: number; peakMult: number },
         ) => {
           for (const rawStep of steps) {
+            const silenceThisStep =
+              stakeRule?.silenceFirstMatch && !firstStepSilenced;
+            if (silenceThisStep) firstStepSilenced = true;
+            if (silenceThisStep) continue;
             const step = restriction?.silenceSuit
               ? silenceSuitInStep(rawStep, restriction.silenceSuit)
               : rawStep;
@@ -186,6 +205,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
               totalMoves: prev.totalMoves,
               halveArcana: restriction?.halveArcana ?? false,
               isBoss: restriction !== null,
+              maxHand,
             });
             acc.score += modified.scoreGained;
             acc.chips += modified.chips;
