@@ -3,10 +3,15 @@ export type Suit = "cups" | "pentacles" | "swords" | "wands";
 
 export const SUITS: readonly Suit[] = ["cups", "pentacles", "swords", "wands"];
 
-/** Special-tile kinds. A bare tile is normal; "spark" is created when
- *  a match of 4+ resolves, and on its subsequent clearing it also
- *  sweeps its row + column. */
-export type TileKind = "spark";
+/** Special-tile kinds.
+ *  - "spark" — a match-4 leaves one of these in the middle. When the
+ *    spark is later cleared as part of any match, it sweeps its row and
+ *    column.
+ *  - "wild" — a match-5+ leaves one of these in the middle. A wild
+ *    counts as any suit when finding matches, but produces no special
+ *    clear effect when itself swept.
+ */
+export type TileKind = "spark" | "wild";
 
 /** A single tile occupying one cell of the board. */
 export type Tile = {

@@ -57,11 +57,16 @@ Screen-routed: every screen lives in `src/screens/*.tsx` and registers a route i
 `src/game/engine/` is the headless match-three engine. Pure TypeScript, no Preact dependency, deterministic when seeded.
 
 - `rng.ts` — mulberry32 PRNG with state capture / restore so runs survive reloads
-- `types.ts` — `Suit`, `Tile { id, suit, kind? }`, `Board`, `MatchGroup`, `ResolveResult`. Tiles can be normal or `"spark"`.
+- `types.ts` — `Suit`, `Tile { id, suit, kind? }`, `Board`, `MatchGroup`, `ResolveResult`. Tiles can be normal, `"spark"`, or `"wild"`.
 - `board.ts` — generation + helpers
-- `match.ts` — `findMatches` (3+ in rows/cols), `swapMakesMatch`
-- `cascade.ts` — `resolveCascades` clears, expands via spark blasts, promotes match-4+ into sparks, collapses, refills, chains
+- `match.ts` — `findMatches` (3+ in rows/cols, wilds count as any suit), `swapMakesMatch`
+- `cascade.ts` — `resolveCascades` clears, expands via spark blasts, promotes match-4 into sparks and match-5+ into wilds, collapses, refills, chains
 - `engine.ts` — `newGame`, `tryMove`, `isDeadlocked` orchestrators
+
+**Special tiles**
+
+- **Spark** — a match-4 plants a spark at the middle of the run. When the spark is later cleared as part of any match, it sweeps its row + column.
+- **Wild** — a match-5+ plants a wild at the middle of the run. A wild matches any suit (a run with at least one non-wild defines the suit). No special clear effect.
 
 ### Visual system
 

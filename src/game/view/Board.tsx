@@ -278,7 +278,7 @@ function TileButton({
         busy ? " tile-card--busy" : ""
       }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}${
         tile.kind === "spark" ? " tile-card--spark" : ""
-      }`}
+      }${tile.kind === "wild" ? " tile-card--wild" : ""}`}
       role="gridcell"
       style={{
         "--tile-color": SUIT_COLORS[tile.suit],
@@ -287,7 +287,7 @@ function TileButton({
         "--drag-x": `${dragDx}px`,
         "--drag-y": `${dragDy}px`,
       }}
-      aria-label={`${tile.kind === "spark" ? "Spark of " : ""}${suitLabel(tile.suit)} at row ${row + 1}, column ${col + 1}`}
+      aria-label={tileAriaLabel(tile, row, col)}
       aria-pressed={isSelected}
       tabIndex={isFocused ? 0 : -1}
       onPointerDown={onPointerDown}
@@ -298,7 +298,7 @@ function TileButton({
     >
       <span class="tile-card__panel" aria-hidden="true" />
       <span class="tile-card__glyph" aria-hidden="true">
-        <SuitGlyph suit={tile.suit} />
+        {tile.kind === "wild" ? <WildGlyph /> : <SuitGlyph suit={tile.suit} />}
       </span>
       {tile.kind === "spark" ? (
         <span class="tile-card__spark" aria-hidden="true">
@@ -313,4 +313,24 @@ function TileButton({
 
 function suitLabel(suit: Suit): string {
   return suit.charAt(0).toUpperCase() + suit.slice(1);
+}
+
+function tileAriaLabel(tile: Tile, row: number, col: number): string {
+  const pos = `at row ${row + 1}, column ${col + 1}`;
+  if (tile.kind === "wild") return `Wild card ${pos}`;
+  if (tile.kind === "spark") return `Spark of ${suitLabel(tile.suit)} ${pos}`;
+  return `${suitLabel(tile.suit)} ${pos}`;
+}
+
+function WildGlyph() {
+  // Four-point compass of small suit dots — reads as "any suit".
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="12" cy="4" r="2.6" />
+      <circle cx="12" cy="20" r="2.6" />
+      <circle cx="4" cy="12" r="2.6" />
+      <circle cx="20" cy="12" r="2.6" />
+      <circle cx="12" cy="12" r="2.2" />
+    </svg>
+  );
 }
