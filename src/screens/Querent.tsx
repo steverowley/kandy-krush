@@ -13,6 +13,7 @@ import {
   type Chamber,
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
+import { useResume } from "../state/resume";
 import "./Querent.css";
 
 export function Querent() {
@@ -24,7 +25,16 @@ export function Querent() {
   const isUnlocked = useQuerent((s) => s.isUnlocked);
 
   if (run) {
-    return <RunInProgress navigate={navigate} runClassId={run.classId} onAbandon={abandonRun} />;
+    return (
+      <RunInProgress
+        navigate={navigate}
+        runClassId={run.classId}
+        onAbandon={() => {
+          useResume.getState().clearAllForMode("querent");
+          abandonRun();
+        }}
+      />
+    );
   }
 
   return (
