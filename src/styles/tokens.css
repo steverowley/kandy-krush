@@ -1,49 +1,60 @@
 :root {
-  /* Editorial-tarot palette: bone, parchment, ink, oxblood, gold leaf. */
-  --bone-50: #faf6ec;
-  --bone-100: #f2ead3;
-  --bone-200: #e5d6b0;
-  --bone-300: #c9b58a;
+  /* Page + cardstock — near-black background, warm cream cards. */
+  --page-bg: #0E0C18;
+  --page-ink: #0F0E1A;
+  --bone-50: #FBF6E4;
+  --bone-100: #F5EFDC;
+  --bone-200: #EAE0BD;
+  --bone-300: #C9B58A;
 
-  --ink-900: #1a1410;
-  --ink-700: #3a2f25;
-  --ink-500: #6e5a48;
-  --ink-300: #a08c75;
+  /* Card panel colors — each is a saturated, modern-poster jewel tone.
+     One per role / suit / card so the deck reads chromatically. */
+  --panel-amethyst: #8E7AC9;
+  --panel-coral:    #E25B5B;
+  --panel-saffron:  #E89248;
+  --panel-gold:     #E5B547;
+  --panel-emerald:  #4B9966;
+  --panel-teal:     #3DAFA8;
+  --panel-cobalt:   #5572BE;
+  --panel-pink:     #E68FA0;
+  --panel-bone:     #F0E6C4;
 
-  --oxblood-700: #4a0a0a;
-  --oxblood-600: #5c0e0e;
-  --oxblood-500: #7a1d1d;
+  /* Ink for the figure-and-frame line work — dark, slight blue cast so
+     it sits warmer than pure black against the bright panels. */
+  --ink: #15131F;
+  --ink-strong: #0B0916;
+  --ink-soft: #4D4B5C;
+  --ink-dim: #A4A1AD;
+  --ink-cream: #F5EFDC;
 
-  --gold-600: #8b6e37;
-  --gold-500: #b8924f;
-  --gold-400: #c9a86a;
-  --gold-200: #e3d2a5;
+  /* Surface roles used by chrome. */
+  --surface: var(--bone-100);
+  --surface-shadow: rgba(15, 14, 26, 0.5);
+  --accent: var(--panel-coral);
+  --accent-soft: var(--panel-amethyst);
+  --rule: var(--ink-strong);
+  --rule-soft: rgba(11, 9, 22, 0.18);
 
-  /* Surface roles */
-  --page-bg: var(--bone-100);
-  --surface-bg: var(--bone-50);
-  --surface-edge: var(--gold-500);
-  --ink: var(--ink-900);
-  --ink-soft: var(--ink-500);
-  --accent: var(--oxblood-600);
-  --accent-soft: var(--oxblood-500);
-  --gilt: var(--gold-500);
-  --gilt-soft: var(--gold-200);
-
-  /* Type */
+  /* Type stack — three voices working in concert.
+       display    heavy serif, the headline name           ("The Devil")
+       sans-up    bold uppercase sans, panel labels        ("TEMPTATION")
+       italic     decorative italic, multilingual caption  ("placeres físicos")
+       script     hand cursive, flourish overlay            ("temptation")
+   */
   --font-display: "Playfair Display", "Times New Roman", Georgia, serif;
-  --font-engraved: "Cinzel", "Trajan Pro", "Times New Roman", serif;
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-script: "Caveat", "Apple Chancery", cursive;
 
-  /* Scale (golden-ratio-ish vertical rhythm) */
+  /* Scale */
   --step-0: 1rem;
-  --step-1: 1.25rem;
-  --step-2: 1.563rem;
-  --step-3: 1.953rem;
-  --step-4: 2.441rem;
-  --step-5: 3.052rem;
-  --step-6: 3.815rem;
-  --step-7: 4.768rem;
+  --step-1: 1.18rem;
+  --step-2: 1.4rem;
+  --step-3: 1.7rem;
+  --step-4: 2.1rem;
+  --step-5: 2.7rem;
+  --step-6: 3.5rem;
+  --step-7: 4.5rem;
+  --step-8: 6rem;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -55,26 +66,20 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  /* Lines & ornament */
-  --hair: 1px solid var(--ink-900);
-  --rule: 1px solid var(--gilt);
-  --rule-soft: 1px solid var(--gilt-soft);
+  /* Card geometry */
+  --card-radius: 14px;
+  --card-radius-inner: 10px;
+  --card-pad: clamp(var(--space-3), 2vw, var(--space-4));
+  --card-border: 1.5px solid var(--ink);
+
+  /* Card-stack offsets — when a card sits over a "deck", these draw
+     the 1-2 sibling cards behind it. */
+  --stack-1-x: 6px;
+  --stack-1-y: 6px;
+  --stack-2-x: 12px;
+  --stack-2-y: 12px;
 
   /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
   --ease-page: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-card: cubic-bezier(0.2, 0.7, 0.1, 1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page-bg: #14100c;
-    --surface-bg: #1f1814;
-    --surface-edge: var(--gold-500);
-    --ink: var(--bone-50);
-    --ink-soft: var(--bone-300);
-    --accent: var(--oxblood-500);
-    --accent-soft: var(--oxblood-600);
-    --gilt: var(--gold-400);
-    --gilt-soft: var(--gold-600);
-  }
 }

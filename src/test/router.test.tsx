@@ -19,7 +19,7 @@ describe("Router", () => {
   it("renders Home on #/home", () => {
     gotoHash("#/home");
     render(<App />);
-    expect(screen.getByText("Choose your spread.")).toBeTruthy();
+    expect(screen.getByText("choose your spread")).toBeTruthy();
   });
 
   it("renders About on #/about", () => {
@@ -31,6 +31,7 @@ describe("Router", () => {
   it("renders NotFound on an unknown hash", () => {
     gotoHash("#/this-card-is-not-real");
     render(<App />);
-    expect(screen.getByText("The Fool's Page")).toBeTruthy();
+    // The NotFound screen uses a TarotCard with "The Fool" headline.
+    expect(screen.getAllByText("The Fool").length).toBeGreaterThan(0);
   });
 });

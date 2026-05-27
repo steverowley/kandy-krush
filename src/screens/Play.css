@@ -1,6 +1,7 @@
 .play {
   align-items: stretch;
   padding-top: clamp(var(--space-4), 3vw, var(--space-8));
+  gap: var(--space-4);
 }
 
 .play__head {
@@ -17,8 +18,8 @@
 .play__chapter {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: var(--step-1);
-  color: var(--accent);
+  font-size: 1.1rem;
+  color: var(--panel-coral);
   margin-top: var(--space-1);
 }
 
@@ -36,8 +37,9 @@
   align-items: center;
   gap: var(--space-6);
   padding: var(--space-3) var(--space-4);
-  border-top: 1px solid var(--gilt);
-  border-bottom: 1px solid var(--gilt);
+  background: rgba(245, 239, 220, 0.04);
+  border: 1px solid rgba(245, 239, 220, 0.16);
+  border-radius: 10px;
 }
 
 .ledger-cell {
@@ -49,25 +51,23 @@
 
 .ledger-value {
   font-family: var(--font-display);
-  font-size: var(--step-3);
-  font-weight: 700;
+  font-size: var(--step-4);
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
-}
-
-.tabular {
-  font-variant-numeric: tabular-nums;
+  color: var(--ink-cream);
 }
 
 .ledger-rule {
   width: 1px;
   height: 60%;
-  background: var(--gilt);
+  background: rgba(245, 239, 220, 0.2);
 }
 
 .play__objective {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  padding: 0 var(--space-2);
 }
 
 .play__objective-head {
@@ -78,22 +78,23 @@
 
 .play__objective-count {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 900;
+  color: var(--ink-cream);
 }
 
 .play__objective-bar {
   position: relative;
-  height: 6px;
-  background: var(--bone-200);
-  border: 1px solid var(--gilt);
+  height: 5px;
+  background: rgba(245, 239, 220, 0.1);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .play__objective-fill {
   position: absolute;
   inset: 0;
-  background: var(--accent);
-  transition: width 320ms var(--ease-card);
+  background: linear-gradient(90deg, var(--panel-coral), var(--panel-saffron));
+  transition: width 320ms var(--ease);
 }
 
 .play__notice {
@@ -103,66 +104,64 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  border-top: 1px solid var(--gilt-soft);
+  background: rgba(245, 239, 220, 0.04);
+  border-top: 1px solid rgba(245, 239, 220, 0.16);
+  border-bottom: 1px solid rgba(245, 239, 220, 0.16);
 }
 
+/* Outcome modal — the result revealed as a tarot card. */
 .outcome {
   position: fixed;
   inset: 0;
-  background: rgba(20, 16, 12, 0.7);
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(142, 122, 201, 0.18),
+      rgba(14, 12, 24, 0.92) 70%
+    );
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
   z-index: 10;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  animation: outcome-fade 280ms var(--ease);
 }
 
-.outcome__card {
-  max-width: 420px;
+@keyframes outcome-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.outcome__card-wrap {
+  max-width: 360px;
   width: 100%;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  view-transition-name: outcome;
+  animation: outcome-rise 360ms var(--ease);
 }
 
-.outcome__title {
-  font-size: var(--step-3);
-}
-
-.outcome__sub {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--ink-soft);
+@keyframes outcome-rise {
+  from { transform: translateY(20px) rotate(-2deg); opacity: 0; }
+  to { transform: translateY(0) rotate(0); opacity: 1; }
 }
 
 .outcome__stars {
   display: flex;
-  gap: var(--space-3);
-  font-size: var(--step-4);
-  color: var(--ink-300);
-  letter-spacing: 0.1em;
-  margin: var(--space-2) 0;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: 1.8rem;
+  color: var(--ink-dim);
+  letter-spacing: 0.05em;
+  margin-top: var(--space-1);
 }
 
 .outcome__star--lit {
-  color: var(--gilt);
-  text-shadow: 0 0 12px rgba(184, 146, 79, 0.4);
-}
-
-.outcome__score-num {
-  font-family: var(--font-display);
-  font-size: var(--step-3);
-  font-weight: 700;
-  margin-left: var(--space-2);
+  color: var(--panel-gold);
+  filter: drop-shadow(0 0 8px rgba(229, 181, 71, 0.5));
 }
 
 .outcome__actions {
   display: flex;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-top: var(--space-3);
   flex-wrap: wrap;
   justify-content: center;

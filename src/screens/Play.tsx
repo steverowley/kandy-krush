@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { useLocation, useSearch } from "wouter-preact";
 import { Board } from "../game/view/Board";
+import { TarotCard } from "../components/TarotCard";
 import { useGame, type GameMode } from "../state/game";
 import { useSpread } from "../state/spread";
 import { useDaily } from "../state/daily";
@@ -286,59 +287,92 @@ function Outcome({
 }) {
   const isWin = outcome.kind === "win";
   const isDaily = mode === "daily";
+
+  const panelName = isDaily
+    ? alreadyRecap ? "Settled" : "Reading"
+    : isWin ? "Resolved" : "Broken";
+  const headline = isDaily
+    ? "The Day"
+    : isWin
+      ? "The Spread"
+      : "The Querent";
+  const script = isWin ? "fortune" : "ruin";
+  const subtitle = isDaily
+    ? "la jornada · return tomorrow"
+    : isWin
+      ? "la fortuna · stars settle"
+      : "el cierre · readings spent";
+  const panelColor = isWin
+    ? "var(--panel-gold)"
+    : "var(--panel-amethyst)";
+  const numeral = level?.numeral ?? (isDaily ? "·" : "·");
+
   return (
     <div class="outcome" role="dialog" aria-modal="true" aria-labelledby="outcome-title">
-      <div class="outcome__card leaf">
-        <p class="numeral">— {level?.numeral ?? (isDaily ? "·" : "—")} —</p>
-        <h2 id="outcome-title" class="outcome__title">
-          {isDaily
-            ? alreadyRecap
-              ? "Today's Reading Is Settled"
-              : "The Daily Draw Resolves"
-            : isWin
-              ? "The Spread Resolves"
-              : "The Reading Breaks"}
-        </h2>
-        <p class="outcome__sub">
-          {isDaily
-            ? "Return tomorrow for a fresh deck."
-            : isWin
-              ? "Stars settle on the cloth."
-              : "The querent runs out of patience."}
-        </p>
-
-        {isWin && level ? (
-          <div class="outcome__stars" aria-label={`${outcome.stars} of 3 stars`}>
-            {[1, 2, 3].map((n) => (
-              <span
-                key={n}
-                class={`outcome__star ${outcome.stars >= n ? "outcome__star--lit" : ""}`}
-                aria-hidden="true"
-              >
-                ★
-              </span>
-            ))}
-          </div>
-        ) : null}
-
-        <p class="outcome__score">
-          <span class="eyebrow">Final fortune</span>{" "}
-          <span class="tabular outcome__score-num">
-            {outcome.finalScore.toLocaleString()}
-          </span>
-        </p>
-
-        <div class="outcome__actions">
-          <button type="button" class="btn" onClick={onLeave}>
-            {level ? "Back to the Spread" : "Leave"}
-          </button>
-          {!isDaily ? (
-            <button type="button" class="btn btn--primary" onClick={onRetry}>
-              {isWin ? "Read again" : "Reshuffle"}
-            </button>
-          ) : null}
-        </div>
+      <div class="outcome__card-wrap">
+        <TarotCard
+          numeral={numeral}
+          panelName={panelName}
+          panelCaption={`${outcome.finalScore.toLocaleString()} fortune`}
+          headline={headline}
+          script={script}
+          subtitle={subtitle}
+          panelColor={panelColor}
+          figure={<OutcomeFigure win={isWin} />}
+          footer={
+            <>
+              {isWin && level ? (
+                <div class="outcome__stars" aria-label={`${outcome.stars} of 3 stars`}>
+                  {[1, 2, 3].map((n) => (
+                    <span
+                      key={n}
+                      class={`outcome__star ${outcome.stars >= n ? "outcome__star--lit" : ""}`}
+                      aria-hidden="true"
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              <div class="outcome__actions">
+                <button type="button" class="btn btn--on-card" onClick={onLeave}>
+                  {level ? "Back to the Spread" : "Leave"}
+                </button>
+                {!isDaily ? (
+                  <button
+                    type="button"
+                    class="btn btn--on-card btn--primary"
+                    onClick={onRetry}
+                  >
+                    {isWin ? "Read again" : "Reshuffle"}
+                  </button>
+                ) : null}
+              </div>
+            </>
+          }
+        />
       </div>
     </div>
+  );
+}
+
+function OutcomeFigure({ win }: { win: boolean }) {
+  if (win) {
+    return (
+      <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+        {/* Hand presenting a star */}
+        <path d="M44 110c-8 0-14-4-16-12l-4-26c-1-6 3-9 7-9s8 3 8 8v10h2v-20c0-5 4-8 8-8s8 3 8 8v18h2v-20c0-5 4-8 8-8s8 3 8 8v14h2v-10c0-4 3-7 7-7s8 3 8 9l-3 24c-1 8-8 14-16 14H44z" />
+        {/* Star */}
+        <path d="M60 18l5.3 13.7L80 32.8l-11.4 8.4L72 56l-12-7.5L48 56l3.4-14.8L40 32.8l14.7-1.1z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Empty hands */}
+      <path d="M30 80c-3-3-2-8 2-9l8-2-4-18c-1-5 3-8 7-7s5 4 5 8l3 15 14-2-2-14c-1-5 3-8 7-7s5 4 5 8l4 24c2 12-6 20-18 20-9 0-18-6-31-16z" />
+      {/* Broken thread */}
+      <path d="M68 110l-8 14m-2-18l-4 6m18-2l4 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" />
+    </svg>
   );
 }

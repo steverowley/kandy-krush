@@ -1,21 +1,33 @@
 import { useLocation } from "wouter-preact";
 import { routes } from "../router";
 import { useSettings } from "../state/settings";
+import "./Settings.css";
 
 export function Settings() {
   const [, navigate] = useLocation();
   const { sound, haptics, reducedMotion, set } = useSettings();
 
   return (
-    <main class="screen stack" style={{ "--gap": "var(--space-6)" }}>
-      <header class="stack" style={{ "--gap": "var(--space-2)" }}>
-        <p class="eyebrow">House Rules</p>
-        <h1>Settings</h1>
+    <main class="screen settings">
+      <header class="settings__head">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          onClick={() => navigate(routes.home)}
+        >
+          ← Reading Room
+        </button>
+        <div class="settings__title">
+          <p class="eyebrow">House Rules</p>
+          <h1>
+            <em>Settings</em>
+          </h1>
+          <p class="script settings__sub">how the room is set</p>
+        </div>
+        <span aria-hidden="true" />
       </header>
 
-      <div class="rule rule--soft" />
-
-      <section class="stack" style={{ "--gap": "var(--space-4)" }}>
+      <section class="settings__list">
         <Toggle
           label="Sound"
           hint="Soft chimes and reading-room ambience."
@@ -35,16 +47,6 @@ export function Settings() {
           onChange={(v) => set({ reducedMotion: v })}
         />
       </section>
-
-      <div class="rule rule--soft" />
-
-      <button
-        type="button"
-        class="btn btn--ghost"
-        onClick={() => navigate(routes.home)}
-      >
-        ← Back to the Reading Room
-      </button>
     </main>
   );
 }
@@ -61,31 +63,18 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: "var(--space-6)",
-        padding: "var(--space-3) 0",
-        borderBottom: "var(--rule-soft)",
-        cursor: "pointer",
-      }}
-    >
-      <span>
-        <span style={{ display: "block", fontFamily: "var(--font-engraved)", fontSize: "0.95rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
-          {label}
-        </span>
-        <span style={{ display: "block", color: "var(--ink-soft)", fontStyle: "italic", marginTop: "var(--space-1)" }}>
-          {hint}
-        </span>
+    <label class="toggle">
+      <span class="toggle__text">
+        <span class="toggle__label">{label}</span>
+        <span class="toggle__hint">{hint}</span>
       </span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange((e.currentTarget as HTMLInputElement).checked)}
-        style={{ marginTop: "var(--space-2)", width: "1.25rem", height: "1.25rem", accentColor: "var(--accent)" }}
+        class="toggle__input"
       />
+      <span class="toggle__switch" aria-hidden="true" />
     </label>
   );
 }
