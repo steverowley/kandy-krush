@@ -14,6 +14,7 @@ import {
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
 import { useResume } from "../state/resume";
+import { STAKES, stakeById } from "../game/stakes";
 import "./Querent.css";
 
 export function Querent() {
@@ -23,6 +24,9 @@ export function Querent() {
   const beginRun = useQuerent((s) => s.beginRun);
   const abandonRun = useQuerent((s) => s.abandonRun);
   const isUnlocked = useQuerent((s) => s.isUnlocked);
+  const setStake = useQuerent((s) => s.setStake);
+  const currentStake = stakeById(meta.currentStakeId) ?? STAKES[0]!;
+  const maxStake = stakeById(meta.maxStakeId) ?? STAKES[0]!;
 
   if (run) {
     return (
@@ -61,6 +65,44 @@ export function Querent() {
         <Stat label="Runs completed" value={meta.runsCompleted.toString()} />
         <Stat label="Deepest chamber" value={`${meta.bestDepth} / ${CHAMBER_COUNT}`} />
         <Stat label="Insight" value={meta.insight.toLocaleString()} />
+      </section>
+
+      <section class="querent__stakes" aria-label="Stake">
+        <header class="querent__stakes-head">
+          <p class="eyebrow">Stake</p>
+          <p class="querent__stakes-current script">
+            {currentStake.name.toLowerCase()} · {currentStake.flavor}
+          </p>
+        </header>
+        <ul class="querent__stakes-list">
+          {STAKES.map((s) => {
+            const unlocked = s.tier <= maxStake.tier;
+            const selected = s.id === currentStake.id;
+            return (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  class={`querent__stake-chip${selected ? " querent__stake-chip--selected" : ""}${
+                    unlocked ? "" : " querent__stake-chip--locked"
+                  }`}
+                  style={{ "--card-panel": s.panelColor }}
+                  disabled={!unlocked}
+                  onClick={() => setStake(s.id)}
+                  aria-pressed={selected}
+                  aria-label={`${s.name} stake${unlocked ? "" : " (sealed)"}`}
+                  title={
+                    unlocked
+                      ? `${s.name} — ${formatStakeEffect(s)}`
+                      : "Sealed — clear a run at the prior stake to unlock"
+                  }
+                >
+                  <span class="querent__stake-numeral numeral">{toRoman(s.tier + 1)}</span>
+                  <span class="querent__stake-name">{s.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section class="querent__classes" aria-label="Classes">
@@ -207,6 +249,23 @@ function formatObjective(ch: Chamber | NonNullable<ReturnType<typeof chamberByIn
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatStakeEffect(stake: { targetMultiplier: number; moveDelta: number }): string {
+  if (stake.targetMultiplier === 1 && stake.moveDelta === 0) return "baseline";
+  const parts: string[] = [];
+  if (stake.targetMultiplier !== 1) {
+    parts.push(`targets ×${stake.targetMultiplier.toFixed(2)}`);
+  }
+  if (stake.moveDelta !== 0) {
+    parts.push(`${stake.moveDelta > 0 ? "+" : ""}${stake.moveDelta} readings`);
+  }
+  return parts.join(" · ");
+}
+
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"] as const;
+function toRoman(n: number): string {
+  return ROMAN[n - 1] ?? n.toString();
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

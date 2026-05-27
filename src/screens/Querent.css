@@ -65,6 +65,95 @@
   color: var(--ink-cream);
 }
 
+/* Stake picker — eight chips representing difficulty tiers. Locked
+ * tiers render dimmed; the active selection has a gold ring + soft
+ * lift; per-chip accent comes from the stake's own panelColor token. */
+.querent__stakes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(245, 239, 220, 0.04);
+  border: 1px solid rgba(245, 239, 220, 0.16);
+  border-radius: 12px;
+}
+
+.querent__stakes-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
+}
+
+.querent__stakes-current {
+  color: var(--accent-gold-2);
+  font-size: 1.1rem;
+}
+
+.querent__stakes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.querent__stake-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.45em 0.8em 0.45em 0.6em;
+  border: 1.25px solid var(--accent-gold-3);
+  border-radius: 999px;
+  background: rgba(245, 239, 220, 0.04);
+  color: var(--ink-cream);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 160ms var(--ease), transform 120ms var(--ease),
+    border-color 160ms var(--ease);
+}
+
+.querent__stake-chip:hover:not(:disabled) {
+  background: rgba(245, 239, 220, 0.1);
+  transform: translateY(-1px);
+}
+
+.querent__stake-chip::before {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: -2px;
+  height: 2px;
+  background: var(--card-panel, var(--accent-gold));
+  border-radius: 1px;
+  opacity: 0.9;
+}
+
+.querent__stake-chip--selected {
+  border-color: var(--accent-gold);
+  background: rgba(212, 162, 76, 0.16);
+  box-shadow: 0 0 0 2px rgba(212, 162, 76, 0.18);
+}
+
+.querent__stake-chip--locked {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.querent__stake-numeral {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--accent-gold-2);
+}
+
 .querent__classes {
   display: grid;
   grid-template-columns: 1fr;

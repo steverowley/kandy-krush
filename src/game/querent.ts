@@ -1,5 +1,6 @@
 import type { Objective } from "./levels";
 import type { Suit } from "./engine/types";
+import type { Stake } from "./stakes";
 
 /**
  * Boss Blind rule restriction — modifies how a single chamber scores or
@@ -284,20 +285,31 @@ export function chamberByIndex(idx: number): Chamber | undefined {
   return CHAMBERS.find((c) => c.index === idx);
 }
 
-export function chamberMovesFor(chamber: Chamber, klass: QuerentClass): number {
-  return chamber.baseMoves + klass.moveBonus;
+export function chamberMovesFor(
+  chamber: Chamber,
+  klass: QuerentClass,
+  stake?: Stake | null,
+): number {
+  const stakeDelta = stake?.moveDelta ?? 0;
+  return Math.max(1, chamber.baseMoves + klass.moveBonus + stakeDelta);
 }
 
 /**
- * Apply a chamber's restriction to its objective. Today only the
- * `targetMultiplier` shape affects the target — silenceSuit and
- * halveArcana modify scoring instead and don't change the threshold.
+ * Apply a chamber's restriction AND the run's active Stake to its
+ * objective. Stake multiplier stacks on top of any boss-restriction
+ * multiplier; suit-clear targets are unaffected by either layer.
  */
-export function chamberEffectiveObjective(chamber: Chamber): Objective {
-  const mult = chamber.restriction?.targetMultiplier;
-  if (!mult || chamber.objective.type !== "score") return chamber.objective;
+export function chamberEffectiveObjective(
+  chamber: Chamber,
+  stake?: Stake | null,
+): Objective {
+  if (chamber.objective.type !== "score") return chamber.objective;
+  const restrictionMult = chamber.restriction?.targetMultiplier ?? 1;
+  const stakeMult = stake?.targetMultiplier ?? 1;
+  const combined = restrictionMult * stakeMult;
+  if (combined === 1) return chamber.objective;
   return {
     ...chamber.objective,
-    target: Math.round(chamber.objective.target * mult),
+    target: Math.round(chamber.objective.target * combined),
   };
 }
