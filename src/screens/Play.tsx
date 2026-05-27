@@ -3,12 +3,20 @@ import { useLocation, useSearch } from "wouter-preact";
 import { Board } from "../game/view/Board";
 import { useGame, type GameMode } from "../state/game";
 import { useSpread } from "../state/spread";
+import { useDaily } from "../state/daily";
 import {
   levelById,
   objectiveProgress,
   starCount,
   type Level,
 } from "../game/levels";
+import {
+  DAILY_COLS,
+  DAILY_MOVE_BUDGET,
+  DAILY_ROWS,
+  dailySeed,
+  todayKey,
+} from "../game/daily";
 import { routes } from "../router";
 import "./Play.css";
 
@@ -43,38 +51,97 @@ export function Play() {
     () => (mode === "spread" && levelIdParam ? levelById(levelIdParam) ?? null : null),
     [mode, levelIdParam],
   );
+  const today = useMemo(() => todayKey(), []);
 
-  const { score, moves, deadlocked, cleared, busy, start, reset } = useGame();
-  const recordResult = useSpread((s) => s.recordResult);
+  const { score, moves, deadlocked, cleared, busy, start, reset, snapshot, restore } =
+    useGame();
+  const recordSpread = useSpread((s) => s.recordResult);
+  const dailyRun = useDaily((s) => s.runs[today]);
+  const saveDailySnapshot = useDaily((s) => s.saveSnapshot);
+  const finishDailyRun = useDaily((s) => s.finishRun);
 
-  // Outcome modal — sticky once the run resolves so the player can read it.
   const [outcomeSeen, setOutcomeSeen] = useState<{
     kind: "win" | "loss";
     stars: 0 | 1 | 2 | 3;
     finalScore: number;
   } | null>(null);
 
+  // Initial mount: bootstrap whichever mode is active. Daily restores
+  // from snapshot if there's an unfinished run today; otherwise starts
+  // fresh from today's seed.
   useEffect(() => {
-    // Reset whenever route key (mode + level) changes.
     setOutcomeSeen(null);
+
+    if (mode === "daily") {
+      const run = useDaily.getState().getRun(today);
+      if (run?.outcome === "won" || run?.outcome === "lost") {
+        // Already played today — flash the result, no live board.
+        setOutcomeSeen({
+          kind: run.outcome === "won" ? "win" : "loss",
+          stars: 0,
+          finalScore: run.finalScore,
+        });
+        return;
+      }
+      if (run?.snapshot) {
+        restore(run.snapshot);
+        return;
+      }
+      start("daily", {
+        seed: dailySeed(today),
+        rows: DAILY_ROWS,
+        cols: DAILY_COLS,
+      });
+      return;
+    }
+
     start(mode, level ? { levelId: level.id } : undefined);
-  }, [mode, level?.id]);
+  }, [mode, level?.id, today]);
 
   const progress = level ? objectiveProgress(level.objective, score, cleared) : null;
-  const movesLeft = level ? Math.max(0, level.moves - moves) : null;
+  const movesLeft =
+    level
+      ? Math.max(0, level.moves - moves)
+      : mode === "daily"
+        ? Math.max(0, DAILY_MOVE_BUDGET - moves)
+        : null;
 
-  // Resolve outcome when the run reaches a terminal state.
+  // Auto-snapshot the daily run after every settled move (busy === false
+  // signals "the cascade has resolved").
   useEffect(() => {
-    if (!level || outcomeSeen || busy) return;
-    if (!progress) return;
-    if (progress.met) {
-      const stars = starCount(level, score, true);
-      recordResult(level.id, stars);
-      setOutcomeSeen({ kind: "win", stars, finalScore: score });
-    } else if (movesLeft === 0) {
-      setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
+    if (mode !== "daily") return;
+    if (busy) return;
+    if (outcomeSeen) return;
+    // Don't snapshot the empty pre-start state.
+    if (useGame.getState().board.rows === 0) return;
+    saveDailySnapshot(today, snapshot());
+  }, [mode, busy, moves, score, today, outcomeSeen, saveDailySnapshot, snapshot]);
+
+  // Resolve outcomes.
+  useEffect(() => {
+    if (outcomeSeen || busy) return;
+
+    if (level && progress) {
+      if (progress.met) {
+        const stars = starCount(level, score, true);
+        recordSpread(level.id, stars);
+        setOutcomeSeen({ kind: "win", stars, finalScore: score });
+      } else if (movesLeft === 0) {
+        setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
+      }
+      return;
     }
-  }, [level, progress?.met, movesLeft, outcomeSeen, busy, score, recordResult]);
+
+    if (mode === "daily" && movesLeft === 0 && useGame.getState().board.rows > 0) {
+      // The Daily Draw resolves on budget exhaustion. Any final score
+      // counts as a "win" in the sense of completing the reading — the
+      // outcome modal celebrates a score regardless.
+      finishDailyRun(today, "won", score);
+      setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
+    }
+  }, [level, progress?.met, movesLeft, outcomeSeen, busy, score, mode, today, finishDailyRun, recordSpread]);
+
+  const isDailyRecap = mode === "daily" && (dailyRun?.outcome === "won" || dailyRun?.outcome === "lost");
 
   return (
     <main class="screen play stack" style={{ "--gap": "var(--space-4)" }}>
@@ -93,19 +160,37 @@ export function Play() {
             <p class="play__chapter">
               <span class="numeral">{level.numeral}</span> · {level.name}
             </p>
+          ) : mode === "daily" ? (
+            <p class="play__chapter"><span class="numeral">·</span> {today}</p>
           ) : null}
         </div>
-        <button
-          type="button"
-          class="btn btn--ghost"
-          aria-label="Shuffle the deck"
-          onClick={() => {
-            setOutcomeSeen(null);
-            reset();
-          }}
-        >
-          ↻ Reshuffle
-        </button>
+        {mode === "free" ? (
+          <button
+            type="button"
+            class="btn btn--ghost"
+            aria-label="Shuffle the deck"
+            onClick={() => {
+              setOutcomeSeen(null);
+              reset();
+            }}
+          >
+            ↻ Reshuffle
+          </button>
+        ) : level ? (
+          <button
+            type="button"
+            class="btn btn--ghost"
+            aria-label="Restart this chapter"
+            onClick={() => {
+              setOutcomeSeen(null);
+              reset();
+            }}
+          >
+            ↻ Restart
+          </button>
+        ) : (
+          <span aria-hidden="true" />
+        )}
       </header>
 
       <section class="play__ledger" aria-label="Run status">
@@ -115,9 +200,9 @@ export function Play() {
         </div>
         <div class="ledger-rule" aria-hidden="true" />
         <div class="ledger-cell">
-          <span class="eyebrow">{level ? "Readings left" : "Readings"}</span>
+          <span class="eyebrow">{movesLeft !== null ? "Readings left" : "Readings"}</span>
           <span class="ledger-value tabular">
-            {level ? movesLeft : moves}
+            {movesLeft !== null ? movesLeft : moves}
           </span>
         </div>
       </section>
@@ -147,57 +232,82 @@ export function Play() {
         </section>
       ) : null}
 
-      <Board />
+      {!isDailyRecap ? <Board /> : null}
 
       {deadlocked && !outcomeSeen ? (
         <div class="play__notice" role="status">
           <p class="eyebrow">The Deck Has Frozen</p>
           <p>No legal swap remains.</p>
-          <button type="button" class="btn btn--primary" onClick={() => reset()}>
-            Reshuffle the deck
+          <button type="button" class="btn btn--primary" onClick={() => {
+            // Daily mode shouldn't reshuffle (would change seed); resolve as won.
+            if (mode === "daily") {
+              finishDailyRun(today, "won", score);
+              setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
+              return;
+            }
+            reset();
+          }}>
+            {mode === "daily" ? "Finalize the reading" : "Reshuffle the deck"}
           </button>
         </div>
       ) : null}
 
-      {outcomeSeen ? <Outcome
-        outcome={outcomeSeen}
-        level={level}
-        onRetry={() => {
-          setOutcomeSeen(null);
-          reset();
-        }}
-        onLeave={() => navigate(level ? routes.spread : routes.home)}
-      /> : null}
+      {outcomeSeen ? (
+        <Outcome
+          mode={mode}
+          outcome={outcomeSeen}
+          level={level}
+          alreadyRecap={isDailyRecap}
+          onRetry={() => {
+            setOutcomeSeen(null);
+            reset();
+          }}
+          onLeave={() => navigate(level ? routes.spread : routes.home)}
+        />
+      ) : null}
     </main>
   );
 }
 
 function Outcome({
+  mode,
   outcome,
   level,
+  alreadyRecap,
   onRetry,
   onLeave,
 }: {
+  mode: GameMode;
   outcome: { kind: "win" | "loss"; stars: 0 | 1 | 2 | 3; finalScore: number };
   level: Level | null;
+  alreadyRecap: boolean;
   onRetry: () => void;
   onLeave: () => void;
 }) {
   const isWin = outcome.kind === "win";
+  const isDaily = mode === "daily";
   return (
     <div class="outcome" role="dialog" aria-modal="true" aria-labelledby="outcome-title">
       <div class="outcome__card leaf">
-        <p class="numeral">— {level?.numeral ?? "—"} —</p>
+        <p class="numeral">— {level?.numeral ?? (isDaily ? "·" : "—")} —</p>
         <h2 id="outcome-title" class="outcome__title">
-          {isWin ? "The Spread Resolves" : "The Reading Breaks"}
+          {isDaily
+            ? alreadyRecap
+              ? "Today's Reading Is Settled"
+              : "The Daily Draw Resolves"
+            : isWin
+              ? "The Spread Resolves"
+              : "The Reading Breaks"}
         </h2>
         <p class="outcome__sub">
-          {isWin
-            ? "Stars settle on the cloth."
-            : "The querent runs out of patience."}
+          {isDaily
+            ? "Return tomorrow for a fresh deck."
+            : isWin
+              ? "Stars settle on the cloth."
+              : "The querent runs out of patience."}
         </p>
 
-        {isWin ? (
+        {isWin && level ? (
           <div class="outcome__stars" aria-label={`${outcome.stars} of 3 stars`}>
             {[1, 2, 3].map((n) => (
               <span
@@ -222,9 +332,11 @@ function Outcome({
           <button type="button" class="btn" onClick={onLeave}>
             {level ? "Back to the Spread" : "Leave"}
           </button>
-          <button type="button" class="btn btn--primary" onClick={onRetry}>
-            {isWin ? "Read again" : "Reshuffle"}
-          </button>
+          {!isDaily ? (
+            <button type="button" class="btn btn--primary" onClick={onRetry}>
+              {isWin ? "Read again" : "Reshuffle"}
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

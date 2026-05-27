@@ -35,9 +35,10 @@ const modes: Mode[] = [
     numeral: "III",
     name: "Daily Draw",
     tagline: "One reading. One day.",
-    body: "A single fixed spread for every querent today. Compare your fate against the world.",
+    body: "A single fixed spread for every querent today. Same seed worldwide; resume mid-day from any device.",
     cta: "Draw today",
     to: `${routes.play}?mode=daily`,
+    status: "Playable",
   },
   {
     numeral: "IV",

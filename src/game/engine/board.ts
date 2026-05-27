@@ -6,6 +6,12 @@ function mintTile(suit: Suit): Tile {
   return { id: nextTileId++, suit };
 }
 
+/** Ensure freshly-minted tiles never collide with restored ids. Called
+ *  by the daily / save layer after a snapshot is rehydrated. */
+export function reserveTileIds(upTo: number) {
+  if (upTo + 1 > nextTileId) nextTileId = upTo + 1;
+}
+
 export function indexOf(board: Board, cell: Cell): number {
   return cell.row * board.cols + cell.col;
 }
