@@ -4,6 +4,39 @@
   gap: var(--space-4);
 }
 
+/* Reveal — the play surface flips in like a turned tarot card. */
+.play__reveal {
+  animation: play-reveal 520ms var(--ease) both;
+  transform-origin: 50% 30%;
+  perspective: 1000px;
+}
+
+@keyframes play-reveal {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg) scale(0.92);
+    filter: blur(3px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: rotateX(0) scale(1);
+  }
+}
+
+:where(.reduced-motion) .play__reveal {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play__reveal {
+    animation: none;
+  }
+}
+
 .play__head {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
