@@ -21,6 +21,17 @@ export type ChamberRestriction = {
   halveArcana?: boolean;
   /** Multiplier applied to the chamber's score objective target. */
   targetMultiplier?: number;
+  /** When set, every Nth move (1-based count) destroys a random tile
+   *  after scoring. The destruction's emergent cascade folds into the
+   *  same move's totals. */
+  destroyEveryN?: number;
+  /** When set, the Board view renders tiles as card-backs unless they
+   *  are the named special OR orthogonally adjacent to one. Engine
+   *  state is unchanged — this is view-only obfuscation. */
+  obscureUntilAdjacentTo?: "wild" | "spark";
+  /** When true, match-4 / match-5+ groups don't promote to sparks/wilds
+   *  for this chamber. The player loses access to specials. */
+  blockSpecialPromotions?: boolean;
 };
 
 export type QuerentClass = {
@@ -159,7 +170,14 @@ export const CHAMBERS: readonly Chamber[] = [
     objective: { type: "suit", target: 12, suit: "swords" },
     baseMoves: 14,
     panelColor: "var(--panel-coral)",
-    boss: false,
+    boss: true,
+    restriction: {
+      id: "the-cut",
+      name: "The Cut",
+      description: "Every fifth reading, a random tile is destroyed.",
+      flavor: "la muerte · the scythe arrives on schedule",
+      destroyEveryN: 5,
+    },
   },
   {
     index: 6,
@@ -214,9 +232,11 @@ export const CHAMBERS: readonly Chamber[] = [
     restriction: {
       id: "higher-fortune",
       name: "Higher Fortune",
-      description: "The fortune target is one and a half times what it asks.",
+      description:
+        "The fortune target rises by half — and no specials may be planted.",
       flavor: "la estrella · the light demands more",
       targetMultiplier: 1.5,
+      blockSpecialPromotions: true,
     },
   },
   {
@@ -228,7 +248,14 @@ export const CHAMBERS: readonly Chamber[] = [
     objective: { type: "suit", target: 14, suit: "cups" },
     baseMoves: 18,
     panelColor: "var(--panel-amethyst)",
-    boss: false,
+    boss: true,
+    restriction: {
+      id: "tide-low",
+      name: "Tide Low",
+      description: "Tiles stay face-down until a wild stands next to them.",
+      flavor: "la luna · the tide hides the stones",
+      obscureUntilAdjacentTo: "wild",
+    },
   },
   {
     index: 11,

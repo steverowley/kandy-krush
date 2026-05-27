@@ -116,3 +116,37 @@ export function generateBoard(
 export function newTile(suit: Suit): Tile {
   return mintTile(suit);
 }
+
+/**
+ * Compute the set of cell indices that should render face-up under an
+ * "obscure until adjacent to a special" boss restriction. A tile is
+ * revealed when it is the named special OR orthogonally adjacent to
+ * one. The result is keyed by board-tiles index so the view can look
+ * each cell up in O(1).
+ */
+export function obscuredRevealSet(
+  board: Board,
+  special: "wild" | "spark",
+): Set<number> {
+  const revealed = new Set<number>();
+  for (let row = 0; row < board.rows; row++) {
+    for (let col = 0; col < board.cols; col++) {
+      const idx = row * board.cols + col;
+      const t = board.tiles[idx];
+      if (!t || t.kind !== special) continue;
+      revealed.add(idx);
+      for (const [dr, dc] of [
+        [-1, 0],
+        [1, 0],
+        [0, -1],
+        [0, 1],
+      ] as const) {
+        const nr = row + dr;
+        const nc = col + dc;
+        if (nr < 0 || nc < 0 || nr >= board.rows || nc >= board.cols) continue;
+        revealed.add(nr * board.cols + nc);
+      }
+    }
+  }
+  return revealed;
+}

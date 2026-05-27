@@ -176,7 +176,10 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   attemptSwap: (a, b) => {
     const s = get();
     if (s.busy) return;
-    const result = tryMove(s.board, s.rng, a, b);
+    const engineOpts = s.restriction?.blockSpecialPromotions
+      ? { skipPromotions: true }
+      : undefined;
+    const result = tryMove(s.board, s.rng, a, b, engineOpts);
     if (!result) {
       set({ nudge: s.nudge + 1, selected: null });
       return;
@@ -263,7 +266,32 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           if (!arcana.postMove) continue;
           const cells = arcana.postMove(board, prev.rng);
           if (cells.length === 0) continue;
-          const destroyed = destroyCells(board, prev.rng, cells);
+          const destroyed = destroyCells(board, prev.rng, cells, engineOpts);
+          board = destroyed.board;
+          scoreSteps(destroyed.cascades, totals);
+          for (const step of destroyed.cascades) {
+            for (const group of step.matches) {
+              cleared[group.suit] += group.cells.length;
+            }
+          }
+        }
+
+        // Death boss restriction: every Nth move (1-based), destroy a
+        // random tile. The destruction's cascade folds into this move's
+        // totals so the player feels it land on the same swap.
+        const moveNumber = prev.moves + 1;
+        if (
+          restriction?.destroyEveryN &&
+          moveNumber % restriction.destroyEveryN === 0
+        ) {
+          const row = Math.floor(prev.rng() * board.rows);
+          const col = Math.floor(prev.rng() * board.cols);
+          const destroyed = destroyCells(
+            board,
+            prev.rng,
+            [{ row, col }],
+            engineOpts,
+          );
           board = destroyed.board;
           scoreSteps(destroyed.cascades, totals);
           for (const step of destroyed.cascades) {

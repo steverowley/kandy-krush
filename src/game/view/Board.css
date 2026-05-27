@@ -145,6 +145,29 @@
   outline-offset: 2px;
 }
 
+/* Moon boss: tiles unrevealed until adjacent to a wild render as a
+ * card-back medallion. The engine still knows the suit; this is
+ * view-only obfuscation. */
+.tile-card--obscured {
+  background: var(--ink-strong);
+  color: var(--accent-gold-2);
+  border: 1px solid var(--accent-gold-3);
+}
+
+.tile-card--obscured .tile-card__back {
+  position: absolute;
+  inset: 16%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold);
+}
+
+.tile-card--obscured .tile-card__back svg {
+  width: 70%;
+  height: 70%;
+}
+
 /* Inner aperture: cream-on-cream with a thin gold-tinted border. The
  * suit color expresses through the glyph itself, not the panel fill —
  * matches the recruitment-poster aesthetic where each card shares chrome

@@ -1,5 +1,5 @@
 import { areAdjacent, generateBoard, swapped } from "./board";
-import { resolveCascades, hasLegalMove } from "./cascade";
+import { resolveCascades, hasLegalMove, type ResolveOpts } from "./cascade";
 import { swapMakesMatch } from "./match";
 import { createRng, type SeededRng } from "./rng";
 import type { Board, Cell, ResolveResult } from "./types";
@@ -27,11 +27,12 @@ export function tryMove(
   rng: () => number,
   a: Cell,
   b: Cell,
+  opts?: ResolveOpts,
 ): ResolveResult | null {
   if (!areAdjacent(a, b)) return null;
   if (!swapMakesMatch(board, a, b)) return null;
   const after = swapped(board, a, b);
-  const resolved = resolveCascades(after, rng);
+  const resolved = resolveCascades(after, rng, opts);
   return resolved;
 }
 

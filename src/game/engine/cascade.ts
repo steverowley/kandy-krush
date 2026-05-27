@@ -59,6 +59,15 @@ function multForMatchSize(n: number): number {
   return 2;
 }
 
+/** Options that thread through resolveCascades and clearAndRefillOnce.
+ *  Used by boss restrictions to suppress specific engine behaviors. */
+export type ResolveOpts = {
+  /** When true, match-4/5+ groups don't plant sparks or wilds. The
+   *  cells score normally but no special survives. Used by the Star
+   *  boss restriction. */
+  skipPromotions?: boolean;
+};
+
 /**
  * Resolve one match wave: figure out the clear set (expanding via any
  * sparks caught in the original match cells), promote any match-4+
@@ -77,6 +86,7 @@ export function clearAndRefillOnce(
   board: Board,
   matches: MatchGroup[],
   rng: () => number,
+  opts?: ResolveOpts,
 ): {
   board: Board;
   chips: number;
@@ -129,21 +139,24 @@ export function clearAndRefillOnce(
   // The promoted cell is rescued from the clear set.
   //   match-4    → spark (clears row+col when later cleared)
   //   match-5+   → wild  (counts as any suit, no special clear effect)
+  // Skipped when opts.skipPromotions is set (Star boss restriction).
   const sparkPlants: Array<{ idx: number; tile: Tile }> = [];
   let sparkPromotions = 0;
-  for (const group of matches) {
-    if (group.cells.length < 4) continue;
-    const middle = group.cells[Math.floor(group.cells.length / 2)]!;
-    const idx = indexOf(board, middle);
-    const oldTile = tiles[idx];
-    if (!oldTile) continue;
-    const kind: Tile["kind"] = group.cells.length >= 5 ? "wild" : "spark";
-    sparkPlants.push({
-      idx,
-      tile: { id: oldTile.id, suit: group.suit, kind },
-    });
-    clearSet.delete(idx);
-    sparkPromotions++;
+  if (!opts?.skipPromotions) {
+    for (const group of matches) {
+      if (group.cells.length < 4) continue;
+      const middle = group.cells[Math.floor(group.cells.length / 2)]!;
+      const idx = indexOf(board, middle);
+      const oldTile = tiles[idx];
+      if (!oldTile) continue;
+      const kind: Tile["kind"] = group.cells.length >= 5 ? "wild" : "spark";
+      sparkPlants.push({
+        idx,
+        tile: { id: oldTile.id, suit: group.suit, kind },
+      });
+      clearSet.delete(idx);
+      sparkPromotions++;
+    }
   }
 
   // Balatro-style scoring: chips × mult.
@@ -188,6 +201,7 @@ export function clearAndRefillOnce(
 export function resolveCascades(
   board: Board,
   rng: () => number,
+  opts?: ResolveOpts,
 ): {
   board: Board;
   cascades: CascadeStep[];
@@ -205,7 +219,7 @@ export function resolveCascades(
   while (true) {
     const matches = findMatches(cur);
     if (matches.length === 0) break;
-    const { board: next, chips, mult } = clearAndRefillOnce(cur, matches, rng);
+    const { board: next, chips, mult } = clearAndRefillOnce(cur, matches, rng, opts);
     const stepMult = mult + (depth - 1);
     const stepScore = chips * stepMult;
     cascades.push({ matches, depth, chips, mult: stepMult, scoreGained: stepScore });
@@ -234,6 +248,7 @@ export function destroyCells(
   board: Board,
   rng: () => number,
   cells: readonly Cell[],
+  opts?: ResolveOpts,
 ): ResolveResult {
   const tiles = board.tiles.slice();
   for (const cell of cells) {
@@ -241,7 +256,7 @@ export function destroyCells(
     tiles[indexOf(board, cell)] = null;
   }
   const settled = collapseAndRefill({ ...board, tiles }, rng);
-  return resolveCascades(settled, rng);
+  return resolveCascades(settled, rng, opts);
 }
 
 export function hasLegalMove(board: Board): boolean {

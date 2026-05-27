@@ -4,12 +4,14 @@ import {
   areAdjacent,
   convertSuit,
   generateBoard,
+  obscuredRevealSet,
   plantTile,
   swapped,
   tileAt,
 } from "../game/engine/board";
 import { findMatches, swapMakesMatch } from "../game/engine/match";
 import {
+  clearAndRefillOnce,
   destroyCells,
   resolveCascades,
   hasLegalMove,
@@ -390,5 +392,90 @@ describe("plantTile", () => {
     const newTile: Tile = { id: 9999, suit: "wands" };
     const out = plantTile(board, { row: 10, col: 10 }, newTile);
     expect(out).toBe(board);
+  });
+});
+
+describe("ResolveOpts.skipPromotions", () => {
+  it("a match-4 plants no spark when skipPromotions is set", () => {
+    const board = makeBoard([
+      "ccccp",
+      "wpsws",
+      "pwspw",
+      "sspwc",
+    ]);
+    const matches = findMatches(board);
+    const rng = createRng(1);
+    const { board: out, sparkPromotions } = clearAndRefillOnce(
+      board,
+      matches,
+      rng,
+      { skipPromotions: true },
+    );
+    expect(sparkPromotions).toBe(0);
+    // No spark or wild lives on the post-step board.
+    for (const t of out.tiles) {
+      expect(t!.kind).toBeUndefined();
+    }
+  });
+
+  it("resolveCascades forwards skipPromotions to every step", () => {
+    const board = makeBoard([
+      "cccccp",
+      "wpswsw",
+      "pwspws",
+      "sspwcs",
+    ]);
+    const rng = createRng(3);
+    const { board: out } = resolveCascades(board, rng, {
+      skipPromotions: true,
+    });
+    for (const t of out.tiles) {
+      expect(t!.kind).toBeUndefined();
+    }
+  });
+});
+
+describe("obscuredRevealSet", () => {
+  it("reveals only the wild and its orthogonal neighbors", () => {
+    const board = makeBoard(["cpsw", "wpsw", "spwc", "cwps"]);
+    // Plant a wild at (1, 1).
+    board.tiles[1 * 4 + 1] = { id: 999, suit: "cups", kind: "wild" };
+    const revealed = obscuredRevealSet(board, "wild");
+    // The wild itself: (1,1) = idx 5.
+    expect(revealed.has(5)).toBe(true);
+    // Orthogonal neighbors: (0,1)=1, (2,1)=9, (1,0)=4, (1,2)=6.
+    expect(revealed.has(1)).toBe(true);
+    expect(revealed.has(9)).toBe(true);
+    expect(revealed.has(4)).toBe(true);
+    expect(revealed.has(6)).toBe(true);
+    // A distant cell: (0,3)=3 — should NOT be revealed.
+    expect(revealed.has(3)).toBe(false);
+  });
+
+  it("returns an empty set on a board with no specials", () => {
+    const board = makeBoard(["cpsw", "wpsw"]);
+    const revealed = obscuredRevealSet(board, "wild");
+    expect(revealed.size).toBe(0);
+  });
+
+  it("clamps adjacency to board bounds (corner wild)", () => {
+    const board = makeBoard(["cpsw", "wpsw"]);
+    board.tiles[0] = { id: 1, suit: "cups", kind: "wild" };
+    const revealed = obscuredRevealSet(board, "wild");
+    // Wild at (0,0): self + (0,1) + (1,0) = 3 cells.
+    expect(revealed.size).toBe(3);
+    expect(revealed.has(0)).toBe(true);
+    expect(revealed.has(1)).toBe(true);
+    expect(revealed.has(4)).toBe(true);
+  });
+
+  it("also works for sparks when keyed on 'spark'", () => {
+    const board = makeBoard(["cpsw", "wpsw"]);
+    board.tiles[2] = { id: 1, suit: "swords", kind: "spark" };
+    const revealed = obscuredRevealSet(board, "spark");
+    expect(revealed.has(2)).toBe(true);
+    expect(revealed.has(1)).toBe(true);
+    expect(revealed.has(3)).toBe(true);
+    expect(revealed.has(6)).toBe(true);
   });
 });
