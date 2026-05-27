@@ -193,3 +193,29 @@ describe("integration — silencing a Wand-heavy step zeros the score", () => {
     expect(out.scoreGained).toBe(60);
   });
 });
+
+describe("Boss chamber restriction shapes", () => {
+  it("Death chamber (5) is a boss with destroyEveryN=5", () => {
+    const ch = chamberByIndex(5)!;
+    expect(ch.boss).toBe(true);
+    expect(ch.restriction?.destroyEveryN).toBe(5);
+  });
+
+  it("Star chamber (9) keeps its target ×1.5 and adds blockSpecialPromotions", () => {
+    const ch = chamberByIndex(9)!;
+    expect(ch.boss).toBe(true);
+    expect(ch.restriction?.targetMultiplier).toBe(1.5);
+    expect(ch.restriction?.blockSpecialPromotions).toBe(true);
+  });
+
+  it("Moon chamber (10) is a boss with obscureUntilAdjacentTo='wild'", () => {
+    const ch = chamberByIndex(10)!;
+    expect(ch.boss).toBe(true);
+    expect(ch.restriction?.obscureUntilAdjacentTo).toBe("wild");
+  });
+
+  it("boss count is at least 7 after Death + Moon promotion", () => {
+    const bossCount = CHAMBERS.filter((c) => c.boss).length;
+    expect(bossCount).toBeGreaterThanOrEqual(7);
+  });
+});

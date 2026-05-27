@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useGame } from "../../state/game";
-import { areAdjacent, inBounds } from "../engine/board";
+import { areAdjacent, inBounds, obscuredRevealSet } from "../engine/board";
 import type { Cell, Suit, Tile } from "../engine/types";
 import { SuitGlyph, SUIT_COLORS } from "./suit-glyphs";
 import "./Board.css";
@@ -30,13 +30,22 @@ type Drag = {
 };
 
 export function Board() {
-  const { board, selected, busy, nudge, select, attemptSwap } = useGame();
+  const { board, restriction, selected, busy, nudge, select, attemptSwap } =
+    useGame();
   const [focus, setFocus] = useState<Cell>({ row: 0, col: 0 });
   const [drag, setDrag] = useState<Drag | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const prevPositionsRef = useRef<Map<number, { row: number; col: number }>>(
     new Map(),
   );
+
+  // Moon boss restriction: tiles render face-down until adjacent to a
+  // wild. The reveal set recomputes any time the board changes — cheap
+  // (O(rows × cols)) and the engine state stays untouched.
+  const revealSet = useMemo(() => {
+    if (!restriction?.obscureUntilAdjacentTo) return null;
+    return obscuredRevealSet(board, restriction.obscureUntilAdjacentTo);
+  }, [board, restriction?.obscureUntilAdjacentTo]);
 
   const positions = new Map<number, { row: number; col: number }>();
   board.tiles.forEach((tile, idx) => {
@@ -213,6 +222,7 @@ export function Board() {
         const isNew = !prev;
         const isDragging =
           drag !== null && drag.cell.row === row && drag.cell.col === col;
+        const obscured = revealSet !== null && !revealSet.has(idx);
         return (
           <TileButton
             key={tile.id}
@@ -225,6 +235,7 @@ export function Board() {
             isDragging={isDragging}
             dragDx={isDragging ? dragDx : 0}
             dragDy={isDragging ? dragDy : 0}
+            obscured={obscured}
             busy={busy}
             onPointerDown={(e) => onPointerDown(e, here)}
             onPointerMove={onPointerMove}
@@ -248,6 +259,7 @@ function TileButton({
   isDragging,
   dragDx,
   dragDy,
+  obscured,
   busy,
   onPointerDown,
   onPointerMove,
@@ -264,6 +276,7 @@ function TileButton({
   isDragging: boolean;
   dragDx: number;
   dragDy: number;
+  obscured: boolean;
   busy: boolean;
   onPointerDown: (e: PointerEvent) => void;
   onPointerMove: (e: PointerEvent) => void;
@@ -278,7 +291,7 @@ function TileButton({
         busy ? " tile-card--busy" : ""
       }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}${
         tile.kind === "spark" ? " tile-card--spark" : ""
-      }${tile.kind === "wild" ? " tile-card--wild" : ""}`}
+      }${tile.kind === "wild" ? " tile-card--wild" : ""}${obscured ? " tile-card--obscured" : ""}`}
       role="gridcell"
       style={{
         "--tile-color": SUIT_COLORS[tile.suit],
@@ -287,7 +300,7 @@ function TileButton({
         "--drag-x": `${dragDx}px`,
         "--drag-y": `${dragDy}px`,
       }}
-      aria-label={tileAriaLabel(tile, row, col)}
+      aria-label={obscured ? `Hidden tile at row ${row + 1}, column ${col + 1}` : tileAriaLabel(tile, row, col)}
       aria-pressed={isSelected}
       tabIndex={isFocused ? 0 : -1}
       onPointerDown={onPointerDown}
@@ -296,17 +309,41 @@ function TileButton({
       onPointerCancel={onPointerCancel}
       onFocus={onFocus}
     >
-      <span class="tile-card__panel" aria-hidden="true" />
-      <span class="tile-card__glyph" aria-hidden="true">
-        {tile.kind === "wild" ? <WildGlyph /> : <SuitGlyph suit={tile.suit} />}
-      </span>
-      {tile.kind === "spark" ? (
-        <span class="tile-card__spark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l2.4 6.6L21 9l-5 4.3L17.6 20 12 16.8 6.4 20 8 13.3 3 9l6.6-.4z" />
+      {obscured ? (
+        <span class="tile-card__back" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="4" fill="currentColor" opacity="0.85" />
+            {[0, 60, 120, 180, 240, 300].map((deg) => (
+              <line
+                key={deg}
+                x1="12"
+                y1="12"
+                x2="12"
+                y2="3"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                opacity="0.6"
+                transform={`rotate(${deg} 12 12)`}
+              />
+            ))}
           </svg>
         </span>
-      ) : null}
+      ) : (
+        <>
+          <span class="tile-card__panel" aria-hidden="true" />
+          <span class="tile-card__glyph" aria-hidden="true">
+            {tile.kind === "wild" ? <WildGlyph /> : <SuitGlyph suit={tile.suit} />}
+          </span>
+          {tile.kind === "spark" ? (
+            <span class="tile-card__spark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 6.6L21 9l-5 4.3L17.6 20 12 16.8 6.4 20 8 13.3 3 9l6.6-.4z" />
+              </svg>
+            </span>
+          ) : null}
+        </>
+      )}
     </button>
   );
 }
