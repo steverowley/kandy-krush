@@ -25,6 +25,7 @@ import { outcome as outcomeAudio } from "../subscribers/audio";
 import {
   CHAMBER_COUNT,
   chamberByIndex,
+  chamberEffectiveObjective,
   chamberMovesFor,
   classById,
   type Chamber,
@@ -152,6 +153,7 @@ export function Play() {
       start("querent", {
         scoreMultiplier: querentClass.scoreMultiplier,
         totalMoves: chamberMovesFor(chamber, querentClass),
+        restriction: chamber.restriction ?? null,
       });
       return;
     }
@@ -170,10 +172,13 @@ export function Play() {
     start(mode, level ? { levelId: level.id, totalMoves: level.moves } : undefined);
   }, [mode, level?.id, today, chamberParam]);
 
+  // Bosses can multiply the objective target — chamberEffectiveObjective
+  // applies the restriction so progress + win-check both see the
+  // adjusted threshold.
   const effectiveObjective = level
     ? level.objective
     : chamber
-      ? chamber.objective
+      ? chamberEffectiveObjective(chamber)
       : null;
 
   const chamberMoves =
@@ -353,6 +358,14 @@ export function Play() {
       </header>
 
       {mode === "querent" ? <ArcanaStrip /> : null}
+
+      {chamber?.restriction ? (
+        <aside class="boss-banner" role="note">
+          <p class="boss-banner__chip eyebrow">{chamber.restriction.name}</p>
+          <p class="boss-banner__body">{chamber.restriction.description}</p>
+          <p class="boss-banner__flavor">{chamber.restriction.flavor}</p>
+        </aside>
+      ) : null}
 
       <section class="play__ledger" aria-label="Run status" aria-live="polite">
         <div class="ledger-cell">

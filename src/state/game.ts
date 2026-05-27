@@ -3,8 +3,9 @@ import { newGame, tryMove, isDeadlocked } from "../game/engine/engine";
 import { reserveTileIds } from "../game/engine/board";
 import { createRng, type SeededRng } from "../game/engine/rng";
 import type { Board, Cell, Suit, Tile } from "../game/engine/types";
-import { applyArcanaToStep } from "../game/arcana";
+import { applyArcanaToStep, silenceSuitInStep } from "../game/arcana";
 import { useArcana } from "./arcana";
+import type { ChamberRestriction } from "../game/querent";
 
 export type GameMode = "free" | "spread" | "daily" | "querent";
 
@@ -45,6 +46,8 @@ type GameState = {
   /** Total move budget for the current blind, if known. Used by arcana
    *  whose effects depend on chamber pacing (e.g. The World). */
   totalMoves: number | null;
+  /** Active Boss Blind restriction, if this blind is a boss. */
+  restriction: ChamberRestriction | null;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -59,6 +62,7 @@ export type StartOpts = {
   levelId?: number;
   scoreMultiplier?: number;
   totalMoves?: number;
+  restriction?: ChamberRestriction | null;
 };
 
 /** Serializable snapshot of an in-progress run. The rng is captured as
@@ -100,6 +104,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   cleared: { ...ZERO_CLEARED },
   scoreMultiplier: 1,
   totalMoves: null,
+  restriction: null,
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -122,6 +127,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       cleared: { ...ZERO_CLEARED },
       scoreMultiplier: opts?.scoreMultiplier ?? 1,
       totalMoves: opts?.totalMoves ?? null,
+      restriction: opts?.restriction ?? null,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -149,19 +155,25 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     set({ busy: true });
     window.setTimeout(() => {
       set((prev) => {
-        // Apply held Arcana effects per cascade step. The engine emits
-        // base chips/mult; arcana mutate those left-to-right before the
-        // final product is summed. Read the live arcana state — it may
-        // have changed between move and resolve.
+        // Apply held Arcana effects per cascade step, plus any Boss
+        // Blind restriction on the chamber. Restriction silencing runs
+        // BEFORE arcana so silenced suits don't trigger suit-keyed
+        // bonuses; halveArcana is forwarded into applyArcanaToStep so
+        // it can scale only the arcana delta, not the engine base.
         const held = useArcana.getState().held();
+        const restriction = prev.restriction;
         let modTotalScore = 0;
         let modTotalChips = 0;
         let modPeakMult = 0;
-        for (const step of result.cascades) {
+        for (const rawStep of result.cascades) {
+          const step = restriction?.silenceSuit
+            ? silenceSuitInStep(rawStep, restriction.silenceSuit)
+            : rawStep;
           const modified = applyArcanaToStep(step, held, {
             depth: step.depth,
             movesUsed: prev.moves,
             totalMoves: prev.totalMoves,
+            halveArcana: restriction?.halveArcana ?? false,
           });
           modTotalScore += modified.scoreGained;
           modTotalChips += modified.chips;

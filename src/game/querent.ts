@@ -1,4 +1,26 @@
 import type { Objective } from "./levels";
+import type { Suit } from "./engine/types";
+
+/**
+ * Boss Blind rule restriction — modifies how a single chamber scores or
+ * objectives are evaluated. Per the design brief §4.4. Three effect
+ * shapes are supported today; future restrictions can mix-and-match.
+ */
+export type ChamberRestriction = {
+  id: string;
+  /** Short uppercase chip the player sees in the HUD ("WANDS SILENT"). */
+  name: string;
+  /** One-line explanation shown on the chamber card and Play HUD. */
+  description: string;
+  /** Italic Spanish flavor for the card footer. */
+  flavor: string;
+  /** If set, matches of this suit clear the board but score nothing. */
+  silenceSuit?: Suit;
+  /** If true, Arcana-effect deltas (chips + mult bonuses) are halved. */
+  halveArcana?: boolean;
+  /** Multiplier applied to the chamber's score objective target. */
+  targetMultiplier?: number;
+};
 
 export type QuerentClass = {
   id: "seer" | "maker" | "walker";
@@ -68,6 +90,7 @@ export type Chamber = {
   baseMoves: number;
   panelColor: string;
   boss: boolean;
+  restriction?: ChamberRestriction;
 };
 
 // Score-typed targets recalibrated for the Chips × Mult engine (PR #376):
@@ -118,6 +141,13 @@ export const CHAMBERS: readonly Chamber[] = [
     baseMoves: 18,
     panelColor: "var(--panel-amethyst)",
     boss: true,
+    restriction: {
+      id: "wands-silent",
+      name: "Wands Silent",
+      description: "Wand matches still clear, but they score no fortune.",
+      flavor: "el ahorcado · the suspended fire",
+      silenceSuit: "wands",
+    },
   },
   {
     index: 5,
@@ -151,6 +181,13 @@ export const CHAMBERS: readonly Chamber[] = [
     baseMoves: 20,
     panelColor: "var(--panel-pink)",
     boss: true,
+    restriction: {
+      id: "arcana-halved",
+      name: "Arcana Halved",
+      description: "Every held Arcana contributes only half its usual chips and mult.",
+      flavor: "el diablo · the bargain trims the gift",
+      halveArcana: true,
+    },
   },
   {
     index: 8,
@@ -173,6 +210,13 @@ export const CHAMBERS: readonly Chamber[] = [
     baseMoves: 22,
     panelColor: "var(--panel-cobalt)",
     boss: true,
+    restriction: {
+      id: "higher-fortune",
+      name: "Higher Fortune",
+      description: "The fortune target is one and a half times what it asks.",
+      flavor: "la estrella · the light demands more",
+      targetMultiplier: 1.5,
+    },
   },
   {
     index: 10,
@@ -206,6 +250,13 @@ export const CHAMBERS: readonly Chamber[] = [
     baseMoves: 20,
     panelColor: "var(--panel-gold)",
     boss: true,
+    restriction: {
+      id: "pentacles-silent",
+      name: "Pentacles Silent",
+      description: "Pentacle matches still clear, but they score no fortune.",
+      flavor: "el juicio · the coin is judged void",
+      silenceSuit: "pentacles",
+    },
   },
   {
     index: 13,
@@ -217,6 +268,13 @@ export const CHAMBERS: readonly Chamber[] = [
     baseMoves: 24,
     panelColor: "var(--panel-emerald)",
     boss: true,
+    restriction: {
+      id: "twice-the-weight",
+      name: "Twice the Weight",
+      description: "The fortune target doubles. The final circle takes everything.",
+      flavor: "el mundo · the world doubles its ask",
+      targetMultiplier: 2,
+    },
   },
 ];
 
@@ -228,4 +286,18 @@ export function chamberByIndex(idx: number): Chamber | undefined {
 
 export function chamberMovesFor(chamber: Chamber, klass: QuerentClass): number {
   return chamber.baseMoves + klass.moveBonus;
+}
+
+/**
+ * Apply a chamber's restriction to its objective. Today only the
+ * `targetMultiplier` shape affects the target — silenceSuit and
+ * halveArcana modify scoring instead and don't change the threshold.
+ */
+export function chamberEffectiveObjective(chamber: Chamber): Objective {
+  const mult = chamber.restriction?.targetMultiplier;
+  if (!mult || chamber.objective.type !== "score") return chamber.objective;
+  return {
+    ...chamber.objective,
+    target: Math.round(chamber.objective.target * mult),
+  };
 }

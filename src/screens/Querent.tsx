@@ -156,7 +156,11 @@ function RunInProgress({
               panelCaption={ch.epigraph}
               headline={ch.name.replace(/^The /, "")}
               script={ch.name.toLowerCase().replace(/^the /, "")}
-              subtitle={`${formatObjective(ch)} · ${chamberMovesFor(ch, klass)} readings`}
+              subtitle={
+                ch.restriction
+                  ? `${formatObjective(ch)} · ${chamberMovesFor(ch, klass)} readings · ${ch.restriction.name}`
+                  : `${formatObjective(ch)} · ${chamberMovesFor(ch, klass)} readings`
+              }
               panelColor={ch.panelColor}
               figure={<ChamberFigure index={ch.index} />}
               className={`chamber chamber--${status}${ch.boss ? " chamber--boss" : ""}`}
@@ -193,7 +197,11 @@ function RunInProgress({
 
 function formatObjective(ch: Chamber | NonNullable<ReturnType<typeof chamberByIndex>>): string {
   const o = ch.objective;
-  if (o.type === "score") return `Reach ${o.target.toLocaleString()} fortune`;
+  const mult = ch.restriction?.targetMultiplier ?? 1;
+  if (o.type === "score") {
+    const adjusted = Math.round(o.target * mult);
+    return `Reach ${adjusted.toLocaleString()} fortune`;
+  }
   return `Clear ${o.target} ${capitalize(o.suit)}`;
 }
 

@@ -64,6 +64,56 @@
   justify-self: end;
 }
 
+/* Boss Blind restriction banner — sits above the Fortune ledger when
+ * the chamber's `restriction` is set. Treats the warning with weight:
+ * dark forest-green-on-cream stripe with a gold rule. */
+.boss-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(212, 162, 76, 0.08);
+  border: 1px solid var(--accent-gold);
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+}
+
+.boss-banner::before,
+.boss-banner::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 1px;
+  background: var(--accent-gold);
+  opacity: 0.5;
+}
+
+.boss-banner::before { left: 8px; }
+.boss-banner::after { right: 8px; }
+
+.boss-banner__chip {
+  color: var(--accent-gold);
+  font-size: 0.74rem;
+  letter-spacing: 0.28em;
+}
+
+.boss-banner__body {
+  font-family: var(--font-body);
+  font-style: italic;
+  color: var(--ink-cream);
+  font-size: 1rem;
+}
+
+.boss-banner__flavor {
+  font-family: var(--font-script);
+  color: var(--accent-gold-2);
+  font-size: 1.05rem;
+  opacity: 0.85;
+}
+
 /* Held-arcana strip — sits above the Fortune ledger in Querent mode.
  * Each badge takes the card's accent as a thin top stripe. */
 .arcana-strip {
