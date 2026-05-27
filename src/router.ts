@@ -6,6 +6,7 @@ export const routes = {
   splash: "/",
   home: "/home",
   modes: "/modes",
+  spread: "/spread",
   play: "/play",
   settings: "/settings",
   about: "/about",

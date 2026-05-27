@@ -28,7 +28,8 @@ const modes: Mode[] = [
     tagline: "A measured progression.",
     body: "Eight chapters of escalating omens. Master each before the next page turns.",
     cta: "Open the book",
-    to: `${routes.play}?mode=spread`,
+    to: routes.spread,
+    status: "Playable",
   },
   {
     numeral: "III",
