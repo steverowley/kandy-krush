@@ -288,6 +288,100 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           <line x1="92" y1="38" x2="100" y2="120" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
         </svg>
       );
+    case "hierophant":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Mitre crown */}
+          <path d="M40 22h40l-4 18H44z" />
+          <path d="M48 12h24l-2 10H50z" />
+          {/* Face */}
+          <ellipse cx="60" cy="50" rx="8" ry="6" fill="var(--card-panel, transparent)" />
+          <circle cx="56" cy="50" r="1.6" />
+          <circle cx="64" cy="50" r="1.6" />
+          {/* Robes */}
+          <path d="M40 60h40l8 60H32z" />
+          <rect x="56" y="68" width="8" height="40" fill="var(--card-panel, transparent)" />
+          {/* Cross within */}
+          <rect x="58" y="80" width="4" height="20" />
+          <rect x="50" y="86" width="20" height="4" />
+          {/* Two acolytes (small heads at base) */}
+          <circle cx="34" cy="120" r="4" />
+          <circle cx="86" cy="120" r="4" />
+        </svg>
+      );
+    case "justice":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Crown */}
+          <path d="M50 16h20l-2 8H52z" />
+          {/* Head */}
+          <circle cx="60" cy="32" r="8" />
+          {/* Robes */}
+          <path d="M44 40h32l4 70H40z" />
+          {/* Sword raised */}
+          <rect x="58" y="46" width="4" height="44" />
+          <path d="M52 46l8-12 8 12z" />
+          {/* Scales horizontal bar */}
+          <path d="M20 70h80" stroke="currentColor" stroke-width="3" fill="none" />
+          {/* Scale pans */}
+          <path d="M30 70l-8 14h16z" />
+          <path d="M90 70l-8 14h16z" />
+        </svg>
+      );
+    case "hanged-man":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Gallows beam */}
+          <rect x="20" y="14" width="80" height="4" />
+          <rect x="20" y="14" width="4" height="20" />
+          {/* Rope */}
+          <rect x="58" y="18" width="4" height="22" />
+          {/* Head inverted */}
+          <circle cx="60" cy="48" r="8" />
+          {/* Body inverted (T-shape upside down) */}
+          <rect x="56" y="56" width="8" height="28" />
+          {/* One leg bent crossing the other (the iconic 4-pose) */}
+          <path d="M56 80l-12 24m12-24l4 24m4-24l8 18-10 6" stroke="currentColor" stroke-width="4" fill="none" stroke-linecap="round" />
+          {/* Halo at the head */}
+          <circle cx="60" cy="48" r="14" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3" />
+        </svg>
+      );
+    case "temperance":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Angel wings */}
+          <path d="M30 30c0 14 14 22 30 22s30-8 30-22c-6 0-14 4-18 8-2-6-6-10-12-10s-10 4-12 10c-4-4-12-8-18-8z" />
+          {/* Head + halo */}
+          <circle cx="60" cy="56" r="8" />
+          <circle cx="60" cy="56" r="14" fill="none" stroke="currentColor" stroke-width="2" />
+          {/* Two vessels pouring */}
+          <path d="M36 78h12l4 18a8 8 0 0 1-20 0z" />
+          <path d="M72 78h12l4 18a8 8 0 0 1-20 0z" />
+          {/* Pouring streams meeting in the middle */}
+          <path d="M50 98l8 14M70 98l-8 14" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+        </svg>
+      );
+    case "devil":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Horns */}
+          <path d="M40 14l8 22-12-10z" />
+          <path d="M80 14l-8 22 12-10z" />
+          {/* Head */}
+          <ellipse cx="60" cy="44" rx="20" ry="14" />
+          {/* Eyes (cut-outs) */}
+          <ellipse cx="52" cy="44" rx="3" ry="4" fill="var(--card-panel, transparent)" />
+          <ellipse cx="68" cy="44" rx="3" ry="4" fill="var(--card-panel, transparent)" />
+          {/* Wicked grin */}
+          <path d="M48 52c4 6 20 6 24 0" stroke="var(--card-panel, transparent)" stroke-width="3" fill="none" />
+          {/* Bat wings */}
+          <path d="M18 70c8-2 14 2 22 8-2-8 0-14 4-18-8 4-18 4-26 10z" />
+          <path d="M102 70c-8-2-14 2-22 8 2-8 0-14-4-18 8 4 18 4 26 10z" />
+          {/* Pillar with chained figures */}
+          <rect x="50" y="72" width="20" height="40" />
+          <path d="M40 110h40v6H40z" />
+        </svg>
+      );
     case "death":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">

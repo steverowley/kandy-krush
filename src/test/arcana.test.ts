@@ -307,6 +307,94 @@ describe("Death.postMove — board-modifying wiring", () => {
   });
 });
 
+describe("applyArcanaToStep — The Hierophant", () => {
+  const hierophant = arcanaById("hierophant")!;
+  it("multiplies mult by ×1.25 when at least one Pentacle match appears", () => {
+    const s = step([
+      { suit: "pentacles", cells: 3 },
+      { suit: "cups", cells: 3 },
+    ]); // base mult = 2 + 2 = 4
+    const out = applyArcanaToStep(s, [hierophant], META());
+    expect(out.mult).toBe(5); // round(4 * 1.25)
+  });
+
+  it("is a no-op without any Pentacle matches", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [hierophant], META());
+    expect(out.mult).toBe(2);
+  });
+});
+
+describe("applyArcanaToStep — Justice", () => {
+  const justice = arcanaById("justice")!;
+  it("multiplies mult by ×1.5 when chips ÷ 10 equals mult exactly", () => {
+    // chips=20, mult=2 → 20/10 = 2 = mult → fire ×1.5.
+    const s = step([{ suit: "cups", cells: 2 }], { chips: 20, mult: 2 });
+    const out = applyArcanaToStep(s, [justice], META());
+    expect(out.mult).toBe(3);
+  });
+
+  it("is a no-op when chips ÷ 10 ≠ mult", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // chips=30, mult=2
+    const out = applyArcanaToStep(s, [justice], META());
+    expect(out.mult).toBe(2);
+  });
+});
+
+describe("applyArcanaToStep — The Hanged Man", () => {
+  const hanged = arcanaById("hanged-man")!;
+  it("adds +10 chips per reading already used in the chamber", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // chips=30, mult=2
+    const out = applyArcanaToStep(s, [hanged], META({ movesUsed: 4 }));
+    expect(out.chips).toBe(30 + 40);
+  });
+
+  it("contributes nothing on the very first reading", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [hanged], META({ movesUsed: 0 }));
+    expect(out.chips).toBe(30);
+  });
+});
+
+describe("applyArcanaToStep — Temperance", () => {
+  const temperance = arcanaById("temperance")!;
+  it("doubles the first Cup match and the first Wand match", () => {
+    const s = step([
+      { suit: "cups", cells: 3 },
+      { suit: "wands", cells: 3 },
+      { suit: "cups", cells: 3 },
+    ]);
+    // base chips = 9 * 10 = 90, base mult = 2 + 2 + 2 = 6
+    // Temperance adds: first cup (chips +30, mult +2) + first wand (chips +30, mult +2)
+    const out = applyArcanaToStep(s, [temperance], META());
+    expect(out.chips).toBe(150);
+    expect(out.mult).toBe(10);
+  });
+
+  it("only doubles the suits that appear", () => {
+    const s = step([{ suit: "swords", cells: 3 }]); // chips=30, mult=2
+    const out = applyArcanaToStep(s, [temperance], META());
+    expect(out.chips).toBe(30);
+    expect(out.mult).toBe(2);
+  });
+});
+
+describe("applyArcanaToStep — The Devil", () => {
+  const devil = arcanaById("devil")!;
+  it("multiplies mult by 1 + 0.5 × minorHeldCount", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // mult=2
+    expect(
+      applyArcanaToStep(s, [devil], META({ minorHeldCount: 0 })).mult,
+    ).toBe(2);
+    expect(
+      applyArcanaToStep(s, [devil], META({ minorHeldCount: 2 })).mult,
+    ).toBe(4); // 2 * (1 + 0.5*2) = 4
+    expect(
+      applyArcanaToStep(s, [devil], META({ minorHeldCount: 3 })).mult,
+    ).toBe(5); // 2 * (1 + 0.5*3) = 5
+  });
+});
+
 describe("applyArcanaToStep — The Tower", () => {
   const tower = arcanaById("tower")!;
   it("multiplies mult by 1.3 on a boss chamber", () => {

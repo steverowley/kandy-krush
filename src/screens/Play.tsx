@@ -92,6 +92,8 @@ export function Play() {
     grantMoves,
     grantScore,
     armNextMoveMul,
+    armNextMoveMultMul,
+    armNextMoveChipsBonus,
   } = useGame();
   const recordSpread = useSpread((s) => s.recordResult);
   const dailyRun = useDaily((s) => s.runs[today]);
@@ -409,9 +411,19 @@ export function Play() {
               case "add-score":
                 grantScore(minor.effect.amount);
                 break;
-              case "double-next-move":
-                armNextMoveMul(2);
+              case "next-move-score-mul":
+                armNextMoveMul(minor.effect.multiplier);
                 break;
+              case "next-move-mult-mul":
+                armNextMoveMultMul(minor.effect.multiplier);
+                break;
+              case "next-move-chips-per-cell": {
+                const board = useGame.getState().board;
+                armNextMoveChipsBonus(
+                  minor.effect.perCell * board.rows * board.cols,
+                );
+                break;
+              }
             }
             useMinorArcana.getState().consume(minor.id);
           }}

@@ -11,6 +11,7 @@ import {
   type Arcana,
 } from "../game/arcana";
 import { useArcana } from "./arcana";
+import { useMinorArcana } from "./minor-arcana";
 import type { ChamberRestriction } from "../game/querent";
 import type { StakeRule } from "../game/stakes";
 
@@ -61,6 +62,12 @@ type GameState = {
    *  Page of Wands). Defaults to 1; resets back to 1 after the next
    *  scored move applies it. */
   nextMoveScoreMul: number;
+  /** Per-move mult multiplier (Queen of Wands). Defaults to 1; resets
+   *  to 1 after the next scored move applies it. */
+  nextMoveMultMul: number;
+  /** Per-move flat chips bonus (King of Pentacles). Defaults to 0;
+   *  resets to 0 after the next scored move applies it. */
+  nextMoveChipsBonus: number;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -107,6 +114,8 @@ type GameActions = {
   grantMoves: (n: number) => void;
   grantScore: (n: number) => void;
   armNextMoveMul: (mul: number) => void;
+  armNextMoveMultMul: (mul: number) => void;
+  armNextMoveChipsBonus: (chips: number) => void;
 };
 
 const PLACEHOLDER_RNG = createRng(0);
@@ -125,6 +134,8 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   restriction: null,
   stakeRule: null,
   nextMoveScoreMul: 1,
+  nextMoveMultMul: 1,
+  nextMoveChipsBonus: 0,
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -150,6 +161,8 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       restriction: opts?.restriction ?? null,
       stakeRule: opts?.stakeRule ?? null,
       nextMoveScoreMul: 1,
+      nextMoveMultMul: 1,
+      nextMoveChipsBonus: 0,
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -177,6 +190,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         // bonuses; halveArcana is forwarded into applyArcanaToStep so
         // it can scale only the arcana delta, not the engine base.
         const held = useArcana.getState().held();
+        const minorHeldCount = useMinorArcana.getState().held().length;
         const restriction = prev.restriction;
         const stakeRule = prev.stakeRule;
         const maxHand = stakeRule?.maxHand ?? MAX_HELD_ARCANA;
@@ -186,6 +200,12 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         // step as silenced; later calls (e.g. Death's post-move cascade)
         // never trigger the silence since the silence flag is per-move.
         let firstStepSilenced = false;
+
+        // King of Pentacles fires a flat chip bonus on the first SCORED
+        // step of the move (so silenced step 1 doesn't burn it). The
+        // closure tracks the remaining bonus so it fires once.
+        let chipsBonusRemaining = prev.nextMoveChipsBonus;
+        const multMul = prev.nextMoveMultMul;
 
         const scoreSteps = (
           steps: readonly CascadeStep[],
@@ -206,10 +226,21 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
               halveArcana: restriction?.halveArcana ?? false,
               isBoss: restriction !== null,
               maxHand,
+              minorHeldCount,
             });
-            acc.score += modified.scoreGained;
-            acc.chips += modified.chips;
-            if (modified.mult > acc.peakMult) acc.peakMult = modified.mult;
+            // Minor consumable post-arcana modifiers: King's flat chips
+            // bonus (one-shot, first scored step only) and Queen of
+            // Wands's mult multiplier (every step of this move).
+            let effChips = modified.chips;
+            if (chipsBonusRemaining > 0) {
+              effChips += chipsBonusRemaining;
+              chipsBonusRemaining = 0;
+            }
+            const effMult = Math.round(modified.mult * multMul);
+            const effScore = effChips * effMult;
+            acc.score += effScore;
+            acc.chips += effChips;
+            if (effMult > acc.peakMult) acc.peakMult = effMult;
           }
         };
 
@@ -250,8 +281,10 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
-          // The per-move minor-arcana buff fires exactly once and clears.
+          // Per-move minor-arcana buffs all fire exactly once and clear.
           nextMoveScoreMul: 1,
+          nextMoveMultMul: 1,
+          nextMoveChipsBonus: 0,
           lastMove: {
             chips: totals.chips,
             mult: totals.peakMult,
@@ -281,6 +314,9 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     set((s) => ({ score: s.score + Math.max(0, Math.round(n)) })),
 
   armNextMoveMul: (mul) => set({ nextMoveScoreMul: Math.max(1, mul) }),
+  armNextMoveMultMul: (mul) => set({ nextMoveMultMul: Math.max(1, mul) }),
+  armNextMoveChipsBonus: (chips) =>
+    set({ nextMoveChipsBonus: Math.max(0, Math.round(chips)) }),
 
   snapshot: () => {
     const s = get();
