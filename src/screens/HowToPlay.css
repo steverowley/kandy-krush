@@ -1,0 +1,84 @@
+.howto {
+  gap: var(--space-8);
+  padding-top: clamp(var(--space-4), 3vh, var(--space-8));
+  align-items: center;
+}
+
+.howto__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.howto__title {
+  text-align: center;
+}
+
+.howto__title h1 em {
+  color: var(--panel-coral);
+  font-style: italic;
+}
+
+.howto__sub {
+  font-size: 1.4rem;
+  color: var(--panel-gold);
+}
+
+.howto__head > :first-child {
+  justify-self: start;
+}
+
+.howto__head > :last-child {
+  justify-self: end;
+}
+
+.howto__card-wrap {
+  width: 100%;
+  max-width: 380px;
+}
+
+.howto__body {
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-top: var(--space-2);
+}
+
+.howto__nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 380px;
+}
+
+.howto__nav > :first-child {
+  justify-self: start;
+}
+
+.howto__nav > :last-child {
+  justify-self: end;
+}
+
+.howto__pips {
+  display: flex;
+  gap: 8px;
+}
+
+.howto__pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(245, 239, 220, 0.18);
+  transition: background 200ms var(--ease);
+}
+
+.howto__pip--active {
+  background: var(--panel-gold);
+}
