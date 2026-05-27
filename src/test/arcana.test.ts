@@ -42,8 +42,8 @@ const META = (over: Partial<Parameters<typeof applyArcanaToStep>[2]> = {}) => ({
 });
 
 describe("MAJOR_ARCANA data", () => {
-  it("has at least five starter arcana", () => {
-    expect(MAJOR_ARCANA.length).toBeGreaterThanOrEqual(5);
+  it("has at least twelve arcana", () => {
+    expect(MAJOR_ARCANA.length).toBeGreaterThanOrEqual(12);
   });
   it("each arcana has a unique id", () => {
     const ids = MAJOR_ARCANA.map((a) => a.id);
@@ -148,6 +148,124 @@ describe("applyArcanaToStep — The World", () => {
   it("no-ops when totalMoves is null", () => {
     const s = step([{ suit: "cups", cells: 3 }]);
     const out = applyArcanaToStep(s, [world], META({ totalMoves: null }));
+    expect(out.mult).toBe(2);
+  });
+});
+
+describe("applyArcanaToStep — The Fool", () => {
+  const fool = arcanaById("fool")!;
+  it("triples chips on the first cascade step", () => {
+    const s = step([{ suit: "cups", cells: 3 }], { depth: 1 });
+    const out = applyArcanaToStep(s, [fool], META({ depth: 1 }));
+    expect(out.chips).toBe(90);
+  });
+  it("does nothing on cascade depth >= 2", () => {
+    const s = step([{ suit: "cups", cells: 3 }], { depth: 2 });
+    const out = applyArcanaToStep(s, [fool], META({ depth: 2 }));
+    expect(out.chips).toBe(30);
+  });
+});
+
+describe("applyArcanaToStep — The Empress", () => {
+  const empress = arcanaById("empress")!;
+  it("adds 20 chips per Cup cell", () => {
+    const s = step([{ suit: "cups", cells: 4 }]); // base chips 40
+    const out = applyArcanaToStep(s, [empress], META());
+    expect(out.chips).toBe(40 + 80);
+  });
+  it("ignores non-Cup matches", () => {
+    const s = step([{ suit: "wands", cells: 3 }]);
+    const out = applyArcanaToStep(s, [empress], META());
+    expect(out.chips).toBe(30);
+  });
+});
+
+describe("applyArcanaToStep — The Lovers", () => {
+  const lovers = arcanaById("lovers")!;
+  it("multiplies mult by 1.5 when Cups AND Wands both match", () => {
+    const s = step([
+      { suit: "cups", cells: 3 },
+      { suit: "wands", cells: 3 },
+    ]);
+    // base mult: 2 + 2 = 4
+    const out = applyArcanaToStep(s, [lovers], META());
+    expect(out.mult).toBe(6); // 4 * 1.5
+  });
+  it("does nothing when only Cups match", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [lovers], META());
+    expect(out.mult).toBe(2);
+  });
+  it("does nothing when only Wands match", () => {
+    const s = step([{ suit: "wands", cells: 3 }]);
+    const out = applyArcanaToStep(s, [lovers], META());
+    expect(out.mult).toBe(2);
+  });
+});
+
+describe("applyArcanaToStep — The Chariot", () => {
+  const chariot = arcanaById("chariot")!;
+  it("adds +3 mult per cascade depth", () => {
+    const s1 = step([{ suit: "cups", cells: 3 }], { depth: 1 });
+    const out1 = applyArcanaToStep(s1, [chariot], META({ depth: 1 }));
+    expect(out1.mult).toBe(2 + 3); // depth 1 → +3
+    const s3 = step([{ suit: "cups", cells: 3 }], { depth: 3 });
+    const out3 = applyArcanaToStep(s3, [chariot], META({ depth: 3 }));
+    expect(out3.mult).toBe(2 + 9); // depth 3 → +9
+  });
+});
+
+describe("applyArcanaToStep — The Hermit", () => {
+  const hermit = arcanaById("hermit")!;
+  it("multiplies mult by 1+0.5×empty when slots are open", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // base mult 2
+    // Holding only Hermit (1 of 5 slots filled) → 4 empty slots → ×3
+    const out = applyArcanaToStep(s, [hermit], META());
+    expect(out.mult).toBe(Math.round(2 * 3));
+  });
+  it("no-op when slots are full (heldCount === MAX_HELD_ARCANA)", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const fullHand = [
+      arcanaById("hermit")!,
+      arcanaById("magician")!,
+      arcanaById("empress")!,
+      arcanaById("lovers")!,
+      arcanaById("chariot")!,
+    ];
+    // Only the Hermit's apply contributes here; others would touch
+    // mult/chips but for this test we just verify Hermit's branch.
+    // Strip the others by passing only hermit but with heldCount=MAX.
+    // Easier: use the full hand directly and assert the final mult is
+    // unchanged from a hand-without-hermit's mult.
+    const withoutHermit = fullHand.slice(1);
+    const withoutOut = applyArcanaToStep(s, withoutHermit, META());
+    const withOut = applyArcanaToStep(s, fullHand, META());
+    expect(withOut.mult).toBe(withoutOut.mult);
+  });
+});
+
+describe("applyArcanaToStep — Death", () => {
+  const death = arcanaById("death")!;
+  it("adds +1 mult per cleared cell across all matches", () => {
+    const s = step([
+      { suit: "cups", cells: 3 },
+      { suit: "wands", cells: 4 },
+    ]); // base mult 2+4=6, 7 cells total
+    const out = applyArcanaToStep(s, [death], META());
+    expect(out.mult).toBe(6 + 7);
+  });
+});
+
+describe("applyArcanaToStep — The Tower", () => {
+  const tower = arcanaById("tower")!;
+  it("multiplies mult by 1.3 on a boss chamber", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // base mult 2
+    const out = applyArcanaToStep(s, [tower], META({ isBoss: true }));
+    expect(out.mult).toBe(Math.round(2 * 1.3));
+  });
+  it("no-op off a boss chamber", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [tower], META({ isBoss: false }));
     expect(out.mult).toBe(2);
   });
 });

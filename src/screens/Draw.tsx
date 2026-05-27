@@ -194,6 +194,128 @@ function DrawCard({
  *  with the panel color tinting through cut-out apertures. */
 function ArcanaFigure({ id }: { id: Arcana["id"] }) {
   switch (id) {
+    case "fool":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* A figure striding off a ledge, bindle on stick */}
+          <path d="M70 26a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" />
+          <path d="M52 38h16l-2 30h-12z" />
+          <path d="M48 70l-6 30 6 4 8-28z" />
+          <path d="M68 70l8 26 8-4-10-30z" />
+          <rect x="58" y="98" width="4" height="22" />
+          <rect x="62" y="98" width="4" height="22" />
+          {/* Bindle on a stick */}
+          <line x1="84" y1="20" x2="100" y2="50" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="100" cy="50" r="6" />
+          <circle cx="100" cy="50" r="2.4" fill="var(--card-panel, transparent)" />
+          {/* Edge of cliff */}
+          <path d="M0 124h70l4 6h-74z" />
+        </svg>
+      );
+    case "empress":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Seated figure with floral crown */}
+          <circle cx="60" cy="36" r="14" />
+          {/* Crown of stars */}
+          {[36, 50, 64].map((x, i) => (
+            <path
+              key={i}
+              d={`M${x} 14l1.6 4 4.4.4-3.4 3 1 4.4L${x} 23.6l-3.6 2.2 1-4.4-3.4-3 4.4-.4z`}
+            />
+          ))}
+          <path d="M44 56h32l4 50H40z" />
+          <circle cx="60" cy="76" r="6" fill="var(--card-panel, transparent)" />
+          {/* Wheat sheaves */}
+          <path d="M22 108l4-30 4 30zM94 108l-4-30-4 30z" />
+        </svg>
+      );
+    case "lovers":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Two heads facing inward */}
+          <circle cx="42" cy="40" r="14" />
+          <circle cx="78" cy="40" r="14" />
+          {/* Shoulders / bodies */}
+          <path d="M22 64c0 18 10 28 20 28s12-10 12-18v-4h12v4c0 8 2 18 12 18s20-10 20-28z" />
+          {/* Angel wings above */}
+          <path d="M44 20c-10-4-20-2-20 6 4-2 14 0 20 4M76 20c10-4 20-2 20 6-4-2-14 0-20 4" stroke="currentColor" stroke-width="2" fill="none" />
+          {/* Heart between */}
+          <path d="M60 96c-6-6-12-2-12 4s12 12 12 12 12-6 12-12-6-10-12-4z" />
+        </svg>
+      );
+    case "chariot":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Chariot body */}
+          <path d="M24 70h72l-6 24H30z" />
+          <rect x="40" y="50" width="40" height="22" />
+          {/* Driver */}
+          <circle cx="60" cy="42" r="8" />
+          <path d="M52 50h16v8H52z" />
+          {/* Wheels */}
+          <circle cx="34" cy="100" r="12" />
+          <circle cx="34" cy="100" r="6" fill="var(--card-panel, transparent)" />
+          <circle cx="86" cy="100" r="12" />
+          <circle cx="86" cy="100" r="6" fill="var(--card-panel, transparent)" />
+          {/* Stars over the canopy */}
+          <path d="M44 18l1.4 3.4 3.6.4-2.8 2.4.8 3.6-3-1.8-3 1.8.8-3.6L39 22l3.6-.4zM76 18l1.4 3.4 3.6.4-2.8 2.4.8 3.6-3-1.8-3 1.8.8-3.6L71 22l3.6-.4z" />
+        </svg>
+      );
+    case "hermit":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Cloaked silhouette holding a lantern */}
+          <path d="M60 20c-12 0-22 10-22 22v50c0 14 10 22 22 22s22-8 22-22V42c0-12-10-22-22-22z" />
+          {/* Face peeking from hood */}
+          <ellipse cx="60" cy="46" rx="8" ry="6" fill="var(--card-panel, transparent)" />
+          <circle cx="58" cy="46" r="1.6" />
+          {/* Lantern */}
+          <rect x="22" y="62" width="14" height="16" />
+          <path d="M22 62l-2-6h18l-2 6z" />
+          <circle cx="29" cy="70" r="3" fill="var(--card-panel, transparent)" />
+          {/* Lantern light rays */}
+          <path d="M10 70l4-2M10 80l4-1M14 60l4 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          {/* Staff */}
+          <line x1="92" y1="38" x2="100" y2="120" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      );
+    case "death":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Skull silhouette */}
+          <path d="M60 20c-16 0-26 12-26 28v6c0 6 2 10 6 12v6h8v-8h4v8h16v-8h4v8h8v-6c4-2 6-6 6-12v-6c0-16-10-28-26-28z" />
+          {/* Eye sockets */}
+          <ellipse cx="50" cy="44" rx="4" ry="6" fill="var(--card-panel, transparent)" />
+          <ellipse cx="70" cy="44" rx="4" ry="6" fill="var(--card-panel, transparent)" />
+          {/* Nose */}
+          <path d="M58 56l2 8 2-8z" fill="var(--card-panel, transparent)" />
+          {/* Scythe */}
+          <line x1="92" y1="14" x2="100" y2="120" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          <path d="M100 14c-12 0-22 10-22 22 0-12 10-22 22-22z" />
+          {/* Rose at the base */}
+          <circle cx="40" cy="118" r="5" />
+          <circle cx="40" cy="118" r="2" fill="var(--card-panel, transparent)" />
+        </svg>
+      );
+    case "tower":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Tall tower */}
+          <rect x="44" y="30" width="32" height="80" />
+          <path d="M40 30l40 0-4-10H44z" />
+          {/* Windows */}
+          <rect x="54" y="50" width="12" height="10" fill="var(--card-panel, transparent)" />
+          <rect x="54" y="74" width="12" height="10" fill="var(--card-panel, transparent)" />
+          {/* Lightning bolt */}
+          <path d="M76 12l-14 26 8 0-6 18 18-22-8 0z" />
+          {/* Falling figures */}
+          <circle cx="28" cy="100" r="3" />
+          <circle cx="96" cy="116" r="3" />
+          {/* Ground crack */}
+          <path d="M20 124h80l-4 4-12-2-10 3-12-3-12 2-10-3-12 2-8-3z" />
+        </svg>
+      );
     case "magician":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
