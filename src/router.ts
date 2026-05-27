@@ -10,6 +10,7 @@ export const routes = {
   querent: "/querent",
   play: "/play",
   howto: "/how-to-play",
+  codex: "/codex",
   settings: "/settings",
   about: "/about",
 } as const;
