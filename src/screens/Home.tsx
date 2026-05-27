@@ -165,13 +165,42 @@ export function Home() {
 function CardFigureCloth() {
   return (
     <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
-      {/* Reading table cloth draped with three cards splayed out */}
-      <path d="M10 96l100 6v18a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4z" />
-      <rect x="22" y="38" width="22" height="52" rx="3" transform="rotate(-12 33 64)" />
-      <rect x="50" y="34" width="22" height="52" rx="3" />
-      <rect x="76" y="38" width="22" height="52" rx="3" transform="rotate(12 87 64)" />
-      <circle cx="60" cy="22" r="6" />
-      <circle cx="60" cy="22" r="2.5" fill="var(--card-panel, transparent)" />
+      {/* Hand of fortune-teller above three splayed cards */}
+      <path
+        d="M22 38c-2 6 0 12 4 14l8 6 10 4 12 2 14-2 10-4 8-6c4-2 6-8 4-14-6 4-12 6-18 6h-34c-6 0-12-2-18-6z"
+      />
+      {/* Wrist */}
+      <rect x="46" y="14" width="28" height="22" />
+      {/* Cards splayed */}
+      <rect
+        x="22"
+        y="62"
+        width="22"
+        height="58"
+        rx="3"
+        transform="rotate(-14 33 92)"
+      />
+      <rect
+        x="50"
+        y="60"
+        width="22"
+        height="62"
+        rx="3"
+        transform="rotate(2 61 92)"
+      />
+      <rect
+        x="76"
+        y="62"
+        width="22"
+        height="58"
+        rx="3"
+        transform="rotate(14 87 92)"
+      />
+      {/* Suit markers on the middle card */}
+      <circle cx="61" cy="92" r="5" fill="var(--card-panel, transparent)" />
+      {/* Eye above wrist (cuff ornament) */}
+      <ellipse cx="60" cy="22" rx="7" ry="4" fill="var(--card-panel, transparent)" />
+      <circle cx="60" cy="22" r="1.6" />
     </svg>
   );
 }
@@ -179,28 +208,40 @@ function CardFigureCloth() {
 function CardFigureBook() {
   return (
     <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
-      {/* Open book / codex with eight pages */}
-      <path d="M16 36c14-6 32-6 44 4v82c-12-10-30-10-44-4z" />
-      <path d="M104 36c-14-6-32-6-44 4v82c12-10 30-10 44-4z" />
-      <rect x="58" y="40" width="4" height="78" rx="1" />
+      {/* Aureole behind the book */}
+      <circle cx="60" cy="74" r="48" fill="var(--card-panel, transparent)" />
+      <circle cx="60" cy="74" r="42" />
+      <circle cx="60" cy="74" r="36" fill="var(--card-panel, transparent)" />
+      {/* Open book / codex */}
+      <path d="M14 50c14-6 32-6 46 4v66c-14-10-32-10-46-4z" />
+      <path d="M106 50c-14-6-32-6-46 4v66c14-10 32-10 46-4z" />
+      <rect x="58" y="54" width="4" height="62" rx="1" />
+      {/* Quill across the spine */}
+      <path
+        d="M40 30l34 34"
+        stroke="currentColor"
+        stroke-width="3"
+        stroke-linecap="round"
+      />
+      <path d="M36 26l8 8-2 4-10-10z" />
       {/* Page lines */}
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2].map((i) => (
         <rect
-          key={i}
+          key={`l${i}`}
           x="22"
-          y={56 + i * 12}
-          width="32"
-          height="3"
+          y={70 + i * 12}
+          width="30"
+          height="2.5"
           fill="var(--card-panel, transparent)"
         />
       ))}
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2].map((i) => (
         <rect
-          key={i}
+          key={`r${i}`}
           x="66"
-          y={56 + i * 12}
-          width="32"
-          height="3"
+          y={70 + i * 12}
+          width="30"
+          height="2.5"
           fill="var(--card-panel, transparent)"
         />
       ))}
@@ -211,15 +252,16 @@ function CardFigureBook() {
 function CardFigureSun() {
   return (
     <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
-      {/* Sun radiating across an eye */}
-      <circle cx="60" cy="68" r="26" />
+      {/* Outer wavy rays — alternating short / long like a sun-poster motif */}
       <g>
-        {Array.from({ length: 12 }).map((_, i) => {
-          const a = (i * 30 * Math.PI) / 180;
-          const x1 = 60 + Math.cos(a) * 32;
-          const y1 = 68 + Math.sin(a) * 32;
-          const x2 = 60 + Math.cos(a) * 48;
-          const y2 = 68 + Math.sin(a) * 48;
+        {Array.from({ length: 16 }).map((_, i) => {
+          const a = (i * 22.5 * Math.PI) / 180;
+          const inner = 38;
+          const outer = i % 2 === 0 ? 60 : 50;
+          const x1 = 60 + Math.cos(a) * inner;
+          const y1 = 68 + Math.sin(a) * inner;
+          const x2 = 60 + Math.cos(a) * outer;
+          const y2 = 68 + Math.sin(a) * outer;
           return (
             <line
               key={i}
@@ -228,15 +270,26 @@ function CardFigureSun() {
               x2={x2}
               y2={y2}
               stroke="currentColor"
-              stroke-width="4"
+              stroke-width={i % 2 === 0 ? 5 : 3}
               stroke-linecap="round"
             />
           );
         })}
       </g>
+      {/* Sun disc */}
+      <circle cx="60" cy="68" r="32" />
       {/* Eye in the middle */}
-      <ellipse cx="60" cy="68" rx="14" ry="8" fill="var(--card-panel, transparent)" />
-      <circle cx="60" cy="68" r="4" />
+      <ellipse cx="60" cy="68" rx="18" ry="10" fill="var(--card-panel, transparent)" />
+      <circle cx="60" cy="68" r="6" />
+      <circle cx="60" cy="68" r="2.4" fill="var(--card-panel, transparent)" />
+      {/* Smiling sun mouth */}
+      <path
+        d="M50 80c4 4 16 4 20 0"
+        stroke="var(--card-panel, transparent)"
+        stroke-width="3"
+        fill="none"
+        stroke-linecap="round"
+      />
     </svg>
   );
 }
@@ -244,14 +297,16 @@ function CardFigureSun() {
 function CardFigureMoon() {
   return (
     <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
-      {/* Crescent moon with path of stars descending */}
-      <path d="M82 60a30 30 0 1 1-38-28 22 22 0 0 0 38 28z" />
-      {/* Star path */}
-      <circle cx="34" cy="98" r="3" />
-      <circle cx="48" cy="110" r="2.5" />
-      <circle cx="64" cy="118" r="3" />
-      <circle cx="80" cy="124" r="2.5" />
-      <circle cx="96" cy="128" r="2" />
+      {/* Crescent moon */}
+      <path d="M86 56a32 32 0 1 1-42-30 24 24 0 0 0 42 30z" />
+      {/* Moon's quiet eye */}
+      <circle cx="56" cy="48" r="3" fill="var(--card-panel, transparent)" />
+      {/* Path of stars descending — alternating 5-point + circle */}
+      <path d="M24 96l2.4 5.6 6 .4-4.6 4 1.4 5.8-5.2-3-5.2 3 1.4-5.8-4.6-4 6-.4z" />
+      <circle cx="44" cy="112" r="2.5" />
+      <path d="M62 118l1.8 4.2 4.4.4-3.4 3 1 4.4-3.8-2.2-3.8 2.2 1-4.4-3.4-3 4.4-.4z" />
+      <circle cx="82" cy="124" r="2.2" />
+      <path d="M100 126l1.4 3.2 3.4.4-2.6 2.2.8 3.4-3-1.6-3 1.6.8-3.4-2.6-2.2 3.4-.4z" />
     </svg>
   );
 }

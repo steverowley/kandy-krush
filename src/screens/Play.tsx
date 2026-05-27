@@ -342,7 +342,11 @@ export function Play() {
         </section>
       ) : null}
 
-      {!isDailyRecap ? <Board /> : null}
+      {!isDailyRecap ? (
+        <div class="play__reveal">
+          <Board />
+        </div>
+      ) : null}
 
       {deadlocked && !outcomeSeen ? (
         <div class="play__notice" role="status">
