@@ -117,6 +117,12 @@ export function newTile(suit: Suit): Tile {
   return mintTile(suit);
 }
 
+/** True if any tile on the board is a spark or wild. The Emperor reads
+ *  this — a "clean" board (all plain suits) earns the structure bonus. */
+export function boardHasSpecials(board: Board): boolean {
+  return board.tiles.some((t) => t !== null && t.kind !== undefined);
+}
+
 /**
  * Compute the set of cell indices that should render face-up under an
  * "obscure until adjacent to a special" boss restriction. A tile is

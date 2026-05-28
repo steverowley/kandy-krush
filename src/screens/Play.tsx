@@ -94,6 +94,11 @@ export function Play() {
     armNextMoveMul,
     armNextMoveMultMul,
     armNextMoveChipsBonus,
+    destroyRandomRow,
+    destroyRandomCol,
+    convertBoardSuit,
+    reshuffleBoard,
+    pentaclePayout,
   } = useGame();
   const recordSpread = useSpread((s) => s.recordResult);
   const dailyRun = useDaily((s) => s.runs[today]);
@@ -424,6 +429,21 @@ export function Play() {
                 );
                 break;
               }
+              case "convert-suit":
+                convertBoardSuit(minor.effect.from, minor.effect.to);
+                break;
+              case "destroy-random-row":
+                destroyRandomRow();
+                break;
+              case "destroy-random-col":
+                destroyRandomCol();
+                break;
+              case "reshuffle-board":
+                reshuffleBoard();
+                break;
+              case "pentacle-payout":
+                pentaclePayout(minor.effect.perPentacle);
+                break;
             }
             useMinorArcana.getState().consume(minor.id);
           }}

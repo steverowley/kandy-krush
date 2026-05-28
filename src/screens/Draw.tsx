@@ -288,6 +288,32 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           <line x1="92" y1="38" x2="100" y2="120" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
         </svg>
       );
+    case "emperor":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Emperor's helmet/crown — square authority */}
+          <path d="M44 18h32v8H44z" />
+          <path d="M46 26h28l-2 6H48z" />
+          {/* Head */}
+          <ellipse cx="60" cy="42" rx="9" ry="7" fill="var(--card-panel, transparent)" />
+          <circle cx="56" cy="42" r="1.6" />
+          <circle cx="64" cy="42" r="1.6" />
+          {/* Armored body — straight blocks */}
+          <rect x="38" y="52" width="44" height="20" />
+          <rect x="32" y="72" width="56" height="40" />
+          {/* Belt */}
+          <rect x="32" y="78" width="56" height="6" fill="var(--card-panel, transparent)" />
+          {/* Throne arms */}
+          <rect x="22" y="80" width="10" height="32" />
+          <rect x="88" y="80" width="10" height="32" />
+          {/* Ram heads at throne ends */}
+          <circle cx="27" cy="76" r="4" />
+          <circle cx="93" cy="76" r="4" />
+          {/* Sceptre */}
+          <line x1="100" y1="36" x2="106" y2="118" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          <circle cx="100" cy="34" r="4" />
+        </svg>
+      );
     case "hierophant":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">

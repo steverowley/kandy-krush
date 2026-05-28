@@ -395,6 +395,29 @@ describe("applyArcanaToStep — The Devil", () => {
   });
 });
 
+describe("applyArcanaToStep — The Emperor", () => {
+  const emperor = arcanaById("emperor")!;
+  it("adds +10 mult when the board has no specials", () => {
+    const s = step([{ suit: "cups", cells: 3 }]); // mult=2
+    const out = applyArcanaToStep(
+      s,
+      [emperor],
+      META({ boardHasSpecials: false }),
+    );
+    expect(out.mult).toBe(12);
+  });
+
+  it("contributes nothing when a spark or wild lives on the board", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(
+      s,
+      [emperor],
+      META({ boardHasSpecials: true }),
+    );
+    expect(out.mult).toBe(2);
+  });
+});
+
 describe("applyArcanaToStep — The Tower", () => {
   const tower = arcanaById("tower")!;
   it("multiplies mult by 1.3 on a boss chamber", () => {

@@ -5,7 +5,9 @@ import {
   minorById,
 } from "../game/minor-arcana";
 import { useMinorArcana } from "../state/minor-arcana";
+import { useGame } from "../state/game";
 import { createRng } from "../game/engine/rng";
+import { findMatches } from "../game/engine/match";
 
 describe("MINOR_ARCANA data", () => {
   it("has at least three starter consumables", () => {
@@ -77,6 +79,39 @@ describe("MINOR_ARCANA data", () => {
     expect(minorById("king-pentacles")!.effect).toEqual({
       kind: "next-move-chips-per-cell",
       perCell: 5,
+    });
+  });
+
+  it("Queen of Cups converts swords to cups", () => {
+    expect(minorById("queen-cups")!.effect).toEqual({
+      kind: "convert-suit",
+      from: "swords",
+      to: "cups",
+    });
+  });
+
+  it("Queen of Pentacles pays out 20 fortune per Pentacle", () => {
+    expect(minorById("queen-pentacles")!.effect).toEqual({
+      kind: "pentacle-payout",
+      perPentacle: 20,
+    });
+  });
+
+  it("Queen of Swords destroys a random row", () => {
+    expect(minorById("queen-swords")!.effect).toEqual({
+      kind: "destroy-random-row",
+    });
+  });
+
+  it("King of Cups reshuffles the board", () => {
+    expect(minorById("king-cups")!.effect).toEqual({
+      kind: "reshuffle-board",
+    });
+  });
+
+  it("King of Swords destroys a random column", () => {
+    expect(minorById("king-swords")!.effect).toEqual({
+      kind: "destroy-random-col",
     });
   });
 });
@@ -157,5 +192,63 @@ describe("useMinorArcana store", () => {
     const ids = MINOR_ARCANA.slice(0, MAX_HELD_MINORS).map((m) => m.id);
     useMinorArcana.setState({ heldIds: ids });
     expect(useMinorArcana.getState().isFull()).toBe(true);
+  });
+});
+
+describe("useGame — imperative consumable actions", () => {
+  beforeEach(() => {
+    useGame.getState().start("free", { seed: 7, rows: 5, cols: 5 });
+  });
+
+  it("destroyRandomRow leaves a settled board with the same dimensions", () => {
+    const before = useGame.getState().board;
+    useGame.getState().destroyRandomRow();
+    const after = useGame.getState().board;
+    expect(after.tiles).toHaveLength(before.tiles.length);
+    for (const t of after.tiles) expect(t).not.toBeNull();
+    expect(findMatches(after)).toEqual([]);
+  });
+
+  it("destroyRandomCol leaves a settled board with the same dimensions", () => {
+    const before = useGame.getState().board;
+    useGame.getState().destroyRandomCol();
+    const after = useGame.getState().board;
+    expect(after.tiles).toHaveLength(before.tiles.length);
+    for (const t of after.tiles) expect(t).not.toBeNull();
+    expect(findMatches(after)).toEqual([]);
+  });
+
+  it("convertBoardSuit settles to a match-free board after any cascade", () => {
+    // The conversion itself can create matches (3+ cups in a row); the
+    // refill that resolves them draws fresh random tiles, so we can't
+    // assert "no swords remain" after the cascade. We can assert the
+    // board ends up settled and the same size.
+    const before = useGame.getState().board;
+    useGame.getState().convertBoardSuit("swords", "cups");
+    const after = useGame.getState().board;
+    expect(after.tiles).toHaveLength(before.tiles.length);
+    for (const t of after.tiles) expect(t).not.toBeNull();
+    expect(findMatches(after)).toEqual([]);
+  });
+
+  it("reshuffleBoard yields a new settled board, no score change", () => {
+    const beforeScore = useGame.getState().score;
+    const beforeBoard = useGame.getState().board;
+    useGame.getState().reshuffleBoard();
+    const after = useGame.getState().board;
+    expect(after.tiles).toHaveLength(beforeBoard.tiles.length);
+    expect(findMatches(after)).toEqual([]);
+    expect(useGame.getState().score).toBe(beforeScore);
+  });
+
+  it("pentaclePayout grants score = pentacle count × perPentacle", () => {
+    const beforeScore = useGame.getState().score;
+    const board = useGame.getState().board;
+    const pentacles = board.tiles.filter(
+      (t) => t && !t.kind && t.suit === "pentacles",
+    ).length;
+    useGame.getState().pentaclePayout(20);
+    const after = useGame.getState().score;
+    expect(after).toBe(beforeScore + pentacles * 20);
   });
 });
