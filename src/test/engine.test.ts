@@ -145,6 +145,22 @@ describe("findMatches", () => {
     expect(m).toHaveLength(1);
     expect(m[0]!.cells).toHaveLength(5);
   });
+
+  it("flags hasWild on match groups that include a wild tile", () => {
+    const board = makeBoard(["cccc", "wpsw", "spsw"]);
+    // Promote one of the cups to a wild.
+    board.tiles[1] = { id: 1, suit: "cups", kind: "wild" };
+    const m = findMatches(board);
+    const cupsMatch = m.find((g) => g.cells.length >= 3);
+    expect(cupsMatch).toBeDefined();
+    expect(cupsMatch!.hasWild).toBe(true);
+  });
+
+  it("does NOT set hasWild on matches with no wild cells", () => {
+    const board = makeBoard(["cccp", "wpsw", "spws"]);
+    const m = findMatches(board);
+    expect(m[0]!.hasWild).toBeUndefined();
+  });
 });
 
 describe("swapMakesMatch", () => {

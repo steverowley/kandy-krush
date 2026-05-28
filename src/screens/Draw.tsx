@@ -637,6 +637,22 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           <path d="M50 72c4 6 16 6 20 0" stroke="var(--card-panel, transparent)" stroke-width="3" fill="none" stroke-linecap="round" />
         </svg>
       );
+    case "star":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Big radiant star */}
+          <path d="M60 14l8 20 22 2-16 14 6 22-20-12-20 12 6-22-16-14 22-2z" />
+          {/* Two pouring vessels */}
+          <path d="M30 70h12l2 14a6 6 0 0 1-16 0z" />
+          <path d="M78 70h12l2 14a6 6 0 0 1-16 0z" />
+          {/* Pouring streams */}
+          <path d="M40 90c-2 8-4 14-4 22" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+          <path d="M88 90c2 8 4 14 4 22" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+          {/* Small auxiliary stars */}
+          <path d="M22 26l2 4 4 .4-3 3 1 4-4-2-4 2 1-4-3-3 4-.4z" />
+          <path d="M100 30l2 4 4 .4-3 3 1 4-4-2-4 2 1-4-3-3 4-.4z" />
+        </svg>
+      );
     case "moon":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">

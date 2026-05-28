@@ -38,6 +38,9 @@ export type Swap = { a: Cell; b: Cell };
 export type MatchGroup = {
   suit: Suit;
   cells: Cell[];
+  /** True when at least one cell in the group was a wild tile at clear
+   *  time. Read by arcana like The Star that reward wild-aware play. */
+  hasWild?: boolean;
 };
 
 /** Result of resolving a swap. */
