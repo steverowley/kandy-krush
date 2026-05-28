@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { QuerentClass } from "../game/querent";
+import { classById, type QuerentClass } from "../game/querent";
 import { useArcana } from "./arcana";
 import { useMinorArcana } from "./minor-arcana";
 import { useCoins } from "./coins";
@@ -106,6 +106,13 @@ export const useQuerent = create<State>()(
         useCoins.getState().reset();
         useVouchers.getState().reset();
         const meta = get().meta;
+        // Class kickoff grants (e.g. Gambler starts with a Minor in
+        // hand).
+        const klass = classById(classId);
+        const startMinors = klass?.startMinorGrant ?? 0;
+        for (let i = 0; i < startMinors; i++) {
+          useMinorArcana.getState().grantRandom();
+        }
         set({
           run: {
             classId,
@@ -195,6 +202,15 @@ export const useQuerent = create<State>()(
         };
         nextMeta = ensureUnlocked(nextMeta, "maker");
         nextMeta = ensureUnlocked(nextMeta, "walker");
+        // Cumulative class unlocks — each new finish opens one more
+        // path: 2 → Skeptic, 3 → Mystic, 4 → Gambler. The thresholds
+        // count the run that just finished, so a fresh player's first
+        // clear unlocks Maker + Walker; their second clear unlocks
+        // Skeptic; and so on.
+        const totalFinishes = nextMeta.runsCompleted;
+        if (totalFinishes >= 2) nextMeta = ensureUnlocked(nextMeta, "skeptic");
+        if (totalFinishes >= 3) nextMeta = ensureUnlocked(nextMeta, "mystic");
+        if (totalFinishes >= 4) nextMeta = ensureUnlocked(nextMeta, "gambler");
         // Beating the current max stake unlocks the next tier (and
         // primes the lobby selector at the new max so subsequent runs
         // default to the harder difficulty).

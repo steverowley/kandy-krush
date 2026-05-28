@@ -8,6 +8,10 @@ import { routes } from "../router";
 import { MAX_HELD_ARCANA, type Arcana } from "../game/arcana";
 import { aggregateVoucherEffects } from "../game/vouchers";
 import { stakeById } from "../game/stakes";
+import { classById } from "../game/querent";
+import { MAX_HELD_MINORS, MINOR_ARCANA, type MinorArcana } from "../game/minor-arcana";
+import { useMinorArcana } from "../state/minor-arcana";
+import { createRng } from "../game/engine/rng";
 import "./Draw.css";
 
 /**
@@ -28,14 +32,20 @@ export function Draw() {
     () => (querentRun ? stakeById(querentRun.stakeId)?.rule ?? null : null),
     [querentRun?.stakeId],
   );
+  const querentClass = useMemo(
+    () => (querentRun ? classById(querentRun.classId) ?? null : null),
+    [querentRun?.classId],
+  );
   const ownedVouchers = useVouchers((s) => s.owned());
   const voucherEffects = useMemo(
     () => aggregateVoucherEffects(ownedVouchers),
     [ownedVouchers],
   );
   const drawCount = stakeRule?.arcanaDrawCount ?? 3;
-  const handCap =
-    (stakeRule?.maxHand ?? MAX_HELD_ARCANA) + voucherEffects.handCapBonus;
+  const baseHand =
+    querentClass?.handCap ?? stakeRule?.maxHand ?? MAX_HELD_ARCANA;
+  const handCap = baseHand + voucherEffects.handCapBonus;
+  const extraMinorOffer = querentClass?.extraMinorDraw ?? false;
 
   const offered = useArcana((s) => s.offered());
   const held = useArcana((s) => s.held());
@@ -43,12 +53,24 @@ export function Draw() {
   const rollOffer = useArcana((s) => s.rollOffer);
   const acceptOffer = useArcana((s) => s.acceptOffer);
   const skipOffer = useArcana((s) => s.skipOffer);
+  const grantMinor = useMinorArcana((s) => s.grant);
+
+  // Skeptic class: roll a single bonus Minor offer alongside the
+  // standard Majors. Stored locally so re-mounts don't re-roll it.
+  const [bonusMinor, setBonusMinor] = useState<MinorArcana | null>(null);
 
   // Roll a fresh offer the first time this screen mounts for a given
   // chamber-transition. Re-mounts via back-button reuse the existing
   // offerings (drawSeed survives in the store).
   useEffect(() => {
     if (offered.length === 0 && !isFull) rollOffer(undefined, drawCount);
+    if (extraMinorOffer && bonusMinor === null) {
+      const seed = Math.floor(Math.random() * 2 ** 31);
+      const rng = createRng(seed);
+      setBonusMinor(
+        MINOR_ARCANA[Math.floor(rng() * MINOR_ARCANA.length)] ?? null,
+      );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -64,11 +86,25 @@ export function Draw() {
 
   function pick(arcana: Arcana) {
     acceptOffer(arcana.id, handCap);
+    // Picking a Major also clears the bonus minor — only one card is
+    // taken per draw, regardless of which it was.
+    setBonusMinor(null);
+    advance();
+  }
+
+  function pickMinor(minor: MinorArcana) {
+    // Effective minor cap = baseline MAX_HELD_MINORS + Deeper Cup
+    // voucher bonus. If the tray is full we just skip the grant — the
+    // UI guards against this with the button's disabled state.
+    grantMinor(minor.id, MAX_HELD_MINORS + voucherEffects.minorCapBonus);
+    skipOffer();
+    setBonusMinor(null);
     advance();
   }
 
   function skip() {
     skipOffer();
+    setBonusMinor(null);
     advance();
   }
 
@@ -116,7 +152,12 @@ export function Draw() {
       </header>
 
       {!isFull ? (
-        <section class="draw__deck" aria-label="Three cards offered">
+        <section
+          class="draw__deck"
+          aria-label={
+            bonusMinor ? "Four cards offered (Skeptic)" : "Three cards offered"
+          }
+        >
           {offered.map((arcana, idx) => (
             <DrawCard
               key={arcana.id}
@@ -126,6 +167,18 @@ export function Draw() {
               onPick={() => pick(arcana)}
             />
           ))}
+          {bonusMinor ? (
+            <MinorDrawCard
+              minor={bonusMinor}
+              revealed={flipped.has(99)}
+              onFlip={() => flip(99)}
+              onPick={() => pickMinor(bonusMinor)}
+              disabled={
+                useMinorArcana.getState().heldIds.length >=
+                MAX_HELD_MINORS + voucherEffects.minorCapBonus
+              }
+            />
+          ) : null}
         </section>
       ) : null}
 
@@ -149,6 +202,78 @@ export function Draw() {
         </button>
       </footer>
     </main>
+  );
+}
+
+function MinorDrawCard({
+  minor,
+  revealed,
+  onFlip,
+  onPick,
+  disabled,
+}: {
+  minor: MinorArcana;
+  revealed: boolean;
+  onFlip: () => void;
+  onPick: () => void;
+  disabled: boolean;
+}) {
+  if (!revealed) {
+    return (
+      <button
+        type="button"
+        class="draw__card-back draw__card-back--minor"
+        aria-label="Turn the bonus Minor card"
+        onClick={onFlip}
+      >
+        <span class="draw__card-back-pattern" aria-hidden="true">
+          <CardBackPattern />
+        </span>
+        <span class="draw__card-back-label script">bonus · turn</span>
+      </button>
+    );
+  }
+  return (
+    <div class="draw__card-wrap">
+      <TarotCard
+        numeral={minor.numeral}
+        panelName={minor.name}
+        panelCaption="consumable"
+        headline={minor.name}
+        script={minor.name.toLowerCase()}
+        subtitle={minor.flavor}
+        panelColor={minor.panelColor}
+        figure={<MinorBonusGlyph />}
+        footer={
+          <>
+            <p class="draw__card-effect">{minor.description}</p>
+            <button
+              type="button"
+              class="btn btn--primary btn--on-card draw__card-cta"
+              disabled={disabled}
+              onClick={onPick}
+            >
+              {disabled ? "Tray full" : "Pocket this"}
+            </button>
+          </>
+        }
+      />
+    </div>
+  );
+}
+
+function MinorBonusGlyph() {
+  return (
+    <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+      {/* Small coin with a flame above — same vocabulary as Parlour Minors. */}
+      <circle cx="60" cy="80" r="22" />
+      <circle cx="60" cy="80" r="16" fill="var(--card-panel, transparent)" />
+      <path d="M60 26c6 12 16 16 16 30a16 16 0 0 1-32 0c0-14 10-18 16-30z" />
+      <path
+        d="M60 42c3 6 6 8 6 14a6 6 0 0 1-12 0c0-6 3-8 6-14z"
+        fill="var(--card-panel, transparent)"
+      />
+    </svg>
   );
 }
 

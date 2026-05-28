@@ -21,6 +21,7 @@ import {
   type Voucher,
 } from "../game/vouchers";
 import { stakeById } from "../game/stakes";
+import { classById } from "../game/querent";
 import { createRng } from "../game/engine/rng";
 import { routes } from "../router";
 import "./Parlour.css";
@@ -48,8 +49,13 @@ export function Parlour() {
     () => (querentRun ? stakeById(querentRun.stakeId)?.rule ?? null : null),
     [querentRun?.stakeId],
   );
+  const querentClass = useMemo(
+    () => (querentRun ? classById(querentRun.classId) ?? null : null),
+    [querentRun?.classId],
+  );
   const offerCount = stakeRule?.parlourOfferCount ?? 3;
-  const stakeMaxHand = stakeRule?.maxHand;
+  const stakeMaxHand = querentClass?.handCap ?? stakeRule?.maxHand;
+  const classRerollBonus = querentClass?.parlourRerollBonus ?? 0;
 
   const ownedVouchers = useVouchers((s) => s.owned());
   const voucherEffects = useMemo(
@@ -92,8 +98,10 @@ export function Parlour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const totalFreeRerolls = voucherEffects.freeRerolls + classRerollBonus;
+
   function reroll() {
-    const freeAvailable = freeRerollsUsed < voucherEffects.freeRerolls;
+    const freeAvailable = freeRerollsUsed < totalFreeRerolls;
     if (!freeAvailable && balance < REROLL_PRICE) return;
     if (!freeAvailable) {
       if (!spend(REROLL_PRICE)) return;
@@ -168,8 +176,7 @@ export function Parlour() {
     );
   }
 
-  const freeRerollAvailable =
-    freeRerollsUsed < voucherEffects.freeRerolls;
+  const freeRerollAvailable = freeRerollsUsed < totalFreeRerolls;
   const canReroll =
     freeRerollAvailable || balance >= REROLL_PRICE;
 
@@ -239,12 +246,14 @@ export function Parlour() {
           }
         >
           {freeRerollAvailable
-            ? "↻ Reroll (free · Mystic Mirror)"
+            ? totalFreeRerolls > voucherEffects.freeRerolls
+              ? "↻ Reroll (free · Gambler)"
+              : "↻ Reroll (free · Mystic Mirror)"
             : `↻ Reroll · ${REROLL_PRICE} ☉`}
         </button>
-        {voucherEffects.freeRerolls > 0 && !freeRerollAvailable ? (
+        {totalFreeRerolls > 0 && !freeRerollAvailable ? (
           <p class="parlour__reroll-note script">
-            mirror spent · pay the next reroll
+            free rerolls spent · pay the next reroll
           </p>
         ) : null}
       </section>

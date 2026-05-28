@@ -190,6 +190,8 @@ export function Play() {
         totalMoves: chamberMovesFor(chamber, querentClass, activeStake),
         restriction: chamber.restriction ?? null,
         stakeRule: activeStake?.rule ?? null,
+        suitLevelGrowth: querentClass.suitLevelGrowth ?? false,
+        classHandCap: querentClass.handCap ?? null,
       });
       return;
     }
@@ -209,12 +211,12 @@ export function Play() {
   }, [mode, level?.id, today, chamberParam]);
 
   // Bosses can multiply the objective target — chamberEffectiveObjective
-  // applies the restriction AND the active stake so progress + win-check
-  // both see the adjusted threshold.
+  // applies the restriction AND the active stake AND the Querent class
+  // so progress + win-check both see the adjusted threshold.
   const effectiveObjective = level
     ? level.objective
     : chamber
-      ? chamberEffectiveObjective(chamber, activeStake)
+      ? chamberEffectiveObjective(chamber, activeStake, querentClass)
       : null;
 
   const chamberMoves =

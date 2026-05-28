@@ -4,14 +4,23 @@ import {
   CHAMBER_COUNT,
   CLASSES,
   chamberByIndex,
+  chamberEffectiveObjective,
   chamberMovesFor,
   classById,
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
+import { useMinorArcana } from "../state/minor-arcana";
 
 describe("CLASSES", () => {
-  it("has the three founding classes", () => {
-    expect(CLASSES.map((c) => c.id)).toEqual(["seer", "maker", "walker"]);
+  it("declares six classes — three founding, three unlock paths", () => {
+    expect(CLASSES.map((c) => c.id)).toEqual([
+      "seer",
+      "maker",
+      "walker",
+      "skeptic",
+      "mystic",
+      "gambler",
+    ]);
   });
 
   it("score multipliers are sane", () => {
@@ -211,5 +220,106 @@ describe("per-stake records", () => {
     const records = useQuerent.getState().meta.records;
     expect(records.red!.bestScore).toBe(800);
     expect(records.green!.bestScore).toBe(200);
+  });
+});
+
+describe("new class identities", () => {
+  it("Skeptic shrinks the Major hand to 4 and adds an extra Minor draw", () => {
+    const k = CLASSES.find((c) => c.id === "skeptic")!;
+    expect(k.handCap).toBe(4);
+    expect(k.extraMinorDraw).toBe(true);
+  });
+
+  it("Mystic enables suit-level growth across the run", () => {
+    const k = CLASSES.find((c) => c.id === "mystic")!;
+    expect(k.suitLevelGrowth).toBe(true);
+  });
+
+  it("Gambler gets +1 reroll, +1 starting Minor, and +15% score targets", () => {
+    const k = CLASSES.find((c) => c.id === "gambler")!;
+    expect(k.parlourRerollBonus).toBe(1);
+    expect(k.startMinorGrant).toBe(1);
+    expect(k.targetMultiplier).toBeCloseTo(1.15);
+  });
+
+  it("chamberEffectiveObjective stacks the class targetMultiplier", () => {
+    const gambler = CLASSES.find((c) => c.id === "gambler")!;
+    const ch = chamberByIndex(13)!; // World ×2 boss
+    const o = chamberEffectiveObjective(ch, null, gambler);
+    if (o.type !== "score" || ch.objective.type !== "score") {
+      throw new Error("test setup");
+    }
+    // 2× boss × 1.15 class
+    expect(o.target).toBe(Math.round(ch.objective.target * 2 * 1.15));
+  });
+});
+
+describe("class unlock progression on finishRun", () => {
+  beforeEach(() => {
+    useQuerent.setState({
+      run: null,
+      meta: {
+        runsCompleted: 0,
+        bestDepth: 0,
+        insight: 0,
+        unlocked: ["seer"],
+        maxStakeId: "white",
+        currentStakeId: "white",
+        records: {},
+      },
+    });
+  });
+
+  function finishOne() {
+    useQuerent.getState().beginRun("seer");
+    for (let i = 0; i < 9; i++) useQuerent.getState().passChamber(100);
+    useQuerent.getState().finishRun();
+  }
+
+  it("1st finish unlocks Maker + Walker only", () => {
+    finishOne();
+    const unlocked = useQuerent.getState().meta.unlocked;
+    expect(unlocked).toContain("maker");
+    expect(unlocked).toContain("walker");
+    expect(unlocked).not.toContain("skeptic");
+  });
+
+  it("2nd finish adds Skeptic", () => {
+    finishOne();
+    finishOne();
+    expect(useQuerent.getState().meta.unlocked).toContain("skeptic");
+  });
+
+  it("3rd finish adds Mystic", () => {
+    finishOne();
+    finishOne();
+    finishOne();
+    expect(useQuerent.getState().meta.unlocked).toContain("mystic");
+  });
+
+  it("4th finish adds Gambler", () => {
+    finishOne();
+    finishOne();
+    finishOne();
+    finishOne();
+    expect(useQuerent.getState().meta.unlocked).toContain("gambler");
+  });
+
+  it("Gambler beginRun grants 1 random Minor at run start", () => {
+    useQuerent.setState({
+      meta: { ...useQuerent.getState().meta, unlocked: ["seer", "gambler"] },
+    });
+    useMinorArcana.getState().reset();
+    useQuerent.getState().beginRun("gambler");
+    expect(useMinorArcana.getState().heldIds).toHaveLength(1);
+  });
+
+  it("Skeptic beginRun does NOT grant a starting Minor", () => {
+    useQuerent.setState({
+      meta: { ...useQuerent.getState().meta, unlocked: ["seer", "skeptic"] },
+    });
+    useMinorArcana.getState().reset();
+    useQuerent.getState().beginRun("skeptic");
+    expect(useMinorArcana.getState().heldIds).toHaveLength(0);
   });
 });

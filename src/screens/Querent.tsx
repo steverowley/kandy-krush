@@ -319,14 +319,65 @@ function ClassFigure({ id }: { id: QuerentClass["id"] }): ComponentChildren {
       </svg>
     );
   }
-  // walker
+  if (id === "walker") {
+    return (
+      <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+        {/* Path with steps + tiny figure */}
+        <path d="M22 110l8-16h12l8-16h12l8-16h12l8-16h12v8h-8l-8 16h-12l-8 16h-12l-8 16H30l-8 16z" />
+        <circle cx="86" cy="40" r="6" />
+        <path d="M80 50h12v18H80z" />
+        <path d="M76 70l4-2 4 4 4-4 4 2" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+      </svg>
+    );
+  }
+  if (id === "skeptic") {
+    return (
+      <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+        {/* Hand holding a small lens — analytical look */}
+        <circle cx="60" cy="48" r="22" fill="none" stroke="currentColor" stroke-width="6" />
+        <line x1="78" y1="64" x2="96" y2="92" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
+        {/* Question mark inside the lens */}
+        <path d="M54 38c0-6 12-6 12 0s-6 6-6 12" stroke="var(--card-panel, transparent)" stroke-width="3" fill="none" stroke-linecap="round" />
+        <circle cx="60" cy="58" r="2.2" fill="var(--card-panel, transparent)" />
+        {/* Cloak below */}
+        <path d="M28 110c8-22 24-30 32-30s24 8 32 30z" />
+      </svg>
+    );
+  }
+  if (id === "mystic") {
+    return (
+      <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+        {/* Crystal ball on a draped stand */}
+        <circle cx="60" cy="60" r="26" />
+        <circle cx="60" cy="60" r="20" fill="var(--card-panel, transparent)" />
+        {/* Inner star */}
+        <path d="M60 46l3 8 8 .5-6 5 2 8-7-4-7 4 2-8-6-5 8-.5z" />
+        {/* Drape */}
+        <path d="M22 96c10-4 24-8 38-8s28 4 38 8l-4 24H26z" />
+        {/* Sparkles */}
+        <circle cx="22" cy="30" r="2" />
+        <circle cx="100" cy="44" r="2" />
+        <circle cx="96" cy="20" r="1.6" />
+      </svg>
+    );
+  }
+  // gambler
   return (
     <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
-      {/* Path with steps + tiny figure */}
-      <path d="M22 110l8-16h12l8-16h12l8-16h12l8-16h12v8h-8l-8 16h-12l-8 16h-12l-8 16H30l-8 16z" />
-      <circle cx="86" cy="40" r="6" />
-      <path d="M80 50h12v18H80z" />
-      <path d="M76 70l4-2 4 4 4-4 4 2" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" />
+      {/* Pair of dice */}
+      <rect x="22" y="50" width="36" height="36" rx="6" transform="rotate(-12 40 68)" />
+      <rect x="64" y="60" width="36" height="36" rx="6" transform="rotate(8 82 78)" />
+      {/* Pips on dice 1 */}
+      <circle cx="32" cy="60" r="2.4" fill="var(--card-panel, transparent)" transform="rotate(-12 40 68)" />
+      <circle cx="48" cy="76" r="2.4" fill="var(--card-panel, transparent)" transform="rotate(-12 40 68)" />
+      {/* Pips on dice 2 */}
+      <circle cx="74" cy="72" r="2.4" fill="var(--card-panel, transparent)" transform="rotate(8 82 78)" />
+      <circle cx="90" cy="84" r="2.4" fill="var(--card-panel, transparent)" transform="rotate(8 82 78)" />
+      {/* Coin spilling */}
+      <circle cx="50" cy="116" r="6" />
+      <circle cx="50" cy="116" r="3" fill="var(--card-panel, transparent)" />
+      <circle cx="70" cy="120" r="5" />
+      <circle cx="70" cy="120" r="2.4" fill="var(--card-panel, transparent)" />
     </svg>
   );
 }
