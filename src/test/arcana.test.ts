@@ -418,6 +418,52 @@ describe("applyArcanaToStep — The Emperor", () => {
   });
 });
 
+describe("Wheel of Fortune + Judgement (chamber-once abilities)", () => {
+  it("Wheel of Fortune declares a no-op apply (imperative only)", () => {
+    const w = arcanaById("wheel")!;
+    expect(w.name).toBe("Wheel of Fortune");
+    expect(w.numeral).toBe("X");
+    // apply should run cleanly without mutating context.
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [w], META());
+    expect(out.chips).toBe(30);
+    expect(out.mult).toBe(2);
+  });
+
+  it("Judgement declares a no-op apply (imperative only)", () => {
+    const j = arcanaById("judgement")!;
+    expect(j.name).toBe("Judgement");
+    expect(j.numeral).toBe("XX");
+    const s = step([{ suit: "wands", cells: 4 }]);
+    const out = applyArcanaToStep(s, [j], META());
+    expect(out.chips).toBe(40);
+    expect(out.mult).toBe(4);
+  });
+
+  it("useArcana.wheelSwap replaces one held card with a random unowned", () => {
+    useArcana.setState({
+      heldIds: ["magician", "empress"],
+      offeredIds: [],
+      drawSeed: 0,
+    });
+    const rng = createRng(123);
+    useArcana.getState().wheelSwap(rng);
+    const ids = useArcana.getState().heldIds;
+    expect(ids).toHaveLength(2);
+    // At least one held card is different from the original pair.
+    const originals = new Set(["magician", "empress"]);
+    const swappedOut =
+      !originals.has(ids[0]!) || !originals.has(ids[1]!);
+    expect(swappedOut).toBe(true);
+  });
+
+  it("wheelSwap is a no-op when no Majors are held", () => {
+    useArcana.setState({ heldIds: [], offeredIds: [], drawSeed: 0 });
+    useArcana.getState().wheelSwap(createRng(1));
+    expect(useArcana.getState().heldIds).toEqual([]);
+  });
+});
+
 describe("applyArcanaToStep — The Star", () => {
   const star = arcanaById("star")!;
   it("doubles chips from wild-involved matches", () => {

@@ -336,6 +336,33 @@ body.boss-just-cleared {
   cursor: default;
 }
 
+/* Active-ability fire button for Wheel + Judgement — same chrome as
+ * the reorder nudge but a gold accent so it reads as a one-shot. */
+.arcana-strip__fire {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  padding: 0.05em 0.45em;
+  font-size: 0.92rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  line-height: 1;
+  border-radius: 999px;
+  transition: opacity 120ms ease, background 120ms ease;
+  margin-left: 0.2em;
+}
+
+.arcana-strip__fire:hover:not(:disabled),
+.arcana-strip__fire:focus-visible {
+  background: rgba(212, 162, 76, 0.16);
+}
+
+.arcana-strip__fire:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
 .arcana-strip__badge::before {
   content: "";
   position: absolute;

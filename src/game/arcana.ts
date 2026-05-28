@@ -63,9 +63,11 @@ export type ArcanaId =
   | "chariot"
   | "strength"
   | "hermit"
+  | "wheel"
   | "justice"
   | "hanged-man"
   | "death"
+  | "judgement"
   | "temperance"
   | "devil"
   | "tower"
@@ -248,6 +250,17 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     },
   },
   {
+    id: "wheel",
+    numeral: "X",
+    name: "Wheel of Fortune",
+    panelCaption: "el giro",
+    description:
+      "Active: sacrifice one held Major to draw a new one. Once per chamber.",
+    subtitle: "la rueda · the cycle turns either way",
+    panelColor: "var(--panel-saffron)",
+    apply: () => {},
+  },
+  {
     id: "justice",
     numeral: "XI",
     name: "Justice",
@@ -328,6 +341,17 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
       if (ctx.minorHeldCount <= 0) return;
       ctx.mult = Math.round(ctx.mult * (1 + 0.5 * ctx.minorHeldCount));
     },
+  },
+  {
+    id: "judgement",
+    numeral: "XX",
+    name: "Judgement",
+    panelCaption: "la llamada",
+    description:
+      "Active: replay your last reading with all its score. Once per chamber.",
+    subtitle: "el juicio · the call you cannot un-hear",
+    panelColor: "var(--panel-gold)",
+    apply: () => {},
   },
   {
     id: "tower",

@@ -86,6 +86,9 @@ type GameState = {
   /** Per-suit chip-level multipliers (1 = baseline). Mystic bumps these
    *  passively; other classes never read them. */
   suitLevels: Record<Suit, number>;
+  /** Which once-per-chamber abilities have already fired this chamber.
+   *  Reset to {} on every `start()`. */
+  chamberAbilitiesUsed: Record<string, boolean>;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -148,6 +151,14 @@ type GameActions = {
   reshuffleBoard: () => void;
   /** Grant flat score for each plain Pentacle currently on the board. */
   pentaclePayout: (perPentacle: number) => void;
+  /** Mark a once-per-chamber arcana ability as spent. */
+  markAbilityUsed: (id: string) => void;
+  /** Judgement: re-grant the most recent move's score as a flat bonus.
+   *  No-op if no scored move yet OR Judgement spent this chamber. */
+  replayLastMove: () => void;
+  /** Wheel of Fortune: swap a held Major for a random unowned one
+   *  (via useArcana.wheelSwap) AND mark the chamber ability spent. */
+  fireWheelOfFortune: () => void;
 };
 
 const PLACEHOLDER_RNG = createRng(0);
@@ -171,6 +182,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   nextMoveChipsBonus: 0,
   suitLevelGrowth: false,
   suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
+  chamberAbilitiesUsed: {},
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -201,6 +213,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       nextMoveChipsBonus: 0,
       suitLevelGrowth: opts?.suitLevelGrowth ?? false,
       suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
+      chamberAbilitiesUsed: {},
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -519,6 +532,30 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       count * perPentacle * s.scoreMultiplier,
     );
     if (grant > 0) set({ score: s.score + grant });
+  },
+
+  markAbilityUsed: (id) =>
+    set((s) => ({
+      chamberAbilitiesUsed: { ...s.chamberAbilitiesUsed, [id]: true },
+    })),
+
+  replayLastMove: () => {
+    const s = get();
+    if (s.chamberAbilitiesUsed["judgement"]) return;
+    if (s.lastMove.score <= 0) return;
+    set((p) => ({
+      score: p.score + p.lastMove.score,
+      chamberAbilitiesUsed: { ...p.chamberAbilitiesUsed, judgement: true },
+    }));
+  },
+
+  fireWheelOfFortune: () => {
+    const s = get();
+    if (s.chamberAbilitiesUsed["wheel"]) return;
+    useArcana.getState().wheelSwap(s.rng);
+    set((p) => ({
+      chamberAbilitiesUsed: { ...p.chamberAbilitiesUsed, wheel: true },
+    }));
   },
 
   snapshot: () => {

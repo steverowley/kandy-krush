@@ -476,6 +476,33 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           <circle cx="86" cy="120" r="4" />
         </svg>
       );
+    case "wheel":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Large wheel of fortune */}
+          <circle cx="60" cy="70" r="38" fill="none" stroke="currentColor" stroke-width="4" />
+          <circle cx="60" cy="70" r="28" fill="none" stroke="currentColor" stroke-width="2" />
+          <circle cx="60" cy="70" r="6" />
+          {/* Spokes */}
+          {Array.from({ length: 8 }).map((_, i) => {
+            const a = (i * 45 * Math.PI) / 180;
+            return (
+              <line
+                key={i}
+                x1={60 + Math.cos(a) * 8}
+                y1={70 + Math.sin(a) * 8}
+                x2={60 + Math.cos(a) * 36}
+                y2={70 + Math.sin(a) * 36}
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            );
+          })}
+          {/* A small marker at top to show rotation */}
+          <path d="M58 22h4l-2 8z" />
+        </svg>
+      );
     case "justice":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
@@ -565,6 +592,23 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           {/* Rose at the base */}
           <circle cx="40" cy="118" r="5" />
           <circle cx="40" cy="118" r="2" fill="var(--card-panel, transparent)" />
+        </svg>
+      );
+    case "judgement":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Trumpet */}
+          <path d="M20 56l52 8-6 18-52-8z" />
+          <circle cx="86" cy="64" r="6" fill="var(--card-panel, transparent)" />
+          {/* Banner on the trumpet */}
+          <rect x="34" y="74" width="20" height="14" fill="var(--card-panel, transparent)" />
+          <path d="M36 84l4-2 4 4 4-4 4 2" stroke="currentColor" stroke-width="1.4" fill="none" />
+          {/* Figures rising from the coffin */}
+          <rect x="36" y="100" width="48" height="20" />
+          <path d="M44 100l2-12c1-4 7-4 8 0l1 12" />
+          <path d="M60 100l2-12c1-4 7-4 8 0l1 12" />
+          <circle cx="48" cy="86" r="3" fill="var(--card-panel, transparent)" />
+          <circle cx="66" cy="86" r="3" fill="var(--card-panel, transparent)" />
         </svg>
       );
     case "tower":
