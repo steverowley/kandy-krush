@@ -4,6 +4,36 @@
   gap: var(--space-4);
 }
 
+/* Brief screen-shake when the player resolves a Boss Blind. Applied to
+ * body for ~700ms via the .boss-just-cleared class, then removed. The
+ * keyframe is a small displacement so the whole page jitters together. */
+@keyframes boss-shake {
+  0% { transform: translate3d(0, 0, 0); }
+  10% { transform: translate3d(-6px, 2px, 0); }
+  20% { transform: translate3d(6px, -3px, 0); }
+  30% { transform: translate3d(-5px, 3px, 0); }
+  40% { transform: translate3d(5px, -2px, 0); }
+  50% { transform: translate3d(-3px, 2px, 0); }
+  60% { transform: translate3d(3px, -1px, 0); }
+  70% { transform: translate3d(-2px, 1px, 0); }
+  80% { transform: translate3d(1px, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+body.boss-just-cleared {
+  animation: boss-shake 700ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+:where(.reduced-motion) body.boss-just-cleared {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.boss-just-cleared {
+    animation: none;
+  }
+}
+
 /* Reveal — the play surface flips in like a turned tarot card. */
 .play__reveal {
   animation: play-reveal 520ms var(--ease) both;

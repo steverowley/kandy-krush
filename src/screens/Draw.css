@@ -63,31 +63,65 @@
   }
 }
 
-.draw__card-wrap {
-  display: flex;
-  justify-content: center;
-  animation: draw-flip 320ms var(--ease) both;
+/* Real 3D flip — both faces stacked in the same grid cell, rotating
+ * together. The card-back starts on rotateY(0); the front is pre-rotated
+ * to rotateY(180) and hidden behind it via backface-visibility. Toggling
+ * .draw__flip--revealed rotates the wrapper -180 so the front faces the
+ * viewer. Grid stacking keeps the cells sized by the (always-mounted)
+ * TarotCard front. */
+.draw__flip {
+  position: relative;
+  display: grid;
+  perspective: 1200px;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
 }
 
-@keyframes draw-flip {
-  0% {
-    opacity: 0;
-    transform: rotateY(-90deg) scale(0.92);
-  }
-  100% {
-    opacity: 1;
-    transform: rotateY(0) scale(1);
-  }
+.draw__flip-face {
+  grid-area: 1 / 1;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: transform 560ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
-:where(.reduced-motion) .draw__card-wrap {
-  animation: none;
+.draw__flip-face--back {
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+.draw__flip-face--front {
+  transform: rotateY(180deg);
+  z-index: 1;
+}
+
+.draw__flip--revealed .draw__flip-face--back {
+  transform: rotateY(-180deg);
+  z-index: 1;
+}
+
+.draw__flip--revealed .draw__flip-face--front {
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+:where(.reduced-motion) .draw__flip-face,
+:where(.reduced-motion) .draw__flip--revealed .draw__flip-face {
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .draw__card-wrap {
-    animation: none;
+  .draw__flip-face,
+  .draw__flip--revealed .draw__flip-face {
+    transition: none;
   }
+}
+
+.draw__card-wrap {
+  display: flex;
+  justify-content: center;
 }
 
 .draw__card-effect {
@@ -104,7 +138,9 @@
   margin-top: var(--space-2);
 }
 
-/* Card back — face-down state. Cream cardstock with a gold sunburst. */
+/* Card back — face-down state. Cream cardstock with a gold sunburst.
+ * When inside a flip wrapper it stretches to fill the grid cell; in
+ * any other context it falls back to its natural 5:7 aspect. */
 .draw__card-back {
   position: relative;
   aspect-ratio: 5 / 7;
@@ -115,12 +151,19 @@
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: transform 200ms var(--ease);
   display: block;
+  align-self: stretch;
 }
 
-.draw__card-back:hover {
+.draw__flip .draw__card-back {
+  aspect-ratio: auto;
+  height: 100%;
+  max-width: none;
+}
+
+.draw__flip-face--back:hover:not([aria-hidden="true"]) .draw__card-back-pattern {
   transform: translateY(-4px);
+  transition: transform 200ms var(--ease);
 }
 
 .draw__card-back:focus-visible {

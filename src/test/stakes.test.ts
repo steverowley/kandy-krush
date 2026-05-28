@@ -190,6 +190,37 @@ describe("useQuerent stake state", () => {
     expect(useQuerent.getState().meta.currentStakeId).toBe("red");
   });
 
+  it("finishRun on max stake sets pendingStakeUnlock for the lobby banner", () => {
+    useQuerent.setState({
+      run: {
+        classId: "seer",
+        chamberIndex: 14,
+        totalScore: 100000,
+        cleared: 13,
+        startedAt: Date.now(),
+        stakeId: "white",
+      },
+      meta: {
+        ...useQuerent.getState().meta,
+        maxStakeId: "white",
+        currentStakeId: "white",
+      },
+    });
+    useQuerent.getState().finishRun();
+    expect(useQuerent.getState().meta.pendingStakeUnlock).toBe("red");
+  });
+
+  it("dismissPendingStakeUnlock clears the flag", () => {
+    useQuerent.setState({
+      meta: {
+        ...useQuerent.getState().meta,
+        pendingStakeUnlock: "green",
+      },
+    });
+    useQuerent.getState().dismissPendingStakeUnlock();
+    expect(useQuerent.getState().meta.pendingStakeUnlock).toBeUndefined();
+  });
+
   it("finishRun on a sub-max stake doesn't unlock further", () => {
     useQuerent.setState({
       run: {

@@ -64,6 +64,10 @@ export type QuerentMeta = {
   /** Per-stake bests, accumulated across runs. Stakes the player has
    *  never started are absent from the map. */
   records: Partial<Record<StakeId, StakeRecord>>;
+  /** Stake the player just unlocked on their most recent finishRun.
+   *  The Querent lobby shows a brief banner when this is set, then
+   *  calls dismissPendingStakeUnlock to clear it. */
+  pendingStakeUnlock?: StakeId;
 };
 
 type State = {
@@ -76,6 +80,9 @@ type State = {
   abandonRun: () => void;
   isUnlocked: (classId: QuerentClass["id"]) => boolean;
   setStake: (id: StakeId) => void;
+  /** Clear the pendingStakeUnlock flag once the lobby has shown the
+   *  banner — so it only fires once per unlock. */
+  dismissPendingStakeUnlock: () => void;
 };
 
 const DEFAULT_META: QuerentMeta = {
@@ -219,6 +226,7 @@ export const useQuerent = create<State>()(
           if (next) {
             nextMeta.maxStakeId = next.id;
             nextMeta.currentStakeId = next.id;
+            nextMeta.pendingStakeUnlock = next.id;
           }
         }
         set({ run: null, meta: nextMeta });
@@ -242,6 +250,14 @@ export const useQuerent = create<State>()(
         // Can't select a stake the player hasn't unlocked yet.
         if (target.tier > max.tier) return;
         set({ meta: { ...meta, currentStakeId: id } });
+      },
+
+      dismissPendingStakeUnlock: () => {
+        const meta = get().meta;
+        if (meta.pendingStakeUnlock === undefined) return;
+        const { pendingStakeUnlock, ...rest } = meta;
+        void pendingStakeUnlock;
+        set({ meta: rest });
       },
     }),
     {

@@ -3,6 +3,75 @@
   padding-top: clamp(var(--space-4), 3vh, var(--space-8));
 }
 
+/* Brief "stake unlocked" banner — slides in from the top of the lobby
+ * when a finishRun has cleared the next tier. Auto-dismisses after 5s
+ * via the screen's local state, or by tapping the × control. */
+.querent__unlock-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-6) var(--space-3) var(--space-4);
+  margin: 0 auto;
+  max-width: 520px;
+  border: 1px solid var(--accent-gold);
+  border-radius: 12px;
+  background: rgba(212, 162, 76, 0.12);
+  animation: querent-unlock-rise 320ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes querent-unlock-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:where(.reduced-motion) .querent__unlock-banner,
+:where(.reduced-motion) .querent__unlock-banner * {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .querent__unlock-banner,
+  .querent__unlock-banner * {
+    animation: none;
+  }
+}
+
+.querent__unlock-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: var(--ink-cream);
+}
+
+.querent__unlock-name em {
+  color: var(--accent-gold);
+  font-style: italic;
+}
+
+.querent__unlock-flavor {
+  margin: 0;
+  color: var(--accent-gold-2);
+  font-size: 1.05rem;
+}
+
+.querent__unlock-dismiss {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-2);
+  padding: 0.1em 0.4em;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--ink-dim);
+}
+
 .querent__head {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
