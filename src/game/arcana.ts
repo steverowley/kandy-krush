@@ -57,6 +57,7 @@ export type ArcanaId =
   | "fool"
   | "magician"
   | "empress"
+  | "emperor"
   | "hierophant"
   | "lovers"
   | "chariot"
@@ -97,6 +98,9 @@ export type ArcanaContext = {
   /** How many Minor Arcana the player is currently holding. The Devil
    *  scales with this. */
   minorHeldCount: number;
+  /** True when the board has at least one spark or wild present at
+   *  scoring time. The Emperor rewards a "clean" board. */
+  boardHasSpecials: boolean;
   /** True when the current chamber is a Boss Blind. Used by The Tower
    *  which doubles down on boss chambers. */
   isBoss: boolean;
@@ -160,6 +164,18 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     apply: (ctx) => {
       const cups = countCells(ctx.step, "cups");
       ctx.chips += cups * 20;
+    },
+  },
+  {
+    id: "emperor",
+    numeral: "IV",
+    name: "The Emperor",
+    panelCaption: "estructura",
+    description: "+10 mult when no sparks or wilds are on the board.",
+    subtitle: "el emperador · the clean order",
+    panelColor: "var(--panel-coral)",
+    apply: (ctx) => {
+      if (!ctx.boardHasSpecials) ctx.mult += 10;
     },
   },
   {
@@ -391,6 +407,7 @@ export function applyArcanaToStep(
     isBoss?: boolean;
     maxHand?: number;
     minorHeldCount?: number;
+    boardHasSpecials?: boolean;
   },
 ): { chips: number; mult: number; scoreGained: number } {
   const baseChips = step.chips;
@@ -405,6 +422,7 @@ export function applyArcanaToStep(
     heldCount: held.length,
     maxHand: meta.maxHand ?? MAX_HELD_ARCANA,
     minorHeldCount: meta.minorHeldCount ?? 0,
+    boardHasSpecials: meta.boardHasSpecials ?? false,
     isBoss: meta.isBoss ?? false,
   };
   for (const a of held) a.apply(ctx);

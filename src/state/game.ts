@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { newGame, tryMove, isDeadlocked } from "../game/engine/engine";
-import { reserveTileIds } from "../game/engine/board";
-import { destroyCells } from "../game/engine/cascade";
+import {
+  boardHasSpecials,
+  generateBoard,
+  reserveTileIds,
+  convertSuit as convertBoardSuit,
+} from "../game/engine/board";
+import { destroyCells, resolveCascades } from "../game/engine/cascade";
 import { createRng, type SeededRng } from "../game/engine/rng";
 import type { Board, CascadeStep, Cell, Suit, Tile } from "../game/engine/types";
 import {
@@ -116,6 +121,18 @@ type GameActions = {
   armNextMoveMul: (mul: number) => void;
   armNextMoveMultMul: (mul: number) => void;
   armNextMoveChipsBonus: (chips: number) => void;
+  /** Imperatively destroy a random row; emergent cascade scores raw
+   *  (no arcana modifiers) under the active scoreMultiplier. */
+  destroyRandomRow: () => void;
+  /** Imperatively destroy a random column. */
+  destroyRandomCol: () => void;
+  /** Imperatively convert every plain tile of `from` suit to `to`; any
+   *  emergent matches resolve and score raw. */
+  convertBoardSuit: (from: Suit, to: Suit) => void;
+  /** Replace the board with a freshly-generated one. No score. */
+  reshuffleBoard: () => void;
+  /** Grant flat score for each plain Pentacle currently on the board. */
+  pentaclePayout: (perPentacle: number) => void;
 };
 
 const PLACEHOLDER_RNG = createRng(0);
@@ -197,6 +214,11 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         const restriction = prev.restriction;
         const stakeRule = prev.stakeRule;
         const maxHand = stakeRule?.maxHand ?? MAX_HELD_ARCANA;
+        // The Emperor's "no specials on the board" check reads the
+        // pre-move board so a clean opening earns the bonus across the
+        // whole move's cascades (rather than only when the player's swap
+        // happens to not consume the spark).
+        const specialsOnBoard = boardHasSpecials(prev.board);
 
         // The "warmup tax" — Gold stake silences the first scoring step
         // of every move. The first call to scoreSteps marks the first
@@ -230,6 +252,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
               isBoss: restriction !== null,
               maxHand,
               minorHeldCount,
+              boardHasSpecials: specialsOnBoard,
             });
             // Minor consumable post-arcana modifiers: King's flat chips
             // bonus (one-shot, first scored step only) and Queen of
@@ -345,6 +368,101 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   armNextMoveMultMul: (mul) => set({ nextMoveMultMul: Math.max(1, mul) }),
   armNextMoveChipsBonus: (chips) =>
     set({ nextMoveChipsBonus: Math.max(0, Math.round(chips)) }),
+
+  destroyRandomRow: () => {
+    const s = get();
+    if (s.board.rows === 0) return;
+    const row = Math.floor(s.rng() * s.board.rows);
+    const cells: Cell[] = [];
+    for (let col = 0; col < s.board.cols; col++) cells.push({ row, col });
+    const opts = s.restriction?.blockSpecialPromotions
+      ? { skipPromotions: true }
+      : undefined;
+    const result = destroyCells(s.board, s.rng, cells, opts);
+    const cleared = { ...s.cleared };
+    for (const step of result.cascades) {
+      for (const group of step.matches) {
+        cleared[group.suit] += group.cells.length;
+      }
+    }
+    set({
+      board: result.board,
+      score: s.score + Math.round(result.scoreGained * s.scoreMultiplier),
+      cleared,
+      deadlocked: isDeadlocked(result.board),
+    });
+  },
+
+  destroyRandomCol: () => {
+    const s = get();
+    if (s.board.cols === 0) return;
+    const col = Math.floor(s.rng() * s.board.cols);
+    const cells: Cell[] = [];
+    for (let row = 0; row < s.board.rows; row++) cells.push({ row, col });
+    const opts = s.restriction?.blockSpecialPromotions
+      ? { skipPromotions: true }
+      : undefined;
+    const result = destroyCells(s.board, s.rng, cells, opts);
+    const cleared = { ...s.cleared };
+    for (const step of result.cascades) {
+      for (const group of step.matches) {
+        cleared[group.suit] += group.cells.length;
+      }
+    }
+    set({
+      board: result.board,
+      score: s.score + Math.round(result.scoreGained * s.scoreMultiplier),
+      cleared,
+      deadlocked: isDeadlocked(result.board),
+    });
+  },
+
+  convertBoardSuit: (from, to) => {
+    const s = get();
+    const converted = convertBoardSuit(s.board, from, to);
+    const opts = s.restriction?.blockSpecialPromotions
+      ? { skipPromotions: true }
+      : undefined;
+    const resolved = resolveCascades(converted, s.rng, opts);
+    const cleared = { ...s.cleared };
+    for (const step of resolved.cascades) {
+      for (const group of step.matches) {
+        cleared[group.suit] += group.cells.length;
+      }
+    }
+    set({
+      board: resolved.board,
+      score: s.score + Math.round(resolved.scoreGained * s.scoreMultiplier),
+      cleared,
+      deadlocked: isDeadlocked(resolved.board),
+    });
+  },
+
+  reshuffleBoard: () => {
+    const s = get();
+    let board = generateBoard(s.board.rows, s.board.cols, s.rng);
+    // Defensive: in case the fresh board has any incidental matches,
+    // resolve them silently (no score) before settling.
+    const settled = resolveCascades(board, s.rng);
+    board = settled.board;
+    set({
+      board,
+      selected: null,
+      deadlocked: isDeadlocked(board),
+    });
+  },
+
+  pentaclePayout: (perPentacle) => {
+    const s = get();
+    let count = 0;
+    for (const t of s.board.tiles) {
+      if (t && !t.kind && t.suit === "pentacles") count++;
+    }
+    const grant = Math.round(
+      count * perPentacle * s.scoreMultiplier,
+    );
+    if (grant > 0) set({ score: s.score + grant });
+  },
 
   snapshot: () => {
     const s = get();
