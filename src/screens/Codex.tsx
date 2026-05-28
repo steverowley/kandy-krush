@@ -143,6 +143,7 @@ export function Codex() {
             depth {querentMeta.bestDepth} / {CHAMBER_COUNT} ·{" "}
             {querentMeta.runsCompleted} runs ·{" "}
             {querentMeta.insight.toLocaleString()} insight
+            {querentMeta.seenTheWorld ? " · ★ the World seen" : ""}
           </p>
         </header>
         <div class="codex__sub-grid">

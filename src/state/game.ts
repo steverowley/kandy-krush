@@ -22,7 +22,7 @@ import { aggregateVoucherEffects } from "../game/vouchers";
 import type { ChamberRestriction } from "../game/querent";
 import type { StakeRule } from "../game/stakes";
 
-export type GameMode = "free" | "spread" | "daily" | "querent";
+export type GameMode = "free" | "spread" | "daily" | "querent" | "final";
 
 export type ClearCounts = Record<Suit, number>;
 

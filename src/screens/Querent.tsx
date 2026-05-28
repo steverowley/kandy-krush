@@ -35,6 +35,13 @@ export function Querent() {
   const dismissPendingStakeUnlock = useQuerent(
     (s) => s.dismissPendingStakeUnlock,
   );
+  const isFinalUnlocked = useQuerent((s) => s.isFinalUnlocked)();
+  const beginFinalReading = useQuerent((s) => s.beginFinalReading);
+  const heldKeys = meta.keys ?? {};
+  const keyCount =
+    (heldKeys.boss ? 1 : 0) +
+    (heldKeys.daily ? 1 : 0) +
+    (heldKeys.spread ? 1 : 0);
 
   // Stake-unlock banner: shows briefly when the player finished a run
   // that unlocked the next tier. Captured to local state on mount so
@@ -150,6 +157,52 @@ export function Querent() {
           })}
         </ul>
       </section>
+
+      {keyCount > 0 || isFinalUnlocked || meta.seenTheWorld ? (
+        <section class="querent__keys" aria-label="Keys of the Querent">
+          <header class="querent__keys-head">
+            <p class="eyebrow">Keys of the Querent</p>
+            <p class="querent__keys-count tabular">
+              {keyCount} / 3
+              {meta.seenTheWorld ? " · the World has been seen" : ""}
+            </p>
+          </header>
+          <ul class="querent__keys-list">
+            <li
+              class={`querent__key${heldKeys.boss ? " querent__key--held" : ""}`}
+            >
+              <span class="eyebrow">Boss</span>
+              <span class="script">a boss at 3-star pace</span>
+            </li>
+            <li
+              class={`querent__key${heldKeys.daily ? " querent__key--held" : ""}`}
+            >
+              <span class="eyebrow">Daily</span>
+              <span class="script">a daily of 5,000 fortune</span>
+            </li>
+            <li
+              class={`querent__key${heldKeys.spread ? " querent__key--held" : ""}`}
+            >
+              <span class="eyebrow">Spread</span>
+              <span class="script">a chapter cleared with 3 stars</span>
+            </li>
+          </ul>
+          {isFinalUnlocked ? (
+            <button
+              type="button"
+              class="btn btn--primary querent__final-btn"
+              onClick={() => {
+                beginFinalReading();
+                navigate(`${routes.play}?mode=final`);
+              }}
+            >
+              {meta.seenTheWorld
+                ? "Read the World again"
+                : "The Final Reading awaits"}
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       <section class="querent__classes" aria-label="Classes">
         {CLASSES.map((klass) => {
