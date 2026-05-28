@@ -1,3 +1,4 @@
+import { useEffect, useState } from "preact/hooks";
 import { useLocation } from "wouter-preact";
 import type { ComponentChildren } from "preact";
 import { TarotCard } from "../components/TarotCard";
@@ -14,7 +15,13 @@ import {
 } from "../game/querent";
 import { useQuerent } from "../state/querent";
 import { useResume } from "../state/resume";
-import { STAKES, formatStakeRule, stakeById, type Stake } from "../game/stakes";
+import {
+  STAKES,
+  formatStakeRule,
+  stakeById,
+  type Stake,
+  type StakeId,
+} from "../game/stakes";
 import "./Querent.css";
 
 export function Querent() {
@@ -25,6 +32,31 @@ export function Querent() {
   const abandonRun = useQuerent((s) => s.abandonRun);
   const isUnlocked = useQuerent((s) => s.isUnlocked);
   const setStake = useQuerent((s) => s.setStake);
+  const dismissPendingStakeUnlock = useQuerent(
+    (s) => s.dismissPendingStakeUnlock,
+  );
+
+  // Stake-unlock banner: shows briefly when the player finished a run
+  // that unlocked the next tier. Captured to local state on mount so
+  // the banner survives a `dismissPendingStakeUnlock` call that clears
+  // the underlying meta flag — the banner stays visible for ~5s then
+  // dismisses itself.
+  const [unlockedStakeId, setUnlockedStakeId] = useState<StakeId | null>(
+    null,
+  );
+  useEffect(() => {
+    if (meta.pendingStakeUnlock && !unlockedStakeId) {
+      setUnlockedStakeId(meta.pendingStakeUnlock);
+      dismissPendingStakeUnlock();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meta.pendingStakeUnlock]);
+  useEffect(() => {
+    if (!unlockedStakeId) return;
+    const t = window.setTimeout(() => setUnlockedStakeId(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [unlockedStakeId]);
+  const unlockedStake = unlockedStakeId ? stakeById(unlockedStakeId) : null;
   const currentStake = stakeById(meta.currentStakeId) ?? STAKES[0]!;
   const maxStake = stakeById(meta.maxStakeId) ?? STAKES[0]!;
 
@@ -43,6 +75,23 @@ export function Querent() {
 
   return (
     <main class="screen querent">
+      {unlockedStake ? (
+        <aside class="querent__unlock-banner" role="status" aria-live="polite">
+          <p class="eyebrow">A new stake</p>
+          <p class="querent__unlock-name">
+            The <em>{unlockedStake.name}</em> stake reveals itself
+          </p>
+          <p class="querent__unlock-flavor script">{unlockedStake.flavor}</p>
+          <button
+            type="button"
+            class="btn btn--ghost querent__unlock-dismiss"
+            onClick={() => setUnlockedStakeId(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </aside>
+      ) : null}
       <header class="querent__head">
         <button
           type="button"

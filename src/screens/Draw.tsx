@@ -218,12 +218,14 @@ function MinorDrawCard({
   onPick: () => void;
   disabled: boolean;
 }) {
-  if (!revealed) {
-    return (
+  return (
+    <div class={`draw__flip${revealed ? " draw__flip--revealed" : ""}`}>
       <button
         type="button"
-        class="draw__card-back draw__card-back--minor"
+        class="draw__flip-face draw__flip-face--back draw__card-back draw__card-back--minor"
+        aria-hidden={revealed}
         aria-label="Turn the bonus Minor card"
+        tabIndex={revealed ? -1 : 0}
         onClick={onFlip}
       >
         <span class="draw__card-back-pattern" aria-hidden="true">
@@ -231,33 +233,35 @@ function MinorDrawCard({
         </span>
         <span class="draw__card-back-label script">bonus · turn</span>
       </button>
-    );
-  }
-  return (
-    <div class="draw__card-wrap">
-      <TarotCard
-        numeral={minor.numeral}
-        panelName={minor.name}
-        panelCaption="consumable"
-        headline={minor.name}
-        script={minor.name.toLowerCase()}
-        subtitle={minor.flavor}
-        panelColor={minor.panelColor}
-        figure={<MinorBonusGlyph />}
-        footer={
-          <>
-            <p class="draw__card-effect">{minor.description}</p>
-            <button
-              type="button"
-              class="btn btn--primary btn--on-card draw__card-cta"
-              disabled={disabled}
-              onClick={onPick}
-            >
-              {disabled ? "Tray full" : "Pocket this"}
-            </button>
-          </>
-        }
-      />
+      <div
+        class="draw__flip-face draw__flip-face--front"
+        aria-hidden={!revealed}
+      >
+        <TarotCard
+          numeral={minor.numeral}
+          panelName={minor.name}
+          panelCaption="consumable"
+          headline={minor.name}
+          script={minor.name.toLowerCase()}
+          subtitle={minor.flavor}
+          panelColor={minor.panelColor}
+          figure={<MinorBonusGlyph />}
+          footer={
+            <>
+              <p class="draw__card-effect">{minor.description}</p>
+              <button
+                type="button"
+                class="btn btn--primary btn--on-card draw__card-cta"
+                disabled={disabled}
+                onClick={onPick}
+                tabIndex={revealed ? 0 : -1}
+              >
+                {disabled ? "Tray full" : "Pocket this"}
+              </button>
+            </>
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -288,12 +292,14 @@ function DrawCard({
   onFlip: () => void;
   onPick: () => void;
 }) {
-  if (!revealed) {
-    return (
+  return (
+    <div class={`draw__flip${revealed ? " draw__flip--revealed" : ""}`}>
       <button
         type="button"
-        class="draw__card-back"
+        class="draw__flip-face draw__flip-face--back draw__card-back"
+        aria-hidden={revealed}
         aria-label="Turn the card"
+        tabIndex={revealed ? -1 : 0}
         onClick={onFlip}
       >
         <span class="draw__card-back-pattern" aria-hidden="true">
@@ -301,32 +307,34 @@ function DrawCard({
         </span>
         <span class="draw__card-back-label script">turn</span>
       </button>
-    );
-  }
-  return (
-    <div class="draw__card-wrap">
-      <TarotCard
-        numeral={arcana.numeral}
-        panelName={arcana.name}
-        panelCaption={arcana.panelCaption}
-        headline={arcana.name}
-        script={arcana.name.toLowerCase()}
-        subtitle={arcana.subtitle}
-        panelColor={arcana.panelColor}
-        figure={<ArcanaFigure id={arcana.id} />}
-        footer={
-          <>
-            <p class="draw__card-effect">{arcana.description}</p>
-            <button
-              type="button"
-              class="btn btn--primary btn--on-card draw__card-cta"
-              onClick={onPick}
-            >
-              Read this card
-            </button>
-          </>
-        }
-      />
+      <div
+        class="draw__flip-face draw__flip-face--front"
+        aria-hidden={!revealed}
+      >
+        <TarotCard
+          numeral={arcana.numeral}
+          panelName={arcana.name}
+          panelCaption={arcana.panelCaption}
+          headline={arcana.name}
+          script={arcana.name.toLowerCase()}
+          subtitle={arcana.subtitle}
+          panelColor={arcana.panelColor}
+          figure={<ArcanaFigure id={arcana.id} />}
+          footer={
+            <>
+              <p class="draw__card-effect">{arcana.description}</p>
+              <button
+                type="button"
+                class="btn btn--primary btn--on-card draw__card-cta"
+                onClick={onPick}
+                tabIndex={revealed ? 0 : -1}
+              >
+                Read this card
+              </button>
+            </>
+          }
+        />
+      </div>
     </div>
   );
 }

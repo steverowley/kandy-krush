@@ -64,6 +64,21 @@ function numFromQuery(search: string, key: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** Trigger a brief screen shake when the player clears a Boss Blind.
+ *  Adds .boss-just-cleared to body for the keyframe duration, then
+ *  removes it. Short-circuits when the user has asked for reduced
+ *  motion. */
+function triggerBossShake(): void {
+  const reduced =
+    document.documentElement.classList.contains("reduced-motion") ||
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+  document.body.classList.add("boss-just-cleared");
+  window.setTimeout(() => {
+    document.body.classList.remove("boss-just-cleared");
+  }, 700);
+}
+
 const modeTitle: Record<GameMode, string> = {
   free: "Free Reading",
   spread: "The Spread",
@@ -334,6 +349,8 @@ export function Play() {
             .getState()
             .grantRandom(undefined, MAX_HELD_MINORS + voucherEffects.minorCapBonus);
         }
+        // Boss-clear gets a brief screen shake to land with weight.
+        if (chamber.boss) triggerBossShake();
         // Coin payout — every chamber win pays a base; bosses pay extra.
         // Orange stake halves payouts; Heavy Purse voucher tacks on
         // a flat bonus.
@@ -678,7 +695,9 @@ function ArcanaStrip({ showCoins = true }: { showCoins?: boolean }) {
             aria-label={`${coins} coins in your purse`}
           >
             <span class="eyebrow">Coins</span>
-            <span class="arcana-strip__coins-value tabular">{coins}</span>
+            <span class="arcana-strip__coins-value tabular">
+              <RollingNumber value={coins} duration={420} />
+            </span>
           </p>
         ) : null}
       </div>
