@@ -35,7 +35,7 @@ export type ChamberRestriction = {
 };
 
 export type QuerentClass = {
-  id: "seer" | "maker" | "walker";
+  id: "seer" | "maker" | "walker" | "skeptic" | "mystic" | "gambler";
   numeral: string;
   name: string;
   panelName: string;
@@ -47,6 +47,21 @@ export type QuerentClass = {
   moveBonus: number;
   /** Multiplier applied to all score gained during the run. 1.0 = none. */
   scoreMultiplier: number;
+  /** Override the run's effective Major Arcana hand cap (Skeptic = 4). */
+  handCap?: number;
+  /** When true, the Arcana Draw includes one additional Minor offer
+   *  alongside the standard 3 Major cards (Skeptic). */
+  extraMinorDraw?: boolean;
+  /** When true, matching a suit raises its per-cell chip value by +1
+   *  for the rest of the run (Mystic). */
+  suitLevelGrowth?: boolean;
+  /** Extra free Parlour rerolls granted per visit (Gambler = 1). */
+  parlourRerollBonus?: number;
+  /** Random Minor Arcana granted at run start (Gambler = 1). */
+  startMinorGrant?: number;
+  /** Multiplier stacked on every chamber's score objective
+   *  (Gambler = 1.15). */
+  targetMultiplier?: number;
 };
 
 export const CLASSES: readonly QuerentClass[] = [
@@ -85,6 +100,48 @@ export const CLASSES: readonly QuerentClass[] = [
     panelColor: "var(--panel-emerald)",
     moveBonus: 1,
     scoreMultiplier: 1.1,
+  },
+  {
+    id: "skeptic",
+    numeral: "·IV·",
+    name: "The Skeptic",
+    panelName: "Skeptic",
+    panelCaption: "una mano que duda",
+    body: "Hand cap shrinks to four Majors, but every Draw flips a fourth Minor as well.",
+    subtitle: "el escéptico · fewer cards, more tools",
+    panelColor: "var(--panel-saffron)",
+    moveBonus: 0,
+    scoreMultiplier: 1.0,
+    handCap: 4,
+    extraMinorDraw: true,
+  },
+  {
+    id: "mystic",
+    numeral: "·V·",
+    name: "The Mystic",
+    panelName: "Mystic",
+    panelCaption: "yo soy el mazo",
+    body: "Each suit's matches grow stronger — every match adds +1 chip per cell to that suit, run-long.",
+    subtitle: "el místico · the deck quickens with you",
+    panelColor: "var(--panel-amethyst)",
+    moveBonus: 0,
+    scoreMultiplier: 1.0,
+    suitLevelGrowth: true,
+  },
+  {
+    id: "gambler",
+    numeral: "·VI·",
+    name: "The Gambler",
+    panelName: "Gambler",
+    panelCaption: "el riesgo dulce",
+    body: "Score targets rise by 15%, but every Parlour gets an extra free reroll and you start each run with a Minor in hand.",
+    subtitle: "el apostador · sharper risks, sweeter rewards",
+    panelColor: "var(--panel-coral)",
+    moveBonus: 0,
+    scoreMultiplier: 1.0,
+    parlourRerollBonus: 1,
+    startMinorGrant: 1,
+    targetMultiplier: 1.15,
   },
 ];
 
@@ -322,18 +379,20 @@ export function chamberMovesFor(
 }
 
 /**
- * Apply a chamber's restriction AND the run's active Stake to its
- * objective. Stake multiplier stacks on top of any boss-restriction
- * multiplier; suit-clear targets are unaffected by either layer.
+ * Apply a chamber's restriction AND the run's active Stake AND the
+ * Querent class to its objective. All three multipliers stack on top of
+ * each other; suit-clear targets are unaffected by any of them.
  */
 export function chamberEffectiveObjective(
   chamber: Chamber,
   stake?: Stake | null,
+  klass?: QuerentClass | null,
 ): Objective {
   if (chamber.objective.type !== "score") return chamber.objective;
   const restrictionMult = chamber.restriction?.targetMultiplier ?? 1;
   const stakeMult = stake?.targetMultiplier ?? 1;
-  const combined = restrictionMult * stakeMult;
+  const classMult = klass?.targetMultiplier ?? 1;
+  const combined = restrictionMult * stakeMult * classMult;
   if (combined === 1) return chamber.objective;
   return {
     ...chamber.objective,

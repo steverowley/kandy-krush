@@ -65,6 +65,10 @@ type GameState = {
   restriction: ChamberRestriction | null;
   /** Active stake's qualitative rule, if any. */
   stakeRule: StakeRule | null;
+  /** Class-specific Major Arcana hand cap override (Skeptic = 4). When
+   *  set, this replaces MAX_HELD_ARCANA + stakeRule.maxHand as the
+   *  base. Voucher hand-cap bonus still stacks on top. */
+  classHandCap: number | null;
   /** Per-move score multiplier set by Minor Arcana consumables (e.g.
    *  Page of Wands). Defaults to 1; resets back to 1 after the next
    *  scored move applies it. */
@@ -75,6 +79,13 @@ type GameState = {
   /** Per-move flat chips bonus (King of Pentacles). Defaults to 0;
    *  resets to 0 after the next scored move applies it. */
   nextMoveChipsBonus: number;
+  /** When true, every match raises the per-cell chip value of its
+   *  suit by +1 for the rest of the run. Used by the Mystic class.
+   *  Other classes leave suit levels at 1 across the board. */
+  suitLevelGrowth: boolean;
+  /** Per-suit chip-level multipliers (1 = baseline). Mystic bumps these
+   *  passively; other classes never read them. */
+  suitLevels: Record<Suit, number>;
   lastMove: LastMoveScore;
   selected: Cell | null;
   busy: boolean;
@@ -91,6 +102,8 @@ export type StartOpts = {
   totalMoves?: number;
   restriction?: ChamberRestriction | null;
   stakeRule?: StakeRule | null;
+  suitLevelGrowth?: boolean;
+  classHandCap?: number | null;
 };
 
 /** Serializable snapshot of an in-progress run. The rng is captured as
@@ -152,9 +165,12 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   totalMoves: null,
   restriction: null,
   stakeRule: null,
+  classHandCap: null,
   nextMoveScoreMul: 1,
   nextMoveMultMul: 1,
   nextMoveChipsBonus: 0,
+  suitLevelGrowth: false,
+  suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
   lastMove: { ...ZERO_LAST_MOVE },
   selected: null,
   busy: false,
@@ -179,9 +195,12 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       totalMoves: opts?.totalMoves ?? null,
       restriction: opts?.restriction ?? null,
       stakeRule: opts?.stakeRule ?? null,
+      classHandCap: opts?.classHandCap ?? null,
       nextMoveScoreMul: 1,
       nextMoveMultMul: 1,
       nextMoveChipsBonus: 0,
+      suitLevelGrowth: opts?.suitLevelGrowth ?? false,
+      suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
       lastMove: { ...ZERO_LAST_MOVE },
       selected: null,
       busy: false,
@@ -218,8 +237,14 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         );
         const restriction = prev.restriction;
         const stakeRule = prev.stakeRule;
-        const maxHand =
-          (stakeRule?.maxHand ?? MAX_HELD_ARCANA) + voucherEffects.handCapBonus;
+        const baseHand =
+          prev.classHandCap ?? stakeRule?.maxHand ?? MAX_HELD_ARCANA;
+        const maxHand = baseHand + voucherEffects.handCapBonus;
+        // Mystic class — pre-arcana chip bonus per matched cell, scaled
+        // by the suit's accumulated level over the run. Each suit
+        // bumps +1 per match group at move's end (see below).
+        const suitLevels = prev.suitLevels;
+        const mysticActive = prev.suitLevelGrowth;
         // The Emperor's "no specials on the board" check reads the
         // pre-move board so a clean opening earns the bonus across the
         // whole move's cascades (rather than only when the player's swap
@@ -247,9 +272,20 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
               stakeRule?.silenceFirstMatch && !firstStepSilenced;
             if (silenceThisStep) firstStepSilenced = true;
             if (silenceThisStep) continue;
-            const step = restriction?.silenceSuit
+            const stepAfterSilence = restriction?.silenceSuit
               ? silenceSuitInStep(rawStep, restriction.silenceSuit)
               : rawStep;
+            let mysticBonus = 0;
+            if (mysticActive) {
+              for (const g of stepAfterSilence.matches) {
+                const level = suitLevels[g.suit];
+                if (level > 1) mysticBonus += g.cells.length * (level - 1) * 10;
+              }
+            }
+            const step =
+              mysticBonus > 0
+                ? { ...stepAfterSilence, chips: stepAfterSilence.chips + mysticBonus }
+                : stepAfterSilence;
             const modified = applyArcanaToStep(step, held, {
               depth: step.depth,
               movesUsed: prev.moves,
@@ -280,11 +316,21 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         scoreSteps(result.cascades, totals);
 
         const cleared: ClearCounts = { ...prev.cleared };
-        for (const step of result.cascades) {
-          for (const group of step.matches) {
-            cleared[group.suit] += group.cells.length;
+        const suitMatchCounts: Record<Suit, number> = {
+          cups: 0,
+          pentacles: 0,
+          swords: 0,
+          wands: 0,
+        };
+        const tallySteps = (steps: readonly CascadeStep[]) => {
+          for (const step of steps) {
+            for (const group of step.matches) {
+              cleared[group.suit] += group.cells.length;
+              suitMatchCounts[group.suit] += 1;
+            }
           }
-        }
+        };
+        tallySteps(result.cascades);
 
         // Imperative board-modifying arcana fire once per move, after
         // the swap's cascade has settled. Each hook's resulting refill-
@@ -298,11 +344,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           const destroyed = destroyCells(board, prev.rng, cells, engineOpts);
           board = destroyed.board;
           scoreSteps(destroyed.cascades, totals);
-          for (const step of destroyed.cascades) {
-            for (const group of step.matches) {
-              cleared[group.suit] += group.cells.length;
-            }
-          }
+          tallySteps(destroyed.cascades);
         }
 
         // Death boss restriction: every Nth move (1-based), destroy a
@@ -323,12 +365,20 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           );
           board = destroyed.board;
           scoreSteps(destroyed.cascades, totals);
-          for (const step of destroyed.cascades) {
-            for (const group of step.matches) {
-              cleared[group.suit] += group.cells.length;
-            }
-          }
+          tallySteps(destroyed.cascades);
         }
+
+        // Mystic class: bump each suit's level by the number of match
+        // groups of that suit cleared this move. The bump takes effect
+        // on the NEXT move's scoring.
+        const nextSuitLevels = mysticActive
+          ? {
+              cups: prev.suitLevels.cups + suitMatchCounts.cups,
+              pentacles: prev.suitLevels.pentacles + suitMatchCounts.pentacles,
+              swords: prev.suitLevels.swords + suitMatchCounts.swords,
+              wands: prev.suitLevels.wands + suitMatchCounts.wands,
+            }
+          : prev.suitLevels;
 
         const scored = Math.round(
           totals.score * prev.scoreMultiplier * prev.nextMoveScoreMul,
@@ -338,6 +388,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
+          suitLevels: nextSuitLevels,
           // Per-move minor-arcana buffs all fire exactly once and clear.
           nextMoveScoreMul: 1,
           nextMoveMultMul: 1,
