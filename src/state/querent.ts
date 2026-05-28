@@ -4,6 +4,7 @@ import type { QuerentClass } from "../game/querent";
 import { useArcana } from "./arcana";
 import { useMinorArcana } from "./minor-arcana";
 import { useCoins } from "./coins";
+import { useVouchers } from "./vouchers";
 import {
   DEFAULT_STAKE,
   nextStakeAfter,
@@ -103,6 +104,7 @@ export const useQuerent = create<State>()(
         useArcana.getState().reset();
         useMinorArcana.getState().reset();
         useCoins.getState().reset();
+        useVouchers.getState().reset();
         const meta = get().meta;
         set({
           run: {
@@ -144,6 +146,7 @@ export const useQuerent = create<State>()(
         useArcana.getState().reset();
         useMinorArcana.getState().reset();
         useCoins.getState().reset();
+        useVouchers.getState().reset();
         if (!r) {
           set({ run: null });
           return;
@@ -169,6 +172,7 @@ export const useQuerent = create<State>()(
         useArcana.getState().reset();
         useMinorArcana.getState().reset();
         useCoins.getState().reset();
+        useVouchers.getState().reset();
         if (!r) {
           set({ run: null });
           return;
@@ -208,6 +212,7 @@ export const useQuerent = create<State>()(
         useArcana.getState().reset();
         useMinorArcana.getState().reset();
         useCoins.getState().reset();
+        useVouchers.getState().reset();
         set({ run: null });
       },
 

@@ -145,3 +145,90 @@
   justify-content: center;
   margin-top: var(--space-4);
 }
+
+/* Voucher offer — a single tile rather than the shelf row, since one
+ * voucher rolls per visit. Card-panel border accent + price + buy. */
+.parlour__voucher {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 520px;
+}
+
+.parlour__voucher-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--accent-gold-3);
+  border-radius: 12px;
+  background: rgba(245, 239, 220, 0.06);
+  width: 100%;
+}
+
+.parlour__voucher-card::before {
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: -1px;
+  height: 2px;
+  background: var(--card-panel, var(--accent-gold));
+  border-radius: 1px;
+}
+
+.parlour__voucher-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.parlour__voucher-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--ink-cream);
+}
+
+.parlour__voucher-desc {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink-cream);
+  line-height: 1.5;
+}
+
+.parlour__voucher-flavor {
+  margin: 0;
+  color: var(--accent-gold-2);
+  font-size: 1.05rem;
+}
+
+/* Reroll button row. */
+.parlour__reroll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.parlour__reroll-btn {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.parlour__reroll-note {
+  font-family: var(--font-script);
+  color: var(--ink-dim);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Subtle tweak so Minor offers read as consumables, not Majors. */
+.parlour-card-minor {
+  opacity: 0.95;
+}

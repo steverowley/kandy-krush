@@ -16,12 +16,14 @@ import {
 type State = {
   heldIds: MinorArcanaId[];
   reset: () => void;
-  grant: (id: MinorArcanaId) => void;
+  /** Grant the named minor if there's room. `cap` overrides
+   *  MAX_HELD_MINORS — Deeper Cup voucher raises the effective cap. */
+  grant: (id: MinorArcanaId, cap?: number) => void;
   /** Grant a random Minor from the pool. Used as the boss-win reward. */
-  grantRandom: (rng?: () => number) => MinorArcana | null;
+  grantRandom: (rng?: () => number, cap?: number) => MinorArcana | null;
   consume: (id: MinorArcanaId) => void;
   held: () => MinorArcana[];
-  isFull: () => boolean;
+  isFull: (cap?: number) => boolean;
 };
 
 export const useMinorArcana = create<State>()(
@@ -31,15 +33,15 @@ export const useMinorArcana = create<State>()(
 
       reset: () => set({ heldIds: [] }),
 
-      grant: (id) => {
+      grant: (id, cap) => {
         const heldIds = get().heldIds;
-        if (heldIds.length >= MAX_HELD_MINORS) return;
+        if (heldIds.length >= (cap ?? MAX_HELD_MINORS)) return;
         set({ heldIds: [...heldIds, id] });
       },
 
-      grantRandom: (rng) => {
+      grantRandom: (rng, cap) => {
         const heldIds = get().heldIds;
-        if (heldIds.length >= MAX_HELD_MINORS) return null;
+        if (heldIds.length >= (cap ?? MAX_HELD_MINORS)) return null;
         const rand = rng ?? Math.random;
         const pick = MINOR_ARCANA[Math.floor(rand() * MINOR_ARCANA.length)]!;
         set({ heldIds: [...heldIds, pick.id] });
@@ -60,7 +62,7 @@ export const useMinorArcana = create<State>()(
           .heldIds.map((id) => minorById(id))
           .filter((m): m is MinorArcana => !!m),
 
-      isFull: () => get().heldIds.length >= MAX_HELD_MINORS,
+      isFull: (cap) => get().heldIds.length >= (cap ?? MAX_HELD_MINORS),
     }),
     {
       name: "arcana.minor.v1",
