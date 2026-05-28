@@ -11,6 +11,7 @@ import {
   stakeById,
   type StakeId,
 } from "../game/stakes";
+import { FINAL_CHAMBER_COUNT, type KeyKind } from "../game/final-reading";
 
 /** A single-stake leaderboard: did the player ever clear at this tier,
  *  what was their peak score, what was their deepest chamber, and how
@@ -68,6 +69,16 @@ export type QuerentMeta = {
    *  The Querent lobby shows a brief banner when this is set, then
    *  calls dismissPendingStakeUnlock to clear it. */
   pendingStakeUnlock?: StakeId;
+  /** Keys of the Querent — three are needed to unlock the Final
+   *  Reading. Each kind is granted once; subsequent triggers are
+   *  no-ops. */
+  keys?: Partial<Record<KeyKind, boolean>>;
+  /** Permanent flag — set after the player clears the Final Reading
+   *  endgame. Codex surfaces it; never cleared. */
+  seenTheWorld?: boolean;
+  /** Active Final Reading state. Separate from `run` so the regular
+   *  Querent loop doesn't have to know about it. */
+  finalRun?: { chamberIndex: number };
 };
 
 type State = {
@@ -83,6 +94,22 @@ type State = {
   /** Clear the pendingStakeUnlock flag once the lobby has shown the
    *  banner — so it only fires once per unlock. */
   dismissPendingStakeUnlock: () => void;
+  /** Grant one of the three keys. Idempotent — re-granting a held
+   *  key is a no-op. */
+  grantKey: (kind: KeyKind) => void;
+  /** True if all three keys are held and at least one regular run
+   *  has been completed. The gate for the Final Reading. */
+  isFinalUnlocked: () => boolean;
+  /** Start the Final Reading at chamber 1. Idempotent. */
+  beginFinalReading: () => void;
+  /** Advance the Final Reading to the next chamber, or finish if at
+   *  the last. */
+  passFinalChamber: () => void;
+  /** Bail out of the Final Reading. No score, no unlock. */
+  failFinalReading: () => void;
+  /** Beat the Final Reading — set seenTheWorld permanently and clear
+   *  the active run. */
+  finishFinalReading: () => void;
 };
 
 const DEFAULT_META: QuerentMeta = {
@@ -258,6 +285,69 @@ export const useQuerent = create<State>()(
         const { pendingStakeUnlock, ...rest } = meta;
         void pendingStakeUnlock;
         set({ meta: rest });
+      },
+
+      grantKey: (kind) => {
+        const meta = get().meta;
+        const keys = meta.keys ?? {};
+        if (keys[kind]) return;
+        set({ meta: { ...meta, keys: { ...keys, [kind]: true } } });
+      },
+
+      isFinalUnlocked: () => {
+        const meta = get().meta;
+        const keys = meta.keys ?? {};
+        return (
+          (keys.boss ?? false) &&
+          (keys.daily ?? false) &&
+          (keys.spread ?? false) &&
+          meta.runsCompleted >= 1
+        );
+      },
+
+      beginFinalReading: () => {
+        useArcana.getState().reset();
+        useMinorArcana.getState().reset();
+        useCoins.getState().reset();
+        useVouchers.getState().reset();
+        const meta = get().meta;
+        set({ meta: { ...meta, finalRun: { chamberIndex: 1 } } });
+      },
+
+      passFinalChamber: () => {
+        const meta = get().meta;
+        if (!meta.finalRun) return;
+        const next = meta.finalRun.chamberIndex + 1;
+        if (next > FINAL_CHAMBER_COUNT) {
+          // Reached past the last chamber — caller should finish.
+          return;
+        }
+        set({
+          meta: { ...meta, finalRun: { chamberIndex: next } },
+        });
+      },
+
+      failFinalReading: () => {
+        useArcana.getState().reset();
+        useMinorArcana.getState().reset();
+        useCoins.getState().reset();
+        useVouchers.getState().reset();
+        const meta = get().meta;
+        if (!meta.finalRun) return;
+        const { finalRun, ...rest } = meta;
+        void finalRun;
+        set({ meta: rest });
+      },
+
+      finishFinalReading: () => {
+        useArcana.getState().reset();
+        useMinorArcana.getState().reset();
+        useCoins.getState().reset();
+        useVouchers.getState().reset();
+        const meta = get().meta;
+        const { finalRun, ...rest } = meta;
+        void finalRun;
+        set({ meta: { ...rest, seenTheWorld: true } });
       },
     }),
     {

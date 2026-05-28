@@ -42,13 +42,27 @@ import {
   type QuerentClass,
 } from "../game/querent";
 import { stakeById } from "../game/stakes";
+import {
+  BOSS_PACE_RATIO,
+  DAILY_FORTUNE_THRESHOLD,
+  FINAL_CHAMBER_COUNT,
+  finalChamberByIndex,
+  type FinalChamber,
+} from "../game/final-reading";
 import { routes } from "../router";
 import "./Play.css";
 
 function modeFromQuery(search: string): GameMode {
   const params = new URLSearchParams(search);
   const m = params.get("mode");
-  if (m === "free" || m === "spread" || m === "daily" || m === "querent") return m;
+  if (
+    m === "free" ||
+    m === "spread" ||
+    m === "daily" ||
+    m === "querent" ||
+    m === "final"
+  )
+    return m;
   return "free";
 }
 
@@ -84,6 +98,7 @@ const modeTitle: Record<GameMode, string> = {
   spread: "The Spread",
   daily: "Daily Draw",
   querent: "The Querent's Path",
+  final: "The Final Reading",
 };
 
 export function Play() {
@@ -130,6 +145,18 @@ export function Play() {
   const passChamber = useQuerent((s) => s.passChamber);
   const failRun = useQuerent((s) => s.failRun);
   const finishRun = useQuerent((s) => s.finishRun);
+  const finalRun = useQuerent((s) => s.meta.finalRun);
+  const passFinalChamber = useQuerent((s) => s.passFinalChamber);
+  const finishFinalReading = useQuerent((s) => s.finishFinalReading);
+  const failFinalReading = useQuerent((s) => s.failFinalReading);
+  const grantKey = useQuerent((s) => s.grantKey);
+  const finalChamber: FinalChamber | null = useMemo(
+    () =>
+      mode === "final" && finalRun
+        ? finalChamberByIndex(finalRun.chamberIndex) ?? null
+        : null,
+    [mode, finalRun?.chamberIndex],
+  );
   const saveResume = useResume((s) => s.saveSnapshot);
   const clearResume = useResume((s) => s.clearSnapshot);
   const querentClass: QuerentClass | null = useMemo(
@@ -198,6 +225,18 @@ export function Play() {
       return;
     }
 
+    if (mode === "final") {
+      if (!finalRun || !finalChamber) {
+        navigate(routes.querent);
+        return;
+      }
+      start("final", {
+        totalMoves: finalChamber.moves,
+        restriction: finalChamber.restriction,
+      });
+      return;
+    }
+
     if (mode === "querent") {
       if (!querentRun || !chamber || !querentClass) {
         navigate(routes.querent);
@@ -262,12 +301,16 @@ export function Play() {
     ? level.objective
     : chamber
       ? chamberEffectiveObjective(chamber, activeStake, querentClass)
-      : null;
+      : finalChamber
+        ? { type: "score" as const, target: Math.round(finalChamber.target * (finalChamber.restriction.targetMultiplier ?? 1)) }
+        : null;
 
   const chamberMoves =
     chamber && querentClass
       ? chamberMovesFor(chamber, querentClass, activeStake)
-      : null;
+      : finalChamber
+        ? finalChamber.moves
+        : null;
 
   const progress = effectiveObjective
     ? objectiveProgress(effectiveObjective, score, cleared)
@@ -324,6 +367,8 @@ export function Play() {
         const stars = starCount(level, score, true);
         recordSpread(level.id, stars);
         clearResume(spreadKey(level.id));
+        // 3-star Spread clears earn the Spread key for the Final Reading.
+        if (stars === 3) grantKey("spread");
         setOutcomeSeen({ kind: "win", stars, finalScore: score });
       } else if (movesLeft === 0) {
         clearResume(spreadKey(level.id));
@@ -349,8 +394,14 @@ export function Play() {
             .getState()
             .grantRandom(undefined, MAX_HELD_MINORS + voucherEffects.minorCapBonus);
         }
-        // Boss-clear gets a brief screen shake to land with weight.
-        if (chamber.boss) triggerBossShake();
+        // Boss-clear gets a brief screen shake to land with weight,
+        // and a "boss pace" key if the player blew past the target.
+        if (chamber.boss) {
+          triggerBossShake();
+          if (score >= (progress?.target ?? 0) * BOSS_PACE_RATIO) {
+            grantKey("boss");
+          }
+        }
         // Coin payout — every chamber win pays a base; bosses pay extra.
         // Orange stake halves payouts; Heavy Purse voucher tacks on
         // a flat bonus.
@@ -380,7 +431,28 @@ export function Play() {
     // Daily.
     if (mode === "daily" && movesLeft === 0) {
       finishDailyRun(today, "won", score);
+      // Comfortable Daily Fortune earns the daily key.
+      if (score >= DAILY_FORTUNE_THRESHOLD) grantKey("daily");
       setOutcomeSeen({ kind: "win", stars: 0, finalScore: score });
+    }
+
+    // Final Reading: per-chamber objective + budget, no rewards
+    // between chambers. The 3rd chamber's win flips seenTheWorld and
+    // closes the journey.
+    if (mode === "final" && finalChamber && finalRun && progress) {
+      if (progress.met) {
+        if (finalRun.chamberIndex >= FINAL_CHAMBER_COUNT) {
+          finishFinalReading();
+          setOutcomeSeen({ kind: "win", stars: 3, finalScore: score });
+        } else {
+          passFinalChamber();
+          setOutcomeSeen({ kind: "win", stars: 3, finalScore: score });
+        }
+      } else if (movesLeft === 0) {
+        failFinalReading();
+        setOutcomeSeen({ kind: "loss", stars: 0, finalScore: score });
+      }
+      return;
     }
   }, [
     level,
@@ -397,6 +469,12 @@ export function Play() {
     recordSpread,
     passChamber,
     failRun,
+    finalChamber,
+    finalRun?.chamberIndex,
+    passFinalChamber,
+    finishFinalReading,
+    failFinalReading,
+    grantKey,
     finishRun,
   ]);
 
@@ -619,6 +697,11 @@ export function Play() {
             outcomeSeen.kind === "win" &&
             chamber.index === CHAMBER_COUNT
           }
+          trueEnding={
+            mode === "final" &&
+            outcomeSeen.kind === "win" &&
+            !useQuerent.getState().meta.finalRun
+          }
           alreadyRecap={isDailyRecap}
           onAdvance={() => {
             if (mode === "querent" && chamber && outcomeSeen.kind === "win") {
@@ -632,6 +715,19 @@ export function Play() {
               } else {
                 // Insert the Arcana Draw between chambers — pick 1 of 3.
                 navigate(`${routes.draw}?next=${next}`);
+              }
+              return;
+            }
+            if (mode === "final" && outcomeSeen.kind === "win") {
+              // No Parlour / Draw between Final chambers. Either advance
+              // (passFinalChamber bumped the index, just re-route) or
+              // return to the lobby on the True Ending.
+              const next = useQuerent.getState().meta.finalRun;
+              if (next) {
+                navigate(`${routes.play}?mode=final`);
+                setOutcomeSeen(null);
+              } else {
+                navigate(routes.querent);
               }
               return;
             }
@@ -863,6 +959,7 @@ function Outcome({
   level,
   chamber,
   finalChamber,
+  trueEnding,
   alreadyRecap,
   onAdvance,
   onLeave,
@@ -872,6 +969,7 @@ function Outcome({
   level: Level | null;
   chamber: Chamber | null;
   finalChamber: boolean;
+  trueEnding: boolean;
   alreadyRecap: boolean;
   onAdvance: () => void;
   onLeave: () => void;
@@ -879,27 +977,34 @@ function Outcome({
   const isWin = outcome.kind === "win";
   const isDaily = mode === "daily";
   const isQuerent = mode === "querent";
+  const isFinal = mode === "final";
 
-  const panelName = isDaily
+  const panelName = trueEnding
+    ? "The World"
+    : isDaily
     ? alreadyRecap ? "Settled" : "Reading"
-    : isQuerent
+    : isQuerent || isFinal
       ? isWin
         ? finalChamber ? "The Path" : "Cleared"
         : "Broken"
       : isWin ? "Resolved" : "Broken";
-  const headline = isDaily
+  const headline = trueEnding
+    ? "Resolved at Last"
+    : isDaily
     ? "The Day"
-    : isQuerent
+    : isQuerent || isFinal
       ? isWin
         ? finalChamber ? "Resolved" : "Onward"
         : "The Path Ends"
       : isWin
         ? "The Spread"
         : "The Querent";
-  const script = isWin ? "fortune" : "ruin";
-  const subtitle = isDaily
+  const script = isWin ? (trueEnding ? "the world" : "fortune") : "ruin";
+  const subtitle = trueEnding
+    ? "el mundo · the circle, complete"
+    : isDaily
     ? "la jornada · return tomorrow"
-    : isQuerent
+    : isQuerent || isFinal
       ? isWin
         ? finalChamber
           ? "el final · nine chambers walked"
@@ -908,9 +1013,11 @@ function Outcome({
       : isWin
       ? "la fortuna · stars settle"
       : "el cierre · readings spent";
-  const panelColor = isWin
-    ? "var(--panel-gold)"
-    : "var(--panel-amethyst)";
+  const panelColor = trueEnding
+    ? "var(--accent-gold)"
+    : isWin
+      ? "var(--panel-gold)"
+      : "var(--panel-amethyst)";
   const numeral = level?.numeral ?? chamber?.numeral ?? (isDaily ? "·" : "·");
 
   // When the modal opens, move keyboard focus to the primary action so
@@ -973,15 +1080,21 @@ function Outcome({
                     onClick={onAdvance}
                     ref={firstActionRef}
                   >
-                    {isQuerent
-                      ? isWin
-                        ? finalChamber
-                          ? "Close the path"
-                          : "Next chamber"
-                        : "Begin again"
-                      : isWin
-                        ? "Read again"
-                        : "Reshuffle"}
+                    {trueEnding
+                      ? "Close the journey"
+                      : isFinal
+                        ? isWin
+                          ? "Next chamber"
+                          : "Return to the path"
+                        : isQuerent
+                          ? isWin
+                            ? finalChamber
+                              ? "Close the path"
+                              : "Next chamber"
+                            : "Begin again"
+                          : isWin
+                            ? "Read again"
+                            : "Reshuffle"}
                   </button>
                 ) : null}
               </div>
