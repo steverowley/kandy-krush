@@ -361,6 +361,25 @@ function ArcanaFigure({ id }: { id: Arcana["id"] }) {
           <path d="M0 124h70l4 6h-74z" />
         </svg>
       );
+    case "high-priestess":
+      return (
+        <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">
+          {/* Veiled seated figure */}
+          <path d="M30 22h60l-4 18-12 4v8H46v-8l-12-4z" />
+          {/* Halo / lunar crown */}
+          <circle cx="60" cy="14" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+          <path d="M40 22a20 20 0 0 1 40 0" fill="none" stroke="currentColor" stroke-width="1.4" />
+          {/* Veil / robe */}
+          <path d="M30 54h60l8 60H22z" />
+          {/* Pillars */}
+          <rect x="10" y="60" width="10" height="64" />
+          <rect x="100" y="60" width="10" height="64" />
+          {/* Scroll */}
+          <rect x="48" y="78" width="24" height="20" fill="var(--card-panel, transparent)" />
+          <line x1="48" y1="78" x2="48" y2="98" stroke="currentColor" stroke-width="1.4" />
+          <line x1="72" y1="78" x2="72" y2="98" stroke="currentColor" stroke-width="1.4" />
+        </svg>
+      );
     case "empress":
       return (
         <svg viewBox="0 0 120 140" fill="currentColor" class="card__figure-svg">

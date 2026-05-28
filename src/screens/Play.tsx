@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useLocation, useSearch } from "wouter-preact";
 import { Board } from "../game/view/Board";
+import { SuitGlyph, SUIT_COLORS } from "../game/view/suit-glyphs";
+import { peekRefillSequence } from "../game/engine/board";
 import { TarotCard } from "../components/TarotCard";
 import { useGame, type GameMode } from "../state/game";
 import { useSpread } from "../state/spread";
@@ -651,6 +653,7 @@ export function Play() {
 
       {!isDailyRecap ? (
         <div class="play__reveal">
+          <PriestessPeek />
           <Board />
         </div>
       ) : null}
@@ -931,6 +934,37 @@ function MinorTray({
         </ul>
       ) : null}
     </section>
+  );
+}
+
+/** Smoothly counts from the previously-displayed number up to `value`
+/** High Priestess intuition: render a small row of suit glyphs above
+ *  the board showing the next N tiles in the rng draw order. Only
+ *  renders when the player holds The High Priestess. The peek uses
+ *  the rng's saved/restored state so it doesn't perturb future draws. */
+function PriestessPeek() {
+  const held = useArcana((s) => s.heldIds);
+  const board = useGame((s) => s.board);
+  const rng = useGame((s) => s.rng);
+  // Re-evaluate when the move count changes (rng advances per move).
+  const moves = useGame((s) => s.moves);
+  if (!held.includes("high-priestess")) return null;
+  if (board.cols === 0) return null;
+  const upcoming = peekRefillSequence(rng, board.cols);
+  void moves;
+  return (
+    <div class="priestess-peek" aria-label="Upcoming tile suits">
+      {upcoming.map((suit, i) => (
+        <span
+          key={i}
+          class="priestess-peek__slot"
+          style={{ "--tile-color": SUIT_COLORS[suit] }}
+          title={`${suit} (next draw ${i + 1})`}
+        >
+          <SuitGlyph suit={suit} />
+        </span>
+      ))}
+    </div>
   );
 }
 

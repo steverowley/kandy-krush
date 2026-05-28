@@ -1,4 +1,4 @@
-import { rngPick } from "./rng";
+import { rngPick, type SeededRng } from "./rng";
 import { SUITS, type Board, type Cell, type Suit, type Tile } from "./types";
 
 let nextTileId = 1;
@@ -121,6 +121,22 @@ export function newTile(suit: Suit): Tile {
  *  this — a "clean" board (all plain suits) earns the structure bonus. */
 export function boardHasSpecials(board: Board): boolean {
   return board.tiles.some((t) => t !== null && t.kind !== undefined);
+}
+
+/**
+ * Peek the next `count` suits the rng will produce when called via
+ * `rngPick(SUITS, ...)`. The rng's internal state is captured and
+ * restored so the peek doesn't perturb the live game's deterministic
+ * draw sequence. Used by The High Priestess to surface upcoming
+ * refills.
+ */
+export function peekRefillSequence(rng: SeededRng, count: number): Suit[] {
+  if (count <= 0) return [];
+  const saved = rng.state();
+  const out: Suit[] = [];
+  for (let i = 0; i < count; i++) out.push(rngPick(rng, SUITS));
+  rng.setState(saved);
+  return out;
 }
 
 /**
