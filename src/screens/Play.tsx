@@ -25,6 +25,7 @@ import {
   DAILY_COLS,
   DAILY_MOVE_BUDGET,
   DAILY_ROWS,
+  dailyArcana,
   dailySeed,
   todayKey,
 } from "../game/daily";
@@ -153,6 +154,14 @@ export function Play() {
     setOutcomeSeen(null);
 
     if (mode === "daily") {
+      // Same date worldwide → same hand worldwide. Set the deck before
+      // restore/start so the ArcanaStrip shows the daily hand even on
+      // a resumed run.
+      useArcana.setState({
+        heldIds: dailyArcana(today),
+        offeredIds: [],
+        drawSeed: 0,
+      });
       const run = useDaily.getState().getRun(today);
       if (run?.outcome === "won" || run?.outcome === "lost") {
         setOutcomeSeen({
@@ -197,6 +206,14 @@ export function Play() {
     }
 
     if (mode === "spread" && level) {
+      // Each Spread chapter is a fixed puzzle — pre-load whatever
+      // Major Arcana the level declares before we read the snapshot
+      // so a resumed run sees the same hand.
+      useArcana.setState({
+        heldIds: level.arcana ?? [],
+        offeredIds: [],
+        drawSeed: 0,
+      });
       const key = spreadKey(level.id);
       const saved = useResume.getState().getSnapshot(key);
       if (saved) {
@@ -209,6 +226,19 @@ export function Play() {
 
     start(mode, level ? { levelId: level.id, totalMoves: level.moves } : undefined);
   }, [mode, level?.id, today, chamberParam]);
+
+  // Spread + Daily are short, one-off readings; arcana shouldn't persist
+  // across them or leak into a subsequent Querent run. Clear on unmount
+  // when mode is non-Querent. Querent's reset is handled by useQuerent's
+  // begin/fail/finish/abandon path.
+  useEffect(() => {
+    return () => {
+      if (mode === "spread" || mode === "daily") {
+        useArcana.setState({ heldIds: [], offeredIds: [], drawSeed: 0 });
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   // Bosses can multiply the objective target — chamberEffectiveObjective
   // applies the restriction AND the active stake AND the Querent class
@@ -418,7 +448,9 @@ export function Play() {
         )}
       </header>
 
-      {mode === "querent" ? <ArcanaStrip /> : null}
+      {mode === "querent" || mode === "spread" || mode === "daily" ? (
+        <ArcanaStrip showCoins={mode === "querent"} />
+      ) : null}
 
       {mode === "querent" ? (
         <MinorTray
@@ -606,7 +638,7 @@ export function Play() {
  *  Players can drag a badge to reorder firing order, or use the ◂ ▸
  *  buttons for keyboard / no-pointer access. A coin chip at the right
  *  tracks Parlour earnings. */
-function ArcanaStrip() {
+function ArcanaStrip({ showCoins = true }: { showCoins?: boolean }) {
   const held = useArcana((s) => s.held());
   const reorder = useArcana((s) => s.reorder);
   const coins = useCoins((s) => s.balance);
@@ -640,14 +672,19 @@ function ArcanaStrip() {
     <section class="arcana-strip" aria-label="Held arcana">
       <div class="arcana-strip__head">
         <p class="eyebrow">Arcana</p>
-        <p class="arcana-strip__coins" aria-label={`${coins} coins in your purse`}>
-          <span class="eyebrow">Coins</span>
-          <span class="arcana-strip__coins-value tabular">{coins}</span>
-        </p>
+        {showCoins ? (
+          <p
+            class="arcana-strip__coins"
+            aria-label={`${coins} coins in your purse`}
+          >
+            <span class="eyebrow">Coins</span>
+            <span class="arcana-strip__coins-value tabular">{coins}</span>
+          </p>
+        ) : null}
       </div>
       {held.length === 0 ? (
         <p class="arcana-strip__empty script">
-          no card yet — finish a chamber to draw
+          {showCoins ? "no card yet — finish a chamber to draw" : "no arcana for this reading"}
         </p>
       ) : (
         <ul class="arcana-strip__list">
