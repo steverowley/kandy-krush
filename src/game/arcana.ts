@@ -69,6 +69,7 @@ export type ArcanaId =
   | "temperance"
   | "devil"
   | "tower"
+  | "star"
   | "moon"
   | "sun"
   | "world";
@@ -338,6 +339,25 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
     panelColor: "var(--panel-coral)",
     apply: (ctx) => {
       if (ctx.isBoss) ctx.mult = Math.round(ctx.mult * 1.3);
+    },
+  },
+  {
+    id: "star",
+    numeral: "XVII",
+    name: "The Star",
+    panelCaption: "luz",
+    description: "Wild-involved matches score their chips again — twice the take.",
+    subtitle: "la estrella · the quiet light doubled",
+    panelColor: "var(--panel-cobalt)",
+    apply: (ctx) => {
+      // Each wild-involved match contributes its base chip value a
+      // second time. We add the additional CHIPS_PER_CELL × cells
+      // here, on top of whatever the engine already counted in the
+      // step's base chips.
+      for (const g of ctx.step.matches) {
+        if (!g.hasWild) continue;
+        ctx.chips += g.cells.length * CHIPS_PER_CELL;
+      }
     },
   },
   {

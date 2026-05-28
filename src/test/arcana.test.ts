@@ -418,6 +418,27 @@ describe("applyArcanaToStep — The Emperor", () => {
   });
 });
 
+describe("applyArcanaToStep — The Star", () => {
+  const star = arcanaById("star")!;
+  it("doubles chips from wild-involved matches", () => {
+    const s = step([
+      { suit: "cups", cells: 4 }, // wild-involved
+      { suit: "wands", cells: 3 }, // plain
+    ]);
+    // Mutate the first match group to flag a wild.
+    s.matches[0]!.hasWild = true;
+    // base chips: (4 + 3) * 10 = 70. Star adds another 4 * 10 = 40.
+    const out = applyArcanaToStep(s, [star], META());
+    expect(out.chips).toBe(70 + 40);
+  });
+
+  it("does nothing when no match included a wild", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [star], META());
+    expect(out.chips).toBe(30);
+  });
+});
+
 describe("applyArcanaToStep — The Tower", () => {
   const tower = arcanaById("tower")!;
   it("multiplies mult by 1.3 on a boss chamber", () => {

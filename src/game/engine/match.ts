@@ -10,10 +10,10 @@ export function findMatches(board: Board): MatchGroup[] {
     scanLine(
       board.cols,
       (i) => board.tiles[row * board.cols + i] ?? null,
-      (start, end, suit) => {
+      (start, end, suit, hasWild) => {
         const cells: Cell[] = [];
         for (let c = start; c < end; c++) cells.push({ row, col: c });
-        groups.push({ suit, cells });
+        groups.push(hasWild ? { suit, cells, hasWild } : { suit, cells });
       },
     );
   }
@@ -22,10 +22,10 @@ export function findMatches(board: Board): MatchGroup[] {
     scanLine(
       board.rows,
       (i) => board.tiles[i * board.cols + col] ?? null,
-      (start, end, suit) => {
+      (start, end, suit, hasWild) => {
         const cells: Cell[] = [];
         for (let r = start; r < end; r++) cells.push({ row: r, col });
-        groups.push({ suit, cells });
+        groups.push(hasWild ? { suit, cells, hasWild } : { suit, cells });
       },
     );
   }
@@ -36,19 +36,21 @@ export function findMatches(board: Board): MatchGroup[] {
 /** Walk one line (a row or column) and emit any match runs found.
  *  A wild tile extends a run of any anchor suit. A run is only a match
  *  if it is 3+ long AND contains at least one non-wild tile (so the
- *  anchor suit is defined). */
+ *  anchor suit is defined). The emitter receives a `hasWild` flag so
+ *  arcana like The Star can detect wild-involved matches. */
 function scanLine(
   length: number,
   getTile: (i: number) => Tile | null,
-  emit: (start: number, end: number, suit: Suit) => void,
+  emit: (start: number, end: number, suit: Suit, hasWild: boolean) => void,
 ): void {
   let start = 0;
   let anchor: Suit | null = null;
   let hasNonWild = false;
+  let hasWild = false;
 
   function closeRun(end: number) {
     if (end - start >= 3 && anchor !== null && hasNonWild) {
-      emit(start, end, anchor);
+      emit(start, end, anchor, hasWild);
     }
   }
 
@@ -56,6 +58,7 @@ function scanLine(
     start = i;
     anchor = t && t.kind !== "wild" ? t.suit : null;
     hasNonWild = !!t && t.kind !== "wild";
+    hasWild = !!t && t.kind === "wild";
   }
 
   // Seed with the first cell.
@@ -83,13 +86,15 @@ function scanLine(
     }
 
     if (extending) {
-      if (t && t.kind !== "wild") hasNonWild = true;
+      if (t && t.kind === "wild") hasWild = true;
+      else if (t) hasNonWild = true;
     } else {
       closeRun(i);
       if (!t) {
         start = i + 1;
         anchor = null;
         hasNonWild = false;
+        hasWild = false;
       } else {
         resetAt(i, t);
       }
