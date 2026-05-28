@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { dailySeed, todayKey, DAILY_MOVE_BUDGET } from "../game/daily";
+import {
+  DAILY_ARCANA_COUNT,
+  DAILY_MOVE_BUDGET,
+  dailyArcana,
+  dailySeed,
+  todayKey,
+} from "../game/daily";
 import { createRng } from "../game/engine/rng";
 import { newGame } from "../game/engine/engine";
+import { MAJOR_ARCANA } from "../game/arcana";
 
 describe("dailySeed", () => {
   it("is deterministic for a given key", () => {
@@ -60,5 +67,37 @@ describe("newGame seed determinism", () => {
     const { board: b1 } = newGame({ rows: 7, cols: 7, seed });
     const { board: b2 } = newGame({ rows: 7, cols: 7, seed });
     expect(b1.tiles.map((t) => t?.suit)).toEqual(b2.tiles.map((t) => t?.suit));
+  });
+});
+
+describe("dailyArcana", () => {
+  it(`returns ${DAILY_ARCANA_COUNT} arcana ids`, () => {
+    expect(dailyArcana("2026-01-01")).toHaveLength(DAILY_ARCANA_COUNT);
+  });
+
+  it("is deterministic for a given key", () => {
+    expect(dailyArcana("2026-05-28")).toEqual(dailyArcana("2026-05-28"));
+  });
+
+  it("differs across days", () => {
+    const a = dailyArcana("2026-05-28");
+    const b = dailyArcana("2026-05-29");
+    expect(a).not.toEqual(b);
+  });
+
+  it("only emits real Major Arcana ids", () => {
+    const real = new Set(MAJOR_ARCANA.map((a) => a.id));
+    for (const key of ["2026-01-01", "2026-06-15", "2026-12-31"]) {
+      for (const id of dailyArcana(key)) {
+        expect(real.has(id)).toBe(true);
+      }
+    }
+  });
+
+  it("never repeats an arcana within one day's hand", () => {
+    for (const key of ["2026-01-01", "2026-06-15", "2026-12-31"]) {
+      const hand = dailyArcana(key);
+      expect(new Set(hand).size).toBe(hand.length);
+    }
   });
 });

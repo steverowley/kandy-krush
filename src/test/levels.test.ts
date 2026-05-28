@@ -6,6 +6,7 @@ import {
   starCount,
   type Level,
 } from "../game/levels";
+import { MAJOR_ARCANA } from "../game/arcana";
 import type { Suit } from "../game/engine/types";
 
 const ZERO_CLEARED: Record<Suit, number> = {
@@ -114,5 +115,37 @@ describe("starCount", () => {
 
   it("is at least one when objective met even with low score", () => {
     expect(starCount(level, 0, true)).toBe(1);
+  });
+});
+
+describe("Spread chapter arcana hands", () => {
+  it("at least four chapters carry a pre-loaded arcana hand", () => {
+    const withArcana = LEVELS.filter((l) => l.arcana && l.arcana.length > 0);
+    expect(withArcana.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("each declared arcana id is a real Major", () => {
+    const real = new Set(MAJOR_ARCANA.map((a) => a.id));
+    for (const lvl of LEVELS) {
+      for (const id of lvl.arcana ?? []) {
+        expect(real.has(id)).toBe(true);
+      }
+    }
+  });
+
+  it("thematic match on at least the title-named chapters", () => {
+    const magician = LEVELS.find((l) => l.id === 1)!;
+    expect(magician.arcana).toContain("magician");
+    const empress = LEVELS.find((l) => l.id === 3)!;
+    expect(empress.arcana).toContain("empress");
+    const strength = LEVELS.find((l) => l.id === 8)!;
+    expect(strength.arcana).toContain("strength");
+    const hangedMan = LEVELS.find((l) => l.id === 12)!;
+    expect(hangedMan.arcana).toContain("hanged-man");
+  });
+
+  it("late chapters can stack multiple arcana", () => {
+    const hangedMan = LEVELS.find((l) => l.id === 12)!;
+    expect((hangedMan.arcana ?? []).length).toBeGreaterThanOrEqual(2);
   });
 });

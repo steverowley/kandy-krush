@@ -1,4 +1,5 @@
 import type { Suit } from "./engine/types";
+import type { ArcanaId } from "./arcana";
 
 export type Objective =
   | { type: "score"; target: number }
@@ -14,6 +15,10 @@ export type Level = {
   /** Score thresholds for one / two / three stars. The "target" of the
    *  objective decides win-vs-loss; stars are always a score read. */
   stars: { one: number; two: number; three: number };
+  /** Pre-loaded Major Arcana for this chapter. Spread is a puzzle mode
+   *  — every chapter has a fixed hand, no draws between, no Parlour.
+   *  Players learn to optimize given the hand. Empty = no arcana. */
+  arcana?: ArcanaId[];
 };
 
 // Score thresholds tuned for the Chips × Mult engine (PR #376). Average
@@ -30,6 +35,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 2000 },
     moves: 20,
     stars: { one: 2000, two: 3000, three: 4500 },
+    arcana: ["magician"],
   },
   {
     id: 2,
@@ -48,6 +54,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 3800 },
     moves: 22,
     stars: { one: 3800, two: 5500, three: 7500 },
+    arcana: ["empress"],
   },
   {
     id: 4,
@@ -57,6 +64,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 14, suit: "swords" },
     moves: 20,
     stars: { one: 3500, two: 5300, three: 7500 },
+    arcana: ["emperor"],
   },
   {
     id: 5,
@@ -66,6 +74,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 5500 },
     moves: 22,
     stars: { one: 5500, two: 7500, three: 10000 },
+    arcana: ["hierophant"],
   },
   {
     id: 6,
@@ -84,6 +93,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 8000 },
     moves: 20,
     stars: { one: 8000, two: 10500, three: 13800 },
+    arcana: ["chariot"],
   },
   {
     id: 8,
@@ -93,6 +103,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 22, suit: "wands" },
     moves: 28,
     stars: { one: 6000, two: 8800, three: 12000 },
+    arcana: ["strength", "magician"],
   },
   {
     id: 9,
@@ -120,6 +131,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 24, suit: "pentacles" },
     moves: 24,
     stars: { one: 7500, two: 11000, three: 15000 },
+    arcana: ["justice", "hierophant"],
   },
   {
     id: 12,
@@ -129,6 +141,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 13800 },
     moves: 26,
     stars: { one: 13800, two: 18800, three: 25000 },
+    arcana: ["hanged-man", "chariot", "empress"],
   },
 ];
 
