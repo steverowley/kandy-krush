@@ -17,6 +17,8 @@ import {
 } from "../game/arcana";
 import { useArcana } from "./arcana";
 import { useMinorArcana } from "./minor-arcana";
+import { useVouchers } from "./vouchers";
+import { aggregateVoucherEffects } from "../game/vouchers";
 import type { ChamberRestriction } from "../game/querent";
 import type { StakeRule } from "../game/stakes";
 
@@ -211,9 +213,13 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
         // it can scale only the arcana delta, not the engine base.
         const held = useArcana.getState().held();
         const minorHeldCount = useMinorArcana.getState().held().length;
+        const voucherEffects = aggregateVoucherEffects(
+          useVouchers.getState().owned(),
+        );
         const restriction = prev.restriction;
         const stakeRule = prev.stakeRule;
-        const maxHand = stakeRule?.maxHand ?? MAX_HELD_ARCANA;
+        const maxHand =
+          (stakeRule?.maxHand ?? MAX_HELD_ARCANA) + voucherEffects.handCapBonus;
         // The Emperor's "no specials on the board" check reads the
         // pre-move board so a clean opening earns the bonus across the
         // whole move's cascades (rather than only when the player's swap

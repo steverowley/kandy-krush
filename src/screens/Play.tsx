@@ -10,6 +10,11 @@ import { useMinorArcana } from "../state/minor-arcana";
 import { useCoins } from "../state/coins";
 import type { MinorArcana } from "../game/minor-arcana";
 import { coinsForChamber, isParlourChamber } from "../game/parlour";
+import { useVouchers } from "../state/vouchers";
+import {
+  aggregateVoucherEffects,
+} from "../game/vouchers";
+import { MAX_HELD_MINORS } from "../game/minor-arcana";
 import {
   levelById,
   objectiveProgress,
@@ -285,19 +290,26 @@ export function Play() {
       if (progress.met) {
         passChamber(score);
         clearResume(querentKey(chamber.index));
+        // Voucher effects layer on top of stake / restriction adjustments.
+        const voucherEffects = aggregateVoucherEffects(
+          useVouchers.getState().owned(),
+        );
         // Boss reward: a random Minor Arcana consumable (if the player
         // has room in their consumables tray). Blue stake rule disables
         // this — bosses still pay coins but no consumable drops.
         if (chamber.boss && (activeStake?.rule?.bossMinorReward ?? true)) {
-          useMinorArcana.getState().grantRandom();
+          useMinorArcana
+            .getState()
+            .grantRandom(undefined, MAX_HELD_MINORS + voucherEffects.minorCapBonus);
         }
         // Coin payout — every chamber win pays a base; bosses pay extra.
-        // Orange stake halves payouts.
+        // Orange stake halves payouts; Heavy Purse voucher tacks on
+        // a flat bonus.
         useCoins.getState().grant(
           coinsForChamber({
             isBoss: chamber.boss,
             multiplier: activeStake?.rule?.coinMultiplier,
-          }),
+          }) + voucherEffects.coinBonus,
         );
         const nextIdx = querentRun.chamberIndex + 1;
         if (nextIdx > CHAMBER_COUNT) {

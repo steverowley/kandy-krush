@@ -3,8 +3,10 @@ import { useLocation, useSearch } from "wouter-preact";
 import { TarotCard } from "../components/TarotCard";
 import { useArcana } from "../state/arcana";
 import { useQuerent } from "../state/querent";
+import { useVouchers } from "../state/vouchers";
 import { routes } from "../router";
-import type { Arcana } from "../game/arcana";
+import { MAX_HELD_ARCANA, type Arcana } from "../game/arcana";
+import { aggregateVoucherEffects } from "../game/vouchers";
 import { stakeById } from "../game/stakes";
 import "./Draw.css";
 
@@ -26,8 +28,14 @@ export function Draw() {
     () => (querentRun ? stakeById(querentRun.stakeId)?.rule ?? null : null),
     [querentRun?.stakeId],
   );
+  const ownedVouchers = useVouchers((s) => s.owned());
+  const voucherEffects = useMemo(
+    () => aggregateVoucherEffects(ownedVouchers),
+    [ownedVouchers],
+  );
   const drawCount = stakeRule?.arcanaDrawCount ?? 3;
-  const handCap = stakeRule?.maxHand;
+  const handCap =
+    (stakeRule?.maxHand ?? MAX_HELD_ARCANA) + voucherEffects.handCapBonus;
 
   const offered = useArcana((s) => s.offered());
   const held = useArcana((s) => s.held());

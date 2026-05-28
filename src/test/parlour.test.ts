@@ -3,10 +3,15 @@ import {
   ARCANA_PRICE,
   COINS_PER_BOSS,
   COINS_PER_CHAMBER,
+  MINOR_PRICE,
+  MINOR_OFFER_CHANCE,
   PARLOUR_CHAMBERS,
   PARLOUR_OFFER_COUNT,
+  REROLL_PRICE,
   coinsForChamber,
   isParlourChamber,
+  priceOf,
+  rollMixedOffers,
   rollParlourOffers,
 } from "../game/parlour";
 import { useCoins } from "../state/coins";
@@ -110,5 +115,66 @@ describe("Parlour pricing sanity", () => {
     // Average ~2 chamber wins (10 coins) should afford 1 arcana.
     expect(ARCANA_PRICE).toBeGreaterThan(0);
     expect(ARCANA_PRICE).toBeLessThanOrEqual(2 * COINS_PER_CHAMBER);
+  });
+
+  it("MINOR_PRICE is strictly cheaper than ARCANA_PRICE", () => {
+    expect(MINOR_PRICE).toBeLessThan(ARCANA_PRICE);
+  });
+
+  it("REROLL_PRICE is affordable from a single chamber win", () => {
+    expect(REROLL_PRICE).toBeGreaterThan(0);
+    expect(REROLL_PRICE).toBeLessThanOrEqual(COINS_PER_CHAMBER);
+  });
+
+  it("MINOR_OFFER_CHANCE sits between 0 and 1", () => {
+    expect(MINOR_OFFER_CHANCE).toBeGreaterThan(0);
+    expect(MINOR_OFFER_CHANCE).toBeLessThan(1);
+  });
+});
+
+describe("rollMixedOffers", () => {
+  it("returns the requested count of offers", () => {
+    const offers = rollMixedOffers([], createRng(1));
+    expect(offers).toHaveLength(PARLOUR_OFFER_COUNT);
+  });
+
+  it("each offer is either major or minor (typed discriminator)", () => {
+    const offers = rollMixedOffers([], createRng(42), 4);
+    for (const o of offers) {
+      expect(o.kind === "major" || o.kind === "minor").toBe(true);
+    }
+  });
+
+  it("excludes major arcana the player already holds", () => {
+    const held = [MAJOR_ARCANA[0]!, MAJOR_ARCANA[1]!, MAJOR_ARCANA[2]!];
+    const offers = rollMixedOffers(held, createRng(7), 5, 0); // 0 chance → all majors
+    const majorIds = offers
+      .filter((o) => o.kind === "major")
+      .map((o) => (o.kind === "major" ? o.arcana.id : ""));
+    for (const h of held) expect(majorIds).not.toContain(h.id);
+  });
+
+  it("never offers duplicate Majors within a single roll", () => {
+    const offers = rollMixedOffers([], createRng(11), 5, 0); // all majors
+    const ids: string[] = [];
+    for (const o of offers) {
+      if (o.kind === "major") ids.push(o.arcana.id);
+    }
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("with minorChance=1 every slot is a Minor", () => {
+    const offers = rollMixedOffers([], createRng(3), 4, 1);
+    for (const o of offers) expect(o.kind).toBe("minor");
+  });
+
+  it("priceOf returns ARCANA_PRICE for majors, MINOR_PRICE for minors", () => {
+    const offers = rollMixedOffers([], createRng(99), 5, 1); // all minors
+    for (const o of offers) expect(priceOf(o)).toBe(MINOR_PRICE);
+    const m: typeof offers[number] = {
+      kind: "major",
+      arcana: MAJOR_ARCANA[0]!,
+    };
+    expect(priceOf(m)).toBe(ARCANA_PRICE);
   });
 });
