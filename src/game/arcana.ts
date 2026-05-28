@@ -56,6 +56,7 @@ export function silenceSuitInStep(
 export type ArcanaId =
   | "fool"
   | "magician"
+  | "high-priestess"
   | "empress"
   | "emperor"
   | "hierophant"
@@ -155,6 +156,17 @@ export const MAJOR_ARCANA: readonly Arcana[] = [
       const wands = countCells(ctx.step, "wands");
       ctx.chips += wands * 30;
     },
+  },
+  {
+    id: "high-priestess",
+    numeral: "II",
+    name: "The High Priestess",
+    panelCaption: "intuición",
+    description:
+      "Reveals the next tiles waiting to fall — passive, no score.",
+    subtitle: "la sacerdotisa · the next pour, foreseen",
+    panelColor: "var(--panel-cobalt)",
+    apply: () => {},
   },
   {
     id: "empress",

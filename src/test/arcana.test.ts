@@ -418,6 +418,20 @@ describe("applyArcanaToStep — The Emperor", () => {
   });
 });
 
+describe("The High Priestess (passive peek)", () => {
+  const p = arcanaById("high-priestess")!;
+  it("ships at numeral II with a cobalt panel", () => {
+    expect(p.numeral).toBe("II");
+    expect(p.panelColor).toMatch(/cobalt/);
+  });
+  it("apply is a no-op (peek lives in the view, not the scoring path)", () => {
+    const s = step([{ suit: "cups", cells: 3 }]);
+    const out = applyArcanaToStep(s, [p], META());
+    expect(out.chips).toBe(30);
+    expect(out.mult).toBe(2);
+  });
+});
+
 describe("Wheel of Fortune + Judgement (chamber-once abilities)", () => {
   it("Wheel of Fortune declares a no-op apply (imperative only)", () => {
     const w = arcanaById("wheel")!;

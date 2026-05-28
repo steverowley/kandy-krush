@@ -41,6 +41,37 @@ body.boss-just-cleared {
   perspective: 1000px;
 }
 
+/* High Priestess intuition row — a faint strip of upcoming suits
+ * rendered above the board when the Priestess is held. */
+.priestess-peek {
+  display: flex;
+  justify-content: space-between;
+  gap: clamp(4px, 0.8vw, 8px);
+  width: min(100%, 560px);
+  margin: 0 auto var(--space-2);
+  padding: 0 clamp(8px, 1.5vw, 12px);
+  opacity: 0.55;
+}
+
+.priestess-peek__slot {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 36px;
+  aspect-ratio: 1 / 1;
+  color: var(--tile-color, var(--ink-cream));
+  border: 1px dashed var(--accent-gold-3);
+  border-radius: 6px;
+  background: rgba(245, 239, 220, 0.04);
+}
+
+.priestess-peek__slot svg {
+  width: 55%;
+  height: 55%;
+  fill: currentColor;
+}
+
 @keyframes play-reveal {
   0% {
     opacity: 0;

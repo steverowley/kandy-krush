@@ -5,6 +5,7 @@ import {
   convertSuit,
   generateBoard,
   obscuredRevealSet,
+  peekRefillSequence,
   plantTile,
   swapped,
   tileAt,
@@ -493,5 +494,38 @@ describe("obscuredRevealSet", () => {
     expect(revealed.has(1)).toBe(true);
     expect(revealed.has(3)).toBe(true);
     expect(revealed.has(6)).toBe(true);
+  });
+});
+
+describe("peekRefillSequence", () => {
+  it("returns the requested count of suits", () => {
+    const rng = createRng(42);
+    const seq = peekRefillSequence(rng, 7);
+    expect(seq).toHaveLength(7);
+    for (const s of seq) {
+      expect(["cups", "pentacles", "swords", "wands"]).toContain(s);
+    }
+  });
+
+  it("does NOT consume the rng state — subsequent draws are unchanged", () => {
+    const rng = createRng(99);
+    const before = rng.state();
+    peekRefillSequence(rng, 10);
+    expect(rng.state()).toBe(before);
+  });
+
+  it("the next live draw matches the first peeked suit", () => {
+    const rng = createRng(7);
+    const peeked = peekRefillSequence(rng, 5);
+    // Now make a real draw — should hit the same first suit.
+    const r = createRng(7); // fresh rng at the same seed for comparison
+    r.state(); // sanity
+    expect(peeked[0]).toBe(["cups", "pentacles", "swords", "wands"][rngInt(r, 4)]);
+  });
+
+  it("returns [] for count <= 0", () => {
+    const rng = createRng(1);
+    expect(peekRefillSequence(rng, 0)).toEqual([]);
+    expect(peekRefillSequence(rng, -3)).toEqual([]);
   });
 });
