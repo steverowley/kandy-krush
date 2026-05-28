@@ -755,6 +755,10 @@ function ArcanaStrip({ showCoins = true }: { showCoins?: boolean }) {
   const held = useArcana((s) => s.held());
   const reorder = useArcana((s) => s.reorder);
   const coins = useCoins((s) => s.balance);
+  const replayLastMove = useGame((s) => s.replayLastMove);
+  const fireWheelOfFortune = useGame((s) => s.fireWheelOfFortune);
+  const chamberAbilitiesUsed = useGame((s) => s.chamberAbilitiesUsed);
+  const lastMoveScore = useGame((s) => s.lastMove.score);
 
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
 
@@ -831,6 +835,45 @@ function ArcanaStrip({ showCoins = true }: { showCoins?: boolean }) {
               ) : null}
               <span class="arcana-strip__numeral numeral">{a.numeral}</span>
               <span class="arcana-strip__name">{a.name}</span>
+              {a.id === "wheel" ? (
+                <button
+                  type="button"
+                  class="arcana-strip__fire"
+                  aria-label="Spin the Wheel of Fortune"
+                  disabled={chamberAbilitiesUsed["wheel"] === true}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => fireWheelOfFortune()}
+                  title={
+                    chamberAbilitiesUsed["wheel"]
+                      ? "Wheel spent this chamber"
+                      : "Spin — sacrifice this card for a new one"
+                  }
+                >
+                  ↻
+                </button>
+              ) : null}
+              {a.id === "judgement" ? (
+                <button
+                  type="button"
+                  class="arcana-strip__fire"
+                  aria-label="Replay your last reading"
+                  disabled={
+                    chamberAbilitiesUsed["judgement"] === true ||
+                    lastMoveScore <= 0
+                  }
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => replayLastMove()}
+                  title={
+                    chamberAbilitiesUsed["judgement"]
+                      ? "Judgement spent this chamber"
+                      : lastMoveScore <= 0
+                        ? "No reading to replay yet"
+                        : `Replay — grant ${lastMoveScore.toLocaleString()} fortune`
+                  }
+                >
+                  ↺
+                </button>
+              ) : null}
               {held.length > 1 ? (
                 <button
                   type="button"

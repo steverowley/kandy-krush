@@ -6,6 +6,7 @@ import {
 } from "../game/minor-arcana";
 import { useMinorArcana } from "../state/minor-arcana";
 import { useGame } from "../state/game";
+import { useArcana } from "../state/arcana";
 import { createRng } from "../game/engine/rng";
 import { findMatches } from "../game/engine/match";
 
@@ -250,5 +251,60 @@ describe("useGame — imperative consumable actions", () => {
     useGame.getState().pentaclePayout(20);
     const after = useGame.getState().score;
     expect(after).toBe(beforeScore + pentacles * 20);
+  });
+});
+
+describe("useGame — chamber-once arcana abilities", () => {
+  beforeEach(() => {
+    useGame.getState().start("free", { seed: 11, rows: 5, cols: 5 });
+  });
+
+  it("replayLastMove grants the last move's score and marks Judgement used", () => {
+    // Seed a fake lastMove value directly — easier than driving attemptSwap.
+    useGame.setState({
+      lastMove: { chips: 100, mult: 10, score: 1000, tick: 1 },
+    });
+    const before = useGame.getState().score;
+    useGame.getState().replayLastMove();
+    expect(useGame.getState().score).toBe(before + 1000);
+    expect(useGame.getState().chamberAbilitiesUsed["judgement"]).toBe(true);
+  });
+
+  it("replayLastMove is a no-op the second time in the same chamber", () => {
+    useGame.setState({
+      lastMove: { chips: 100, mult: 10, score: 1000, tick: 1 },
+    });
+    useGame.getState().replayLastMove();
+    const after1 = useGame.getState().score;
+    useGame.getState().replayLastMove();
+    expect(useGame.getState().score).toBe(after1);
+  });
+
+  it("replayLastMove is a no-op when no scored move yet", () => {
+    const before = useGame.getState().score;
+    useGame.getState().replayLastMove();
+    expect(useGame.getState().score).toBe(before);
+    expect(useGame.getState().chamberAbilitiesUsed["judgement"]).toBeUndefined();
+  });
+
+  it("fireWheelOfFortune marks the chamber ability used", () => {
+    // Pre-seed held arcana so wheelSwap has something to do.
+    useArcana.setState({ heldIds: ["magician"], offeredIds: [], drawSeed: 0 });
+    useGame.getState().fireWheelOfFortune();
+    expect(useGame.getState().chamberAbilitiesUsed["wheel"]).toBe(true);
+  });
+
+  it("fireWheelOfFortune is a no-op the second time in the same chamber", () => {
+    useArcana.setState({ heldIds: ["magician", "empress"], offeredIds: [], drawSeed: 0 });
+    useGame.getState().fireWheelOfFortune();
+    const firstHeld = useArcana.getState().heldIds.slice();
+    useGame.getState().fireWheelOfFortune();
+    expect(useArcana.getState().heldIds).toEqual(firstHeld);
+  });
+
+  it("start() resets chamberAbilitiesUsed", () => {
+    useGame.setState({ chamberAbilitiesUsed: { judgement: true, wheel: true } });
+    useGame.getState().start("free", { seed: 22, rows: 5, cols: 5 });
+    expect(useGame.getState().chamberAbilitiesUsed).toEqual({});
   });
 });

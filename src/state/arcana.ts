@@ -39,6 +39,10 @@ type State = {
    *  indices or no-op moves return without mutating. Order is the firing
    *  order, so reordering is a meaningful strategic action. */
   reorder: (from: number, to: number) => void;
+  /** Wheel of Fortune: sacrifice one held Major (random) and replace it
+   *  with a random Major the player doesn't currently hold. Caller is
+   *  responsible for the "once per chamber" gate via useGame. */
+  wheelSwap: (rng?: () => number) => void;
   /** Convenience: hydrated readers. */
   held: () => Arcana[];
   offered: () => Arcana[];
@@ -87,6 +91,20 @@ export const useArcana = create<State>()(
         const [moved] = next.splice(from, 1);
         if (!moved) return;
         next.splice(to, 0, moved);
+        set({ heldIds: next });
+      },
+
+      wheelSwap: (rng) => {
+        const ids = get().heldIds;
+        if (ids.length === 0) return;
+        const r = rng ?? Math.random;
+        const heldSet = new Set(ids);
+        const pool = MAJOR_ARCANA.filter((a) => !heldSet.has(a.id));
+        if (pool.length === 0) return;
+        const sacrificeIdx = Math.floor(r() * ids.length);
+        const drawn = pool[Math.floor(r() * pool.length)]!;
+        const next = ids.slice();
+        next.splice(sacrificeIdx, 1, drawn.id);
         set({ heldIds: next });
       },
 
