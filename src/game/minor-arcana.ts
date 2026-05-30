@@ -18,6 +18,7 @@ export type MinorArcanaId =
   | "page-wands"
   | "knight-cups"
   | "knight-pentacles"
+  | "knight-swords"
   | "knight-wands"
   | "queen-cups"
   | "queen-pentacles"
@@ -25,7 +26,8 @@ export type MinorArcanaId =
   | "queen-wands"
   | "king-cups"
   | "king-pentacles"
-  | "king-swords";
+  | "king-swords"
+  | "king-wands";
 
 /** Effect shapes a consumable can fire. Strict union keeps Play.tsx
  *  dispatch exhaustive at compile time. */
@@ -51,7 +53,11 @@ export type MinorEffect =
   | { kind: "reshuffle-board" }
   /** Imperative: each plain Pentacle on the board pays out
    *  `perPentacle` score, granted immediately. */
-  | { kind: "pentacle-payout"; perPentacle: number };
+  | { kind: "pentacle-payout"; perPentacle: number }
+  /** Tap-target: player picks `count` tiles, they're destroyed. */
+  | { kind: "destroy-targets"; count: number }
+  /** Tap-target: player picks 1 tile, it becomes a wild. */
+  | { kind: "promote-to-wild" };
 
 export type MinorArcana = {
   id: MinorArcanaId;
@@ -110,6 +116,15 @@ export const MINOR_ARCANA: readonly MinorArcana[] = [
     flavor: "el caballo de oros · the coin galloped in",
     panelColor: "var(--panel-gold)",
     effect: { kind: "add-score", amount: 3000 },
+  },
+  {
+    id: "knight-swords",
+    numeral: "C · ♣",
+    name: "Knight of Swords",
+    description: "Pick any two tiles — they're cut from the board.",
+    flavor: "el caballo de espadas · the blade chooses its own",
+    panelColor: "var(--panel-amethyst)",
+    effect: { kind: "destroy-targets", count: 2 },
   },
   {
     id: "knight-wands",
@@ -182,6 +197,15 @@ export const MINOR_ARCANA: readonly MinorArcana[] = [
     flavor: "el rey de espadas · the blade vertical",
     panelColor: "var(--panel-amethyst)",
     effect: { kind: "destroy-random-col" },
+  },
+  {
+    id: "king-wands",
+    numeral: "K · ♦",
+    name: "King of Wands",
+    description: "Pick any tile — it's promoted to a wild.",
+    flavor: "el rey de bastos · the flame chooses its bearer",
+    panelColor: "var(--panel-coral)",
+    effect: { kind: "promote-to-wild" },
   },
 ];
 

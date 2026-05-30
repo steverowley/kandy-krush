@@ -33,6 +33,9 @@ export function Board() {
   const { board, restriction, selected, busy, nudge, select, attemptSwap, lastClearedCells } =
     useGame();
   const lastMoveTick = useGame((s) => s.lastMove.tick);
+  const targetingMode = useGame((s) => s.targetingMode);
+  const pickTarget = useGame((s) => s.pickTarget);
+  const cancelTargeting = useGame((s) => s.cancelTargeting);
   const [focus, setFocus] = useState<Cell>({ row: 0, col: 0 });
   const [drag, setDrag] = useState<Drag | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -99,6 +102,11 @@ export function Board() {
 
   function tapClick(cell: Cell) {
     setFocus(cell);
+    // Targeting mode: route taps to pickTarget; ignore busy/select gates.
+    if (targetingMode) {
+      pickTarget(cell);
+      return;
+    }
     if (busy) return;
     if (!selected) {
       select(cell);
@@ -138,6 +146,13 @@ export function Board() {
   }
 
   function onPointerUp(e: PointerEvent, cell: Cell) {
+    // In targeting mode, taps always go through tapClick — drags
+    // shouldn't trigger a swap when the board's being used as a picker.
+    if (targetingMode) {
+      setDrag(null);
+      tapClick(cell);
+      return;
+    }
     if (!drag || drag.pointerId !== e.pointerId) {
       tapClick(cell);
       return;
@@ -216,24 +231,51 @@ export function Board() {
   }
 
   return (
-    <div
-      ref={wrapRef}
-      class="board"
-      role="grid"
-      aria-label="Match-three board. Arrow keys move, Enter swaps with the selected card. Drag a card in any direction to swap with its neighbour."
-      onKeyDown={onKeyDown}
-      style={{
-        "--board-rows": board.rows,
-        "--board-cols": board.cols,
-      }}
-    >
+    <>
+      {targetingMode ? (
+        <div class="board__targeting-banner" role="status" aria-live="polite">
+          <p class="eyebrow">
+            {targetingMode.kind === "destroy"
+              ? "Mark for destruction"
+              : "Mark to promote"}
+          </p>
+          <p class="script">
+            {targetingMode.kind === "destroy"
+              ? `Tap ${targetingMode.needed - targetingMode.selected.length} more tile${targetingMode.needed - targetingMode.selected.length === 1 ? "" : "s"} to cut`
+              : "Tap one tile to make it a wild"}
+          </p>
+          <button
+            type="button"
+            class="btn btn--ghost board__targeting-cancel"
+            onClick={cancelTargeting}
+          >
+            Cancel
+          </button>
+        </div>
+      ) : null}
+      <div
+        ref={wrapRef}
+        class="board"
+        role="grid"
+        aria-label="Match-three board. Arrow keys move, Enter swaps with the selected card. Drag a card in any direction to swap with its neighbour."
+        onKeyDown={onKeyDown}
+        style={{
+          "--board-rows": board.rows,
+          "--board-cols": board.cols,
+        }}
+      >
       {board.tiles.map((tile, idx) => {
         if (!tile) return null;
         const row = Math.floor(idx / board.cols);
         const col = idx % board.cols;
         const here: Cell = { row, col };
+        const targetingSelected =
+          targetingMode?.selected.some(
+            (c) => c.row === row && c.col === col,
+          ) ?? false;
         const isSelected =
-          !!selected && selected.row === row && selected.col === col;
+          targetingSelected ||
+          (!!selected && selected.row === row && selected.col === col);
         const isFocused = focus.row === row && focus.col === col;
         const prev = prevPositionsRef.current.get(tile.id);
         const isNew = !prev;
@@ -269,7 +311,8 @@ export function Board() {
         tick={lastMoveTick}
         board={board}
       />
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -3,6 +3,7 @@ import { newGame, tryMove, isDeadlocked } from "../game/engine/engine";
 import {
   boardHasSpecials,
   generateBoard,
+  plantTile,
   reserveTileIds,
   convertSuit as convertBoardSuit,
 } from "../game/engine/board";
@@ -21,6 +22,19 @@ import { useVouchers } from "./vouchers";
 import { aggregateVoucherEffects } from "../game/vouchers";
 import type { ChamberRestriction } from "../game/querent";
 import type { StakeRule } from "../game/stakes";
+import type { MinorArcanaId } from "../game/minor-arcana";
+
+/** Active "pick N tiles" mode triggered by a tap-target Minor Arcana.
+ *  While present, Board taps record targets instead of swapping;
+ *  reaching `needed` count auto-fires the effect and consumes the
+ *  Minor. Cancel returns to normal mode without consuming. */
+export type TargetingMode = {
+  kind: "destroy" | "promote-wild";
+  needed: number;
+  selected: Cell[];
+  /** Minor that triggered the mode — consumed on fire. */
+  minorId: MinorArcanaId;
+};
 
 export type GameMode = "free" | "spread" | "daily" | "querent" | "final";
 
@@ -94,6 +108,8 @@ type GameState = {
    *  Read by the Board view to emit cascade-step particles. Replaced
    *  wholesale each move; previous-move cells are no longer needed. */
   lastClearedCells: Cell[];
+  /** Active tap-target mode, or null in normal play. */
+  targetingMode: TargetingMode | null;
   selected: Cell | null;
   busy: boolean;
   deadlocked: boolean;
@@ -163,6 +179,20 @@ type GameActions = {
   /** Wheel of Fortune: swap a held Major for a random unowned one
    *  (via useArcana.wheelSwap) AND mark the chamber ability spent. */
   fireWheelOfFortune: () => void;
+  /** Enter a tap-target mode triggered by a Minor consumable. The
+   *  Minor is held in reserve and only consumed when the effect fires
+   *  (cancelling preserves the consumable). */
+  startTargeting: (
+    kind: "destroy" | "promote-wild",
+    needed: number,
+    minorId: MinorArcanaId,
+  ) => void;
+  /** Add a cell to the active targeting selection. When the selection
+   *  reaches the needed count, the effect fires + the Minor is
+   *  consumed + the mode clears. */
+  pickTarget: (cell: Cell) => void;
+  /** Exit targeting mode without firing. The Minor stays in the tray. */
+  cancelTargeting: () => void;
 };
 
 const PLACEHOLDER_RNG = createRng(0);
@@ -189,6 +219,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   chamberAbilitiesUsed: {},
   lastMove: { ...ZERO_LAST_MOVE },
   lastClearedCells: [],
+  targetingMode: null,
   selected: null,
   busy: false,
   deadlocked: false,
@@ -221,6 +252,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       chamberAbilitiesUsed: {},
       lastMove: { ...ZERO_LAST_MOVE },
       lastClearedCells: [],
+      targetingMode: null,
       selected: null,
       busy: false,
       deadlocked: isDeadlocked(board),
@@ -565,6 +597,66 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
     set((p) => ({
       chamberAbilitiesUsed: { ...p.chamberAbilitiesUsed, wheel: true },
     }));
+  },
+
+  startTargeting: (kind, needed, minorId) => {
+    const s = get();
+    if (s.targetingMode) return; // already targeting
+    set({ targetingMode: { kind, needed, selected: [], minorId } });
+  },
+
+  cancelTargeting: () => set({ targetingMode: null }),
+
+  pickTarget: (cell) => {
+    const s = get();
+    const t = s.targetingMode;
+    if (!t) return;
+    // De-dupe by index (cell equality).
+    const exists = t.selected.some(
+      (c) => c.row === cell.row && c.col === cell.col,
+    );
+    if (exists) return;
+    const next = [...t.selected, cell];
+    if (next.length < t.needed) {
+      set({ targetingMode: { ...t, selected: next } });
+      return;
+    }
+    // Reached count — fire the effect, consume the Minor, exit mode.
+    const opts = s.restriction?.blockSpecialPromotions
+      ? { skipPromotions: true }
+      : undefined;
+    if (t.kind === "destroy") {
+      const result = destroyCells(s.board, s.rng, next, opts);
+      const cleared = { ...s.cleared };
+      for (const step of result.cascades) {
+        for (const group of step.matches) {
+          cleared[group.suit] += group.cells.length;
+        }
+      }
+      set({
+        board: result.board,
+        score: s.score + Math.round(result.scoreGained * s.scoreMultiplier),
+        cleared,
+        deadlocked: isDeadlocked(result.board),
+        targetingMode: null,
+      });
+    } else if (t.kind === "promote-wild") {
+      const cell0 = next[0]!;
+      const idx = cell0.row * s.board.cols + cell0.col;
+      const existing = s.board.tiles[idx];
+      if (!existing) {
+        set({ targetingMode: null });
+        return;
+      }
+      const wildTile = { id: existing.id, suit: existing.suit, kind: "wild" as const };
+      const board = plantTile(s.board, cell0, wildTile);
+      set({
+        board,
+        deadlocked: isDeadlocked(board),
+        targetingMode: null,
+      });
+    }
+    useMinorArcana.getState().consume(t.minorId);
   },
 
   snapshot: () => {
