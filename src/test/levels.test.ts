@@ -119,9 +119,10 @@ describe("starCount", () => {
 });
 
 describe("Spread chapter arcana hands", () => {
-  it("at least four chapters carry a pre-loaded arcana hand", () => {
-    const withArcana = LEVELS.filter((l) => l.arcana && l.arcana.length > 0);
-    expect(withArcana.length).toBeGreaterThanOrEqual(4);
+  it("every chapter carries a pre-loaded arcana hand", () => {
+    for (const lvl of LEVELS) {
+      expect(lvl.arcana ?? []).not.toEqual([]);
+    }
   });
 
   it("each declared arcana id is a real Major", () => {
@@ -133,15 +134,25 @@ describe("Spread chapter arcana hands", () => {
     }
   });
 
-  it("thematic match on at least the title-named chapters", () => {
-    const magician = LEVELS.find((l) => l.id === 1)!;
-    expect(magician.arcana).toContain("magician");
-    const empress = LEVELS.find((l) => l.id === 3)!;
-    expect(empress.arcana).toContain("empress");
-    const strength = LEVELS.find((l) => l.id === 8)!;
-    expect(strength.arcana).toContain("strength");
-    const hangedMan = LEVELS.find((l) => l.id === 12)!;
-    expect(hangedMan.arcana).toContain("hanged-man");
+  it("thematic match on the title-named chapters", () => {
+    const checks: Array<[number, string]> = [
+      [1, "magician"],
+      [2, "high-priestess"],
+      [3, "empress"],
+      [4, "emperor"],
+      [5, "hierophant"],
+      [6, "lovers"],
+      [7, "chariot"],
+      [8, "strength"],
+      [9, "hermit"],
+      [10, "wheel"],
+      [11, "justice"],
+      [12, "hanged-man"],
+    ];
+    for (const [id, expectedArcana] of checks) {
+      const lvl = LEVELS.find((l) => l.id === id)!;
+      expect(lvl.arcana).toContain(expectedArcana);
+    }
   });
 
   it("late chapters can stack multiple arcana", () => {
