@@ -587,6 +587,18 @@ export function Play() {
               case "pentacle-payout":
                 pentaclePayout(minor.effect.perPentacle);
                 break;
+              case "destroy-targets":
+                useGame
+                  .getState()
+                  .startTargeting("destroy", minor.effect.count, minor.id);
+                // Targeting flow consumes the minor on fire; bail
+                // before the catch-all consume below.
+                return;
+              case "promote-to-wild":
+                useGame
+                  .getState()
+                  .startTargeting("promote-wild", 1, minor.id);
+                return;
             }
             useMinorArcana.getState().consume(minor.id);
           }}

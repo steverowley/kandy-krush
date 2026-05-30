@@ -115,6 +115,19 @@ describe("MINOR_ARCANA data", () => {
       kind: "destroy-random-col",
     });
   });
+
+  it("Knight of Swords destroys 2 tap-target tiles", () => {
+    expect(minorById("knight-swords")!.effect).toEqual({
+      kind: "destroy-targets",
+      count: 2,
+    });
+  });
+
+  it("King of Wands promotes a tap-target tile to a wild", () => {
+    expect(minorById("king-wands")!.effect).toEqual({
+      kind: "promote-to-wild",
+    });
+  });
 });
 
 describe("minorById", () => {
@@ -306,5 +319,61 @@ describe("useGame — chamber-once arcana abilities", () => {
     useGame.setState({ chamberAbilitiesUsed: { judgement: true, wheel: true } });
     useGame.getState().start("free", { seed: 22, rows: 5, cols: 5 });
     expect(useGame.getState().chamberAbilitiesUsed).toEqual({});
+  });
+});
+
+describe("useGame — tap-target Minor effects", () => {
+  beforeEach(() => {
+    useGame.getState().start("free", { seed: 31, rows: 5, cols: 5 });
+    useMinorArcana.setState({ heldIds: ["knight-swords", "king-wands"] });
+  });
+
+  it("startTargeting puts the board into destroy-2 mode", () => {
+    useGame.getState().startTargeting("destroy", 2, "knight-swords");
+    const t = useGame.getState().targetingMode;
+    expect(t).not.toBeNull();
+    expect(t!.kind).toBe("destroy");
+    expect(t!.needed).toBe(2);
+    expect(t!.selected).toEqual([]);
+  });
+
+  it("cancelTargeting clears the mode without consuming the Minor", () => {
+    useGame.getState().startTargeting("destroy", 2, "knight-swords");
+    useGame.getState().cancelTargeting();
+    expect(useGame.getState().targetingMode).toBeNull();
+    expect(useMinorArcana.getState().heldIds).toContain("knight-swords");
+  });
+
+  it("pickTarget collects up to N then fires; Minor is consumed", () => {
+    useGame.getState().startTargeting("destroy", 2, "knight-swords");
+    useGame.getState().pickTarget({ row: 0, col: 0 });
+    expect(useGame.getState().targetingMode?.selected.length).toBe(1);
+    useGame.getState().pickTarget({ row: 1, col: 1 });
+    expect(useGame.getState().targetingMode).toBeNull();
+    expect(useMinorArcana.getState().heldIds).not.toContain("knight-swords");
+  });
+
+  it("pickTarget de-dupes when the same cell is tapped twice", () => {
+    useGame.getState().startTargeting("destroy", 2, "knight-swords");
+    useGame.getState().pickTarget({ row: 2, col: 2 });
+    useGame.getState().pickTarget({ row: 2, col: 2 });
+    expect(useGame.getState().targetingMode?.selected.length).toBe(1);
+  });
+
+  it("promote-to-wild fires after a single pick; the cell becomes a wild", () => {
+    useGame.getState().startTargeting("promote-wild", 1, "king-wands");
+    const target = { row: 0, col: 0 };
+    useGame.getState().pickTarget(target);
+    const board = useGame.getState().board;
+    const idx = target.row * board.cols + target.col;
+    expect(board.tiles[idx]?.kind).toBe("wild");
+    expect(useGame.getState().targetingMode).toBeNull();
+    expect(useMinorArcana.getState().heldIds).not.toContain("king-wands");
+  });
+
+  it("start() clears any active targeting mode", () => {
+    useGame.getState().startTargeting("destroy", 2, "knight-swords");
+    useGame.getState().start("free", { seed: 99, rows: 5, cols: 5 });
+    expect(useGame.getState().targetingMode).toBeNull();
   });
 });

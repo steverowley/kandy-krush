@@ -264,6 +264,35 @@
   animation: none !important;
 }
 
+/* Tap-target banner — shown above the board when a Minor consumable
+ * is in tap-to-target mode (Knight of Swords, King of Wands). */
+.board__targeting-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  width: min(100%, 560px);
+  margin: 0 auto var(--space-2);
+  border: 1px solid var(--accent-gold);
+  background: rgba(212, 162, 76, 0.12);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.board__targeting-banner .script {
+  margin: 0;
+  color: var(--ink-cream);
+  font-family: var(--font-script);
+  font-size: 1.1rem;
+}
+
+.board__targeting-cancel {
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+  padding: 0.2em 0.8em;
+}
+
 /* Wild-pulse halo — fires on the render after a tile freshly becomes
  * a wild (match-5+ promotion). Tracked in Board.tsx via a wild-id
  * ref; the class is applied once and the animation drops off after
