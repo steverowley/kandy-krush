@@ -90,6 +90,10 @@ type GameState = {
    *  Reset to {} on every `start()`. */
   chamberAbilitiesUsed: Record<string, boolean>;
   lastMove: LastMoveScore;
+  /** Cells cleared in the most recent move (across all cascade steps).
+   *  Read by the Board view to emit cascade-step particles. Replaced
+   *  wholesale each move; previous-move cells are no longer needed. */
+  lastClearedCells: Cell[];
   selected: Cell | null;
   busy: boolean;
   deadlocked: boolean;
@@ -184,6 +188,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
   suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
   chamberAbilitiesUsed: {},
   lastMove: { ...ZERO_LAST_MOVE },
+  lastClearedCells: [],
   selected: null,
   busy: false,
   deadlocked: false,
@@ -215,6 +220,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
       suitLevels: { cups: 1, pentacles: 1, swords: 1, wands: 1 },
       chamberAbilitiesUsed: {},
       lastMove: { ...ZERO_LAST_MOVE },
+      lastClearedCells: [],
       selected: null,
       busy: false,
       deadlocked: isDeadlocked(board),
@@ -335,11 +341,13 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           swords: 0,
           wands: 0,
         };
+        const allClearedCells: Cell[] = [];
         const tallySteps = (steps: readonly CascadeStep[]) => {
           for (const step of steps) {
             for (const group of step.matches) {
               cleared[group.suit] += group.cells.length;
               suitMatchCounts[group.suit] += 1;
+              for (const c of group.cells) allClearedCells.push(c);
             }
           }
         };
@@ -401,6 +409,7 @@ export const useGame = create<GameState & GameActions>((set, get) => ({
           score: prev.score + scored,
           moves: prev.moves + 1,
           cleared,
+          lastClearedCells: allClearedCells,
           suitLevels: nextSuitLevels,
           // Per-move minor-arcana buffs all fire exactly once and clear.
           nextMoveScoreMul: 1,

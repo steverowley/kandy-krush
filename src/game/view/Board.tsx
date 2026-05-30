@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useGame } from "../../state/game";
 import { areAdjacent, inBounds, obscuredRevealSet } from "../engine/board";
-import type { Cell, Suit, Tile } from "../engine/types";
+import type { Board as BoardState, Cell, Suit, Tile } from "../engine/types";
 import { SuitGlyph, SUIT_COLORS } from "./suit-glyphs";
 import "./Board.css";
 
@@ -30,14 +30,31 @@ type Drag = {
 };
 
 export function Board() {
-  const { board, restriction, selected, busy, nudge, select, attemptSwap } =
+  const { board, restriction, selected, busy, nudge, select, attemptSwap, lastClearedCells } =
     useGame();
+  const lastMoveTick = useGame((s) => s.lastMove.tick);
   const [focus, setFocus] = useState<Cell>({ row: 0, col: 0 });
   const [drag, setDrag] = useState<Drag | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const prevPositionsRef = useRef<Map<number, { row: number; col: number }>>(
     new Map(),
   );
+  // Tracks which tile ids were already wilds last render. When a tile
+  // freshly becomes a wild (match-5+ promotion preserves the id), we
+  // briefly pulse the halo around it for the first render after the
+  // transition.
+  const prevWildIdsRef = useRef<Set<number>>(new Set());
+  const currentWildIds = new Set<number>();
+  for (const t of board.tiles) {
+    if (t && t.kind === "wild") currentWildIds.add(t.id);
+  }
+  const justPlantedWildIds = new Set<number>();
+  for (const id of currentWildIds) {
+    if (!prevWildIdsRef.current.has(id)) justPlantedWildIds.add(id);
+  }
+  useEffect(() => {
+    prevWildIdsRef.current = currentWildIds;
+  });
 
   // Moon boss restriction: tiles render face-down until adjacent to a
   // wild. The reveal set recomputes any time the board changes — cheap
@@ -223,6 +240,7 @@ export function Board() {
         const isDragging =
           drag !== null && drag.cell.row === row && drag.cell.col === col;
         const obscured = revealSet !== null && !revealSet.has(idx);
+        const justPlantedWild = justPlantedWildIds.has(tile.id);
         return (
           <TileButton
             key={tile.id}
@@ -236,6 +254,7 @@ export function Board() {
             dragDx={isDragging ? dragDx : 0}
             dragDy={isDragging ? dragDy : 0}
             obscured={obscured}
+            justPlantedWild={justPlantedWild}
             busy={busy}
             onPointerDown={(e) => onPointerDown(e, here)}
             onPointerMove={onPointerMove}
@@ -245,6 +264,11 @@ export function Board() {
           />
         );
       })}
+      <ParticleLayer
+        cells={lastClearedCells}
+        tick={lastMoveTick}
+        board={board}
+      />
     </div>
   );
 }
@@ -260,6 +284,7 @@ function TileButton({
   dragDx,
   dragDy,
   obscured,
+  justPlantedWild,
   busy,
   onPointerDown,
   onPointerMove,
@@ -277,6 +302,7 @@ function TileButton({
   dragDx: number;
   dragDy: number;
   obscured: boolean;
+  justPlantedWild: boolean;
   busy: boolean;
   onPointerDown: (e: PointerEvent) => void;
   onPointerMove: (e: PointerEvent) => void;
@@ -291,7 +317,7 @@ function TileButton({
         busy ? " tile-card--busy" : ""
       }${isNew ? " tile-card--entering" : ""}${isDragging ? " tile-card--dragging" : ""}${
         tile.kind === "spark" ? " tile-card--spark" : ""
-      }${tile.kind === "wild" ? " tile-card--wild" : ""}${obscured ? " tile-card--obscured" : ""}`}
+      }${tile.kind === "wild" ? " tile-card--wild" : ""}${obscured ? " tile-card--obscured" : ""}${justPlantedWild ? " tile-card--wild-just-planted" : ""}`}
       role="gridcell"
       style={{
         "--tile-color": SUIT_COLORS[tile.suit],
@@ -369,5 +395,53 @@ function WildGlyph() {
       <circle cx="20" cy="12" r="2.6" />
       <circle cx="12" cy="12" r="2.2" />
     </svg>
+  );
+}
+
+/** Cascade-step particles — emitted from the cells cleared on the most
+ *  recent move. Caps at 8 dots to keep the GPU happy; if more cells
+ *  cleared than that, picks a deterministic slice. Re-renders on every
+ *  `tick` change (one per scored move), so the CSS animation re-fires
+ *  cleanly. */
+function ParticleLayer({
+  cells,
+  tick,
+  board,
+}: {
+  cells: readonly Cell[];
+  tick: number;
+  board: BoardState;
+}) {
+  // Look up each cell's recent suit color via the current board. The
+  // tile is gone at this point (refilled), but the index resolves to
+  // whatever's there now — close enough for a small dot that fades.
+  if (tick === 0 || cells.length === 0) return null;
+  const MAX = 8;
+  const step = Math.max(1, Math.floor(cells.length / MAX));
+  const sampled: Cell[] = [];
+  for (let i = 0; i < cells.length && sampled.length < MAX; i += step) {
+    sampled.push(cells[i]!);
+  }
+  return (
+    <div class="board__particles" key={tick} aria-hidden="true">
+      {sampled.map((c, i) => {
+        const idx = c.row * board.cols + c.col;
+        const t = board.tiles[idx];
+        const color = t
+          ? SUIT_COLORS[t.suit as Suit]
+          : "var(--accent-gold)";
+        return (
+          <span
+            key={`${tick}-${i}`}
+            class="board__particle"
+            style={{
+              "--row": c.row,
+              "--col": c.col,
+              "--particle-color": color,
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }

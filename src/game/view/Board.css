@@ -263,3 +263,72 @@
   transition: none !important;
   animation: none !important;
 }
+
+/* Wild-pulse halo — fires on the render after a tile freshly becomes
+ * a wild (match-5+ promotion). Tracked in Board.tsx via a wild-id
+ * ref; the class is applied once and the animation drops off after
+ * one cycle. */
+@keyframes wild-just-planted {
+  0% { box-shadow: 0 0 0 0 rgba(212, 162, 76, 0.85); transform: scale(1); }
+  50% { box-shadow: 0 0 0 14px rgba(212, 162, 76, 0); transform: scale(1.06); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 162, 76, 0); transform: scale(1); }
+}
+
+.tile-card--wild-just-planted {
+  animation: wild-just-planted 620ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-card--wild-just-planted {
+    animation: none !important;
+  }
+}
+
+:where(.reduced-motion) .tile-card--wild-just-planted {
+  animation: none !important;
+}
+
+/* Cascade-step particles — small suit-color dots emitted from cleared
+ * cells. Lifecycle is one ~640ms keyframe per move, keyed on
+ * lastMove.tick so each scored move retriggers the animation. */
+.board__particles {
+  position: absolute;
+  inset: clamp(8px, 1.5vw, 12px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.board__particle {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--particle-color, var(--accent-gold));
+  top: calc(
+    var(--row) * (var(--cell-size) + var(--gap)) + var(--cell-size) * 0.45
+  );
+  left: calc(
+    var(--col) * (var(--cell-size) + var(--gap)) + var(--cell-size) * 0.45
+  );
+  opacity: 0;
+  filter: drop-shadow(0 0 4px var(--particle-color));
+  animation: board-particle 640ms ease-out both;
+}
+
+@keyframes board-particle {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  35% { opacity: 1; transform: translate(0, -4px) scale(1.15); }
+  100% { opacity: 0; transform: translate(0, -22px) scale(0.4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board__particle {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+:where(.reduced-motion) .board__particle {
+  animation: none !important;
+  opacity: 0 !important;
+}
