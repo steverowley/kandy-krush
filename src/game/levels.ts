@@ -45,6 +45,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 14, suit: "cups" },
     moves: 22,
     stars: { one: 2500, two: 3800, three: 5500 },
+    arcana: ["high-priestess"],
   },
   {
     id: 3,
@@ -84,6 +85,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 18, suit: "pentacles" },
     moves: 24,
     stars: { one: 4500, two: 6800, three: 9000 },
+    arcana: ["lovers"],
   },
   {
     id: 7,
@@ -113,6 +115,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "score", target: 9500 },
     moves: 24,
     stars: { one: 9500, two: 12500, three: 16300 },
+    arcana: ["hermit", "justice"],
   },
   {
     id: 10,
@@ -122,6 +125,7 @@ export const LEVELS: readonly Level[] = [
     objective: { type: "suit", target: 24, suit: "cups" },
     moves: 26,
     stars: { one: 7000, two: 10000, three: 13800 },
+    arcana: ["wheel", "fool"],
   },
   {
     id: 11,
