@@ -1,134 +1,65 @@
-# Arcana Cascada
+# Kandy Krush — rebuild (working title)
 
-A fortune-telling match-three in four suits. Cards fall, fortunes settle, the querent reads what remains.
+Fresh foundations for the next version of the game. The previous game
+(**Arcana Cascada**, v1) has been cleared from the working tree but is fully
+recoverable — see [Where v1 went](#where-v1-went).
 
-Modern poster-art tarot: vivid jewel-tone color blocks, bold flat figures, multilingual headline stack (English + Spanish), cursive flourish overlays, on a near-black page.
+## Status
 
-## Modes
-
-| | Mode | What it is |
-|---|---|---|
-| I | **Free Reading** | Endless practice. No budget, no objective. The cloth, unlimited. |
-| II | **The Spread** | Twelve Major-Arcana chapters (I–XII) with score / suit-clear objectives, fixed move budgets, and up to three stars per chapter. Progress persists; chapters unlock as you earn stars. |
-| III | **Daily Draw** | One fixed seed every UTC day. Same deck worldwide. Mid-day save so you can pause and resume across devices. |
-| IV | **The Querent's Path** | Roguelike. Pick a class, walk thirteen chambers (Major Arcana IX–XXI) in order. Boss chambers punctuate the walk; The World is the final read. Permanent loss on failure; class unlocks across runs. The Spread and the Path share the same Major Arcana — same cards, different reading. |
-
-## Stack
-
-- **Vite 6** — build + dev server, zero-config TypeScript
-- **Preact 10** — ~10kb React-compatible component shell
-- **wouter-preact** — hash-based router with browser back-button
-- **Zustand 5** — small persisted global state
-- **Vitest 3** + **happy-dom** + **@testing-library/preact** — unit + component tests
-- **vite-plugin-pwa** — service worker + manifest at build time
-
-Total framework runtime: **~12kb gzipped.**
+- [x] Best-practice scaffold: app skeleton, tests, lint, format, CI
+- [ ] Design brief — fill in [`docs/DESIGN_BRIEF.md`](docs/DESIGN_BRIEF.md)
+- [ ] Name the game (then rename `package.json` and this README)
+- [ ] Build the game
 
 ## Commands
 
 ```sh
-npm install
+npm install        # install dependencies
 npm run dev        # local dev server at http://localhost:5173
 npm test           # one-shot test run
+npm run test:watch # tests in watch mode
+npm run lint       # ESLint
+npm run format     # Prettier, write mode
 npm run typecheck  # tsc -b --noEmit
 npm run build      # production build to dist/
 npm run preview    # serve dist/ locally
 ```
 
-## Architecture
+## Stack
 
-Screen-routed: every screen lives in `src/screens/*.tsx` and registers a route in `src/router.ts`. Navigation goes through `wouter-preact`'s `useLocation` hook, so the browser back-button works.
+- **Vite** — build + dev server
+- **Preact** — ~10kb React-compatible UI library
+- **TypeScript (strict)** — full strict mode, no unused locals/parameters
+- **Vitest** + **happy-dom** + **@testing-library/preact** — test runner with one placeholder test to build on
+- **ESLint (flat config)** + **Prettier** — linting and formatting, enforced in CI
 
-```
-/                 Splash      — first impression card
-/home             Home        — Reading Room, four mode cards
-/spread           Spread      — eight chapter cards with star progression
-/querent          Querent     — class-select / chamber-walk lobby
-/play             Play        — the board (mode chosen via ?mode=...)
-/how-to-play      HowToPlay   — four-step tutorial walkthrough
-/codex            Codex       — aggregate progress across every mode
-/settings         Settings    — sound, haptics, motion, telemetry
-/about            About       — colophon
-*                 NotFound    — "The Fool" card
-```
+## Continuous integration
 
-### Engine
+`.github/workflows/ci.yml` runs lint → format check → typecheck → test → build
+on every pull request.
 
-`src/game/engine/` is the headless match-three engine. Pure TypeScript, no Preact dependency, deterministic when seeded.
+`.github/workflows/deploy.yml` deploys to GitHub Pages **manually only**
+(Actions tab → Deploy to GitHub Pages → Run workflow). It is deliberately not
+triggered by pushes to `main`, so the live v1 game stays up until the new game
+is ready to replace it.
 
-- `rng.ts` — mulberry32 PRNG with state capture / restore so runs survive reloads
-- `types.ts` — `Suit`, `Tile { id, suit, kind? }`, `Board`, `MatchGroup`, `ResolveResult`. Tiles can be normal, `"spark"`, or `"wild"`.
-- `board.ts` — generation + helpers
-- `match.ts` — `findMatches` (3+ in rows/cols, wilds count as any suit), `swapMakesMatch`
-- `cascade.ts` — `resolveCascades` clears, expands via spark blasts, promotes match-4 into sparks and match-5+ into wilds, collapses, refills, chains
-- `engine.ts` — `newGame`, `tryMove`, `isDeadlocked` orchestrators
+## Where v1 went
 
-**Scoring (Balatro-style Chips × Mult).** Each cascade step earns
-chips (10 per cleared cell, +30 per spark blast) and mult (sum of
-match-size bonuses: 3 → +2, 4 → +4, 5 → +8, 6+ → +20). Each cascade
-beyond the first adds +1 to its step's mult. Step score = chips × mult;
-move score = sum of step scores. The Play HUD flashes the breakdown on
-every resolved move and ramps a pentatonic arpeggio whose length
-tracks the magnitude — the apex moment is the audible product reveal.
+Nothing was destroyed. The full v1 app — engine, 5 game modes, 382 tests —
+lives in git history. The last v1 commit is `5ecda1a`.
 
-**Special tiles**
+- Browse it on GitHub: `https://github.com/steverowley/kandy-krush/tree/5ecda1a`
+- Recover any file or folder into the working tree:
 
-- **Spark** — a match-4 plants a spark at the middle of the run. When the spark is later cleared as part of any match, it sweeps its row + column.
-- **Wild** — a match-5+ plants a wild at the middle of the run. A wild matches any suit (a run with at least one non-wild defines the suit). No special clear effect.
+  ```sh
+  git checkout 5ecda1a -- src/game/engine   # example: the match-3 engine
+  ```
 
-### Visual system
+- The live GitHub Pages site keeps serving v1 until someone runs the manual
+  deploy workflow.
 
-Tokens in `src/styles/tokens.css`:
+## Notes
 
-- **Page** — near-black with a soft violet+coral radial wash
-- **Cards** — bone cream cardstock (`#F5EFDC`) with ink border, 2-card stack shadow
-- **Panels** — eight saturated poster tones (amethyst, coral, saffron, gold, emerald, teal, cobalt, pink)
-- **Ink** — warm near-black (`#15131F`) for figures + line work
-- **Type** — Playfair Display (heavy display serif), Inter (bold sans labels), Caveat (cursive flourish) — three voices
-
-Reusable primitives in `src/styles/primitives.css`: `.screen`, `.card`, `.tile-card`, `.eyebrow`, `.numeral`, `.script`, `.rule`, `.btn`, `.stack`, `.cluster`.
-
-The `TarotCard` component in `src/components/TarotCard.tsx` is the centerpiece: cardstock frame, corner tick + numeral, colored inner panel with cursive flourish behind a figure, bold uppercase name + italic Spanish caption, then a heavy serif headline with cursive echo and a tiny multilingual subtitle underneath.
-
-### State stores (Zustand + persist)
-
-| Store | Lives at | What it tracks |
-|---|---|---|
-| `useGame` | `src/state/game.ts` | Active board, rng, score, moves, cleared counts, selection. Snapshot / restore for cross-mode resume. |
-| `useSettings` | `src/state/settings.ts` | Sound, haptics, reduced motion, telemetry toggles. |
-| `useSpread` | `src/state/spread.ts` | Stars per chapter. Forward-only unlocks. |
-| `useDaily` | `src/state/daily.ts` | Per-day snapshot + outcome history. |
-| `useQuerent` | `src/state/querent.ts` | Active run + persistent meta (runsCompleted, bestDepth, insight, unlocked classes). |
-| `useResume` | `src/state/resume.ts` | Mid-run snapshots for Spread chapters and Querent chambers. |
-| `useTutorial` | `src/state/tutorial.ts` | Has the player seen the How-to-Play yet. |
-
-### Audio + haptics
-
-`src/audio/synth.ts` synthesizes the entire sound vocabulary at runtime — no audio files. Web Audio is unlocked on the first user gesture (iOS Safari requirement). Suits map to a pentatonic so cascades stay consonant.
-
-`src/audio/haptics.ts` wraps the Vibration API with feature detection.
-
-`src/subscribers/audio.ts` mirrors `useGame` + `useSettings` deltas into the sound + haptic layer.
-
-### Telemetry
-
-`src/telemetry/bus.ts` is a local-only event ring (200-entry cap, localStorage-backed). No network, no IDs, no third-party. `src/subscribers/telemetry.ts` mirrors store deltas into the bus. Settings has a viewer + clear button so the player can audit and wipe at any time.
-
-## Accessibility
-
-- Skip-link at the top of every page
-- Full keyboard navigation on the board (arrow keys, Enter, Escape) with a roving tabindex
-- `aria-live` on the Play screen ledger so score / readings updates are spoken
-- Outcome modal focuses its primary action and closes on Escape
-- Reduced-motion respected via both OS preference and a Settings toggle
-- Pointer events for drag-to-swap on touch + mouse + pen
-
-## Tests
-
-`npm test` runs Vitest. The engine, every Zustand store, the telemetry bus, haptics, and the router all have unit tests. ~90 tests, all pure, no flake.
-
-## Deploy
-
-`.github/workflows/deploy.yml` runs `typecheck` → `test` → `build` on every push to main and publishes `dist/` to GitHub Pages.
-
-`.github/workflows/ci.yml` runs the same gates on every PR.
+- **License:** no LICENSE file means "all rights reserved" — the right default
+  for a private project. Decide consciously before making the repo public.
+- **Environment variables:** none required.
